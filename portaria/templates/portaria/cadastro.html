@@ -2,20 +2,23 @@
 {% block content %}
 
 <div class="container mt-5">
-
+{% if auth_message %}
+    <p><strong>{{ auth_message }}</strong></p>
+{% else %}
+    {% if teste %}<p>{{ teste }}</p>{% endif %}
 <form role="form" method="POST">
     {% csrf_token %}
 <fieldset>
-    <h3>Placa Veículo</h3>
+    <h2 class="title-cad">Placa Veículo</h2>
     <th>
         <tr>{{ form.search_placa }}</tr>
         <tr>{{ form.tipo_veic }}</tr>
     </th>
-    <input type="submit">
+            <input type="submit" class="button">
 </fieldset>
 </form>
 
 {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
 </div>
-
+{% endif %}
 {% endblock %}

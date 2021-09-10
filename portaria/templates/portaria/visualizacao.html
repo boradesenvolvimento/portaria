@@ -10,7 +10,7 @@
                 <td scope="col">FILIAL</td>
                 <td scope="col">ENTRADA</td>
                 <td scope="col">SAIDA</td>
-                <td scope="col">ULTIMA ALTERAÇÃO</td>
+                <td scope="col">CHANGED BY</td>
             </tr>
             </thead>
             <tbody>
@@ -58,7 +58,7 @@
             </tbody>
         </table>
         {% if request.user.is_authenticated %}
-        <button class="btn btn-primary">
+        <button class="button">
             <a href="{% url 'portaria:get_portaria_csv' %}" style="text-decoration:none; color:white;">Export</a>
         </button>
         {% else %}

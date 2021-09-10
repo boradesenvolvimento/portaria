@@ -17,7 +17,7 @@
       </ul>
     </div>
     <div>
-      <ul class="navbar-nav" style="align-items:center;">
+      <ul class="navbar-nav user-navbar">
         {% if user.is_authenticated %}
           <li class="nav-item">{{ user.get_username }}</li>
           <li class="nav-item"><a href="{% url 'logout'%}?next={{request.path}}" class="nav-link">Logout</a></li>

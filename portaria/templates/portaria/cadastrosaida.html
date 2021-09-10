@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<div class="container">
+<div class="container mt-5">
 {% if auth_message %}
     <p><strong>{{ auth_message }}</strong></p>
 {% else %}
-<h2 style="center">{{ cadastro }}</h2>
+<h2 class="title-cad">{{ cadastro }}</h2>
 
 <form role="form" method="POST">
     {% csrf_token %}
@@ -26,7 +26,7 @@
 
     </tbody>
     </table>
-    <input type="submit">
+    <input class="button" type="submit">
 </form>
 {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
 
@@ -37,5 +37,6 @@
     <p>Sem horario de saida cadastrado</p>
     {% endif %}
 </div>
+
 {% endif %}
 {% endblock %}

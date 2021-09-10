@@ -1,8 +1,11 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<div class="container">
-<h2 style="center">{{ cadastro }}</h2>
+<div class="container mt-5">
+{% if auth_message %}
+    <p><strong>{{ auth_message }}</strong></p>
+{% else %}
+<h2 class="title-cad">{{ cadastro }}</h2>
 
 <form role="form" method="POST">
     {% csrf_token %}
@@ -23,14 +26,12 @@
 
         </tbody>
     </table>
-    <input type="submit">
+    <input class="button" type="submit">
 </form>
 <h2>{{ form.hr_chegada.as_view }}</h2>
 
 {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
 </div>
 
-
-
-
+{% endif %}
 {% endblock %}

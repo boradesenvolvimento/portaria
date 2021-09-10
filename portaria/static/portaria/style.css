@@ -1,17 +1,49 @@
-body{
-    background-color: #def0ff;
+/* main */
+*{
+    margin: 0;
+    padding: 0;
+    border: none;
+    text-decoration: none;
+    box-sizing: border-box;
 }
+html{
+    --black: #0D114F;
+    --white: #FAFAFA;
+    --red: #E83F5B;
+    --light-blue: #E0ECFF;
+    --blue: #3485FF;
+    --background: #def0ff;
+    --overlay: #040911;
+    --icons-details: #A5B0C1;
+    --grey-dark: #4D5E77;
+    --grey-blue: #A1B2CD;
+    --grey-light: #E5EAF1;
+    --grey-medium: #eaecf2;
+
+    /* 1rem = 16px (Padrão navegaddor)*/
+    font-size: 62.5%; /* 10 px */
+}
+
+body{
+    height: 100vh;
+    background: var(--background);
+}
+/* global */
 .maintext-navbar{
     font-family: Copperplate, Fantasy;
     font-size: 25px;
     color: #FFF;
     text-shadow: 2px 0 0 #000, -2px 0 0 #000, 0 2px 0 #000, 0 -2px 0 #000, 1px 1px #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
 }
-
 .menutext-navbar{
-    font-family: Poppins, sans-serif, bold;
+    font-family: Poppins, sans-serif;
     font-weight: 900;
     color: #FFF;
+}
+.user-navbar{
+    font-family: Poppins, sans-serif;
+    font-weight: 900;
+    align-items: center;
 }
 .footer {
   position: fixed;
@@ -21,15 +53,65 @@ body{
   color: white;
   text-align: center;
 }
-.cadastrofield{
+
+body, button, input, select, background{
+    /* clamp = intervalo de tamanho */
+    font-size: clamp(14px, 1.6rem, 2vw);
+    font-family: 'Open Sans', sans-serif;
     font-family: 'Poppins', sans-serif;
-    font-color: blue;
 }
 
-a::hover{
-    color: #000;
+.content{
+    width: 100%;
+    margin: 0 auto;
 }
 
-btn-csv{
-    color: white;
+.sr-only{
+    position: absolute;
+    height: 1px;
+    width: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+/* endglobal */
+
+/* input and buttons*/
+input, button, select, .button{
+    border-radius: 0.8rem;
+    height: 3rem;
+    margin: 0.5rem;
+}
+
+button, .button{
+    font-family: 'Poppins', sans-serif;
+    font-weight: 500;
+    line-height: 0;
+    padding: 0.5rem;
+
+    align-items: center;
+    justify-content: center;
+
+    background: var(--blue);
+    color: var(--white);
+
+    transition: filter 0.2s;
+
+    cursor: pointer;
+}
+
+button:hover, .button:hover{
+    filter: brightness(1.2);
+}
+/* end inputs and buttons */
+
+/* etc */
+.title-cad{
+    font-family: Poppins, sans-serif;
+    font-weight: 900;
+    color: var(--black);
+    margin-left: 3rem;
 }

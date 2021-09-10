@@ -16,7 +16,7 @@ class Visualizacao(generic.ListView):
     context_object_name = 'lista'
 
     def get_queryset(self):
-        return Cadastro.objects.all()
+        return Cadastro.objects.all().order_by('hr_chegada')
 
 def cadastroentrada(request, cadastro_id):
     if request.user.is_authenticated:
@@ -32,7 +32,7 @@ def cadastroentrada(request, cadastro_id):
         return render(request, 'portaria/cadastroentrada.html', {'cadastro':cadastro,'form':form})
     else:
         auth_message = 'Usuário não autenticado, por favor logue novamente'
-        return render(request, 'portaria/cadastrosaida.html', {'auth_message': auth_message})
+        return render(request, 'portaria/cadastroentrada.html', {'auth_message': auth_message})
 
 def cadastrosaida(request, cadastro_id):
     if request.user.is_authenticated:
@@ -63,17 +63,16 @@ def cadastro(request):
                     Cadastro.objects.get(pk=s_query)
                 except Cadastro.DoesNotExist:
                     return render(request, 'portaria/cadastro.html', {'form': form, 'error_message': 'Não encontrado!'})
+                if j_query == '1':
+                    return redirect('portaria:cadastroentrada', cadastro_id=request.POST['search_placa'])
                 else:
-                    if j_query == '1':
-                        return redirect('portaria:cadastroentrada', cadastro_id=request.POST['search_placa'])
-                    elif j_query == '2':
-                        return redirect('portaria:cadastrosaida', cadastro_id=request.POST['search_placa'])
+                    return redirect('portaria:cadastrosaida', cadastro_id=request.POST['search_placa'])
         else:
             form = isPlacaForm()
         return render(request, 'portaria/cadastro.html', {'form': form})
     else:
         auth_message = 'Usuário não autenticado, por favor logue novamente'
-        return render(request, 'portaria/cadastrosaida.html', {'auth_message': auth_message})
+        return render(request, 'portaria/cadastro.html', {'auth_message': auth_message})
 #fim das views
 
 
