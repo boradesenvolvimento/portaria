@@ -1,0 +1,35 @@
+body{
+    background-color: #def0ff;
+}
+.maintext-navbar{
+    font-family: Copperplate, Fantasy;
+    font-size: 25px;
+    color: #FFF;
+    text-shadow: 2px 0 0 #000, -2px 0 0 #000, 0 2px 0 #000, 0 -2px 0 #000, 1px 1px #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+}
+
+.menutext-navbar{
+    font-family: Poppins, sans-serif, bold;
+    font-weight: 900;
+    color: #FFF;
+}
+.footer {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  color: white;
+  text-align: center;
+}
+.cadastrofield{
+    font-family: 'Poppins', sans-serif;
+    font-color: blue;
+}
+
+a::hover{
+    color: #000;
+}
+
+btn-csv{
+    color: white;
+}

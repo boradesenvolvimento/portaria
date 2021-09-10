@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container">
+<h2 style="center">{{ cadastro }}</h2>
+
+<form role="form" method="POST">
+    {% csrf_token %}
+    <table>
+        <tbody>
+        <tr>
+            <th>Motorista</th><th>{{ form.motorista }}</th>
+        </tr>
+        <tr>
+            <th>Empresa</th><th>{{ form.empresa }}</th>
+        </tr>
+        <tr>
+            <th>Filial</th><th>{{ form.filial }}</th>
+        </tr>
+        <tr>
+            <th>Garagem</th><th>{{ form.garagem }}</th>
+        </tr>
+
+        </tbody>
+    </table>
+    <input type="submit">
+</form>
+<h2>{{ form.hr_chegada.as_view }}</h2>
+
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+</div>
+
+
+
+
+{% endblock %}

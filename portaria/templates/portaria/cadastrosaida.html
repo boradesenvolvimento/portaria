@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container">
+{% if auth_message %}
+    <p><strong>{{ auth_message }}</strong></p>
+{% else %}
+<h2 style="center">{{ cadastro }}</h2>
+
+<form role="form" method="POST">
+    {% csrf_token %}
+    <table>
+        <tbody>
+        <tr>
+            <th>Motorista</th><th>{{ form.motorista }}</th>
+        </tr>
+        <tr>
+            <th>Empresa</th><th>{{ form.empresa }}</th>
+        </tr>
+        <tr>
+            <th>Filial</th><th>{{ form.filial }}</th>
+        </tr>
+        <tr>
+            <th>Garagem</th><th>{{ form.garagem }}</th>
+        </tr>
+
+    </tbody>
+    </table>
+    <input type="submit">
+</form>
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+    <p>Horário Entrada:{{ cadastro.hr_chegada }}</p>
+    {% if cadastro.hr_saida %}
+    <p>Horário saida:{{ cadastro.hr_saida }}</p>
+    {% else %}
+    <p>Sem horario de saida cadastrado</p>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}
