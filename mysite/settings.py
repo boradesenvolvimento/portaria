@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 import os.path
 import dj_database_url
 from pathlib import Path
+
+import psycopg2
 from django.core.management.utils import get_random_secret_key
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -84,7 +86,8 @@ DATABASES = {
     }
 }
 db_from_env = dj_database_url.config(conn_max_age=500)
-DATABASES['default'].update(db_from_env)
+DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
+conn = psycopg2.connect('postgres://gwusdkrorfyuik:31a231a190d57f37ae2835d952bc33ab20c1a86cf064007206e28bc6b2cba676@ec2-44-195-16-34.compute-1.amazonaws.com:5432/dcq2uthp2ctbl0', sslmode='require')
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
