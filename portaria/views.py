@@ -1,10 +1,15 @@
 import csv
-from django.http import HttpResponse
+import datetime
+
+from django.http import HttpResponse, HttpResponseRedirect, HttpRequest
 from django.shortcuts import get_object_or_404, render, redirect
+from django.urls import reverse
 from django.utils import timezone
 from django.views import generic
+
 from .models import Cadastro
-from .forms import CadastroForm, isPlacaForm
+from .forms import CadastroForm, isPlacaForm, DateForm
+
 
 #views
 
@@ -12,43 +17,54 @@ def index(request):
     return render(request, 'portaria/index.html')
 
 class Visualizacao(generic.ListView):
+    paginate_by = 10
     template_name = 'portaria/visualizacao.html'
     context_object_name = 'lista'
+    form = DateForm()
 
     def get_queryset(self):
-        return Cadastro.objects.all().order_by('hr_chegada')
+        form_input1 = self.request.GET.get('date')
+        form_input2 = self.request.GET.get('date1')
 
-def cadastroentrada(request, cadastro_id):
+        qs = Cadastro.objects.all().filter(hr_chegada__month=datetime.datetime.now().month).order_by('-hr_chegada')
+        if form_input1 and form_input2:
+            self.dateparse1 = datetime.datetime.strptime(form_input1, '%d/%m/%Y').replace(hour=23, minute=59)
+            self.dateparse2 = datetime.datetime.strptime(form_input2, '%d/%m/%Y').replace(hour=23, minute=59)
+            qs = Cadastro.objects.all().filter(hr_chegada__gte=self.dateparse1,hr_chegada__lte=self.dateparse2).order_by('-hr_chegada')
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super(Visualizacao, self).get_context_data(**kwargs)
+        context['form'] = DateForm()
+        return context
+
+
+def cadastroentrada(request):
     if request.user.is_authenticated:
-        cadastro = get_object_or_404(Cadastro, pk=cadastro_id)
-        form = CadastroForm(request.POST or None, instance=cadastro)
+        form = CadastroForm(request.POST or None)
+        autor = request.user
         if request.method == 'POST':
             if form.is_valid():
-                fil = form.cleaned_data['filial']
-                ga = form.cleaned_data['filial']
-                timer = str(timezone.now())
-                Cadastro.objects.filter(pk=cadastro).update(filial=fil, garagem=ga, hr_chegada=timer, hr_saida=None, autor=request.user)
+                order = form.save(commit=False)
+                order.autor = autor
+                order.save()
                 return redirect('portaria:index')
         return render(request, 'portaria/cadastroentrada.html', {'cadastro':cadastro,'form':form})
     else:
         auth_message = 'Usuário não autenticado, por favor logue novamente'
         return render(request, 'portaria/cadastroentrada.html', {'auth_message': auth_message})
 
-def cadastrosaida(request, cadastro_id):
-    if request.user.is_authenticated:
-        cadastro = get_object_or_404(Cadastro, pk=cadastro_id)
-        form = CadastroForm(request.POST or None, instance=cadastro)
-        if request.method == 'POST':
-            if form.is_valid():
-                fil = form.cleaned_data['filial']
-                ga = form.cleaned_data['filial']
-                timer = str(timezone.now())
-                Cadastro.objects.filter(pk=cadastro).update(filial=fil, garagem=ga, hr_saida=timer, autor=request.user)
-                return redirect('portaria:index')
-        return render(request, 'portaria/cadastrosaida.html', {'form': form, 'cadastro': cadastro})
+def cadastrosaida(request, placa_id):
+    five_days_back = timezone.now() - datetime.timedelta(days=5)
+    loc_placa = Cadastro.objects.filter(placa=placa_id, hr_chegada__lte=timezone.now(), hr_chegada__gte=five_days_back,
+                                        hr_saida=None).order_by('-hr_chegada').first()
+    try:
+        Cadastro.objects.get(pk=loc_placa.id)
+    except AttributeError:
+        return render(request,'portaria/cadastrosaida.html', {'error_message': 'Não encontrado'})
     else:
-        auth_message = 'Usuário não autenticado, por favor logue novamente'
-        return render(request, 'portaria/cadastrosaida.html', {'auth_message':auth_message})
+        Cadastro.objects.filter(pk=loc_placa.id).update(hr_saida=timezone.now(), autor=request.user)
+        return HttpResponseRedirect(reverse('portaria:cadastro'), {'success_message':'success_message'})
 
 def cadastro(request):
     if request.user.is_authenticated:
@@ -58,17 +74,7 @@ def cadastro(request):
             form = isPlacaForm(request.POST)
             if form.is_valid():
                 s_query = form.cleaned_data['search_placa']
-                j_query = form.cleaned_data['tipo_veic']
-                try:
-                    Cadastro.objects.get(pk=s_query)
-                except Cadastro.DoesNotExist:
-                    return render(request, 'portaria/cadastro.html', {'form': form, 'error_message': 'Não encontrado!'})
-                if j_query == '1':
-                    return redirect('portaria:cadastroentrada', cadastro_id=request.POST['search_placa'])
-                else:
-                    return redirect('portaria:cadastrosaida', cadastro_id=request.POST['search_placa'])
-        else:
-            form = isPlacaForm()
+                return redirect('portaria:cadastrosaida', placa_id=s_query)
         return render(request, 'portaria/cadastro.html', {'form': form})
     else:
         auth_message = 'Usuário não autenticado, por favor logue novamente'
@@ -78,13 +84,18 @@ def cadastro(request):
 
 #funcoes variadas
 def get_portaria_csv(request):
-    response = HttpResponse(
-        content_type='text/csv',
-        headers={'Content-Disposition': 'attachment; filename="portaria.csv"'},
-    )
+    data1 = request.POST.get('dataIni')
+    data2 = request.POST.get('dataFim')
+    response = HttpResponse(content_type='text/csv',
+                            headers={'Content-Disposition': 'attachment; filename="portaria.csv"'},
+                            )
+    dateparse = datetime.datetime.strptime(data1, '%d/%m/%Y').replace(hour=23, minute=59)
+    dateparse1 = datetime.datetime.strptime(data2, '%d/%m/%Y').replace(hour=23, minute=59)
     writer = csv.writer(response)
-    writer.writerow(['Placa','Placa2','Motorista','Empresa','Filial','Garagem','Hr_entrada','Hr_Saida'])
-    cadastro = Cadastro.objects.all().values_list('placa','placa2','motorista','empresa','filial','garagem','hr_chegada','hr_saida')
+    writer.writerow(['Placa','Placa2','Motorista','Empresa','Garagem','Tipo_func','Tipo_viagem','Hr_entrada','Hr_Saida','autor'])
+    cadastro = Cadastro.objects.all().values_list(
+                        'placa', 'placa2', 'motorista', 'empresa', 'garagem',
+                            'tipo_func', 'tipo_viagem', 'hr_chegada', 'hr_saida', 'autor').filter(hr_chegada__gte=dateparse,hr_chegada__lte=dateparse1)
     for placa in cadastro:
         writer.writerow(placa)
     return response
