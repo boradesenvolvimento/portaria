@@ -3,16 +3,13 @@
 {% block content %}
 <div class="container col-3 mt-5">
   <div class="row">
-  {% if form.errors %}
-    <p><strong>Your username and password didn't match. Please try again.</strong></p>
-  {% endif %}
+
 
   {% if next %}
     {% if user.is_authenticated %}
-      <p><strong>Your account doesn't have access to this page. To proceed,
-      please login with an account that has access.</strong></p>
+      <p><strong>Seu usuário não tem permissão para visualizar essa página.</strong></p>
     {% else %}
-      <p><strong>Please login to see this page.</strong></p>
+      <p><strong></strong></p>
     {% endif %}
   {% endif %}
 
@@ -28,9 +25,12 @@
         <td>{{ form.password }}</td>
       </tr>
     </table>
-    <input type="submit" value="login" />
+    <input class="button" type="submit" value="login" />
     <input type="hidden" name="next" value="{{ next }}" />
   </form>
+      {% if form.errors %}
+    <p><strong>Usuário ou senha inválidos.</strong></p>
+  {% endif %}
 
   {# Assumes you setup the password_reset view in your URLconf #}
   <!--<p><a href="{% url 'password_reset' %}">Lost password?</a></p>-->

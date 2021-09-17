@@ -27,8 +27,14 @@ html{
 body{
     height: 100vh;
     background: var(--background);
+    padding-bottom: 7rem;
 }
 /* global */
+.navbar{
+    height: auto;
+    max-width:100%;
+    flex-direction: row;
+}
 .maintext-navbar{
     font-family: Copperplate, Fantasy;
     font-size: 25px;
@@ -38,18 +44,26 @@ body{
 .menutext-navbar{
     font-family: Poppins, sans-serif;
     font-weight: 900;
-    color: #FFF;
+}
+
+.nav-link1{
+    display: block;
+    padding: .5rem 1rem;
+    color: white;
+    text-decoration: none;
+    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out;
 }
 .user-navbar{
     font-family: Poppins, sans-serif;
     font-weight: 900;
     align-items: center;
 }
-.footer {
+.footer1{
   position: fixed;
   left: 0;
   bottom: 0;
   width: 100%;
+  height: 7rem;
   color: white;
   text-align: center;
 }
@@ -77,6 +91,23 @@ body, button, input, select, background{
     white-space: nowrap;
     border-width: 0;
 }
+
+.linha-baixo{
+    border-bottom: 1px solid #000!important;
+    margin-left: 3rem;
+}
+
+a{
+    text-decoration:none;
+}
+
+.table1 {
+  margin: 0 auto;
+}
+td,th {
+  font-size: 13px;
+  font-family: 'Poppins', sans-serif;
+}
 /* endglobal */
 
 /* input and buttons*/
@@ -97,7 +128,7 @@ button, .button{
 
     background: var(--blue);
     color: var(--white);
-
+    text-decoration:none;
     transition: filter 0.2s;
 
     cursor: pointer;
@@ -106,6 +137,11 @@ button, .button{
 button:hover, .button:hover{
     filter: brightness(1.2);
 }
+
+.form-box{
+    margin-bottom:1rem;
+}
+
 /* end inputs and buttons */
 
 /* etc */
@@ -113,5 +149,7 @@ button:hover, .button:hover{
     font-family: Poppins, sans-serif;
     font-weight: 900;
     color: var(--black);
-    margin-left: 3rem;
+}
+.button-right{
+    display: inline;
 }
