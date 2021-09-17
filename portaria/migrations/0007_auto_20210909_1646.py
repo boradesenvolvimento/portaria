@@ -9,8 +9,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('portaria', '0006_alter_cadastro_hr_saida'),
-        ('portaria', '0006_alter_cadastro_hr_chegada')
+        ('portaria', '0006_alter_cadastro_hr_saida')
     ]
 
     operations = [
