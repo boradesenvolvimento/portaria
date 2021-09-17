@@ -34,7 +34,7 @@ class Migration(migrations.Migration):
             name='placa',
             field=models.CharField(max_length=7),
         ),
-        migrations.AlterField(
+        migrations.AddField(
             model_name='cadastro',
             name='tipo_viagem',
             field=models.CharField(choices=[('COLETA', 'COLETA'), ('ENTREGA', 'ENTREGA'), ('TRANSF', 'TRANSF')],
