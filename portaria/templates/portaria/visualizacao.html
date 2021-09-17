@@ -1,69 +1,110 @@
-{% extends 'base.html' %}
-{% block content %}
-    <div class="container mt-4">
-        <table class="table">
-            <thead>
-            <tr>
-                <td scope="col">PLACA</td>
-                <td scope="col">PLACA2</td>
-                <td scope="col">MOTORISTA</td>
-                <td scope="col">FILIAL</td>
-                <td scope="col">ENTRADA</td>
-                <td scope="col">SAIDA</td>
-                <td scope="col">ULTIMA ALTERAÇÃO</td>
-            </tr>
-            </thead>
-            <tbody>
-                {% for cadastro in lista %}
+    {% extends 'base.html' %}
+    {% block content %}
+        <div class="container mt-4">
+            <div class="row">
+                <form class="container" action="" method="get">
+                    <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                        <table><tbody>
+                            <th><tr><td>{{ form.date }}</td>
+                                    <td>{{ form.date1 }}</td>
+                                    <td><input type="submit" value="Filtrar" class="button"></td>
+                                    <td></td></tr>
+                        </tbody></table>
+                    </div>
+                </form>
+            </div>
+            <div class="row">
+            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+            <table class="table table1">
+                <thead>
                 <tr>
-                    <th>{{ cadastro.placa }}</th>
-                    <th>{{ cadastro.placa2 }}</th>
-                    <th>{{ cadastro.motorista }}</th>
-                    {% if cadastro.garagem == 1 %}
-                    <th>SPO</th>
-                    {% elif cadastro.garagem == 2 %}
-                    <th>REC</th>
-                    {% elif cadastro.garagem == 3 %}
-                    <th>SSA</th>
-                    {% elif cadastro.garagem == 4 %}
-                    <th>FOR</th>
-                    {% elif cadastro.garagem == 5 %}
-                    <th>MCZ</th>
-                    {% elif cadastro.garagem == 6 %}
-                    <th>NAT</th>
-                    {% elif cadastro.garagem == 7 %}
-                    <th>JPA</th>
-                    {% elif cadastro.garagem == 8 %}
-                    <th>AJU</th>
-                    {% elif cadastro.garagem == 9 %}
-                    <th>VDC</th>
-                    {% elif cadastro.garagem == 10 %}
-                    <th>MG</th>
-                    {% elif cadastro.garagem == 11 %}
-                    <th>CTG</th>
-                    {% elif cadastro.garagem == 12 %}
-                    <th>TCO</th>
-                    {% elif cadastro.garagem == 13 %}
-                    <th>UDI</th>
-                    {% elif cadastro.garagem == 14 %}
-                    <th>TNA</th>
-                    {% elif cadastro.garagem == 15 %}
-                    <th>VIX</th>
-                    {% endif %}
-                    <th>{{ cadastro.hr_chegada|date:'d/m/Y' }}</th>
-                    <th>{{ cadastro.hr_saida|date:'d/m/Y' }}</th>
-                    <th>{{ cadastro.autor }}</th>
+                    <td scope="col">PLACA</td>
+                    <td scope="col">MOTORISTA</td>
+                    <td scope="col">EMPRESA</td>
+                    <td scope="col">GARAGEM</td>
+                    <td scope="col">TP_FUNC</td>
+                    <td scope="col">TP_VIAGEM</td>
+                    <td scope="col">ENTRADA</td>
+                    <td scope="col">SAIDA</td>
+                    <td scope="col">CHANGED BY</td>
                 </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% if request.user.is_authenticated %}
-        <button class="btn btn-primary">
-            <a href="{% url 'portaria:get_portaria_csv' %}" style="text-decoration:none; color:white;">Export</a>
-        </button>
-        {% else %}
-        {% endif %}
-    </div>
+                </thead>
+                <tbody>
+                    {% for cadastro in page_obj %}
+                    <tr>
+                        <th>{{ cadastro.placa }}</th>
+                        <th>{{ cadastro.motorista }}</th>
+                        <th>{{ cadastro.empresa }}</th>
+                        {% if cadastro.garagem == 1 %}
+                        <th>SPO</th>
+                        {% elif cadastro.garagem == 2 %}
+                        <th>REC</th>
+                        {% elif cadastro.garagem == 3 %}
+                        <th>SSA</th>
+                        {% elif cadastro.garagem == 4 %}
+                        <th>FOR</th>
+                        {% elif cadastro.garagem == 5 %}
+                        <th>MCZ</th>
+                        {% elif cadastro.garagem == 6 %}
+                        <th>NAT</th>
+                        {% elif cadastro.garagem == 7 %}
+                        <th>JPA</th>
+                        {% elif cadastro.garagem == 8 %}
+                        <th>AJU</th>
+                        {% elif cadastro.garagem == 9 %}
+                        <th>VDC</th>
+                        {% elif cadastro.garagem == 10 %}
+                        <th>MG</th>
+                        {% elif cadastro.garagem == 11 %}
+                        <th>CTG</th>
+                        {% elif cadastro.garagem == 12 %}
+                        <th>TCO</th>
+                        {% elif cadastro.garagem == 13 %}
+                        <th>UDI</th>
+                        {% elif cadastro.garagem == 14 %}
+                        <th>TNA</th>
+                        {% elif cadastro.garagem == 15 %}
+                        <th>VIX</th>
+                        {% endif %}
+                        <th>{{ cadastro.tipo_func }}</th>
+                        <th>{{ cadastro.tipo_viagem }}</th>
+                        <th>{{ cadastro.hr_chegada|date:'d/m/Y' }}</th>
+                        <th>{{ cadastro.hr_saida|date:'d/m/Y' }}</th>
+                        <th>{{ cadastro.autor }}</th>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div class="pagination">
+                    <span class="step-links">
+                        {% if page_obj.has_previous %}
+                            <a href="?page=1">&laquo; primeira</a>
+                            <a href="?page={{ page_obj.previous_page_number }}">anterior</a>
+                        {% endif %}
 
+                        <span class="current">
+                            Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                        </span>
 
-{% endblock %}
+                        {% if page_obj.has_next %}
+                            <a href="?page={{ page_obj.next_page_number }}">próxima</a>
+                            <a href="?page={{ page_obj.paginator.num_pages }}">última &raquo;</a>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+            </div>
+</div>
+    <!-- JS Scripts -->
+    <script>
+      $(function () {
+        $("#id_date").datepicker({
+            format:'dd/mm/yyyy'
+        });
+        $("#id_date1").datepicker({
+            format:'dd/mm/yyyy'
+        });
+      });
+    </script>
+    {% endblock %}
+

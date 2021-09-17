@@ -1,36 +1,48 @@
-{% extends 'base.html' %}
-{% block content %}
+    {% extends 'base.html' %}
+    {% block content %}
 
-<div class="container">
-<h2 style="center">{{ cadastro }}</h2>
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+    {% if auth_message %}
+        <p><strong>{{ auth_message }}</strong></p>
+    {% else %}
+    <h2 class="title-cad">{{ cadastro }}</h2>
 
-<form role="form" method="POST">
-    {% csrf_token %}
-    <table>
-        <tbody>
-        <tr>
-            <th>Motorista</th><th>{{ form.motorista }}</th>
-        </tr>
-        <tr>
-            <th>Empresa</th><th>{{ form.empresa }}</th>
-        </tr>
-        <tr>
-            <th>Filial</th><th>{{ form.filial }}</th>
-        </tr>
-        <tr>
-            <th>Garagem</th><th>{{ form.garagem }}</th>
-        </tr>
-
-        </tbody>
-    </table>
-    <input type="submit">
-</form>
-<h2>{{ form.hr_chegada.as_view }}</h2>
-
-{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
-</div>
+    <form role="form" method="POST">
+        {% csrf_token %}
+        <table>
+            <tbody>
+            <tr>
+                <th>Placa</th><th>{{ form.placa }}</th>
+            </tr>
+            <tr>
+                <th>Motorista</th><th>{{ form.motorista }}</th>
+            </tr>
+            <tr>
+                <th>Empresa</th><th>{{ form.empresa }}</th>
+            </tr>
+            <tr>
+                <th>Tipo Funcionário</th><th>{{ form.tipo_func }}</th>
+            </tr>
+            <tr>
+                <th>Tipo Viagem</th><th>{{ form.tipo_viagem }}</th>
+            </tr>
+            <tr>
+                <th>Garagem</th><th>{{ form.garagem }}</th>
+            </tr>
 
 
+            </tbody>
+        </table>
+        <input class="button" type="submit">
+    </form>
+    <h2>{{ form.hr_chegada.as_view }}</h2>
 
+    {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+            </div>
+        </div>
+    </div>
 
-{% endblock %}
+    {% endif %}
+    {% endblock %}

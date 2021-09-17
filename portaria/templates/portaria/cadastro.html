@@ -1,21 +1,56 @@
-{% extends 'base.html' %}
-{% block content %}
+    {% extends 'base.html' %}
+    {% block content %}
+    <div class="container mt-5">
+    {% if auth_message %}
+        <p><strong>{{ auth_message }}</strong></p>
+    {% else %}
+        {% if teste %}<p>{{ teste }}</p>{% endif %}
+            <div class="row mb-3">
+                <div class="linha-baixo col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                <h3 class="title-cad">Cadastro entrada veículo <button class="button button-right">
+                        <a href="{% url 'portaria:cadastroentrada' %}" style="color:white;">Entrada</a>
+                    </button></h3>
+                </div>
+            </div>
 
-<div class="container mt-5">
+            <div class="row mb-3">
+                <div class="linha-baixo col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                    <form role="form" class="form-box" method="POST">
+                    {% csrf_token %}
+                    <fieldset>
+                    <h3 class="title-cad">Cadastro saída Veículo</h3>
+                        <h3 class="title-cad">Nº placa:{{ form.search_placa }}
+                            <input type="submit" class="button"></h3>
+                    </fieldset>
+                    </form>
+                    {% if success_message %}<p>{{ success_message }}</p>{% endif %}
+                </div>
+            </div>
 
-<form role="form" method="POST">
-    {% csrf_token %}
-<fieldset>
-    <h3>Placa Veículo</h3>
-    <th>
-        <tr>{{ form.search_placa }}</tr>
-        <tr>{{ form.tipo_veic }}</tr>
-    </th>
-    <input type="submit">
-</fieldset>
-</form>
+            <div class="row mb-3">
+                <div class="linha-baixo col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                        <h3 class="title-cad">Exportar CSV portaria</h3>
+                        <form class="form-box" action="{% url 'portaria:get_portaria_csv' %}" method="post">
+                            {% csrf_token %}
+                            <input type="text" placeholder="Data inicio" name="dataIni" id="id_date">
+                            <input type="text" placeholder="Data final" name="dataFim" id="id_date1">
+                            <input type="submit" class="button">
+                        </form>
+                    </div>
+                </div>
 
-{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
-</div>
-
-{% endblock %}
+    {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+    </div>
+    {% endif %}
+    <!-- JS -->
+    <script>
+      $(function () {
+        $("#id_date").datepicker({
+            format:'dd/mm/yyyy'
+        });
+        $("#id_date1").datepicker({
+            format:'dd/mm/yyyy'
+        });
+      });
+    </script>
+    {% endblock %}
