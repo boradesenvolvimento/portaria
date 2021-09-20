@@ -85,7 +85,6 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-db_from_env = dj_database_url.config(conn_max_age=500)
 DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=False)
 conn = psycopg2.connect('postgres://gwusdkrorfyuik:31a231a190d57f37ae2835d952bc33ab20c1a86cf064007206e28bc6b2cba676@ec2-44-195-16-34.compute-1.amazonaws.com:5432/dcq2uthp2ctbl0', sslmode='require')
 
