@@ -15,9 +15,8 @@ TIPO_VIAGEM = (
 )
 # Create your models here.
 class Cadastro(models.Model):
-
+    id = models.BigAutoField(primary_key=True)
     placa = models.CharField(max_length=7)
-
     placa2 = models.CharField(max_length=20, blank=True)
     motorista = models.CharField(max_length=50)
     empresa = models.CharField(max_length=100)
