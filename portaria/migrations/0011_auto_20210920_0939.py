@@ -14,18 +14,6 @@ class Migration(migrations.Migration):
             model_name='cadastro',
             name='filial',
         ),
-        migrations.AddField(
-            model_name='cadastro',
-            name='id',
-            field=models.BigAutoField(default=1, primary_key=True, serialize=False),
-            preserve_default=False,
-        ),
-        migrations.AddField(
-            model_name='cadastro',
-            name='tipo_func',
-            field=models.CharField(choices=[('INTERNO', 'INTERNO'), ('AGREGADO', 'AGREGADO')], default='EXTERNO', max_length=10),
-            preserve_default=False,
-        ),
         migrations.AlterField(
             model_name='cadastro',
             name='empresa',

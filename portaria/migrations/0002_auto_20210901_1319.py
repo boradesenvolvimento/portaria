@@ -10,13 +10,9 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='cadastro',
-            name='id',
-        ),
         migrations.AlterField(
             model_name='cadastro',
             name='placa',
-            field=models.CharField(max_length=20, primary_key=True, serialize=False),
+            field=models.CharField(max_length=20, serialize=False),
         ),
     ]

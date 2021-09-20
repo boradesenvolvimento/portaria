@@ -2,6 +2,8 @@
 
 from django.db import migrations, models
 
+from portaria.models import TIPO_FUNC, TIPO_VIAGEM
+
 
 class Migration(migrations.Migration):
 
@@ -19,8 +21,9 @@ class Migration(migrations.Migration):
                 ('placa2', models.CharField(max_length=20)),
                 ('motorista', models.CharField(max_length=50)),
                 ('empresa', models.IntegerField()),
-                ('filial', models.IntegerField()),
                 ('garagem', models.IntegerField()),
+                ('tipo_func',  models.CharField(max_length=10, choices=TIPO_FUNC)),
+                ('tipo_viagem', models.CharField(max_length=10, choices=TIPO_VIAGEM)),
                 ('hr_chegada', models.DateTimeField()),
                 ('hr_saida', models.DateTimeField()),
             ],

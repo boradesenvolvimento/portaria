@@ -40,4 +40,11 @@ class Migration(migrations.Migration):
             field=models.CharField(choices=[('COLETA', 'COLETA'), ('ENTREGA', 'ENTREGA'), ('TRANSF', 'TRANSF')],
                                    max_length=10),
         ),
+        migrations.AddField(
+            model_name='cadastro',
+            name='tipo_func',
+            field=models.CharField(choices=[('INTERNO', 'INTERNO'), ('AGREGADO', 'AGREGADO')], default='EXTERNO',
+                                   max_length=10),
+            preserve_default=False,
+        ),
     ]
