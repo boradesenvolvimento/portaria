@@ -10,10 +10,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='cadastro',
-            name='filial',
-        ),
         migrations.AlterField(
             model_name='cadastro',
             name='empresa',
