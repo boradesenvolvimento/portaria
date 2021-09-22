@@ -26,7 +26,7 @@ class CadastroForm(forms.ModelForm):
             'motorista',
             'empresa',
             'garagem',
-            'tipo_func',
+            'tipo_mot',
             'tipo_viagem',
             'hr_chegada',
             'hr_saida',

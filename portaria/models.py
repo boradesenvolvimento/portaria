@@ -38,7 +38,7 @@ class Cadastro(models.Model):
     motorista = models.CharField(max_length=50)
     empresa = models.CharField(max_length=30)
     garagem = models.CharField(max_length=5, choices=TIPO_GARAGEM)
-    tipo_func = models.CharField(max_length=10, choices=TIPO_MOT)
+    tipo_mot = models.CharField(max_length=10, choices=TIPO_MOT)
     tipo_viagem = models.CharField(max_length=10, choices=TIPO_VIAGEM)
     hr_chegada = models.DateTimeField(blank=True, default=timezone.now)
     hr_saida = models.DateTimeField(blank=True, null=True)
