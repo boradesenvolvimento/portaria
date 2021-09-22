@@ -103,10 +103,14 @@ a{
 
 .table1 {
   margin: 0 auto;
+  max-width: 100%;
+  table-layout: fixed;
+  overflow:auto
 }
 td,th {
   font-size: 13px;
   font-family: 'Poppins', sans-serif;
+  word-wrap: break-word;
 }
 /* endglobal */
 
