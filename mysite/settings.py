@@ -85,8 +85,8 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-#DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
-#conn = psycopg2.connect('postgres://dkwaaycoivvunp:11e716b33c4a66c03203cb878ccf108734822c990394610ffcea46b054e2b7fb@ec2-50-17-255-244.compute-1.amazonaws.com:5432/d1gnpodpteaqsa', sslmode='require')
+DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
+conn = psycopg2.connect('postgres://dkwaaycoivvunp:11e716b33c4a66c03203cb878ccf108734822c990394610ffcea46b054e2b7fb@ec2-50-17-255-244.compute-1.amazonaws.com:5432/d1gnpodpteaqsa', sslmode='require')
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
