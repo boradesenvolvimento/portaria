@@ -9,7 +9,7 @@ class CadastroAdmin(admin.ModelAdmin):
         ('motorista', {'fields': ['motorista']}),
         ('empresa',{'fields':['empresa']}),
         ('garagem', {'fields':['garagem']}),
-        ('tipo_func', {'fields': ['tipo_mot']}),
+        ('tipo_mot', {'fields': ['tipo_mot']}),
         ('tipo_viagem', {'fields': ['tipo_viagem']}),
         ('hr_chegada', {'fields':['hr_chegada']}),
         ('hr_saida',{'fields':['hr_saida']}),

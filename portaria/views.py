@@ -92,10 +92,10 @@ def get_portaria_csv(request):
     dateparse = datetime.datetime.strptime(data1, '%d/%m/%Y').replace(hour=23, minute=59)
     dateparse1 = datetime.datetime.strptime(data2, '%d/%m/%Y').replace(hour=23, minute=59)
     writer = csv.writer(response)
-    writer.writerow(['Placa','Placa2','Motorista','Empresa','Garagem','Tipo_func','Tipo_viagem','Hr_entrada','Hr_Saida','autor'])
+    writer.writerow(['Placa','Placa2','Motorista','Empresa','Garagem','Tipo_mot','Tipo_viagem','Hr_entrada','Hr_Saida','autor'])
     cadastro = Cadastro.objects.all().values_list(
                         'placa', 'placa2', 'motorista', 'empresa', 'garagem',
-                            'tipo_func', 'tipo_viagem', 'hr_chegada', 'hr_saida', 'autor').filter(hr_chegada__gte=dateparse,hr_chegada__lte=dateparse1)
+                            'tipo_mot', 'tipo_viagem', 'hr_chegada', 'hr_saida', 'autor').filter(hr_chegada__gte=dateparse,hr_chegada__lte=dateparse1)
     for placa in cadastro:
         writer.writerow(placa)
     return response
