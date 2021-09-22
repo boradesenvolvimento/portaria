@@ -35,37 +35,7 @@
                         <th>{{ cadastro.placa }}</th>
                         <th>{{ cadastro.motorista }}</th>
                         <th>{{ cadastro.empresa }}</th>
-                        {% if cadastro.garagem == 1 %}
-                        <th>SPO</th>
-                        {% elif cadastro.garagem == 2 %}
-                        <th>REC</th>
-                        {% elif cadastro.garagem == 3 %}
-                        <th>SSA</th>
-                        {% elif cadastro.garagem == 4 %}
-                        <th>FOR</th>
-                        {% elif cadastro.garagem == 5 %}
-                        <th>MCZ</th>
-                        {% elif cadastro.garagem == 6 %}
-                        <th>NAT</th>
-                        {% elif cadastro.garagem == 7 %}
-                        <th>JPA</th>
-                        {% elif cadastro.garagem == 8 %}
-                        <th>AJU</th>
-                        {% elif cadastro.garagem == 9 %}
-                        <th>VDC</th>
-                        {% elif cadastro.garagem == 10 %}
-                        <th>MG</th>
-                        {% elif cadastro.garagem == 11 %}
-                        <th>CTG</th>
-                        {% elif cadastro.garagem == 12 %}
-                        <th>TCO</th>
-                        {% elif cadastro.garagem == 13 %}
-                        <th>UDI</th>
-                        {% elif cadastro.garagem == 14 %}
-                        <th>TNA</th>
-                        {% elif cadastro.garagem == 15 %}
-                        <th>VIX</th>
-                        {% endif %}
+                        <th>{{ cadastro.garagem }}</th>
                         <th>{{ cadastro.tipo_mot }}</th>
                         <th>{{ cadastro.tipo_viagem }}</th>
                         <th>{{ cadastro.hr_chegada|date:'d/m/Y' }}</th>

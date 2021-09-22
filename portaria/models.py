@@ -14,21 +14,21 @@ TIPO_VIAGEM = (
     ('TRANSF', 'TRANSF')
 )
 TIPO_GARAGEM = (
-    ('SPO','1'),
-    ('REC','2'),
-    ('SSA','3'),
-    ('FOR','4'),
-    ('MCZ','5'),
-    ('NAT','6'),
-    ('JPA','7'),
-    ('AJU','8'),
-    ('VDC','9'),
-    ('MG','10'),
-    ('CTG','20'),
-    ('TCO','21'),
-    ('UDI','22'),
-    ('TNA','23'),
-    ('VIX','24'),
+    ('1','SPO'),
+    ('2','REC'),
+    ('3','SSA'),
+    ('4','FOR'),
+    ('5','MCZ'),
+    ('6','NAT'),
+    ('7','JPA'),
+    ('8','AJU'),
+    ('9','VDC'),
+    ('10','MG'),
+    ('20','CTG'),
+    ('21','TCO'),
+    ('22','UDI'),
+    ('23','TNA'),
+    ('24','VIX'),
 )
 # Create your models here.
 class Cadastro(models.Model):
