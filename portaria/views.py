@@ -79,6 +79,9 @@ def cadastro(request):
     else:
         auth_message = 'Usuário não autenticado, por favor logue novamente'
         return render(request, 'portaria/cadastro.html', {'auth_message': auth_message})
+
+def outputs(request):
+    return render(request, 'portaria/outputs.html')
 #fim das views
 
 

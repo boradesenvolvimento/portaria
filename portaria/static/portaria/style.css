@@ -43,7 +43,7 @@ body{
 }
 .menutext-navbar{
     font-family: Poppins, sans-serif;
-    font-weight: 900;
+    margin: 0;
 }
 
 .nav-link1{
