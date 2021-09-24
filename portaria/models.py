@@ -14,21 +14,21 @@ TIPO_VIAGEM = (
     ('TRANSF', 'TRANSF')
 )
 TIPO_GARAGEM = (
-    ('1','SPO'),
-    ('2','REC'),
-    ('3','SSA'),
-    ('4','FOR'),
-    ('5','MCZ'),
-    ('6','NAT'),
-    ('7','JPA'),
-    ('8','AJU'),
-    ('9','VDC'),
-    ('10','MG'),
-    ('20','CTG'),
-    ('21','TCO'),
-    ('22','UDI'),
-    ('23','TNA'),
-    ('24','VIX'),
+    ('SPO','SPO'),
+    ('REC','REC'),
+    ('SSA','SSA'),
+    ('FOR','FOR'),
+    ('MCZ','MCZ'),
+    ('NAT','NAT'),
+    ('JPA','JPA'),
+    ('AJU','AJU'),
+    ('VDC','VDC'),
+    ('MG','MG'),
+    ('CTG','CTG'),
+    ('TCO','TCO'),
+    ('UDI','UDI'),
+    ('TNA','TNA'),
+    ('VIX','VIX'),
 )
 # Create your models here.
 class Cadastro(models.Model):
@@ -47,4 +47,17 @@ class Cadastro(models.Model):
     def __str__(self):
        return self.placa
 
+class PaletControl(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    loc_atual = models.CharField(max_length=3, choices=TIPO_GARAGEM)
+    ultima_viagem = models.DateField()
+    origem = models.CharField(max_length=3,choices=TIPO_GARAGEM)
+    destino = models.CharField(max_length=3, choices=TIPO_GARAGEM)
+    placa_veic = models.CharField(max_length=7)
 
+    class Meta:
+        verbose_name = 'PaletControl'
+        verbose_name_plural = 'PaletControl'
+
+    def __int__(self):
+        return self.id

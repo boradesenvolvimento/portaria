@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Cadastro
+from .models import Cadastro, PaletControl
 # Register your models here.
 
 class CadastroAdmin(admin.ModelAdmin):
@@ -16,5 +16,16 @@ class CadastroAdmin(admin.ModelAdmin):
         ('autor', {'fields': ['autor']}),
     ]
     list_display = ('id','placa', 'placa2', 'motorista', 'empresa','garagem','tipo_viagem','tipo_mot','hr_chegada','hr_saida', 'autor')
-
 admin.site.register(Cadastro, CadastroAdmin)
+
+class PaletControlAdmin(admin.ModelAdmin):
+    fieldsets = (
+        ('loc_atual',{'fields':['loc_atual']}) ,
+        ('ultima_viagem',{'fields':['ultima_viagem']}),
+        ('origem',{'fields':['origem']}),
+        ('destino',{'fields':['destino']}),
+        ('placa_veic',{'fields':['placa_veic']})
+    )
+    list_display = ('id','loc_atual','ultima_viagem','origem','destino','placa_veic')
+admin.site.register(PaletControl, PaletControlAdmin)
+

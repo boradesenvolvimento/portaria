@@ -7,8 +7,8 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views import generic
 
-from .models import Cadastro
-from .forms import CadastroForm, isPlacaForm, DateForm
+from .models import Cadastro, PaletControl
+from .forms import CadastroForm, isPlacaForm, DateForm, FilterForm, TPaletsForm
 
 
 #views
@@ -82,10 +82,48 @@ def cadastro(request):
 
 def outputs(request):
     return render(request, 'portaria/outputs.html')
+
+class PaletView(generic.ListView):
+    paginate_by = 10
+    template_name = 'portaria/palets.html'
+    context_object_name = 'lista'
+
+    def get_queryset(self):
+        qs = PaletControl.objects.all()
+        self.form_input = self.request.GET.get('filter_')
+        if self.form_input:
+            qs = PaletControl.objects.filter(loc_atual=self.form_input)
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super(PaletView, self).get_context_data(**kwargs)
+        context['form'] = FilterForm()
+        return context
+
 #fim das views
 
 
 #funcoes variadas
+def transfpalet(request):
+    context = {}
+    form = TPaletsForm()
+    context['form'] = form
+    if request.method == 'POST':
+        ori = request.POST.get('origem_')
+        des = request.POST.get('destino_')
+        qnt = int(request.POST.get('quantidade_'))
+        plc = request.POST.get('placa_veic')
+        print(qnt)
+        if qnt <= PaletControl.objects.filter(loc_atual=ori).count():
+            form = PaletControl()
+            for x in range(qnt):
+                q = PaletControl.objects.filter(loc_atual=ori).first()
+                a = PaletControl.objects.filter(pk=q.id).update(origem=ori,destino=des, loc_atual=des, placa_veic=plc,ultima_viagem=timezone.now())
+            return render(request, 'portaria/transfpalets.html', {'context':context,'success':'Transferência Ok'})
+        else:
+            return render()
+
+    return render(request,'portaria/transfpalets.html', context)
 def get_portaria_csv(request):
     data1 = request.POST.get('dataIni')
     data2 = request.POST.get('dataFim')

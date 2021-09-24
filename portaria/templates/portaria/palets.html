@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container">
+            <div class="row">
+                <div class="col-lg-9 col-md-9 col-sm-9 col-xs-9">
+                <form class="container" action="" method="get">
+                        <table>
+                            <tbody>
+                            <th>
+                                <tr>
+                                    <td>{{ form.filter_ }}</td>
+                                    <td><input type="submit" value="Filtrar" class="button"></td>
+                                </tr>
+                            </th>
+                            </tbody>
+                        </table>
+                </form>
+                    </div>
+                <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
+                    <button class="button" type="submit">
+                        <a href="{% url 'portaria:transfpalets' %}" style="text-decoration:none; color:white;">Transferencia de Palets</a>
+                    </button>
+                </div>
+            </div>
+
+            <div class="row">
+            <table class="table table1">
+                <thead>
+                <tr>
+                    <td scope="col">ID</td>
+                    <td scope="col">LOC_ATUAL</td>
+                    <td scope="col">ULTIMA_VIAGEM</td>
+                    <td scope="col">ORIGEM</td>
+                    <td scope="col">DESTINO</td>
+                    <td scope="col">PLACA_VEIC</td>
+                </tr>
+                </thead>
+                <tbody>
+                {{ lista|length }}
+                {{ args }}
+                    {% for palet in page_obj %}
+                    <tr>    {% with total=palet.id.count %}
+                            {{ total }}
+                            {% endwith %}
+
+                        <td>{{ palet.id }}</td>
+                        <td>{{ palet.loc_atual }}</td>
+                        <td>{{ palet.ultima_viagem }}</td>
+                        <td>{{ palet.origem }}</td>
+                        <td>{{ palet.destino }}</td>
+                        <td>{{ palet.placa_veic|upper }}</td>
+
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div class="pagination">
+                    <span class="step-links">
+                        {% if page_obj.has_previous %}
+                            <a href="?page=1">&laquo; primeira</a>
+                            <a href="?page={{ page_obj.previous_page_number }}">anterior</a>
+                        {% endif %}
+
+                        <span class="current">
+                            Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                        </span>
+
+                        {% if page_obj.has_next %}
+                            <a href="?page={{ page_obj.next_page_number }}">próxima</a>
+                            <a href="?page={{ page_obj.paginator.num_pages }}">última &raquo;</a>
+                        {% endif %}
+                    </span>
+                </div>
+
+            </div>
+</div>
+    <!-- JS Scripts -->
+    <script>
+      $(function () {
+        $("#id_date").datepicker({
+            format:'dd/mm/yyyy'
+        });
+        $("#id_date1").datepicker({
+            format:'dd/mm/yyyy'
+        });
+      });
+    </script>
+
+{% endblock %}
