@@ -1,72 +1,19 @@
 {% extends 'base.html' %}
 {% block content %}
-{% if success %}
-<p>{{ success }}</p>
-{% endif %}
 <div class="container">
-            <div class="row" style="align-items: center;padding: 5px 0;">
-                <div class="col-lg-9 col-md-9 col-sm-9 col-xs-9">
-                <form class="container" action="" method="get">
-                        <table>
-                            <tbody>
-                            <th>
-                                <tr>
-                                    <td>{{ form.filter_ }}</td>
-                                    <td><input type="submit" value="Filtrar" class="button"></td>
-                                </tr>
-                            </th>
-                            </tbody>
-                        </table>
-                </form>
-                    </div>
-                <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
-                    <p class="user-navbar">Total de {{ lista|length }} palets.</p>
+            <div class="row linha-baixo">
+                <h2 class="user-navbar">Quantidade de Palets por garagem</h2>
+            </div>
+            <div class="row" style="margin-left: 6rem; ">
+            {% for palet in lista %}
+
+            <div class="card" style="width: 10rem; margin-top: 5rem;">
+                <div class="card-body" style="text-align:center;">
+                    <h5 class="card-title">{{ palet.loc_atual}}</h5>
+                    <p class="card-text">{{ palet.num_ratings }}</p>
                 </div>
             </div>
-
-            <div class="row">
-            <table class="table table1">
-                <thead>
-                <tr>
-                    <td scope="col">ID</td>
-                    <td scope="col">LOC_ATUAL</td>
-                    <td scope="col">ULTIMA_VIAGEM</td>
-                    <td scope="col">ORIGEM</td>
-                    <td scope="col">DESTINO</td>
-                    <td scope="col">PLACA_VEIC</td>
-                </tr>
-                </thead>
-                <tbody>
-                    {% for palet in page_obj %}
-                    <tr>
-                        <td>{{ palet.id }}</td>
-                        <td>{{ palet.loc_atual }}</td>
-                        <td>{{ palet.ultima_viagem }}</td>
-                        <td>{{ palet.origem }}</td>
-                        <td>{{ palet.destino }}</td>
-                        <td>{{ palet.placa_veic|upper }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            <div class="pagination">
-                    <span class="step-links">
-                        {% if page_obj.has_previous %}
-                            <a href="?page=1">&laquo; primeira</a>
-                            <a href="?page={{ page_obj.previous_page_number }}">anterior</a>
-                        {% endif %}
-
-                        <span class="current">
-                            Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
-                        </span>
-
-                        {% if page_obj.has_next %}
-                            <a href="?page={{ page_obj.next_page_number }}">próxima</a>
-                            <a href="?page={{ page_obj.paginator.num_pages }}">última &raquo;</a>
-                        {% endif %}
-                    </span>
-                </div>
-
+            {% endfor %}
             </div>
 </div>
     <!-- JS Scripts -->

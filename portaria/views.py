@@ -2,6 +2,7 @@ import csv
 import datetime
 
 from django.contrib.auth.decorators import login_required
+from django.db.models import Count
 from django.http import HttpResponse, HttpResponseRedirect, HttpRequest
 from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
@@ -9,7 +10,7 @@ from django.utils import timezone
 from django.views import generic
 
 from .models import Cadastro, PaletControl
-from .forms import CadastroForm, isPlacaForm, DateForm, FilterForm, TPaletsForm
+from .forms import CadastroForm, isPlacaForm, DateForm, FilterForm, TPaletsForm, TIPO_GARAGEM
 
 
 #views
@@ -94,19 +95,19 @@ class PaletView(generic.ListView):
     template_name = 'portaria/palets.html'
     context_object_name = 'lista'
 
+    ga = PaletControl.objects.values("loc_atual").annotate(num_ratings=Count("id"))
+
     def get_queryset(self):
-        qs = PaletControl.objects.all()
-        self.form_input = self.request.GET.get('filter_')
-        if self.form_input:
-            qs = PaletControl.objects.filter(loc_atual=self.form_input)
+        qs = PaletControl.objects.values("loc_atual").annotate(num_ratings=Count("id"))
         return qs
 
-    def get_context_data(self, **kwargs):
-        context = super(PaletView, self).get_context_data(**kwargs)
-        context['form'] = FilterForm()
-        return context
+
 
 #fim das views
+
+
+
+
 
 
 #funcoes variadas
