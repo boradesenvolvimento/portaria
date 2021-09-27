@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% block content %}
+
     <div class="container mt-5">
     <div class="row linha-baixo mb-3">
         <div class="col col-lg-12 col-md-12 col-sm-12 col-xs-12">
@@ -18,6 +19,11 @@
                     </tbody>
                 </table>
             </form>
+            {% if error_message %}
+                <strong><p>{{ error_message }}</p></strong>
+            {% elif success_message %}
+                <strong><p>{{ success_message }}</p></strong>
+            {% endif %}
         </div>
     </div>
     </div>
