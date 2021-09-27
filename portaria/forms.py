@@ -1,7 +1,8 @@
 from django import forms
 
 
-from .models import Cadastro
+from .models import Cadastro, TIPO_GARAGEM
+
 
 #tuplas de escolha
 
@@ -15,6 +16,9 @@ class isPlacaForm(forms.Form):
 class DateForm(forms.Form):
     date = forms.CharField(max_length=10)
     date1 = forms.CharField(max_length=10)
+
+class FilterForm(forms.Form):
+    filter_ = forms.CharField(max_length=30)
 
 #inputs para pegar os dados
 class CadastroForm(forms.ModelForm):
@@ -33,6 +37,11 @@ class CadastroForm(forms.ModelForm):
             'autor'
         ]
 
+class TPaletsForm(forms.Form):
+    origem_ = forms.ChoiceField(choices=TIPO_GARAGEM)
+    destino_ = forms.ChoiceField(choices=TIPO_GARAGEM)
+    quantidade_ = forms.IntegerField()
+    placa_veic = forms.CharField(max_length=7)
 
 
 

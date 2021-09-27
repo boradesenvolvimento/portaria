@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block content %}
+
+    <div class="container mt-5">
+    <div class="row linha-baixo mb-3">
+        <div class="col col-lg-12 col-md-12 col-sm-12 col-xs-12">
+            <h3 class="title-cad">Transferir palets entre filiais</h3>
+            <form class="form-box" action="" method="post">
+                {% csrf_token %}
+                <table>
+                    <tbody>
+                        <th>
+                            <td>Origem:{{ form.origem_ }}</td>
+                            <td>Destino:{{ form.destino_ }}</td>
+                            <td>Quantidade:{{ form.quantidade_ }}</td>
+                            <td>Placa Veic:{{ form.placa_veic }}</td>
+                            <td><input type="submit" class="button"></td>
+                        </th>
+                    </tbody>
+                </table>
+            </form>
+            {% if error_message %}
+                <strong><p>{{ error_message }}</p></strong>
+            {% elif success_message %}
+                <strong><p>{{ success_message }}</p></strong>
+            {% endif %}
+        </div>
+    </div>
+    </div>
+
+
+    <!-- JS -->
+    <script>
+      $(function () {
+        $("#id_date").datepicker({
+            format:'dd/mm/yyyy'
+        });
+        $("#id_date1").datepicker({
+            format:'dd/mm/yyyy'
+        });
+      });
+    </script>
+{% endblock %}

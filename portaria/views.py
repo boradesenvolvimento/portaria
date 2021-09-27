@@ -1,20 +1,22 @@
 import csv
 import datetime
 
+from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect, HttpRequest
 from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
 from django.utils import timezone
 from django.views import generic
 
-from .models import Cadastro
-from .forms import CadastroForm, isPlacaForm, DateForm
+from .models import Cadastro, PaletControl
+from .forms import CadastroForm, isPlacaForm, DateForm, FilterForm, TPaletsForm
 
 
 #views
-
+@login_required
 def index(request):
     return render(request, 'portaria/index.html')
+
 
 class Visualizacao(generic.ListView):
     paginate_by = 10
@@ -38,7 +40,7 @@ class Visualizacao(generic.ListView):
         context['form'] = DateForm()
         return context
 
-
+@login_required
 def cadastroentrada(request):
     if request.user.is_authenticated:
         form = CadastroForm(request.POST or None)
@@ -54,6 +56,7 @@ def cadastroentrada(request):
         auth_message = 'Usuário não autenticado, por favor logue novamente'
         return render(request, 'portaria/cadastroentrada.html', {'auth_message': auth_message})
 
+@login_required
 def cadastrosaida(request, placa_id):
     five_days_back = timezone.now() - datetime.timedelta(days=5)
     loc_placa = Cadastro.objects.filter(placa=placa_id, hr_chegada__lte=timezone.now(), hr_chegada__gte=five_days_back,
@@ -66,6 +69,7 @@ def cadastrosaida(request, placa_id):
         Cadastro.objects.filter(pk=loc_placa.id).update(hr_saida=timezone.now(), autor=request.user)
         return HttpResponseRedirect(reverse('portaria:cadastro'), {'success_message':'success_message'})
 
+@login_required
 def cadastro(request):
     if request.user.is_authenticated:
         form_class = isPlacaForm
@@ -80,12 +84,56 @@ def cadastro(request):
         auth_message = 'Usuário não autenticado, por favor logue novamente'
         return render(request, 'portaria/cadastro.html', {'auth_message': auth_message})
 
+@login_required
 def outputs(request):
     return render(request, 'portaria/outputs.html')
+
+
+class PaletView(generic.ListView):
+    paginate_by = 10
+    template_name = 'portaria/palets.html'
+    context_object_name = 'lista'
+
+    def get_queryset(self):
+        qs = PaletControl.objects.all()
+        self.form_input = self.request.GET.get('filter_')
+        if self.form_input:
+            qs = PaletControl.objects.filter(loc_atual=self.form_input)
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super(PaletView, self).get_context_data(**kwargs)
+        context['form'] = FilterForm()
+        return context
+
 #fim das views
 
 
 #funcoes variadas
+@login_required
+def transfpalet(request):
+    context = {}
+    form = TPaletsForm()
+    context['form'] = form
+    if request.method == 'POST':
+        ori = request.POST.get('origem_')
+        des = request.POST.get('destino_')
+        qnt = int(request.POST.get('quantidade_'))
+        plc = request.POST.get('placa_veic')
+        print(qnt)
+        if qnt <= PaletControl.objects.filter(loc_atual=ori).count():
+            for x in range(qnt):
+                q = PaletControl.objects.filter(loc_atual=ori).first()
+                PaletControl.objects.filter(pk=q.id).update(origem=ori,destino=des, loc_atual=des, placa_veic=plc,ultima_viagem=timezone.now())
+
+            success_message = f'{qnt} palets transferidos de {ori} para {des}'
+            return render(request,'portaria/transfpalets.html', {'form':form,'success_message': success_message})
+        else:
+            error_message = 'Quantidade solicitada maior que a disponível'
+            return render(request,'portaria/transfpalets.html', {'form':form,'error_message':error_message})
+
+    return render(request,'portaria/transfpalets.html', context)
+
 def get_portaria_csv(request):
     data1 = request.POST.get('dataIni')
     data2 = request.POST.get('dataFim')
