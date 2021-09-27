@@ -38,17 +38,13 @@
                 </thead>
                 <tbody>
                     {% for palet in page_obj %}
-                    <tr>    {% with total=palet.id.count %}
-                            {{ total }}
-                            {% endwith %}
-
+                    <tr>
                         <td>{{ palet.id }}</td>
                         <td>{{ palet.loc_atual }}</td>
                         <td>{{ palet.ultima_viagem }}</td>
                         <td>{{ palet.origem }}</td>
                         <td>{{ palet.destino }}</td>
                         <td>{{ palet.placa_veic|upper }}</td>
-
                     </tr>
                     {% endfor %}
                 </tbody>

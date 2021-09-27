@@ -126,7 +126,7 @@ def transfpalet(request):
                 q = PaletControl.objects.filter(loc_atual=ori).first()
                 PaletControl.objects.filter(pk=q.id).update(origem=ori,destino=des, loc_atual=des, placa_veic=plc,ultima_viagem=timezone.now())
 
-            success_message = f'{qnt} palets transferidos de {ori} para {des}'
+            success_message = f'{qnt} palet transferido de {ori} para {des}'
             return render(request,'portaria/transfpalets.html', {'form':form,'success_message': success_message})
         else:
             error_message = 'Quantidade solicitada maior que a disponível'
