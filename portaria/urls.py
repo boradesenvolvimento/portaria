@@ -11,6 +11,7 @@ urlpatterns = [
     path('palets/', views.PaletView.as_view(), name='paletview'),
     path('palets/transfpalets', views.transfpalet, name='transfpalets'),
     path('outputs/', views.outputs, name='outputs'),
-    path(r'export-csv-port/', views.get_portaria_csv, name='get_portaria_csv')
+    path(r'export-csv-port/', views.get_portaria_csv, name='get_portaria_csv'),
+    path(r'export-csv-palet/', views.get_palet_csv, name='get_palet_csv')
 
 ]

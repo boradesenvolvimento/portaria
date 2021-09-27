@@ -151,5 +151,17 @@ def get_portaria_csv(request):
         writer.writerow(placa)
     return response
 
+def get_palet_csv(request):
+    response = HttpResponse(content_type='text/csv',
+                            headers={'Content-Disposition':'attachment; filename="palets.csv"'})
+    writer = csv.writer(response)
+    writer.writerow(['id','loc_atual','ultima_viagem','origem','destino','placa_veic'])
+    palet = PaletControl.objects.all().values_list(
+        'id', 'loc_atual', 'ultima_viagem', 'origem', 'destino', 'placa_veic'
+    )
+    for id in palet:
+        writer.writerow(id)
+    return response
+
 
 
