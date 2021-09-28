@@ -1,7 +1,7 @@
 from django import forms
 
 
-from .models import Cadastro, TIPO_GARAGEM
+from .models import Cadastro, TIPO_GARAGEM, ChecklistFrota
 
 
 #tuplas de escolha
@@ -11,7 +11,8 @@ class DateInput(forms.DateInput):
     input_type = 'date'
 
 class isPlacaForm(forms.Form):
-    search_placa = forms.CharField(max_length=20, label='search_placa')
+    search_placa = forms.CharField(max_length=20, label='Placa')
+    search_dest = forms.ChoiceField(choices=TIPO_GARAGEM, label='Destino')
 
 class DateForm(forms.Form):
     date = forms.CharField(max_length=10)
@@ -29,7 +30,8 @@ class CadastroForm(forms.ModelForm):
             'placa2',
             'motorista',
             'empresa',
-            'garagem',
+            'origem',
+            'destino',
             'tipo_mot',
             'tipo_viagem',
             'hr_chegada',
@@ -43,7 +45,48 @@ class TPaletsForm(forms.Form):
     quantidade_ = forms.IntegerField()
     placa_veic = forms.CharField(max_length=7)
 
-
-
-
-
+class ChecklistForm(forms.ModelForm):
+    class Meta:
+        model = ChecklistFrota
+        fields = [
+            'placaveic',
+            'motoristaveic',
+            'placacarreta',
+            'kmanterior',
+            'kmatual',
+            'horimetro',
+            'p1_1',
+            'p1_2',
+            'p2_1',
+            'p2_2',
+            'p2_3',
+            'p2_4',
+            'p2_5',
+            'p2_6',
+            'p2_7',
+            'p2_8',
+            'p2_9',
+            'p2_10',
+            'p2_11',
+            'p2_12',
+            'p2_13',
+            'p2_14',
+            'p2_15',
+            'p2_16',
+            'p2_17',
+            'p2_18',
+            'p2_19',
+            'p2_20',
+            'p2_21',
+            'p2_22',
+            'p2_23',
+            'p2_24',
+            'p3_1',
+            'p3_2',
+            'p3_3',
+            'p3_4',
+            'p3_5',
+            'p3_6',
+            'p3_7',
+            'p3_8'
+        ]

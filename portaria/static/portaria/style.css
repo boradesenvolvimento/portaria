@@ -25,9 +25,8 @@ html{
 }
 
 body{
-    height: 100vh;
     background: var(--background);
-    padding-bottom: 7rem;
+    margin-bottom: 10rem;
 }
 /* global */
 .navbar{

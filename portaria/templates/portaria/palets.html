@@ -1,12 +1,11 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="container">
+        <div class="container">
             <div class="row linha-baixo">
                 <h2 class="user-navbar">Quantidade de Palets por garagem</h2>
             </div>
             <div class="row" style="margin-left: 6rem; ">
             {% for palet in lista %}
-
             <div class="card" style="width: 10rem; margin-top: 5rem;">
                 <div class="card-body" style="text-align:center;">
                     <h5 class="card-title">{{ palet.loc_atual}}</h5>
@@ -15,7 +14,7 @@
             </div>
             {% endfor %}
             </div>
-</div>
+        </div>
     <!-- JS Scripts -->
     <script>
       $(function () {

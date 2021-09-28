@@ -14,18 +14,16 @@
 
             <div class="row linha-baixo mb-3">
                 <div class="col col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                    <form role="form" class="form-box" method="POST">
-                    {% csrf_token %}
-                    <fieldset>
-                    <h3 class="title-cad">Cadastro saída Veículo</h3>
-                        <h3 class="title-cad">Nº placa:{{ form.search_placa }}
-                            <input type="submit" class="button"></h3>
-                    </fieldset>
-                    </form>
-                    {% if success_message %}<p>{{ success_message }}</p>{% endif %}
+                    <h3 class="title-cad">Cadastro saída veículo <button class="button button-right">
+                        <a href="{% url 'portaria:cadastrosaida' %}" style="color:white;">Saída</a>
+                    </button></h3>
                 </div>
             </div>
-    {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+            {% if error_message %}
+                <strong><p>{{ error_message }}</p></strong>
+            {% elif success_message %}
+                <strong><p>{{ success_message }}</p></strong>
+            {% endif %}
     </div>
     {% endif %}
     <!-- JS -->

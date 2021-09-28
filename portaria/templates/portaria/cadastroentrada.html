@@ -7,8 +7,8 @@
     {% if auth_message %}
         <p><strong>{{ auth_message }}</strong></p>
     {% else %}
-    <h2 class="title-cad">{{ cadastro }}</h2>
 
+    <h2>Cadastro Entrada veículo</h2>
     <form role="form" method="POST">
         {% csrf_token %}
         <table>
@@ -29,7 +29,7 @@
                 <th>Tipo Viagem</th><th>{{ form.tipo_viagem }}</th>
             </tr>
             <tr>
-                <th>Garagem</th><th>{{ form.garagem }}</th>
+                <th>Garagem</th><th>{{ form.origem }}</th>
             </tr>
 
 
@@ -37,9 +37,12 @@
         </table>
         <input class="button" type="submit">
     </form>
-    <h2>{{ form.hr_chegada.as_view }}</h2>
 
-    {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+    {% if error_message %}
+     <strong><p>{{ error_message }}</p></strong>
+     {% elif success_message %}
+     <strong><p>{{ success_message }}</p></strong>
+     {% endif %}
             </div>
         </div>
     </div>

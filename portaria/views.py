@@ -9,15 +9,14 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views import generic
 
-from .models import Cadastro, PaletControl
-from .forms import CadastroForm, isPlacaForm, DateForm, FilterForm, TPaletsForm, TIPO_GARAGEM
+from .models import Cadastro, PaletControl, ChecklistFrota
+from .forms import CadastroForm, isPlacaForm, DateForm, FilterForm, TPaletsForm, TIPO_GARAGEM, ChecklistForm
 
 
 #views
 @login_required
 def index(request):
     return render(request, 'portaria/index.html')
-
 
 class Visualizacao(generic.ListView):
     paginate_by = 10
@@ -51,27 +50,14 @@ def cadastroentrada(request):
                 order = form.save(commit=False)
                 order.autor = autor
                 order.save()
-                return redirect('portaria:index')
+                return redirect('portaria:cadastro')
         return render(request, 'portaria/cadastroentrada.html', {'cadastro':cadastro,'form':form})
     else:
         auth_message = 'Usuário não autenticado, por favor logue novamente'
         return render(request, 'portaria/cadastroentrada.html', {'auth_message': auth_message})
 
 @login_required
-def cadastrosaida(request, placa_id):
-    five_days_back = timezone.now() - datetime.timedelta(days=5)
-    loc_placa = Cadastro.objects.filter(placa=placa_id, hr_chegada__lte=timezone.now(), hr_chegada__gte=five_days_back,
-                                        hr_saida=None).order_by('-hr_chegada').first()
-    try:
-        Cadastro.objects.get(pk=loc_placa.id)
-    except AttributeError:
-        return render(request,'portaria/cadastrosaida.html', {'error_message': 'Não encontrado'})
-    else:
-        Cadastro.objects.filter(pk=loc_placa.id).update(hr_saida=timezone.now(), autor=request.user)
-        return HttpResponseRedirect(reverse('portaria:cadastro'), {'success_message':'success_message'})
-
-@login_required
-def cadastro(request):
+def cadastrosaida(request):
     if request.user.is_authenticated:
         form_class = isPlacaForm
         form = form_class(request.POST or None)
@@ -79,8 +65,27 @@ def cadastro(request):
             form = isPlacaForm(request.POST)
             if form.is_valid():
                 s_query = form.cleaned_data['search_placa']
-                return redirect('portaria:cadastrosaida', placa_id=s_query)
-        return render(request, 'portaria/cadastro.html', {'form': form})
+                q_query = form.cleaned_data['search_dest']
+                five_days_back = timezone.now() - datetime.timedelta(days=5)
+                loc_placa = Cadastro.objects.filter(placa=s_query, hr_chegada__lte=timezone.now(),
+                                                    hr_chegada__gte=five_days_back,
+                                                    hr_saida=None).order_by('-hr_chegada').first()
+                try:
+                    Cadastro.objects.get(pk=loc_placa.id)
+                except AttributeError:
+                    return render(request, 'portaria/cadastrosaida.html', {'form':form,'error_message': 'Não encontrado'})
+                else:
+                    Cadastro.objects.filter(pk=loc_placa.id).update(hr_saida=timezone.now(), destino=q_query, autor=request.user)
+                    return HttpResponseRedirect(reverse('portaria:cadastro'), {'success_message': 'success_message'})
+        return render(request, 'portaria/cadastrosaida.html', {'form':form})
+    else:
+        auth_message = 'Usuário não autenticado, por favor logue novamente'
+        return render(request, 'portaria/cadastrosaida.html', {'auth_message': auth_message})
+
+@login_required
+def cadastro(request):
+    if request.user.is_authenticated:
+        return render(request, 'portaria/cadastro.html')
     else:
         auth_message = 'Usuário não autenticado, por favor logue novamente'
         return render(request, 'portaria/cadastro.html', {'auth_message': auth_message})
@@ -95,13 +100,16 @@ class PaletView(generic.ListView):
     template_name = 'portaria/palets.html'
     context_object_name = 'lista'
 
-    ga = PaletControl.objects.values("loc_atual").annotate(num_ratings=Count("id"))
-
     def get_queryset(self):
         qs = PaletControl.objects.values("loc_atual").annotate(num_ratings=Count("id"))
         return qs
 
-
+@login_required
+def checklistfrota(request):
+    context = {}
+    form = ChecklistForm()
+    context['form'] = form
+    return render(request,'portaria/checklistfrota.html', context)
 
 #fim das views
 
