@@ -19,7 +19,7 @@ class DateForm(forms.Form):
     date1 = forms.CharField(max_length=10)
 
 class FilterForm(forms.Form):
-    filter_ = forms.CharField(max_length=30)
+    filter_ = forms.CharField(max_length=30, label='')
 
 #inputs para pegar os dados
 class CadastroForm(forms.ModelForm):
@@ -49,8 +49,6 @@ class ChecklistForm(forms.ModelForm):
     class Meta:
         model = ChecklistFrota
         fields = [
-            'placaveic',
-            'motoristaveic',
             'placacarreta',
             'kmanterior',
             'kmatual',

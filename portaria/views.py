@@ -2,6 +2,7 @@ import csv
 import datetime
 
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Count
 from django.http import HttpResponse, HttpResponseRedirect, HttpRequest
 from django.shortcuts import get_object_or_404, render, redirect
@@ -9,7 +10,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views import generic
 
-from .models import Cadastro, PaletControl, ChecklistFrota
+from .models import Cadastro, PaletControl, ChecklistFrota, Veiculos
 from .forms import CadastroForm, isPlacaForm, DateForm, FilterForm, TPaletsForm, TIPO_GARAGEM, ChecklistForm
 
 
@@ -104,12 +105,38 @@ class PaletView(generic.ListView):
         qs = PaletControl.objects.values("loc_atual").annotate(num_ratings=Count("id"))
         return qs
 
-@login_required
-def checklistfrota(request):
+def frota(request):
     context = {}
-    form = ChecklistForm()
+    form = FilterForm()
     context['form'] = form
-    return render(request,'portaria/checklistfrota.html', context)
+    if request.method == "GET":
+        foo = request.GET.get('filter_')
+        if foo:
+            try:
+                bar = Veiculos.objects.get(prefixoveic=foo)
+            except ObjectDoesNotExist:
+                return render(request, 'portaria/frota.html',
+                              {'form': form, 'error_message': 'Cadastro não encontrado'})
+            else:
+                return redirect('portaria:checklistfrota',placa_id = bar)
+    return render(request, 'portaria/frota.html', context)
+
+
+@login_required
+def checklistfrota(request, placa_id):
+    test = get_object_or_404(Veiculos, prefixoveic = placa_id)
+    context = {}
+    form = ChecklistForm
+    context['form'] = form
+    if request.method == 'POST':
+        form = ChecklistForm(request.POST)
+        if form.is_valid():
+            obar = form.save(commit=False)
+            obar.placaveic = test
+            obar.motoristaveic = test.codmotorista
+            obar.save()
+            return HttpResponseRedirect(reverse('portaria:frota'), {'success_message': 'success_message'})
+    return render(request,'portaria/checklistfrota.html', {'form':form,'test':test})
 
 #fim das views
 

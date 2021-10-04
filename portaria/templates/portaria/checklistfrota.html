@@ -2,11 +2,89 @@
 {% block content %}
 {% load static %}
 <div class="container">
-    <div class="row">
-        <div class="col-12">
-        {{ form }}
+            <form method="post">
+                {% csrf_token %}
+                <h2 class="title-cad">Placa: {{ test }}</h2>
+                <h2 class="title-cad">Motorista: {{ test.codmotorista }}</h2>
+                <table>
+                    <thead class="row">
+                        <tr>
+                            <th>Placa Carreta{{ form.placacarreta }}</th>
+                            <th>Horimetro{{ form.horimetro }}</th>
+                            <th>Km anterior{{ form.kmanterior }}</th>
+                            <th>Km atual{{ form.kmatual }}</th>
+                        </tr>
+                    </thead>
+                    <tbody class="row">
+                    <tr>
+                        <th>Uniforme da Empresa {{ form.p1_1 }}</th>
+                        <th>Motorista identificado por crachá {{ form.p1_2 }}</th>
+                    </tr>
+                    <tr>
+                        <th>Lanterna do farol dianteiro funcionando? {{ form.p2_1 }}</th>
+                        <th>Farol baixo funcionando? {{ form.p2_2 }}</th>
+                        <th>Farol alto funcionando? {{ form.p2_3 }}</th>
+                    </tr>
+                    <tr>
+                        <th>Lanterna direita funcionando? {{ form.p2_4 }}</th>
+                        <th>Lanterna esquerda funcionando? {{ form.p2_5 }}</th>
+                        <th>Lanternas traseiras funcionando? {{ form.p2_6 }}</th>
+                    </tr>
+                    <tr>
+                        <th>Luz de ré funcionando? {{ form.p2_7 }}</th>
+                        <th>Retrovisores estão em perfeito estado? {{ form.p2_8 }}</th>
+                        <th>Água do radiador está no nível? {{ form.p2_9 }}</th>
+                    </tr>
+                    <tr>
+                        <th>Óleo de freio está no nível? {{ form.p2_10 }}</th>
+                        <th>Óleo de motor está no nível? {{ form.p2_11 }}</th>
+                        <th>Verificado todas as luzes de advertências? {{ form.p2_12 }}</th>
+                    </tr>
+                    <tr>
+                        <th>Verificado o freio de emergência? {{ form.p2_13 }}</th>
+                        <th>Verificado o alarme sonoro da ré? {{ form.p2_14 }}</th>
+                        <th>Verificado se existe vazamentos de óleo de motor? {{ form.p2_15 }}</th>
+                    </tr>
+                    <tr>
+                        <th>Verificado se existe vazamento de ar? {{ form.p2_16 }}</th>
+                        <th>Verificado se existe vazamento de óleo hidráulico? {{ form.p2_17 }}</th>
+                    </tr>
+                    <tr>
+                        <th>Verificado se existe vazamento de água no radiador? {{ form.p2_18 }}</th>
+                        <th>Verificado se as mangueiras estão em condições boas? {{ form.p2_19 }}</th>
+                        <th>Pneus em boas condições? {{ form.p2_20 }}</th>
+                    </tr>
+                    <tr>
+                        <th>As lonas de freio estão em boas condições? {{ form.p2_21 }}</th>
+                        <th>Os estepes estão bons? {{ form.p2_22 }}</th>
+                        <th>A suspensão está em condições perfeitas? {{ form.p2_23 }}</th>
+                        <th>O carro está limpo e higienizado? {{ form.p2_24 }}</th>
+                    </tr>
+                    <tr>
+                        <th>Foi verificado as luzes de advertência das laterais? {{ form.p3_1 }}</th>
+                        <th>Foi verificado o lacre da placa? {{ form.p3_2 }}</th>
+                        <th>Foi verificado se o aparelho thermoking apresenta falhas? {{ form.p3_3 }}</th>
+                    </tr>
+                    <tr>
+                        <th>Foi verificado a carroceria, assoalho e baú? {{ form.p3_4 }}</th>
+                        <th>Foi verificado a luz de freio? {{ form.p3_5 }}</th>
+                        <th>Foi verificado a luz de ré? {{ form.p3_6 }}</th>
+                    </tr>
+                    <tr>
+                        <th>Foi verificado se as luzes da lanterna traseira direita funciona? {{ form.p3_7 }}</th>
+                        <th>Foi verificado se as luzes da lanterna traseira esquerda funciona? {{ form.p3_8 }}</th>
+                    </tr>
+                    </tbody>
+                </table>
+
+            <input type="submit" class="button">
+            </form>
+            {% if error_message %}
+            <strong><p>{{ error_message }}</p></strong>
+            {% elif success_message %}
+            <strong><p>{{ success_message }}</p></strong>
+            {% endif %}
         </div>
-    </div>
-</div>
+
 
 {% endblock %}

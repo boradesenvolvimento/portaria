@@ -63,7 +63,7 @@ class PaletControl(models.Model):
         verbose_name_plural = 'PaletControl'
 
     def __int__(self):
-        return self.id
+        return str(self.id)
 
 class Motorista(models.Model):
     codigomot = models.BigAutoField(primary_key=True)
@@ -165,3 +165,6 @@ class ChecklistFrota(models.Model):
     p3_6 = models.CharField(max_length=1, choices=SN_CHOICES)
     p3_7 = models.CharField(max_length=1, choices=SN_CHOICES)
     p3_8 = models.CharField(max_length=1, choices=SN_CHOICES)
+
+    def __str__(self):
+       return str(self.idchecklist)
