@@ -33,7 +33,7 @@ class Visualizacao(generic.ListView):
 
         qs = Cadastro.objects.all().filter(hr_chegada__month=datetime.datetime.now().month).order_by('-hr_chegada')
         if form_input1 and form_input2:
-            self.dateparse1 = datetime.datetime.strptime(form_input1, '%d/%m/%Y').replace(hour=23, minute=59)
+            self.dateparse1 = datetime.datetime.strptime(form_input1, '%d/%m/%Y').replace(hour=00, minute=00)
             self.dateparse2 = datetime.datetime.strptime(form_input2, '%d/%m/%Y').replace(hour=23, minute=59)
             qs = Cadastro.objects.all().filter(hr_chegada__gte=self.dateparse1,hr_chegada__lte=self.dateparse2).order_by('-hr_chegada')
         return qs
