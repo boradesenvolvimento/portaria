@@ -154,12 +154,12 @@ def servicospj(request):
     if func:
         try:
             cad = FuncPj.objects.get(cpf_cnpj=func)
-        except ObjectDoesNotExist:
+        except FuncPj.DoesNotExist:
             return render(request, 'portaria/servicospj.html',
-                          {'error_message': 'Cadastro não encontrado','query':query,'arrya':arrya})
+                          {'error_message': 'Cadastro não encontrado','arrya':arrya})
         else:
             return redirect('portaria:cadservicospj',args=cad.id)
-    return render(request, 'portaria/servicospj.html',{'query':query,'arrya':arrya})
+    return render(request, 'portaria/servicospj.html',{'arrya':arrya})
 
 def cadservicospj(request, args):
     form = ServicoPjForm(request.POST or None)
@@ -260,9 +260,9 @@ def get_portaria_csv(request):
     dateparse = datetime.datetime.strptime(data1, '%d/%m/%Y').replace(hour=23, minute=59)
     dateparse1 = datetime.datetime.strptime(data2, '%d/%m/%Y').replace(hour=23, minute=59)
     writer = csv.writer(response)
-    writer.writerow(['Placa','Placa2','Motorista','Empresa','Garagem','Tipo_mot','Tipo_viagem','Hr_entrada','Hr_Saida','autor'])
+    writer.writerow(['Placa','Placa2','Motorista','Empresa','Origem','Destino','Tipo_mot','Tipo_viagem','Hr_entrada','Hr_Saida','autor'])
     cadastro = Cadastro.objects.all().values_list(
-                        'placa', 'placa2', 'motorista', 'empresa', 'garagem',
+                        'placa', 'placa2', 'motorista', 'empresa', 'origem','destino',
                             'tipo_mot', 'tipo_viagem', 'hr_chegada', 'hr_saida', 'autor').filter(hr_chegada__gte=dateparse,hr_chegada__lte=dateparse1)
     for placa in cadastro:
         writer.writerow(placa)
