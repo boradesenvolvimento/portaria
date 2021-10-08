@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Cadastro, PaletControl, Motorista, Veiculos, ChecklistFrota
+from .models import Cadastro, PaletControl, Motorista, Veiculos, ChecklistFrota, NfServicoPj, FuncPj
 
 
 # Register your models here.
@@ -43,3 +43,20 @@ admin.site.register(Veiculos, VeiculosAdmin)
 class ChecklistFrotaAdmin(admin.ModelAdmin):
     pass
 admin.site.register(ChecklistFrota, ChecklistFrotaAdmin)
+
+class NfServicoPjAdmin(admin.ModelAdmin):
+    fieldsets = (
+        ('funcionario',{'fields':['funcionario']}),
+        ('premios_faculdade', {'fields':['premios_faculdade']}),
+        ('ajuda_custo', {'fields':['ajuda_custo']}),
+        ('adiantamento', {'fields':['adiantamento']}),
+        ('convenio', {'fields':['convenio']}),
+        ('data_emissao', {'fields':['data_emissao']}),
+    )
+    list_display = ('funcionario', 'premios_faculdade', 'ajuda_custo', 'adiantamento', 'convenio', 'data_emissao')
+
+admin.site.register(NfServicoPj, NfServicoPjAdmin)
+
+class FuncPjAdmin(admin.ModelAdmin):
+    pass
+admin.site.register(FuncPj, FuncPjAdmin)

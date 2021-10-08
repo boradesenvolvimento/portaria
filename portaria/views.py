@@ -1,17 +1,19 @@
 import csv
 import datetime
 
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Count
+from django.core.mail import send_mail
+from django.db.models import Count, Sum
 from django.http import HttpResponse, HttpResponseRedirect, HttpRequest
 from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
 from django.utils import timezone
 from django.views import generic
 
-from .models import Cadastro, PaletControl, ChecklistFrota, Veiculos
-from .forms import CadastroForm, isPlacaForm, DateForm, FilterForm, TPaletsForm, TIPO_GARAGEM, ChecklistForm
+from .models import * #Cadastro, PaletControl, ChecklistFrota, Veiculos, NfServicoPj
+from .forms import * #CadastroForm, isPlacaForm, DateForm, FilterForm, TPaletsForm, TIPO_GARAGEM, ChecklistForm
 
 
 #views
@@ -121,7 +123,6 @@ def frota(request):
                 return redirect('portaria:checklistfrota',placa_id = bar)
     return render(request, 'portaria/frota.html', context)
 
-
 @login_required
 def checklistfrota(request, placa_id):
     test = get_object_or_404(Veiculos, prefixoveic = placa_id)
@@ -138,11 +139,44 @@ def checklistfrota(request, placa_id):
             return HttpResponseRedirect(reverse('portaria:frota'), {'success_message': 'success_message'})
     return render(request,'portaria/checklistfrota.html', {'form':form,'test':test})
 
+def servicospj(request):
+    func = request.GET.get('cpf_id')
+    date1 = datetime.datetime.strptime('05/10/2021', '%d/%m/%Y')
+    date2 = datetime.datetime.strptime('10/10/2021', '%d/%m/%Y')
+    arrya = []
+    qnt_funcs = FuncPj.objects.all()
+    for q in qnt_funcs:
+        query = FuncPj.objects.filter(pk=q.id,nfservicopj__data_emissao__gte=date1,nfservicopj__data_emissao__lte=date2)\
+                                        .annotate(premios=Sum('nfservicopj__premios_faculdade'),
+                                        ajuda_custo=Sum('nfservicopj__ajuda_custo'),
+                                        adiantamento=Sum('nfservicopj__adiantamento'),
+                                        convenio=Sum('nfservicopj__convenio'),).select_related()
+        arrya.extend(query)
+
+    if func:
+        try:
+            cad = FuncPj.objects.get(cpf_cnpj=func)
+        except ObjectDoesNotExist:
+            return render(request, 'portaria/servicospj.html',
+                          {'error_message': 'Cadastro não encontrado','query':query,'arrya':arrya})
+        else:
+            return redirect('portaria:cadservicospj',args=cad.id)
+    return render(request, 'portaria/servicospj.html',{'query':query,'arrya':arrya})
+
+def cadservicospj(request, args):
+    form = ServicoPjForm(request.POST or None)
+    func = get_object_or_404(FuncPj, pk=args)
+    if request.method == 'POST':
+        if form.is_valid():
+            calc = form.save(commit=False)
+            calc.funcionario = func
+            calc.save()
+            return HttpResponseRedirect(reverse('portaria:servicospj'),{'success_message':'Nf Cadastrada'})
+
+    return render(request, 'portaria/cadservicospj.html', {'form':form,'func':func})
+
+
 #fim das views
-
-
-
-
 
 
 #funcoes variadas
@@ -169,6 +203,55 @@ def transfpalet(request):
             return render(request,'portaria/transfpalets.html', {'form':form,'error_message':error_message})
 
     return render(request,'portaria/transfpalets.html', context)
+
+def get_nfpj_csv(request):
+    data1 = request.POST.get('dataIni')
+    data2 = request.POST.get('dataFim')
+    dateparse = datetime.datetime.strptime(data1, '%d/%m/%Y').replace(hour=23, minute=59)
+    dateparse1 = datetime.datetime.strptime(data2, '%d/%m/%Y').replace(hour=23, minute=59)
+    arrya = []
+    for q in FuncPj.objects.all():
+        query = FuncPj.objects.filter(pk=q.id, nfservicopj__data_emissao__gte=dateparse,
+                                      nfservicopj__data_emissao__lte=dateparse1) \
+            .annotate(premios=Sum('nfservicopj__premios_faculdade'),
+                      ajuda_custo=Sum('nfservicopj__ajuda_custo'),
+                      adiantamento=Sum('nfservicopj__adiantamento'),
+                      convenio=Sum('nfservicopj__convenio'), ).select_related()
+        arrya.extend(query)
+    for q in arrya:
+        uni = q.unidade
+        nome = q.nome
+        sal = q.salario
+        premio = q.premios
+        ajuda = q.ajuda_custo
+        adian = q.adiantamento
+        conv = q.convenio
+        cpf = q.cpf_cnpj
+        bco = q.banco
+        ag = q.ag
+        conta = q.conta
+        op = q.op
+        toemail = q.email
+        total_a_pagar = (sal + premio + ajuda) - (adian + conv)
+        print(uni,nome,sal,premio,ajuda,adian,conv,cpf,bco,ag,conta,op,toemail,total_a_pagar)
+        send_mail(
+            subject='Teste',
+            message=f'''
+                Unidade: {uni}
+                Nome: {nome}
+                Salario: {sal}
+                Premio / Faculdade: {premio}
+                Ajuda de Custo: {ajuda}
+                Adiantamento: {adian}
+                Convenio: {conv}
+                Total pagamento: {total_a_pagar}
+                Cpf/Cnpj: {cpf}
+                Dados bancários: {bco} / {ag} / {conta} / {op}
+                        ''',
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=[toemail]
+        )
+    return redirect('portaria:index')
 
 def get_portaria_csv(request):
     data1 = request.POST.get('dataIni')

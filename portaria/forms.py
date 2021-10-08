@@ -1,7 +1,7 @@
 from django import forms
 
 
-from .models import Cadastro, TIPO_GARAGEM, ChecklistFrota
+from .models import Cadastro, TIPO_GARAGEM, ChecklistFrota, NfServicoPj
 
 
 #tuplas de escolha
@@ -87,4 +87,18 @@ class ChecklistForm(forms.ModelForm):
             'p3_6',
             'p3_7',
             'p3_8'
+        ]
+
+
+
+
+class ServicoPjForm(forms.ModelForm):
+    class Meta:
+        model = NfServicoPj
+        fields = [
+            'premios_faculdade',
+            'ajuda_custo',
+            'adiantamento',
+            'convenio',
+            'data_emissao'
         ]

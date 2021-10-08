@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container mt-4">
+    <div class="row linha-baixo">
+        <form method="get">
+        <h2 class="title-cad">Cadastrar NF por serviços PJ
+            <input name="cpf_id" placeholder="Digite o CPF" type="text">
+            <input type="submit" class="button">
+        </h2>
+        </form>
+        {% if error_message %}
+        <strong>{{ error_message }}</strong>
+        {% elif success_message %}
+        <strong>{{ success_message }}</strong>
+        {% endif %}
+    </div>
+    <div class="row linha-baixo">
+        <table>
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>CPF/CNPJ</th>
+                    <th>Salario</th>
+                    <th>Premio/Faculdade</th>
+                    <th>Ajuda de Custo</th>
+                    <th>Adiantamento</th>
+                    <th>Convenio</th>
+                    <th>Email</th>
+
+                </tr>
+            </thead>
+        {% for q in arrya %}
+
+                <tr>
+                    <th>{{ q.nome }}</th>
+                    <th>{{ q.cpf_cnpj }}</th>
+                    <th>{{ q.salario }}</th>
+                    <th>{{ q.premios }}</th>
+                    <th>{{ q.ajuda_custo }}</th>
+                    <th>{{ q.adiantamento }}</th>
+                    <th>{{ q.convenio }}</th>
+                    <th>{{ q.email }}</th>
+                </tr>
+        {% endfor %}
+        </table>
+
+    </div>
+</div>
+{% endblock %}

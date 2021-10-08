@@ -12,6 +12,7 @@
             </form>
         </div>
     </div>
+        <!--
     <div class="row linha-baixo mb-3">
         <div class="col col-lg-12 col-md-12 col-sm-12 col-xs-12">
             <form class="form-box" action="{% url 'portaria:get_palet_csv' %}" method="post">
@@ -20,6 +21,19 @@
             </form>
         </div>
     </div>
+
+    <div class="row linha-baixo mb-3">
+        <div class="col col-lg-12 col-md-12 col-sm-12 col-xs-12">
+            <h3 class="title-cad">Enviar emails</h3>
+            <form class="form-box" action="{% url 'portaria:get_nfpj_csv' %}" method="post">
+                {% csrf_token %}
+                <input type="text" placeholder="Data inicio" name="dataIni">
+                <input type="text" placeholder="Data final" name="dataFim">
+                <input type="submit" class="button">
+            </form>
+        </div>
+    </div>
+    -->
     </div>
 
 

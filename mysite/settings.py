@@ -27,10 +27,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'cg#p$g+j9tax!#a3cup@1$8obt2_+&k3q+pmu)5%asj6yjpkag')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-#DEBUG = True
-DEBUG = os.environ.get('DJANGO_DEBUG', '')
-#ALLOWED_HOSTS = []
-ALLOWED_HOSTS = ["bora-intra.herokuapp.com", "127.0.0.1"]
+DEBUG = True
+#DEBUG = os.environ.get('DJANGO_DEBUG', '')
+ALLOWED_HOSTS = []
+#ALLOWED_HOSTS = ["bora-intra.herokuapp.com", "127.0.0.1"]
 
 # Application definition
 
@@ -85,8 +85,8 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
-conn = psycopg2.connect('postgres://dkwaaycoivvunp:11e716b33c4a66c03203cb878ccf108734822c990394610ffcea46b054e2b7fb@ec2-50-17-255-244.compute-1.amazonaws.com:5432/d1gnpodpteaqsa', sslmode='require')
+#DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
+#conn = psycopg2.connect('postgres://dkwaaycoivvunp:11e716b33c4a66c03203cb878ccf108734822c990394610ffcea46b054e2b7fb@ec2-50-17-255-244.compute-1.amazonaws.com:5432/d1gnpodpteaqsa', sslmode='require')
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
@@ -141,3 +141,12 @@ LOGOUT_REDIRECT_URL = '/'
 # Simplified static file serving.
 # https://warehouse.python.org/project/whitenoise/
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+
+#EMAIL CONFIG
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.bora.com.br'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'renan.amarantes@bora.com.br'
+EMAIL_HOST_PASSWORD = 'B0r*476248'

@@ -1,7 +1,7 @@
 import datetime
 
 from django.contrib.auth.models import User
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import MaxLengthValidator
 from django.db import models
 from django.db.models import SET_NULL
 from django.utils import timezone
@@ -168,3 +168,30 @@ class ChecklistFrota(models.Model):
 
     def __str__(self):
        return str(self.idchecklist)
+
+class FuncPj(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    unidade = models.CharField(max_length=30)
+    nome = models.CharField(max_length=50)
+    salario = models.IntegerField()
+    cpf_cnpj = models.IntegerField()
+    banco = models.IntegerField()
+    ag = models.IntegerField()
+    conta = models.IntegerField()
+    op = models.IntegerField()
+    email = models.EmailField(max_length=254)
+
+    def __str__(self):
+       return self.nome
+
+class NfServicoPj(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    funcionario = models.ForeignKey(FuncPj, on_delete=models.CASCADE)
+    premios_faculdade = models.IntegerField()
+    ajuda_custo = models.IntegerField()
+    adiantamento = models.IntegerField()
+    convenio = models.IntegerField()
+    data_emissao = models.DateField(default=timezone.now)
+
+    def __str__(self):
+       return str(self.id)
