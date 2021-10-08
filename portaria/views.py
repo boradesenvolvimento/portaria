@@ -141,12 +141,10 @@ def checklistfrota(request, placa_id):
 
 def servicospj(request):
     func = request.GET.get('cpf_id')
-    date1 = datetime.datetime.strptime('05/10/2021', '%d/%m/%Y')
-    date2 = datetime.datetime.strptime('10/10/2021', '%d/%m/%Y')
     arrya = []
     qnt_funcs = FuncPj.objects.all()
     for q in qnt_funcs:
-        query = FuncPj.objects.filter(pk=q.id,nfservicopj__data_emissao__gte=date1,nfservicopj__data_emissao__lte=date2)\
+        query = FuncPj.objects.filter(pk=q.id,nfservicopj__data_emissao__month=datetime.datetime.now().month)\
                                         .annotate(premios=Sum('nfservicopj__premios_faculdade'),
                                         ajuda_custo=Sum('nfservicopj__ajuda_custo'),
                                         adiantamento=Sum('nfservicopj__adiantamento'),
