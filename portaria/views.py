@@ -2,6 +2,7 @@ import csv
 import datetime
 
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
@@ -13,6 +14,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views import generic
 
+from .templatetags import groupscheck
 from .models import * #Cadastro, PaletControl, ChecklistFrota, Veiculos, NfServicoPj
 from .forms import * #CadastroForm, isPlacaForm, DateForm, FilterForm, TPaletsForm, TIPO_GARAGEM, ChecklistForm
 
@@ -56,8 +58,9 @@ def cadastroentrada(request):
                 order.placa = uplaca
                 order.autor = autor
                 order.save()
+                messages.success(request,'Entrada cadastrada com sucesso.')
                 return redirect('portaria:cadastro')
-        return render(request, 'portaria/cadastroentrada.html', {'cadastro':cadastro,'form':form})
+        return render(request, 'portaria/cadastroentrada.html', {'cadastro': cadastro, 'form': form})
     else:
         auth_message = 'Usuário não autenticado, por favor logue novamente'
         return render(request, 'portaria/cadastroentrada.html', {'auth_message': auth_message})
@@ -78,10 +81,12 @@ def cadastrosaida(request):
                 try:
                     Cadastro.objects.get(pk=loc_placa.id)
                 except AttributeError:
-                    return render(request, 'portaria/cadastrosaida.html', {'form':form,'error_message': 'Não encontrado'})
+                    messages.error(request, 'Não encontrado')
+                    return render(request, 'portaria/cadastrosaida.html', {'form':form})
                 else:
                     Cadastro.objects.filter(pk=loc_placa.id).update(hr_saida=timezone.now(), destino=q_query, autor=request.user)
-                    return HttpResponseRedirect(reverse('portaria:cadastro'), {'success_message': 'success_message'})
+                    messages.success(request, 'Saida cadastrada com sucesso.')
+                    return HttpResponseRedirect(reverse('portaria:cadastro'))
         return render(request, 'portaria/cadastrosaida.html', {'form':form})
     else:
         auth_message = 'Usuário não autenticado, por favor logue novamente'
@@ -157,8 +162,11 @@ def servicospj(request):
         try:
             cad = FuncPj.objects.get(cpf_cnpj=func)
         except FuncPj.DoesNotExist:
-            return render(request, 'portaria/servicospj.html',
-                          {'error_message': 'Cadastro não encontrado','arrya':arrya})
+            messages.error(request, 'Cadastro não encontrado')
+            return render(request, 'portaria/servicospj.html',{'arrya':arrya})
+        except ValueError:
+            messages.warning(request, 'Por favor digite um CPF válido')
+            return render(request, 'portaria/servicospj.html', {'arrya':arrya})
         else:
             return redirect('portaria:cadservicospj',args=cad.id)
     return render(request, 'portaria/servicospj.html',{'arrya':arrya})
@@ -171,6 +179,7 @@ def cadservicospj(request, args):
             calc = form.save(commit=False)
             calc.funcionario = func
             calc.save()
+            messages.success(request, f'Valores cadastrados com sucesso para {calc.funcionario}')
             return HttpResponseRedirect(reverse('portaria:servicospj'),{'success_message':'Nf Cadastrada'})
 
     return render(request, 'portaria/cadservicospj.html', {'form':form,'func':func})
@@ -190,17 +199,16 @@ def transfpalet(request):
         des = request.POST.get('destino_')
         qnt = int(request.POST.get('quantidade_'))
         plc = request.POST.get('placa_veic')
-        print(qnt)
         if qnt <= PaletControl.objects.filter(loc_atual=ori).count():
             for x in range(qnt):
                 q = PaletControl.objects.filter(loc_atual=ori).first()
                 PaletControl.objects.filter(pk=q.id).update(origem=ori,destino=des, loc_atual=des, placa_veic=plc,ultima_viagem=timezone.now())
 
-            success_message = f'{qnt} palet transferido de {ori} para {des}'
-            return render(request,'portaria/transfpalets.html', {'form':form,'success_message': success_message})
+            messages.success(request, f'{qnt} palet transferido de {ori} para {des}')
+            return render(request,'portaria/transfpalets.html', {'form':form})
         else:
-            error_message = 'Quantidade solicitada maior que a disponível'
-            return render(request,'portaria/transfpalets.html', {'form':form,'error_message':error_message})
+            messages.error(request,'Quantidade solicitada maior que a disponível')
+            return render(request,'portaria/transfpalets.html', {'form':form})
 
     return render(request,'portaria/transfpalets.html', context)
 

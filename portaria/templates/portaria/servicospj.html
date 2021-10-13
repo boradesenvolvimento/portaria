@@ -2,6 +2,13 @@
 {% block content %}
 
 <div class="container mt-4">
+    {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+            {% endfor %}
     <div class="row linha-baixo">
         <form method="get">
         <h2 class="title-cad">Cadastrar NF por serviços PJ

@@ -3,9 +3,6 @@ from django import forms
 
 from .models import Cadastro, TIPO_GARAGEM, ChecklistFrota, NfServicoPj
 
-
-#tuplas de escolha
-
 #forms
 class DateInput(forms.DateInput):
     input_type = 'date'

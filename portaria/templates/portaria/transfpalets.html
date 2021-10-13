@@ -2,6 +2,13 @@
 {% block content %}
 
     <div class="container mt-5">
+        {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+            {% endfor %}
     <div class="row linha-baixo mb-3">
         <div class="col col-lg-12 col-md-12 col-sm-12 col-xs-12">
             <h3 class="title-cad">Transferir palets entre filiais</h3>
@@ -19,11 +26,7 @@
                     </tbody>
                 </table>
             </form>
-            {% if error_message %}
-                <strong><p>{{ error_message }}</p></strong>
-            {% elif success_message %}
-                <strong><p>{{ success_message }}</p></strong>
-            {% endif %}
+
         </div>
     </div>
     </div>

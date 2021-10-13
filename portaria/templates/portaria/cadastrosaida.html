@@ -1,9 +1,18 @@
 {% extends 'base.html' %}
 {% block content %}
+{% load groupscheck %}
  <div class="container mt-5">
     {% if auth_message %}
         <p><strong>{{ auth_message }}</strong></p>
     {% else %}
+     {% if request.user|has_group:"portaria" %}
+            {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+            {% endfor %}
         <form role="form" method="POST">
         {% csrf_token %}
         <table>
@@ -15,11 +24,11 @@
         </table>
         <input class="button" type="submit">
     </form>
-     {% if error_message %}
-     <strong><p>{{ error_message }}</p></strong>
-     {% elif success_message %}
-     <strong><p>{{ success_message }}</p></strong>
-     {% endif %}
+         {% else %}
+                <p>Usuário não tem permissão para acessar</p>
+
+                {% endif %}
+
  </div>
     {% endif %}
 {% endblock %}

@@ -15,6 +15,15 @@ from pathlib import Path
 
 import psycopg2
 from django.core.management.utils import get_random_secret_key
+from django.contrib.messages import constants as messages
+
+MESSAGE_TAGS = {
+        messages.DEBUG: 'alert-secondary',
+        messages.INFO: 'alert-info',
+        messages.SUCCESS: 'alert-success',
+        messages.WARNING: 'alert-warning',
+        messages.ERROR: 'alert-danger',
+ }
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -27,11 +36,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'cg#p$g+j9tax!#a3cup@1$8obt2_+&k3q+pmu)5%asj6yjpkag')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-#DEBUG = True
-DEBUG = False
+DEBUG = True
+#DEBUG = False
 #DEBUG = os.environ.get('DJANGO_DEBUG', '') != False
-#ALLOWED_HOSTS = []
-ALLOWED_HOSTS = ["bora-intra.herokuapp.com", "127.0.0.1"]
+ALLOWED_HOSTS = []
+#ALLOWED_HOSTS = ["bora-intra.herokuapp.com", "127.0.0.1"]
 
 # Application definition
 
@@ -86,8 +95,8 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
-conn = psycopg2.connect('postgres://dkwaaycoivvunp:11e716b33c4a66c03203cb878ccf108734822c990394610ffcea46b054e2b7fb@ec2-50-17-255-244.compute-1.amazonaws.com:5432/d1gnpodpteaqsa', sslmode='require')
+#DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
+#conn = psycopg2.connect('postgres://dkwaaycoivvunp:11e716b33c4a66c03203cb878ccf108734822c990394610ffcea46b054e2b7fb@ec2-50-17-255-244.compute-1.amazonaws.com:5432/d1gnpodpteaqsa', sslmode='require')
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators

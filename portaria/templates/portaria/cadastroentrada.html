@@ -1,13 +1,13 @@
     {% extends 'base.html' %}
     {% block content %}
-
+    {% load groupscheck %}
     <div class="container mt-5">
         <div class="row">
             <div class="col col-lg-12 col-md-12 col-sm-12 col-xs-12">
     {% if auth_message %}
         <p><strong>{{ auth_message }}</strong></p>
     {% else %}
-
+    {% if request.user|has_group:"portaria" %}
     <h2>Cadastro Entrada veículo</h2>
     <form role="form" method="POST">
         {% csrf_token %}
@@ -37,12 +37,11 @@
         </table>
         <input class="button" type="submit">
     </form>
+    {% else %}
+                <p>Usuário não tem permissão para acessar</p>
 
-    {% if error_message %}
-     <strong><p>{{ error_message }}</p></strong>
-     {% elif success_message %}
-     <strong><p>{{ success_message }}</p></strong>
-     {% endif %}
+                {% endif %}
+
             </div>
         </div>
     </div>
