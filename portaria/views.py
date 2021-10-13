@@ -8,6 +8,7 @@ from django.core.mail import send_mail
 from django.db.models import Count, Sum
 from django.http import HttpResponse, HttpResponseRedirect, HttpRequest
 from django.shortcuts import get_object_or_404, render, redirect
+from django.template.defaultfilters import upper
 from django.urls import reverse
 from django.utils import timezone
 from django.views import generic
@@ -50,7 +51,9 @@ def cadastroentrada(request):
         autor = request.user
         if request.method == 'POST':
             if form.is_valid():
+                uplaca = upper(form.cleaned_data['placa'])
                 order = form.save(commit=False)
+                order.placa = uplaca
                 order.autor = autor
                 order.save()
                 return redirect('portaria:cadastro')

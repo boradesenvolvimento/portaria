@@ -1,4 +1,5 @@
  {% load static %}
+ {% load groupscheck %}
   <nav class="navbar navbar-expand-lg navbar-light mb-2" style="background-color: #3188E8;">
       <div class="container-fluid">
       <a class="navbar-brand">
@@ -12,7 +13,7 @@
           <li class="nav-item">
             <a class="nav-link1" aria-current="page" href="/">Home</a>
           </li>
-
+          {% if request.user|has_group:"portaria" %}
           <div class="dropdown">
             <button class="dropdown-toggle menutext-navbar nav-link1" type="button" style="background-color: #3188E8;" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
               Portaria
@@ -26,7 +27,8 @@
               </li>
               </ul>
           </div>
-
+          {% endif %}
+          {% if request.user|has_group:"palets" %}
           <div class="dropdown">
             <button class="dropdown-toggle menutext-navbar nav-link1" type="button" style="background-color: #3188E8;" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
               Palets
@@ -40,6 +42,7 @@
               </li>
             </ul>
           </div>
+          {% endif %}
           <!--
           <div class="dropdown">
             <button class="dropdown-toggle menutext-navbar nav-link1" type="button" style="background-color: #3188E8;" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
