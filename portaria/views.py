@@ -73,8 +73,8 @@ def cadastrosaida(request):
         if request.method == 'POST':
             form = isPlacaForm(request.POST)
             if form.is_valid():
-                s_query = form.cleaned_data['search_placa']
-                q_query = form.cleaned_data['search_dest']
+                s_query = upper(form.cleaned_data['search_placa'])
+                q_query = upper(form.cleaned_data['search_dest'])
                 #five_days_back = timezone.now() - datetime.timedelta(days=5)
                 loc_placa = Cadastro.objects.filter(placa=s_query, hr_chegada__month=datetime.datetime.now().month,
                                                     hr_saida=None).order_by('-hr_chegada').first()
