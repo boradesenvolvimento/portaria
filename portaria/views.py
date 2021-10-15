@@ -19,8 +19,11 @@ from django.views import generic
 from .models import * #Cadastro, PaletControl, ChecklistFrota, Veiculos, NfServicoPj
 from .forms import * #CadastroForm, isPlacaForm, DateForm, FilterForm, TPaletsForm, TIPO_GARAGEM, ChecklistForm
 
-def telausuario(request):
-    return render(request, "portaria/telausuario.html")
+def telausuariothiago(request):
+    return render(request, "portaria/telausuariothiago.html")
+
+def telausuariorodrigo(request):
+    return render(request, "portaria/telausuariothiago.html")
 
 #views
 @login_required

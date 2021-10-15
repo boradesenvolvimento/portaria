@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+<input id="text" class="sr-only" value="{{ request.build_absolute_uri }}" type="text"/>
+
+
+
+<div class="profile-main-body">
+    <center>
+    <img src="{% static 'portaria/images/avatar.png' %}" style="max-width:20%">
+    <h2>Rodrigo Tiso</h2>
+    <h3>Diretor</h3>
+    <div class="item-social" onclick="isactive()"><button>QR-Code</button></div>
+<table class="profile-icons-row">
+    <th><div class="item-social" onclick="call()"><img src="{% static 'portaria/images/call-icon.png' %}" width="50"></div></th>
+    <th><div class="item-social" onclick="mail()"><img src="{% static 'portaria/images/mail-icon.png' %}" width="50"></div></th>
+    <th><div class="item-social false" onclick="whatsapp()"><img src="{% static 'portaria/images/whatsapp-icon.png' %}" width="50"></div></th>
+</table>
+
+<div class="sr-only" id="qrcode"></div>
+        </center>
+</div>
+
+
+
+
+<script type="text/javascript">
+var qrcode = new QRCode("qrcode");
+
+function makeCode () {
+  var elText = document.getElementById("text");
+
+  qrcode.makeCode(elText.value);
+}
+makeCode();
+ function whatsapp() {
+    if(false) {
+      location.href = 'whatsapp://send?phone=5511940113848';
+    } else {
+      location.href = 'https://api.whatsapp.com/send?phone=5511940113848';
+    }
+  }
+
+  function mail(){
+    location.href = 'mailto:rodrigo@bora.com.br'
+  }
+  function call(){
+    location.href = 'tel:+5511940113848';
+  }
+  function isactive(){
+    if(document.getElementById("qrcode").classList.contains('sr-only')){
+        document.getElementById("qrcode").classList.remove('sr-only')
+    } else {
+        document.getElementById("qrcode").classList.add('sr-only')
+    }
+  }
+
+
+</script>
+
+{% endblock %}

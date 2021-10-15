@@ -20,6 +20,7 @@ urlpatterns = [
     path(r'export-csv-nfpj', views.get_nfpj_csv, name='get_nfpj_csv'),
     path(r'export-csv-port/', views.get_portaria_csv, name='get_portaria_csv'),
     path(r'export-csv-palet/', views.get_palet_csv, name='get_palet_csv'),
-    path('telausuario/', views.telausuario, name='telausuario')
+    path('telausuariorodrigo/', views.telausuariorodrigo, name='telausuariorodrigo'),
+    path('telausuariothiago/', views.telausuariothiago, name='telausuariothiago')
 
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
