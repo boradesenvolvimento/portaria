@@ -12,8 +12,8 @@ class isPlacaForm(forms.Form):
     search_dest = forms.ChoiceField(choices=TIPO_GARAGEM, label='Destino')
 
 class DateForm(forms.Form):
-    date = forms.CharField(max_length=10)
-    date1 = forms.CharField(max_length=10)
+    date = forms.DateField()
+    date1 = forms.DateField()
 
 class FilterForm(forms.Form):
     filter_ = forms.CharField(max_length=30, label='')
@@ -83,7 +83,8 @@ class ChecklistForm(forms.ModelForm):
             'p3_5',
             'p3_6',
             'p3_7',
-            'p3_8'
+            'p3_8',
+            'teste'
         ]
 
 

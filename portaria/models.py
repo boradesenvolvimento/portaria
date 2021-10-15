@@ -165,6 +165,7 @@ class ChecklistFrota(models.Model):
     p3_6 = models.CharField(max_length=1, choices=SN_CHOICES)
     p3_7 = models.CharField(max_length=1, choices=SN_CHOICES)
     p3_8 = models.CharField(max_length=1, choices=SN_CHOICES)
+    teste = models.BooleanField()
 
     def __str__(self):
        return str(self.idchecklist)

@@ -1,28 +1,32 @@
 import csv
 import datetime
 
+
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
 from django.db.models import Count, Sum
-from django.http import HttpResponse, HttpResponseRedirect, HttpRequest
+from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, Http404
 from django.shortcuts import get_object_or_404, render, redirect
 from django.template.defaultfilters import upper
 from django.urls import reverse
 from django.utils import timezone
 from django.views import generic
 
-from .templatetags import groupscheck
+
 from .models import * #Cadastro, PaletControl, ChecklistFrota, Veiculos, NfServicoPj
 from .forms import * #CadastroForm, isPlacaForm, DateForm, FilterForm, TPaletsForm, TIPO_GARAGEM, ChecklistForm
 
+def telausuario(request):
+    return render(request, "portaria/telausuario.html")
 
 #views
 @login_required
 def index(request):
-    return render(request, 'portaria/index.html')
+    return render(request, "portaria/index.html")
+
 
 class Visualizacao(generic.ListView):
     paginate_by = 10
@@ -31,14 +35,17 @@ class Visualizacao(generic.ListView):
     form = DateForm()
 
     def get_queryset(self):
-        form_input1 = self.request.GET.get('date')
-        form_input2 = self.request.GET.get('date1')
-
         qs = Cadastro.objects.all().filter(hr_chegada__month=datetime.datetime.now().month).order_by('-hr_chegada')
-        if form_input1 and form_input2:
-            self.dateparse1 = datetime.datetime.strptime(form_input1, '%d/%m/%Y').replace(hour=00, minute=00)
-            self.dateparse2 = datetime.datetime.strptime(form_input2, '%d/%m/%Y').replace(hour=23, minute=59)
-            qs = Cadastro.objects.all().filter(hr_chegada__gte=self.dateparse1,hr_chegada__lte=self.dateparse2).order_by('-hr_chegada')
+        try:
+            form_input1 = self.request.GET.get('date')
+            form_input2 = self.request.GET.get('date1')
+            if form_input1 and form_input2:
+                self.dateparse1 = datetime.datetime.strptime(form_input1, '%d/%m/%Y').replace(hour=00, minute=00)
+                self.dateparse2 = datetime.datetime.strptime(form_input2, '%d/%m/%Y').replace(hour=23, minute=59)
+                qs = Cadastro.objects.all().filter(hr_chegada__gte=self.dateparse1,
+                                                   hr_chegada__lte=self.dateparse2).order_by('-hr_chegada')
+        except ValueError:
+            raise Exception('Valor digitado inválido')
         return qs
 
     def get_context_data(self, **kwargs):
@@ -147,7 +154,7 @@ def checklistfrota(request, placa_id):
     return render(request,'portaria/checklistfrota.html', {'form':form,'test':test})
 
 def servicospj(request):
-    func = request.GET.get('cpf_id')
+    func = request.GET.get('nomefunc')
     arrya = []
     qnt_funcs = FuncPj.objects.all()
     for q in qnt_funcs:
@@ -160,13 +167,13 @@ def servicospj(request):
 
     if func:
         try:
-            cad = FuncPj.objects.get(cpf_cnpj=func)
+            cad = FuncPj.objects.get(nome=func)
         except FuncPj.DoesNotExist:
-            messages.error(request, 'Cadastro não encontrado')
-            return render(request, 'portaria/servicospj.html',{'arrya':arrya})
+            messages.warning(request, 'Por favor digite um usuário válido')
+            return redirect('portaria:servicospj', {'arrya': arrya})
         except ValueError:
-            messages.warning(request, 'Por favor digite um CPF válido')
-            return render(request, 'portaria/servicospj.html', {'arrya':arrya})
+            messages.warning(request, 'Por favor digite um usuário válido')
+            return redirect('portaria:servicospj',{'arrya':arrya})
         else:
             return redirect('portaria:cadservicospj',args=cad.id)
     return render(request, 'portaria/servicospj.html',{'arrya':arrya})
@@ -180,7 +187,7 @@ def cadservicospj(request, args):
             calc.funcionario = func
             calc.save()
             messages.success(request, f'Valores cadastrados com sucesso para {calc.funcionario}')
-            return HttpResponseRedirect(reverse('portaria:servicospj'),{'success_message':'Nf Cadastrada'})
+            return HttpResponseRedirect(reverse('portaria:servicospj'))
 
     return render(request, 'portaria/cadservicospj.html', {'form':form,'func':func})
 

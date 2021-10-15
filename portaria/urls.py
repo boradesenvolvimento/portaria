@@ -1,4 +1,6 @@
 from django.urls import path
+from django.conf import settings
+from django.conf.urls.static import static
 from . import views
 
 app_name = 'portaria'
@@ -17,6 +19,7 @@ urlpatterns = [
     path('outputs/', views.outputs, name='outputs'),
     path(r'export-csv-nfpj', views.get_nfpj_csv, name='get_nfpj_csv'),
     path(r'export-csv-port/', views.get_portaria_csv, name='get_portaria_csv'),
-    path(r'export-csv-palet/', views.get_palet_csv, name='get_palet_csv')
+    path(r'export-csv-palet/', views.get_palet_csv, name='get_palet_csv'),
+    path('telausuario/', views.telausuario, name='telausuario')
 
-]
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
