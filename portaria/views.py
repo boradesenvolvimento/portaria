@@ -23,7 +23,7 @@ def telausuariothiago(request):
     return render(request, "portaria/telausuariothiago.html")
 
 def telausuariorodrigo(request):
-    return render(request, "portaria/telausuariothiago.html")
+    return render(request, "portaria/telausuariorodrigo.html")
 
 #views
 @login_required
