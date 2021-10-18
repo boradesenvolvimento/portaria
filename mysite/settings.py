@@ -36,11 +36,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'cg#p$g+j9tax!#a3cup@1$8obt2_+&k3q+pmu)5%asj6yjpkag')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-#DEBUG = False
+#DEBUG = True
+DEBUG = False
 #DEBUG = os.environ.get('DJANGO_DEBUG', '') != False
-ALLOWED_HOSTS = []
-#ALLOWED_HOSTS = ["bora-intra.herokuapp.com", "127.0.0.1"]
+#ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["bora.kinghost.net", "127.0.0.1"]
 
 # Application definition
 
