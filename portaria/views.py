@@ -159,6 +159,7 @@ def checklistfrota(request, placa_id):
 def servicospj(request):
     func = request.GET.get('nomefunc')
     arrya = []
+
     qnt_funcs = FuncPj.objects.all()
     for q in qnt_funcs:
         query = FuncPj.objects.filter(pk=q.id,nfservicopj__data_emissao__month=datetime.datetime.now().month)\
@@ -170,7 +171,16 @@ def servicospj(request):
 
     if func:
         try:
-            cad = FuncPj.objects.get(nome=func)
+            cad = FuncPj.objects.all().filter(nome__icontains=func)
+            arrya.clear()
+            for c in cad:
+                inse = FuncPj.objects.filter(pk=c.id, nfservicopj__data_emissao__month=datetime.datetime.now().month) \
+                    .annotate(premios=Sum('nfservicopj__premios_faculdade'),
+                              ajuda_custo=Sum('nfservicopj__ajuda_custo'),
+                              adiantamento=Sum('nfservicopj__adiantamento'),
+                              convenio=Sum('nfservicopj__convenio'), ).select_related()
+                arrya.extend(inse)
+
         except FuncPj.DoesNotExist:
             messages.warning(request, 'Por favor digite um usuário válido')
             return redirect('portaria:servicospj', {'arrya': arrya})
@@ -178,7 +188,7 @@ def servicospj(request):
             messages.warning(request, 'Por favor digite um usuário válido')
             return redirect('portaria:servicospj',{'arrya':arrya})
         else:
-            return redirect('portaria:cadservicospj',args=cad.id)
+            return render(request,'portaria/servicospj.html',{'arrya':arrya})
     return render(request, 'portaria/servicospj.html',{'arrya':arrya})
 
 def cadservicospj(request, args):
