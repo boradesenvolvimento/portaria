@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
-from django.db.models import Count, Sum
+from django.db.models import Count, Sum, F
 from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, Http404
 from django.shortcuts import get_object_or_404, render, redirect
 from django.template.defaultfilters import upper
@@ -166,29 +166,26 @@ def servicospj(request):
                                         .annotate(premios=Sum('nfservicopj__premios_faculdade'),
                                         ajuda_custo=Sum('nfservicopj__ajuda_custo'),
                                         adiantamento=Sum('nfservicopj__adiantamento'),
-                                        convenio=Sum('nfservicopj__convenio'),).select_related()
+                                        convenio=Sum('nfservicopj__convenio'),).select_related()\
+                                        .annotate(total=F('salario') + F('premios') + F('ajuda_custo') - (F('adiantamento') + F('convenio')))
         arrya.extend(query)
-
     if func:
-        try:
-            cad = FuncPj.objects.all().filter(nome__icontains=func)
+        cad = FuncPj.objects.all().filter(nome__icontains=func)
+        if cad:
             arrya.clear()
             for c in cad:
                 inse = FuncPj.objects.filter(pk=c.id, nfservicopj__data_emissao__month=datetime.datetime.now().month) \
                     .annotate(premios=Sum('nfservicopj__premios_faculdade'),
                               ajuda_custo=Sum('nfservicopj__ajuda_custo'),
                               adiantamento=Sum('nfservicopj__adiantamento'),
-                              convenio=Sum('nfservicopj__convenio'), ).select_related()
+                              convenio=Sum('nfservicopj__convenio'),).select_related() \
+                    .annotate(total=F('salario') + F('premios') + F('ajuda_custo') - (F('adiantamento') + F('convenio')))
                 arrya.extend(inse)
-
-        except FuncPj.DoesNotExist:
-            messages.warning(request, 'Por favor digite um usuário válido')
-            return redirect('portaria:servicospj', {'arrya': arrya})
-        except ValueError:
-            messages.warning(request, 'Por favor digite um usuário válido')
-            return redirect('portaria:servicospj',{'arrya':arrya})
+            return render(request, 'portaria/servicospj.html', {'arrya': arrya})
         else:
-            return render(request,'portaria/servicospj.html',{'arrya':arrya})
+            messages.warning(request, 'Por favor digite um usuário válido')
+            return redirect('portaria:servicospj')
+
     return render(request, 'portaria/servicospj.html',{'arrya':arrya})
 
 def cadservicospj(request, args):

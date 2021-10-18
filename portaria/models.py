@@ -196,6 +196,7 @@ class NfServicoPj(models.Model):
     ajuda_custo = models.IntegerField()
     adiantamento = models.IntegerField()
     convenio = models.IntegerField()
+    outros_desc = models.IntegerField()
     data_emissao = models.DateField(default=timezone.now)
 
     def __str__(self):
