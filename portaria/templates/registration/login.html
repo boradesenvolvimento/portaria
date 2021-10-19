@@ -26,6 +26,7 @@
       </tr>
     </table>
     <input class="button" type="submit" value="login" />
+    <input type="hidden" name="next" value="{{ next }}" />
   </form>
       {% if form.errors %}
     <p><strong>Usuário ou senha inválidos.</strong></p>
