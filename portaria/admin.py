@@ -51,9 +51,10 @@ class NfServicoPjAdmin(admin.ModelAdmin):
         ('ajuda_custo', {'fields':['ajuda_custo']}),
         ('adiantamento', {'fields':['adiantamento']}),
         ('convenio', {'fields':['convenio']}),
+        ('outros_desc', {'fields': ['outros_desc']}),
         ('data_emissao', {'fields':['data_emissao']}),
     )
-    list_display = ('funcionario', 'premios_faculdade', 'ajuda_custo', 'adiantamento', 'convenio', 'data_emissao')
+    list_display = ('funcionario', 'premios_faculdade', 'ajuda_custo', 'adiantamento', 'convenio', 'outros_desc', 'data_emissao')
 
 admin.site.register(NfServicoPj, NfServicoPjAdmin)
 
