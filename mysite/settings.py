@@ -161,6 +161,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 #auth redirects
+LOGIN_URL = 'portaria/accounts/login'
 LOGIN_REDIRECT_URL = '/portaria/'
 LOGOUT_REDIRECT_URL = '/portaria/'
 
