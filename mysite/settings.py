@@ -161,8 +161,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 #auth redirects
-LOGIN_REDIRECT_URL = 'portaria/'
-LOGOUT_REDIRECT_URL = 'portaria/'
+LOGIN_REDIRECT_URL = '/portaria/'
+LOGOUT_REDIRECT_URL = '/portaria/'
 
 # Simplified static file serving.
 # https://warehouse.python.org/project/whitenoise/
