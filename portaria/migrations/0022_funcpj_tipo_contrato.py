@@ -13,7 +13,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='funcpj',
             name='tipo_contrato',
-            field=models.CharField(choices=[('PF', 'PF'), ('PJ', 'PJ')], default='111', max_length=2),
+            field=models.CharField(choices=[('PF', 'PF'), ('PJ', 'PJ')], max_length=2),
             preserve_default=False,
         ),
     ]

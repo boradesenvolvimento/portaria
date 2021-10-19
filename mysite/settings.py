@@ -35,11 +35,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'cg#p$g+j9tax!#a3cup@1$8obt2_+&k3q+pmu)5%asj6yjpkag')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-#DEBUG = True
-DEBUG = False
+DEBUG = True
+#DEBUG = False
 #DEBUG = os.environ.get('DJANGO_DEBUG', '') != False
-ALLOWED_HOSTS = []
-#ALLOWED_HOSTS = ["bora.kinghost.net", "127.0.0.1"]
+#ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["www.bora.kinghost.net","www.bora.kinghost.net/portaria", "bora.kinghost.net/portaria"]
 
 # Application definition
 
@@ -145,7 +145,7 @@ USE_TZ = False
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'portaria/static')
+STATIC_ROOT = '/home/bora/www/static' 
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
@@ -169,4 +169,3 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = ''
 EMAIL_HOST_PASSWORD = ''
->>>>>>> 122f8ebc11709ab1fa0a2b6b5a84025d40636bb3

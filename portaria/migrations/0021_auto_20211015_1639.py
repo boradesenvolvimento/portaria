@@ -28,7 +28,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='funcpj',
             name='filial',
-            field=models.CharField(choices=[('SPO', 'SPO'), ('REC', 'REC'), ('SSA', 'SSA'), ('FOR', 'FOR'), ('MCZ', 'MCZ'), ('NAT', 'NAT'), ('JPA', 'JPA'), ('AJU', 'AJU'), ('VDC', 'VDC'), ('MG', 'MG'), ('CTG', 'CTG'), ('TCO', 'TCO'), ('UDI', 'UDI'), ('TNA', 'TNA'), ('VIX', 'VIX')], default='1111', max_length=3),
+            field=models.CharField(choices=[('SPO', 'SPO'), ('REC', 'REC'), ('SSA', 'SSA'), ('FOR', 'FOR'), ('MCZ', 'MCZ'), ('NAT', 'NAT'), ('JPA', 'JPA'), ('AJU', 'AJU'), ('VDC', 'VDC'), ('MG', 'MG'), ('CTG', 'CTG'), ('TCO', 'TCO'), ('UDI', 'UDI'), ('TNA', 'TNA'), ('VIX', 'VIX')], max_length=3),
             preserve_default=False,
         ),
     ]
