@@ -166,8 +166,9 @@ def servicospj(request):
                                         .annotate(premios=Sum('nfservicopj__premios_faculdade'),
                                         ajuda_custo=Sum('nfservicopj__ajuda_custo'),
                                         adiantamento=Sum('nfservicopj__adiantamento'),
-                                        convenio=Sum('nfservicopj__convenio'),).select_related()\
-                                        .annotate(total=F('salario') + F('premios') + F('ajuda_custo') - (F('adiantamento') + F('convenio')))
+                                        convenio=Sum('nfservicopj__convenio'),
+                                        outros=Sum('nfservicopj__outros_desc'),).select_related()\
+                                        .annotate(total=F('salario') + F('premios') + F('ajuda_custo') - (F('adiantamento') + F('convenio') + F('outros')))
         arrya.extend(query)
     if func:
         cad = FuncPj.objects.all().filter(nome__icontains=func)
@@ -178,8 +179,9 @@ def servicospj(request):
                     .annotate(premios=Sum('nfservicopj__premios_faculdade'),
                               ajuda_custo=Sum('nfservicopj__ajuda_custo'),
                               adiantamento=Sum('nfservicopj__adiantamento'),
-                              convenio=Sum('nfservicopj__convenio'),).select_related() \
-                    .annotate(total=F('salario') + F('premios') + F('ajuda_custo') - (F('adiantamento') + F('convenio')))
+                              convenio=Sum('nfservicopj__convenio'),
+                              outros=Sum('nfservicopj__outros_desc'),).select_related() \
+                    .annotate(total=F('salario') + F('premios') + F('ajuda_custo') - (F('adiantamento') + F('convenio') + F('outros')))
                 arrya.extend(inse)
             return render(request, 'portaria/servicospj.html', {'arrya': arrya})
         else:

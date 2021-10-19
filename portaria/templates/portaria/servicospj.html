@@ -33,6 +33,7 @@
                     <th>Ajuda de Custo</th>
                     <th>Adiantamento</th>
                     <th>Convenio</th>
+                    <th>Outros Desc</th>
                     <th>Total a pagar</th>
 
                 </tr>
@@ -47,6 +48,7 @@
                     <th>{{ q.ajuda_custo }}</th>
                     <th>{{ q.adiantamento }}</th>
                     <th>{{ q.convenio }}</th>
+                    <th>{{ q.outros }}</th>
                     <th>{{ q.total }}</th>
                     <th><a href="{% url 'portaria:cadservicospj' q.id %}">Edit</a></th>
                 </tr>

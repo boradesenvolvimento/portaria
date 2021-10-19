@@ -98,5 +98,6 @@ class ServicoPjForm(forms.ModelForm):
             'ajuda_custo',
             'adiantamento',
             'convenio',
+            'outros_desc',
             'data_emissao'
         ]
