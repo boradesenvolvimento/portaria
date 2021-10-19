@@ -5,7 +5,6 @@ django-bootstrap-datepicker-plus==3.0.5
 django-qr-code==2.2.0
 django-qrcode==0.3
 gunicorn==20.1.0
-Pillow==8.4.0
 pypng==0.0.21
 PyQRCode==1.2.1
 pytz==2021.1
