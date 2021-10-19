@@ -3,7 +3,7 @@
   <nav class="navbar navbar-expand-lg navbar-light mb-2" style="background-color: #3188E8;">
       <div class="container-fluid">
       <a class="navbar-brand">
-          <img src="{% static 'portaria/images/logo.png' %}">
+          <img src="{% static 'images/logo.png' %}">
       </a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
@@ -11,7 +11,7 @@
       <div class="collapse navbar-collapse menutext-navbar" id="navbarSupportedContent">
         <ul class="navbar-nav">
           <li class="nav-item">
-            <a class="nav-link1" aria-current="page" href="/">Home</a>
+            <a class="nav-link1" aria-current="page" href="/portaria/">Home</a>
           </li>
             {% if request.user|has_group:"portaria" %}
           <div class="dropdown">
@@ -20,10 +20,10 @@
             </button>
             <ul class="dropdown-menu" style="background-color: #3188E8;" aria-labelledby="dropdownMenuButton1">
               <li class="nav-item">
-                <a class="nav-link1" href="/cadastro/">Cadastro</a>
+                <a class="nav-link1" href="{% url 'portaria:cadastro' %}">Cadastro</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link1" href="/visualizacao/">Painel</a>
+                <a class="nav-link1" href="{% url 'portaria:visualizacao' %}">Painel</a>
               </li>
               </ul>
           </div>
@@ -35,28 +35,28 @@
             </button>
             <ul class="dropdown-menu" style="background-color: #3188E8;" aria-labelledby="dropdownMenuButton1">
               <li class="nav-item">
-                <a class="nav-link1" href="/palets/">Palets</a>
+                <a class="nav-link1" href="{% url 'portaria:paletview' %}">Palets</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link1" href="/palets/transfpalets">Transferir</a>
+                <a class="nav-link1" href="{% url 'portaria:transfpalets' %}">Transferir</a>
               </li>
             </ul>
           </div>
           {% endif %}
-          <!--
+
           <div class="dropdown">
             <button class="dropdown-toggle menutext-navbar nav-link1" type="button" style="background-color: #3188E8;" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
               Frota
             </button>
             <ul class="dropdown-menu" style="background-color: #3188E8;" aria-labelledby="dropdownMenuButton1">
               <li class="nav-item">
-                <a class="nav-link1" href="/frota/">Ferramentas</a>
+                <a class="nav-link1" href="{% url 'portaria:frota' %}">Ferramentas</a>
               </li>
             </ul>
           </div>
-          -->
-          <li class="nav-item"><a class="nav-link1" href="/outputs/">Gerar CSVs</a></li>
-          <!--<li class="nav-item"><a class="nav-link1" href="/servicospj/">Servicos PJ</a></li>-->
+
+          <li class="nav-item"><a class="nav-link1" href="{% url 'portaria:outputs' %}">Gerar CSVs</a></li>
+          <li class="nav-item"><a class="nav-link1" href="{% url 'portaria:servicospj' %}">Servicos PJ</a></li>
         </ul>
       </div>
     </div>

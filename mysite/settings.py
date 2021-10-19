@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 import os.path
 from pathlib import Path
-import MySQLdb
+#import MySQLdb
 
 from django.core.management.utils import get_random_secret_key
 from django.contrib.messages import constants as messages
@@ -35,10 +35,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'cg#p$g+j9tax!#a3cup@1$8obt2_+&k3q+pmu)5%asj6yjpkag')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-#DEBUG = False
-#DEBUG = os.environ.get('DJANGO_DEBUG', '') != False
+
+#develop
+#DEBUG = True
 #ALLOWED_HOSTS = []
+
+#production
+DEBUG = False
 ALLOWED_HOSTS = ["www.bora.kinghost.net","www.bora.kinghost.net/portaria", "bora.kinghost.net/portaria"]
 
 # Application definition
@@ -88,12 +91,15 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
-"""DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}"""
+#develop
+#DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.sqlite3',
+#        'NAME': BASE_DIR / 'db.sqlite3',
+#    }
+#}
+
+#production
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -104,8 +110,6 @@ DATABASES = {
         'PORT': '3306',
     }
 }
-#DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
-#conn = psycopg2.connect('postgres://dkwaaycoivvunp:11e716b33c4a66c03203cb878ccf108734822c990394610ffcea46b054e2b7fb@ec2-50-17-255-244.compute-1.amazonaws.com:5432/d1gnpodpteaqsa', sslmode='require')
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
@@ -145,7 +149,10 @@ USE_TZ = False
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = '/home/bora/www/static' 
+#develop
+#STATIC_ROOT = os.path.join(BASE_DIR, 'portaria/static')
+#production
+STATIC_ROOT = '/home/bora/www/static'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
