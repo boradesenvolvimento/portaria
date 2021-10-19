@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 import os.path
 from pathlib import Path
 import MySQLdb
-
+from django.urls import reverse_lazy
 from django.core.management.utils import get_random_secret_key
 from django.contrib.messages import constants as messages
 
@@ -161,7 +161,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 #auth redirects
-LOGIN_URL = 'portaria/accounts/login'
+LOGIN_URL = reverse_lazy('login')
 LOGIN_REDIRECT_URL = '/portaria/'
 LOGOUT_REDIRECT_URL = '/portaria/'
 
