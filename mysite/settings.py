@@ -10,10 +10,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 import os.path
-import dj_database_url
 from pathlib import Path
+import MySQLdb
 
-import psycopg2
 from django.core.management.utils import get_random_secret_key
 from django.contrib.messages import constants as messages
 
@@ -39,8 +38,8 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'cg#p$g+j9tax!#a3cup@1$8obt2_+&
 #DEBUG = True
 DEBUG = False
 #DEBUG = os.environ.get('DJANGO_DEBUG', '') != False
-#ALLOWED_HOSTS = []
-ALLOWED_HOSTS = ["bora.kinghost.net", "127.0.0.1"]
+ALLOWED_HOSTS = []
+#ALLOWED_HOSTS = ["bora.kinghost.net", "127.0.0.1"]
 
 # Application definition
 
@@ -89,10 +88,20 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
-DATABASES = {
+"""DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}"""
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'bora',
+        'USER': 'bora',
+        'PASSWORD': 'Bor4dev01230database',
+        'HOST': 'mysql.bora.kinghost.net',   # Or an IP Address that your DB is hosted on
+        'PORT': '3306',
     }
 }
 #DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
