@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% block content %}
+{% load groupscheck %}
 {% if request.user|has_group:"palets" %}
         <div class="container">
             <div class="row linha-baixo">
