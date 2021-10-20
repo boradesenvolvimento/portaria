@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% block content %}
+{% load groupscheck %}
 {% if request.user|has_group:"servicopj" %}
 <div class="container mt-4">
     <h2 class="title-cad">Cadastrar NF por serviços PJ</h2>

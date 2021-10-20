@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% block content %}
+{% load groupscheck %}
 {% if request.user|has_group:"outputs" %}
     <div class="container mt-5">
     <div class="row linha-baixo mb-3">
