@@ -42,7 +42,7 @@ DEBUG = True
 
 #production
 #DEBUG = False
-ALLOWED_HOSTS = ["www.bora.kinghost.net","www.bora.kinghost.net/portaria", "bora.kinghost.net/portaria"]
+ALLOWED_HOSTS = ["www.bora.tec.br","www.bora.tec.br/portaria", "bora.tec.br/portaria"]
 
 # Application definition
 
@@ -93,7 +93,7 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 
 #develop
 #DATABASES = {
-#   'default': {
+#    'default': {
 #        'ENGINE': 'django.db.backends.sqlite3',
 #        'NAME': BASE_DIR / 'db.sqlite3',
 #    }

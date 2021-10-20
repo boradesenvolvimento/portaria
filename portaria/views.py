@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
-from django.db.models import Count, Sum, F
+from django.db.models import Count, Sum, F, Q, Case, When, Value, IntegerField
 from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, Http404
 from django.shortcuts import get_object_or_404, render, redirect
 from django.template.defaultfilters import upper
@@ -158,37 +158,33 @@ def checklistfrota(request, placa_id):
 
 def servicospj(request):
     func = request.GET.get('nomefunc')
-    arrya = []
-
-    qnt_funcs = FuncPj.objects.all()
+    array = []
+    qnt_funcs = FuncPj.objects.filter(ativo=True)
     for q in qnt_funcs:
-        query = FuncPj.objects.filter(pk=q.id,nfservicopj__data_emissao__month=datetime.datetime.now().month)\
-                                        .annotate(premios=Sum('nfservicopj__premios_faculdade'),
-                                        ajuda_custo=Sum('nfservicopj__ajuda_custo'),
-                                        adiantamento=Sum('nfservicopj__adiantamento'),
-                                        convenio=Sum('nfservicopj__convenio'),
-                                        outros=Sum('nfservicopj__outros_desc'),).select_related()\
-                                        .annotate(total=F('salario') + F('premios') + F('ajuda_custo') - (F('adiantamento') + F('convenio') + F('outros')))
-        arrya.extend(query)
+        query = FuncPj.objects.filter(pk=q.id)
+        array.extend(query)
     if func:
         cad = FuncPj.objects.all().filter(nome__icontains=func)
         if cad:
-            arrya.clear()
+            array.clear()
             for c in cad:
-                inse = FuncPj.objects.filter(pk=c.id, nfservicopj__data_emissao__month=datetime.datetime.now().month) \
-                    .annotate(premios=Sum('nfservicopj__premios_faculdade'),
-                              ajuda_custo=Sum('nfservicopj__ajuda_custo'),
-                              adiantamento=Sum('nfservicopj__adiantamento'),
-                              convenio=Sum('nfservicopj__convenio'),
-                              outros=Sum('nfservicopj__outros_desc'),).select_related() \
-                    .annotate(total=F('salario') + F('premios') + F('ajuda_custo') - (F('adiantamento') + F('convenio') + F('outros')))
-                arrya.extend(inse)
-            return render(request, 'portaria/servicospj.html', {'arrya': arrya})
-        else:
-            messages.warning(request, 'Por favor digite um usuário válido')
-            return redirect('portaria:servicospj')
+                query = FuncPj.objects.filter(pk=c.id)
+                array.extend(query)
+    return render(request, 'portaria/servicospj.html', {'array': array})
 
-    return render(request, 'portaria/servicospj.html',{'arrya':arrya})
+def consultanfpj(request):
+    arrya = []
+    qnt_funcs = FuncPj.objects.filter(ativo=True)
+    for q in qnt_funcs:
+        query = FuncPj.objects.filter(pk=q.id, nfservicopj__data_emissao__month=datetime.datetime.now().month) \
+            .annotate(premios=Sum('nfservicopj__premios_faculdade'),
+                      ajuda_custo=Sum('nfservicopj__ajuda_custo'),
+                      adiantamento=Sum('nfservicopj__adiantamento'),
+                      convenio=Sum('nfservicopj__convenio'),
+                      outros=Sum('nfservicopj__outros_desc'), ) \
+            .annotate(total=F('salario') + F('premios') + F('ajuda_custo') - (F('adiantamento') + F('convenio') + F('outros')))
+        arrya.extend(query)
+    return render(request, 'portaria/consultanfpj.html', {'arrya': arrya})
 
 def cadservicospj(request, args):
     form = ServicoPjForm(request.POST or None)
@@ -234,47 +230,53 @@ def transfpalet(request):
 def get_nfpj_csv(request):
     data1 = request.POST.get('dataIni')
     data2 = request.POST.get('dataFim')
-    dateparse = datetime.datetime.strptime(data1, '%d/%m/%Y').replace(hour=23, minute=59)
+    dateparse = datetime.datetime.strptime(data1, '%d/%m/%Y').replace(hour=00, minute=00)
     dateparse1 = datetime.datetime.strptime(data2, '%d/%m/%Y').replace(hour=23, minute=59)
     arrya = []
-    for q in FuncPj.objects.all():
-        query = FuncPj.objects.filter(pk=q.id, nfservicopj__data_emissao__gte=dateparse,
-                                      nfservicopj__data_emissao__lte=dateparse1) \
-            .annotate(premios=Sum('nfservicopj__premios_faculdade'),
-                      ajuda_custo=Sum('nfservicopj__ajuda_custo'),
-                      adiantamento=Sum('nfservicopj__adiantamento'),
-                      convenio=Sum('nfservicopj__convenio'), ).select_related()
+    qs = FuncPj.objects.filter(ativo=True)
+    for q in qs:
+        query = FuncPj.objects.filter(pk=q.id) \
+            .annotate(
+             premios=Sum('nfservicopj__premios_faculdade',filter=Q(nfservicopj__data_emissao__lte=dateparse1, nfservicopj__data_emissao__gte=dateparse)),
+             ajuda_custo=Sum('nfservicopj__ajuda_custo', filter=Q(nfservicopj__data_emissao__lte=dateparse1,nfservicopj__data_emissao__gte=dateparse)),
+             adiantamento=Sum('nfservicopj__adiantamento', filter=Q(nfservicopj__data_emissao__lte=dateparse1,nfservicopj__data_emissao__gte=dateparse)),
+             convenio=Sum('nfservicopj__convenio', filter=Q(nfservicopj__data_emissao__lte=dateparse1,nfservicopj__data_emissao__gte=dateparse)),
+             outros=Sum('nfservicopj__outros_desc',filter=Q(nfservicopj__data_emissao__lte=dateparse1, nfservicopj__data_emissao__gte=dateparse)),
+             ).annotate(total=F('salario') + F('premios') + F('ajuda_custo') - (F('adiantamento') + F('convenio') + F('outros')))
         arrya.extend(query)
     for q in arrya:
-        uni = q.unidade
+        fil = q.filial
         nome = q.nome
         sal = q.salario
         premio = q.premios
         ajuda = q.ajuda_custo
         adian = q.adiantamento
         conv = q.convenio
-        cpf = q.cpf_cnpj
+        outr = q.outros
+        cpf = q.cpf
+        cnpj = q.cnpj
         bco = q.banco
         ag = q.ag
         conta = q.conta
         op = q.op
         toemail = q.email
-        total_a_pagar = (sal + premio + ajuda) - (adian + conv)
-        print(uni,nome,sal,premio,ajuda,adian,conv,cpf,bco,ag,conta,op,toemail,total_a_pagar)
+        total = q.total
+        print(q.premios,q.total)
         send_mail(
             subject='Teste',
             message=f'''
-                Unidade: {uni}
-                Nome: {nome}
-                Salario: {sal}
-                Premio / Faculdade: {premio}
-                Ajuda de Custo: {ajuda}
-                Adiantamento: {adian}
-                Convenio: {conv}
-                Total pagamento: {total_a_pagar}
-                Cpf/Cnpj: {cpf}
-                Dados bancários: {bco} / {ag} / {conta} / {op}
-                        ''',
+                        Unidade: {fil}
+                        Nome: {nome}
+                        Salario: {sal}
+                        Premio / Faculdade: {premio}
+                        Ajuda de Custo: {ajuda}
+                        Adiantamento: {adian}
+                        Convenio: {conv}
+                        Outros Descontos: {outr}
+                        Total pagamento: {total}
+                        Cpf/Cnpj: {cpf} - {cnpj}
+                        Dados bancários: {bco} / {ag} / {conta} / {op}
+                                ''',
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=[toemail]
         )
@@ -288,6 +290,7 @@ def get_portaria_csv(request):
                             )
     dateparse = datetime.datetime.strptime(data1, '%d/%m/%Y').replace(hour=23, minute=59)
     dateparse1 = datetime.datetime.strptime(data2, '%d/%m/%Y').replace(hour=23, minute=59)
+    response.write(u'\ufeff'.encode('utf8'))
     writer = csv.writer(response)
     writer.writerow(['Placa','Placa2','Motorista','Empresa','Origem','Destino','Tipo_mot','Tipo_viagem','Hr_entrada','Hr_Saida','autor'])
     cadastro = Cadastro.objects.all().values_list(

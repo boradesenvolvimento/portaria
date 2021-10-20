@@ -16,6 +16,7 @@ urlpatterns = [
     path('frota/<str:placa_id>/checklist/', views.checklistfrota, name='checklistfrota'),
     path('servicospj/', views.servicospj, name='servicospj'),
     path('servicospj/<int:args>/cadservicospj/', views.cadservicospj, name='cadservicospj'),
+    path('servicospj/consultanfpj', views.consultanfpj, name='consultanfpj'),
     path('outputs/', views.outputs, name='outputs'),
     path(r'export-csv-nfpj', views.get_nfpj_csv, name='get_nfpj_csv'),
     path(r'export-csv-port/', views.get_portaria_csv, name='get_portaria_csv'),

@@ -11,46 +11,35 @@
             </div>
             {% endfor %}
     <div class="row linha-baixo">
+        <div class="col-6">
         <form method="get">
-        <h2 class="title-cad">Cadastrar NF por serviços PJ
+        <h2 class="title-cad">Buscar funcionário
             <input name="nomefunc" placeholder="Digite o nome completo" type="text">
             <input type="submit" class="button">
         </h2>
         </form>
-        {% if error_message %}
-        <strong>{{ error_message }}</strong>
-        {% elif success_message %}
-        <strong>{{ success_message }}</strong>
-        {% endif %}
+        </div>
+        <div class="col-6" style="margin-top:5px; text-align:right;">
+            <a class="button" href="{% url 'portaria:consultanfpj' %}">Consultar Valores</a>
+        </div>
     </div>
     <div class="row linha-baixo">
         <table>
             <thead>
                 <tr>
                     <th>Nome</th>
+                    <th>Filial</th>
                     <th>CPF</th>
                     <th>CNPJ</th>
-                    <th>Premio/Faculdade</th>
-                    <th>Ajuda de Custo</th>
-                    <th>Adiantamento</th>
-                    <th>Convenio</th>
-                    <th>Outros Desc</th>
-                    <th>Total a pagar</th>
-
                 </tr>
             </thead>
-        {% for q in arrya %}
+        {% for q in array %}
 
                 <tr>
                     <th>{{ q.nome }}</th>
+                    <th>{{ q.filial }}</th>
                     <th>{{ q.cpf }}</th>
                     <th>{{ q.cnpj }}</th>
-                    <th>{{ q.premios }}</th>
-                    <th>{{ q.ajuda_custo }}</th>
-                    <th>{{ q.adiantamento }}</th>
-                    <th>{{ q.convenio }}</th>
-                    <th>{{ q.outros }}</th>
-                    <th>{{ q.total }}</th>
                     <th><a href="{% url 'portaria:cadservicospj' q.id %}">Edit</a></th>
                 </tr>
         {% endfor %}
