@@ -106,7 +106,7 @@ DATABASES = {
         'NAME': 'bora',
         'USER': 'bora',
         'PASSWORD': 'Bor4dev01230database',
-        'HOST': 'mysql.bora.kinghost.net',   # Or an IP Address that your DB is hosted on
+        'HOST': 'mysql.bora.tec.br',
         'PORT': '3306',
     }
 }
