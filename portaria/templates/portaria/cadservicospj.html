@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% block content %}
-
+{% if request.user|has_group:"servicopj" %}
 <div class="container mt-4">
     <h2 class="title-cad">Cadastrar NF por serviços PJ</h2>
     <div class="row">
@@ -21,4 +21,5 @@
         </form>
     </div>
 </div>
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
 {% endblock %}

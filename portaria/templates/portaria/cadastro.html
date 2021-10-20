@@ -4,6 +4,7 @@
     {% if auth_message %}
         <p><strong>{{ auth_message }}</strong></p>
     {% else %}
+    {% if request.user|has_group:"portaria" %}
             {% for message in messages %}
             <div class="container-fluid p-0">
                 <div class="alert {{ message.tags }} alert-dismissible" role="alert">
@@ -27,6 +28,7 @@
                 </div>
             </div>
     </div>
+    {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
     {% endif %}
     <!-- JS -->
     <script>
