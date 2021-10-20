@@ -1,10 +1,19 @@
 import datetime
 
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from django.core.validators import MaxLengthValidator
 from django.db import models
 from django.db.models import SET_NULL
 from django.utils import timezone
+
+#validators
+def only_int(value):
+    try:
+        int(value)
+    except (ValueError,TypeError):
+        raise ValidationError('NaN')
+
 
 TIPO_MOT = (
     ('INTERNO', 'INTERNO'),
@@ -177,14 +186,15 @@ class FuncPj(models.Model):
     filial = models.CharField(choices=TIPO_GARAGEM, max_length=3)
     nome = models.CharField(max_length=50)
     salario = models.IntegerField()
-    cpf = models.IntegerField()
-    cnpj = models.IntegerField()
+    cpf = models.CharField(max_length=11, validators=[only_int])
+    cnpj = models.CharField(max_length=14, validators=[only_int])
     tipo_contrato = models.CharField(choices=TIPO_CONTRATO_CHOICES, max_length=2)
     banco = models.IntegerField()
     ag = models.IntegerField()
     conta = models.IntegerField()
     op = models.IntegerField()
     email = models.EmailField(max_length=254)
+    ativo = models.BooleanField(default=True)
 
     def __str__(self):
        return self.nome
