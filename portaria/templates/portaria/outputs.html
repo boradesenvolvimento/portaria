@@ -1,5 +1,6 @@
-    {% extends 'base.html' %}
-    {% block content %}
+{% extends 'base.html' %}
+{% block content %}
+{% if request.user|has_group:"outputs" %}
     <div class="container mt-5">
     <div class="row linha-baixo mb-3">
         <div class="col col-lg-12 col-md-12 col-sm-12 col-xs-12">
@@ -35,7 +36,7 @@
     </div>
     -->
     </div>
-
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
 
     <!-- JS -->
     <script>
@@ -48,4 +49,4 @@
         });
       });
     </script>
-    {% endblock %}
+{% endblock %}

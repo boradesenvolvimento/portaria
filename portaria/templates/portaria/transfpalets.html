@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% block content %}
-
+{% if request.user|has_group:"servicopj" %}
     <div class="container mt-5">
         {% for message in messages %}
             <div class="container-fluid p-0">
@@ -31,7 +31,7 @@
     </div>
     </div>
 
-
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
     <!-- JS -->
     <script>
       $(function () {
