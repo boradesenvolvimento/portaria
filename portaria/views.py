@@ -152,8 +152,10 @@ def checklistfrota(request, placa_id):
         if form.is_valid():
             obar = form.save(commit=False)
             obar.placaveic = test
-            obar.motoristaveic = test.codmotorista
+            obar.kmanterior = test.kmatualveic
             obar.save()
+            test.kmatualveic = obar.kmatual
+            test.save()
             return HttpResponseRedirect(reverse('portaria:frota'), {'success_message': 'success_message'})
     return render(request,'portaria/checklistfrota.html', {'form':form,'test':test})
 

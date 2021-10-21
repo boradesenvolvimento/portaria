@@ -80,14 +80,14 @@ class Motorista(models.Model):
     empresa = models.IntegerField(default=1)
     filial = models.IntegerField(default=1)
     nome = models.CharField(max_length=100)
-    RG = models.CharField(max_length=20)
-    CPF = models.CharField(max_length=11)
-    telefone = models.IntegerField(max_length=11)
+    RG = models.CharField(max_length=20, validators=[only_int])
+    CPF = models.CharField(max_length=11, validators=[only_int])
+    telefone = models.CharField(max_length=11, validators=[only_int])
     endereco = models.CharField(max_length=100)
     bairro = models.CharField(max_length=100)
     cidade = models.CharField(max_length=20)
     UF = models.CharField(max_length=2)
-    cep = models.IntegerField(max_length=8)
+    cep = models.CharField(max_length=8, validators=[only_int])
     data_nasc = models.DateField()
 
     def __str__(self):
@@ -95,33 +95,35 @@ class Motorista(models.Model):
 
 class Veiculos(models.Model):
     CODIGOTPVEIC_CHOICES = [
-        ('1', 'VAN_PASSAGEIROS'),
-        ('2', 'CAMINHAO'),
-        ('3', 'CAVALO'),
-        ('4', 'CARRETA'),
-        ('5', 'VUC'),
-        ('6', 'BITRUCK'),
-        ('7', 'TOCO'),
-        ('8', '3/4'),
-        ('9', 'TRUCK'),
-        ('10', 'VEICULO_APOIO'),
-        ('11', 'PASSAGEIRO'),
-        ('12', 'PASSAGEIRO_AUTOMOVEL')
+        ('1', 'CAMINHÃO TOCO 3/4'),
+        ('2', 'CAMINHÃO TOCO'),
+        ('3', 'CAMINHÃO 3/4'),
+        ('4', 'CAMINHONETE/UTILITARIO'),
+        ('5', 'CAMINHÃO TRUCK'),
+        ('6', 'PASSEIO'),
+        ('7', 'CAVALO'),
+        ('8', 'CARRETA'),
+        ('9', 'CAMINHÃO BI TRUCK '),
+        ('10', 'CAVALO '),
+        ('11', 'CAMINHAO LEVE'),
+        ('12', 'SEMI ROBOQUE'),
+        ('13', 'CAMINHÃO FURGÃO'),
+        ('14', 'CAMINHÃO TRUCK '),
+        ('15', 'CAMINHOTE'),
+        ('16', 'CAMINHONETE/FURGAO')
     ]
 
     codigoveic = models.BigAutoField(primary_key=True)
     codigotpveic = models.CharField(max_length=5, choices=CODIGOTPVEIC_CHOICES)
-    empresa = models.IntegerField(default=1)
-    filial = models.IntegerField(default=1)
-    garagem = models.IntegerField(default=1)
+    filial = models.CharField(max_length=3, choices=TIPO_GARAGEM)
     prefixoveic = models.CharField(max_length=7)
     condicaoveic = models.CharField(max_length=20)
     capacidadetanqueveic = models.CharField(max_length=20)
     kmatualveic = models.IntegerField()
-    obsveic = models.CharField(max_length=30)
+    obsveic = models.CharField(max_length=30, blank=True, null=True)
     renavanveic = models.CharField(max_length=11)
     modeloveic = models.CharField(max_length=20)
-    codmotorista = models.ForeignKey(Motorista, on_delete=SET_NULL, blank=True, null=True)
+
 
     def __str__(self):
        return self.prefixoveic

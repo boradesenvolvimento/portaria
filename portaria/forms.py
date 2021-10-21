@@ -46,8 +46,8 @@ class ChecklistForm(forms.ModelForm):
     class Meta:
         model = ChecklistFrota
         fields = [
+            'motoristaveic',
             'placacarreta',
-            'kmanterior',
             'kmatual',
             'horimetro',
             'p1_1',
