@@ -179,13 +179,14 @@ def consultanfpj(request):
     arrya = []
     qnt_funcs = FuncPj.objects.filter(ativo=True)
     for q in qnt_funcs:
-        query = FuncPj.objects.filter(pk=q.id, nfservicopj__data_emissao__month=datetime.datetime.now().month) \
-            .annotate(premios=Sum('nfservicopj__premios_faculdade'),
-                      ajuda_custo=Sum('nfservicopj__ajuda_custo'),
-                      adiantamento=Sum('nfservicopj__adiantamento'),
-                      convenio=Sum('nfservicopj__convenio'),
-                      outros=Sum('nfservicopj__outros_desc'), ) \
-            .annotate(total=F('salario') + F('premios') + F('ajuda_custo') - (F('adiantamento') + F('convenio') + F('outros')))
+        query = FuncPj.objects.filter(pk=q.id) \
+            .annotate(faculdade=Coalesce(Sum('nfservicopj__faculdade', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month)),Value(0)),
+            cred_convenio=Coalesce(Sum('nfservicopj__cred_convenio', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month)),Value(0)),
+            outros_cred=Coalesce(Sum('nfservicopj__outros_cred', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month)),Value(0)),
+            desc_convenio=Coalesce(Sum('nfservicopj__desc_convenio', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month)),Value(0)),
+            outros_desc=Coalesce(Sum('nfservicopj__outros_desc', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month)),Value(0)),
+            ) \
+            .annotate(total=(F('salario') + F('ajuda_custo') + F('faculdade') + F('cred_convenio') + F('outros_cred') ) - (F('adiantamento') + F('desc_convenio') + F('outros_desc')))
         arrya.extend(query)
     return render(request, 'portaria/consultanfpj.html', {'arrya': arrya})
 
@@ -240,48 +241,33 @@ def get_nfpj_csv(request):
     for q in qs:
         query = FuncPj.objects.filter(pk=q.id) \
             .annotate(
-             premios=Coalesce(Sum('nfservicopj__premios_faculdade',filter=Q(nfservicopj__data_emissao__lte=dateparse1, nfservicopj__data_emissao__gte=dateparse)), Value(0)),
-             ajuda_custo=Coalesce(Sum('nfservicopj__ajuda_custo', filter=Q(nfservicopj__data_emissao__lte=dateparse1,nfservicopj__data_emissao__gte=dateparse)), Value(0)),
-             adiantamento=Coalesce(Sum('nfservicopj__adiantamento', filter=Q(nfservicopj__data_emissao__lte=dateparse1,nfservicopj__data_emissao__gte=dateparse)), Value(0)),
-             convenio=Coalesce(Sum('nfservicopj__convenio', filter=Q(nfservicopj__data_emissao__lte=dateparse1,nfservicopj__data_emissao__gte=dateparse)), Value(0)),
-             outros=Coalesce(Sum('nfservicopj__outros_desc',filter=Q(nfservicopj__data_emissao__lte=dateparse1, nfservicopj__data_emissao__gte=dateparse)), Value(0)),
-             ).annotate(total=F('salario') + F('premios') + F('ajuda_custo') - (F('adiantamento') + F('convenio') + F('outros')))
+             faculdade=Coalesce(Sum('nfservicopj__faculdade',filter=Q(nfservicopj__data_emissao__lte=dateparse1, nfservicopj__data_emissao__gte=dateparse)), Value(0)),
+             cred_convenio=Coalesce(Sum('nfservicopj__cred_convenio', filter=Q(nfservicopj__data_emissao__lte=dateparse1,nfservicopj__data_emissao__gte=dateparse)), Value(0)),
+             outros_cred=Coalesce(Sum('nfservicopj__outros_cred', filter=Q(nfservicopj__data_emissao__lte=dateparse1,nfservicopj__data_emissao__gte=dateparse)), Value(0)),
+             desc_convenio=Coalesce(Sum('nfservicopj__desc_convenio', filter=Q(nfservicopj__data_emissao__lte=dateparse1,nfservicopj__data_emissao__gte=dateparse)), Value(0)),
+             outros_desc=Coalesce(Sum('nfservicopj__outros_desc',filter=Q(nfservicopj__data_emissao__lte=dateparse1, nfservicopj__data_emissao__gte=dateparse)), Value(0)),
+             ).annotate(total=(F('salario') + F('ajuda_custo') + F('faculdade') + F('cred_convenio') + F('outros_cred') ) - (F('adiantamento') + F('desc_convenio') + F('outros_desc')))
         arrya.extend(query)
     for q in arrya:
-        fil = q.filial
-        nome = q.nome
-        sal = q.salario
-        premio = q.premios
-        ajuda = q.ajuda_custo
-        adian = q.adiantamento
-        conv = q.convenio
-        outr = q.outros
-        cpf = q.cpf
-        cnpj = q.cnpj
-        bco = q.banco
-        ag = q.ag
-        conta = q.conta
-        op = q.op
-        toemail = q.email
-        total = q.total
-        print(q.premios,q.total)
         send_mail(
             subject='Teste',
             message=f'''
-                        Unidade: {fil}
-                        Nome: {nome}
-                        Salario: {sal}
-                        Premio / Faculdade: {premio}
-                        Ajuda de Custo: {ajuda}
-                        Adiantamento: {adian}
-                        Convenio: {conv}
-                        Outros Descontos: {outr}
-                        Total pagamento: {total}
-                        Cpf/Cnpj: {cpf} - {cnpj}
-                        Dados bancários: {bco} / {ag} / {conta} / {op}
+                        Unidade: {q.filial}
+                        Nome: {q.nome}
+                        Salario: {q.salario}
+                        Faculdade: {q.faculdade}
+                        Ajuda de Custo: {q.ajuda_custo}
+                        Creditos Convenio: {q.cred_convenio}
+                        Outros Creditos: {q.outros_cred}
+                        Adiantamento: {q.adiantamento}
+                        Descontos Convenio: {q.desc_convenio}
+                        Outros Descontos: {q.outros_desc}
+                        Total pagamento: {q.total}
+                        Cpf/Cnpj: {q.cpf_cnpj}
+                        Dados bancários: {q.banco} / {q.ag} / {q.conta} / {q.op}
                                 ''',
             from_email=settings.EMAIL_HOST_USER,
-            recipient_list=[toemail]
+            recipient_list=[q.email]
         )
     return redirect('portaria:index')
 
