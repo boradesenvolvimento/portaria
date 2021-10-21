@@ -152,7 +152,7 @@ STATIC_URL = '/static/'
 #develop
 #STATIC_ROOT = os.path.join(BASE_DIR, 'portaria/static')
 #production
-#STATIC_ROOT = '/home/bora/www/static'
+STATIC_ROOT = '/home/bora/www/static'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
