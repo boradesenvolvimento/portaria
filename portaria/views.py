@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
-from django.db.models import Count, Sum, F, Q, Case, When, Value, IntegerField
+from django.db.models import Count, Sum, F, Q, Value, FloatField, DecimalField
 from django.db.models.functions import Coalesce
 from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, Http404
 from django.shortcuts import get_object_or_404, render, redirect
@@ -180,13 +180,13 @@ def consultanfpj(request):
     qnt_funcs = FuncPj.objects.filter(ativo=True)
     for q in qnt_funcs:
         query = FuncPj.objects.filter(pk=q.id) \
-            .annotate(faculdade=Coalesce(Sum('nfservicopj__faculdade', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month)),Value(0)),
-            cred_convenio=Coalesce(Sum('nfservicopj__cred_convenio', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month)),Value(0)),
-            outros_cred=Coalesce(Sum('nfservicopj__outros_cred', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month)),Value(0)),
-            desc_convenio=Coalesce(Sum('nfservicopj__desc_convenio', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month)),Value(0)),
-            outros_desc=Coalesce(Sum('nfservicopj__outros_desc', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month)),Value(0)),
+            .annotate(faculdade=Coalesce(Sum('nfservicopj__faculdade', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month)),Value(0.0)),
+            cred_convenio=Coalesce(Sum('nfservicopj__cred_convenio', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month)),Value(0.0)),
+            outros_cred=Coalesce(Sum('nfservicopj__outros_cred', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month)),Value(0.0)),
+            desc_convenio=Coalesce(Sum('nfservicopj__desc_convenio', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month)),Value(0.0)),
+            outros_desc=Coalesce(Sum('nfservicopj__outros_desc', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month)),Value(0.0)),
             ) \
-            .annotate(total=(F('salario') + F('ajuda_custo') + F('faculdade') + F('cred_convenio') + F('outros_cred') ) - (F('adiantamento') + F('desc_convenio') + F('outros_desc')))
+            .annotate(total=((F('salario') + F('ajuda_custo') + F('faculdade') + F('cred_convenio') + F('outros_cred')) - (F('adiantamento') + F('desc_convenio') + F('outros_desc'))))
         arrya.extend(query)
     return render(request, 'portaria/consultanfpj.html', {'arrya': arrya})
 
@@ -241,11 +241,11 @@ def get_nfpj_csv(request):
     for q in qs:
         query = FuncPj.objects.filter(pk=q.id) \
             .annotate(
-             faculdade=Coalesce(Sum('nfservicopj__faculdade',filter=Q(nfservicopj__data_emissao__lte=dateparse1, nfservicopj__data_emissao__gte=dateparse)), Value(0)),
-             cred_convenio=Coalesce(Sum('nfservicopj__cred_convenio', filter=Q(nfservicopj__data_emissao__lte=dateparse1,nfservicopj__data_emissao__gte=dateparse)), Value(0)),
-             outros_cred=Coalesce(Sum('nfservicopj__outros_cred', filter=Q(nfservicopj__data_emissao__lte=dateparse1,nfservicopj__data_emissao__gte=dateparse)), Value(0)),
-             desc_convenio=Coalesce(Sum('nfservicopj__desc_convenio', filter=Q(nfservicopj__data_emissao__lte=dateparse1,nfservicopj__data_emissao__gte=dateparse)), Value(0)),
-             outros_desc=Coalesce(Sum('nfservicopj__outros_desc',filter=Q(nfservicopj__data_emissao__lte=dateparse1, nfservicopj__data_emissao__gte=dateparse)), Value(0)),
+             faculdade=Coalesce(Sum('nfservicopj__faculdade',filter=Q(nfservicopj__data_emissao__lte=dateparse1, nfservicopj__data_emissao__gte=dateparse)), Value(0.0)),
+             cred_convenio=Coalesce(Sum('nfservicopj__cred_convenio', filter=Q(nfservicopj__data_emissao__lte=dateparse1,nfservicopj__data_emissao__gte=dateparse)), Value(0.0)),
+             outros_cred=Coalesce(Sum('nfservicopj__outros_cred', filter=Q(nfservicopj__data_emissao__lte=dateparse1,nfservicopj__data_emissao__gte=dateparse)), Value(0.0)),
+             desc_convenio=Coalesce(Sum('nfservicopj__desc_convenio', filter=Q(nfservicopj__data_emissao__lte=dateparse1,nfservicopj__data_emissao__gte=dateparse)), Value(0.0)),
+             outros_desc=Coalesce(Sum('nfservicopj__outros_desc',filter=Q(nfservicopj__data_emissao__lte=dateparse1, nfservicopj__data_emissao__gte=dateparse)), Value(0.0)),
              ).annotate(total=(F('salario') + F('ajuda_custo') + F('faculdade') + F('cred_convenio') + F('outros_cred') ) - (F('adiantamento') + F('desc_convenio') + F('outros_desc')))
         arrya.extend(query)
     for q in arrya:
@@ -254,15 +254,15 @@ def get_nfpj_csv(request):
             message=f'''
                         Unidade: {q.filial}
                         Nome: {q.nome}
-                        Salario: {q.salario}
-                        Faculdade: {q.faculdade}
-                        Ajuda de Custo: {q.ajuda_custo}
-                        Creditos Convenio: {q.cred_convenio}
-                        Outros Creditos: {q.outros_cred}
-                        Adiantamento: {q.adiantamento}
-                        Descontos Convenio: {q.desc_convenio}
-                        Outros Descontos: {q.outros_desc}
-                        Total pagamento: {q.total}
+                        Salario: {q.salario:.2f}
+                        Faculdade: {q.faculdade:.2f}
+                        Ajuda de Custo: {q.ajuda_custo:.2f}
+                        Creditos Convenio: {q.cred_convenio:.2f}
+                        Outros Creditos: {q.outros_cred:.2f}
+                        Adiantamento: {q.adiantamento:.2f}
+                        Descontos Convenio: {q.desc_convenio:.2f}
+                        Outros Descontos: {q.outros_desc:.2f}
+                        Total pagamento: {q.total:.2f}
                         Cpf/Cnpj: {q.cpf_cnpj}
                         Dados bancários: {q.banco} / {q.ag} / {q.conta} / {q.op}
                                 ''',

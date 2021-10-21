@@ -2,7 +2,7 @@ import datetime
 
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-from django.core.validators import MaxLengthValidator
+from django.core.validators import MaxLengthValidator, DecimalValidator
 from django.db import models
 from django.db.models import SET_NULL
 from django.utils import timezone
@@ -186,9 +186,9 @@ class FuncPj(models.Model):
     id = models.BigAutoField(primary_key=True)
     filial = models.CharField(choices=TIPO_GARAGEM, max_length=3)
     nome = models.CharField(max_length=50)
-    salario = models.IntegerField()
-    adiantamento = models.IntegerField()
-    ajuda_custo = models.IntegerField()
+    salario = models.FloatField()
+    adiantamento = models.FloatField()
+    ajuda_custo = models.FloatField()
     cpf_cnpj = models.CharField(max_length=14, validators=[only_int])
     tipo_contrato = models.CharField(choices=TIPO_CONTRATO_CHOICES, max_length=2)
     banco = models.IntegerField()
@@ -204,11 +204,11 @@ class FuncPj(models.Model):
 class NfServicoPj(models.Model):
     id = models.BigAutoField(primary_key=True)
     funcionario = models.ForeignKey(FuncPj, on_delete=models.CASCADE)
-    faculdade = models.IntegerField()
-    cred_convenio = models.IntegerField()
-    outros_cred = models.IntegerField()
-    desc_convenio = models.IntegerField()
-    outros_desc = models.IntegerField()
+    faculdade = models.FloatField()
+    cred_convenio = models.FloatField()
+    outros_cred = models.FloatField()
+    desc_convenio = models.FloatField()
+    outros_desc = models.FloatField()
     data_emissao = models.DateField(default=timezone.now)
 
     def __str__(self):
