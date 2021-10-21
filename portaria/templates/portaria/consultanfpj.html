@@ -1,32 +1,41 @@
 {% extends 'base.html' %}
 {% block content %}
 {% load groupscheck %}
-{% if request.user|has_group:"servicopj" %}
+{% if request.user|has_group:"adm_rh" %}
 
-    <div class="container mt-4">
+    <div class="container mt-5">
         <div class="row">
-        <div class="col col-lg-12 col-md-12 col-sm-12 col-xs-12">
-            <h3 class="title-cad">Enviar emails</h3>
-            <form class="form-box" action="{% url 'portaria:get_nfpj_csv' %}" method="post">
-                {% csrf_token %}
-                <input type="text" placeholder="Data inicio" name="dataIni">
-                <input type="text" placeholder="Data final" name="dataFim">
-                <input type="submit" class="button">
-            </form>
+            <div class="col col-lg-9 col-md-9 col-sm-9 sr-only" id="sendmail">
+                <form class="form-box" action="{% url 'portaria:get_nfpj_csv' %}" method="post">
+                    {% csrf_token %}
+                    <h3 class="title-cad">Selecione o período:
+                    <input type="text" placeholder="Data inicio" name="dataIni">
+                    <input type="text" placeholder="Data final" name="dataFim">
+                    <input type="submit" class="button">
+                    </h3>
+                </form>
+            </div>
+            <div class="col-6">
+                    <button onclick="isactive()" class="button">Enviar emails</button>
+            </div>
         </div>
-    </div>
-    <div class="row">
-        <table>
-            <thead class="linha-baixo">
+        <div class="row">
+        <table class="table">
+            <thead>
                 <tr>
-                    <th>Nome</th>
-                    <th>Salario</th>
-                    <th>Premio/Faculdade</th>
-                    <th>Ajuda de Custo</th>
-                    <th>Adiantamento</th>
-                    <th>Convenio</th>
-                    <th>Outros Desc</th>
-                    <th>Total a Pagar</th>
+                    <th class="title-cad"><strong>Total de Registros: {{ arrya|length }}</strong></th>
+                </tr>
+                <tr>
+                    <th class="title-cad">Nome</th>
+                    <th class="title-cad">Salario</th>
+                    <th class="title-cad">Faculdade</th>
+                    <th class="title-cad">Ajuda de Custo</th>
+                    <th class="title-cad">Adiantamento</th>
+                    <th class="title-cad">Cred Convenio</th>
+                    <th class="title-cad">Outros Cred</th>
+                    <th class="title-cad">Desc Convenio</th>
+                    <th class="title-cad">Outros Desc</th>
+                    <th class="title-cad">Total a Pagar</th>
                 </tr>
             </thead>
         {% for q in arrya %}
@@ -34,18 +43,30 @@
                 <tr>
                     <th>{{ q.nome }}</th>
                     <th>{{ q.salario }}</th>
-                    <th>{{ q.premios }}</th>
+                    <th>{{ q.faculdade }}</th>
                     <th>{{ q.ajuda_custo }}</th>
                     <th>{{ q.adiantamento }}</th>
-                    <th>{{ q.convenio }}</th>
-                    <th>{{ q.outros }}</th>
+                    <th>{{ q.cred_convenio }}</th>
+                    <th>{{ q.outros_cred }}</th>
+                    <th>{{ q.desc_convenio }}</th>
+                    <th>{{ q.outros_desc }}</th>
                     <th>{{ q.total }}</th>
                 </tr>
             </tbody>
         {% endfor %}
         </table>
-
     </div>
-    </div>
+</div>
 {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+<script type="text/javascript">
+    function isactive(){
+    if(document.getElementById("sendmail").classList.contains('sr-only')){
+        document.getElementById("sendmail").classList.remove('sr-only')
+    } else {
+        document.getElementById("sendmail").classList.add('sr-only')
+    }
+  }
+
+
+</script>
 {% endblock %}

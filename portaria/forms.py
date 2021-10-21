@@ -93,10 +93,10 @@ class ServicoPjForm(forms.ModelForm):
     class Meta:
         model = NfServicoPj
         fields = [
-            'premios_faculdade',
-            'ajuda_custo',
-            'adiantamento',
-            'convenio',
+            'faculdade',
+            'cred_convenio',
+            'outros_cred',
+            'desc_convenio',
             'outros_desc',
             'data_emissao'
         ]
