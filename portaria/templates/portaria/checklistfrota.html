@@ -17,12 +17,6 @@
 
             <input type="submit" class="button">
             </form>
-            {% if error_message %}
-            <strong><p>{{ error_message }}</p></strong>
-            {% elif success_message %}
-            <strong><p>{{ success_message }}</p></strong>
-            {% endif %}
-
         </div>
 
 {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}

@@ -8,6 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
 from django.db.models import Count, Sum, F, Q, Case, When, Value, IntegerField
+from django.db.models.functions import Coalesce
 from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, Http404
 from django.shortcuts import get_object_or_404, render, redirect
 from django.template.defaultfilters import upper
@@ -237,11 +238,11 @@ def get_nfpj_csv(request):
     for q in qs:
         query = FuncPj.objects.filter(pk=q.id) \
             .annotate(
-             premios=Sum('nfservicopj__premios_faculdade',filter=Q(nfservicopj__data_emissao__lte=dateparse1, nfservicopj__data_emissao__gte=dateparse)),
-             ajuda_custo=Sum('nfservicopj__ajuda_custo', filter=Q(nfservicopj__data_emissao__lte=dateparse1,nfservicopj__data_emissao__gte=dateparse)),
-             adiantamento=Sum('nfservicopj__adiantamento', filter=Q(nfservicopj__data_emissao__lte=dateparse1,nfservicopj__data_emissao__gte=dateparse)),
-             convenio=Sum('nfservicopj__convenio', filter=Q(nfservicopj__data_emissao__lte=dateparse1,nfservicopj__data_emissao__gte=dateparse)),
-             outros=Sum('nfservicopj__outros_desc',filter=Q(nfservicopj__data_emissao__lte=dateparse1, nfservicopj__data_emissao__gte=dateparse)),
+             premios=Coalesce(Sum('nfservicopj__premios_faculdade',filter=Q(nfservicopj__data_emissao__lte=dateparse1, nfservicopj__data_emissao__gte=dateparse)), Value(0)),
+             ajuda_custo=Coalesce(Sum('nfservicopj__ajuda_custo', filter=Q(nfservicopj__data_emissao__lte=dateparse1,nfservicopj__data_emissao__gte=dateparse)), Value(0)),
+             adiantamento=Coalesce(Sum('nfservicopj__adiantamento', filter=Q(nfservicopj__data_emissao__lte=dateparse1,nfservicopj__data_emissao__gte=dateparse)), Value(0)),
+             convenio=Coalesce(Sum('nfservicopj__convenio', filter=Q(nfservicopj__data_emissao__lte=dateparse1,nfservicopj__data_emissao__gte=dateparse)), Value(0)),
+             outros=Coalesce(Sum('nfservicopj__outros_desc',filter=Q(nfservicopj__data_emissao__lte=dateparse1, nfservicopj__data_emissao__gte=dateparse)), Value(0)),
              ).annotate(total=F('salario') + F('premios') + F('ajuda_custo') - (F('adiantamento') + F('convenio') + F('outros')))
         arrya.extend(query)
     for q in arrya:

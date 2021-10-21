@@ -83,8 +83,7 @@ class ChecklistForm(forms.ModelForm):
             'p3_5',
             'p3_6',
             'p3_7',
-            'p3_8',
-            'teste'
+            'p3_8'
         ]
 
 
