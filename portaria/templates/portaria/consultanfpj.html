@@ -42,15 +42,15 @@
             <tbody>
                 <tr>
                     <th>{{ q.nome }}</th>
-                    <th>{{ q.salario }}</th>
-                    <th>{{ q.faculdade }}</th>
-                    <th>{{ q.ajuda_custo }}</th>
-                    <th>{{ q.adiantamento }}</th>
-                    <th>{{ q.cred_convenio }}</th>
-                    <th>{{ q.outros_cred }}</th>
-                    <th>{{ q.desc_convenio }}</th>
-                    <th>{{ q.outros_desc }}</th>
-                    <th>{{ q.total }}</th>
+                    <th>R$ {{ q.salario|floatformat:2 }}</th>
+                    <th>R$ {{ q.faculdade|floatformat:2 }}</th>
+                    <th>R$ {{ q.ajuda_custo|floatformat:2 }}</th>
+                    <th>R$ {{ q.adiantamento|floatformat:2 }}</th>
+                    <th>R$ {{ q.cred_convenio|floatformat:2 }}</th>
+                    <th>R$ {{ q.outros_cred|floatformat:2 }}</th>
+                    <th>R$ {{ q.desc_convenio|floatformat:2 }}</th>
+                    <th>R$ {{ q.outros_desc|floatformat:2 }}</th>
+                    <th>R$ {{ q.total|floatformat:2 }}</th>
                 </tr>
             </tbody>
         {% endfor %}
