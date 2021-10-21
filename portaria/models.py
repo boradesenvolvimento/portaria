@@ -169,7 +169,6 @@ class ChecklistFrota(models.Model):
     p3_6 = models.BooleanField('Foi verificado a luz de ré?')
     p3_7 = models.BooleanField('Foi verificado se as luzes da lanterna traseira direita funciona?')
     p3_8 = models.BooleanField('Foi verificado se as luzes da lanterna traseira esquerda funciona?')
-    teste = models.BooleanField('testando')
 
     def __str__(self):
        return str(self.idchecklist)
