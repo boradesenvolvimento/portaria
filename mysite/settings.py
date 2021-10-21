@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 import os.path
 from pathlib import Path
-import MySQLdb
+#import MySQLdb
 from django.urls import reverse_lazy
 from django.core.management.utils import get_random_secret_key
 from django.contrib.messages import constants as messages
@@ -92,24 +92,24 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
 #develop
-#DATABASES = {
-#    'default': {
-#        'ENGINE': 'django.db.backends.sqlite3',
-#        'NAME': BASE_DIR / 'db.sqlite3',
-#    }
-#}
-
-#production
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'bora',
-        'USER': 'bora',
-        'PASSWORD': 'Bor4dev01230database',
-        'HOST': 'mysql.bora.tec.br',
-        'PORT': '3306',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+#production
+#DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.mysql',
+#        'NAME': 'bora',
+#        'USER': 'bora',
+#        'PASSWORD': 'Bor4dev01230database',
+#        'HOST': 'mysql.bora.tec.br',
+#        'PORT': '3306',
+#    }
+#}
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
@@ -175,5 +175,5 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.bora.com.br'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'renan.amarantes@bora.com.br'
-EMAIL_HOST_PASSWORD = 'B0r*476248'
+EMAIL_HOST_USER = ''
+EMAIL_HOST_PASSWORD = ''
