@@ -1,5 +1,6 @@
 import datetime
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxLengthValidator, DecimalValidator
@@ -22,7 +23,8 @@ TIPO_MOT = (
 TIPO_VIAGEM = (
     ('COLETA', 'COLETA'),
     ('ENTREGA', 'ENTREGA'),
-    ('TRANSF', 'TRANSF')
+    ('TRANSF', 'TRANSF'),
+    ('NENHUM', 'NENHUM')
 )
 TIPO_GARAGEM = (
     ('SPO','SPO'),
@@ -42,6 +44,8 @@ TIPO_GARAGEM = (
     ('VIX','VIX'),
 )
 # Create your models here.
+
+
 class Cadastro(models.Model):
     id = models.BigAutoField(primary_key=True)
     placa = models.CharField(max_length=7)
@@ -52,7 +56,7 @@ class Cadastro(models.Model):
     destino = models.CharField(max_length=5, choices=TIPO_GARAGEM, blank=True, null=True)
     tipo_mot = models.CharField(max_length=10, choices=TIPO_MOT)
     tipo_viagem = models.CharField(max_length=10, choices=TIPO_VIAGEM)
-    hr_chegada = models.DateTimeField(blank=True, default=timezone.now)
+    hr_chegada = models.DateTimeField(blank=True)
     hr_saida = models.DateTimeField(blank=True, null=True)
     autor = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
 

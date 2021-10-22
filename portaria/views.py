@@ -65,9 +65,12 @@ def cadastroentrada(request):
         if request.method == 'POST':
             if form.is_valid():
                 uplaca = upper(form.cleaned_data['placa'])
+                new_date_str = datetime.datetime.strftime(timezone.now(), settings.DATETIME_FORMAT)
+                new_date_date = datetime.datetime.strptime(new_date_str, settings.DATETIME_FORMAT)
                 order = form.save(commit=False)
                 order.placa = uplaca
                 order.autor = autor
+                order.hr_chegada = new_date_date
                 order.save()
                 messages.success(request,'Entrada cadastrada com sucesso.')
                 return redirect('portaria:cadastro')
@@ -95,7 +98,9 @@ def cadastrosaida(request):
                     messages.error(request, 'Não encontrado')
                     return render(request, 'portaria/cadastrosaida.html', {'form':form})
                 else:
-                    Cadastro.objects.filter(pk=loc_placa.id).update(hr_saida=timezone.now(), destino=q_query, autor=request.user)
+                    new_date_str = datetime.datetime.strftime(timezone.now(), settings.DATETIME_FORMAT)
+                    new_date_date = datetime.datetime.strptime(new_date_str, settings.DATETIME_FORMAT)
+                    Cadastro.objects.filter(pk=loc_placa.id).update(hr_saida=new_date_date, destino=q_query, autor=request.user)
                     messages.success(request, 'Saida cadastrada com sucesso.')
                     return HttpResponseRedirect(reverse('portaria:cadastro'))
         return render(request, 'portaria/cadastrosaida.html', {'form':form})
@@ -277,7 +282,7 @@ def get_portaria_csv(request):
     response = HttpResponse(content_type='text/csv',
                             headers={'Content-Disposition': 'attachment; filename="portaria.csv"'},
                             )
-    dateparse = datetime.datetime.strptime(data1, '%d/%m/%Y').replace(hour=23, minute=59)
+    dateparse = datetime.datetime.strptime(data1, '%d/%m/%Y').replace(hour=00, minute=00)
     dateparse1 = datetime.datetime.strptime(data2, '%d/%m/%Y').replace(hour=23, minute=59)
     response.write(u'\ufeff'.encode('utf8'))
     writer = csv.writer(response)
@@ -287,6 +292,7 @@ def get_portaria_csv(request):
                             'tipo_mot', 'tipo_viagem', 'hr_chegada', 'hr_saida', 'autor').filter(hr_chegada__gte=dateparse,hr_chegada__lte=dateparse1)
     for placa in cadastro:
         writer.writerow(placa)
+        print(placa)
     return response
 
 def get_palet_csv(request):

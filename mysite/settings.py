@@ -37,11 +37,11 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'cg#p$g+j9tax!#a3cup@1$8obt2_+&
 # SECURITY WARNING: don't run with debug turned on in production!
 
 #develop
-DEBUG = True
+#DEBUG = True
 #ALLOWED_HOSTS = []
 
 #production
-#DEBUG = False
+DEBUG = False
 ALLOWED_HOSTS = ["www.bora.tec.br","www.bora.tec.br/portaria", "bora.tec.br/portaria"]
 
 # Application definition
@@ -132,17 +132,17 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
+DATETIME_FORMAT = '%d/%m/%Y %H:%M'
 
 LANGUAGE_CODE = 'pt-br'
 
 TIME_ZONE = 'America/Sao_Paulo'
 
-USE_I18N = True
+USE_I18N = False
 
-USE_L10N = True
+USE_L10N = False
 
 USE_TZ = False
-
 
 
 # Static files (CSS, JavaScript, Images)
@@ -152,7 +152,7 @@ STATIC_URL = '/static/'
 #develop
 #STATIC_ROOT = os.path.join(BASE_DIR, 'portaria/static')
 #production
-#STATIC_ROOT = '/home/bora/www/static'
+STATIC_ROOT = '/home/bora/www/static'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
