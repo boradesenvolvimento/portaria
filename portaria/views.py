@@ -172,7 +172,7 @@ def servicospj(request):
         query = FuncPj.objects.filter(pk=q.id)
         array.extend(query)
     if func:
-        cad = FuncPj.objects.all().filter(nome__icontains=func)
+        cad = FuncPj.objects.all().filter(nome__icontains=func, ativo=True)
         if cad:
             array.clear()
             for c in cad:
