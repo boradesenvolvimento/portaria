@@ -53,8 +53,9 @@ class NfServicoPjAdmin(admin.ModelAdmin):
         ('desc_convenio', {'fields':['desc_convenio']}),
         ('outros_desc', {'fields': ['outros_desc']}),
         ('data_emissao', {'fields':['data_emissao']}),
+        ('autor', {'fields': ['autor']}),
     )
-    list_display = ('funcionario', 'faculdade', 'cred_convenio', 'outros_cred', 'desc_convenio', 'outros_desc', 'data_emissao')
+    list_display = ('funcionario', 'faculdade', 'cred_convenio', 'outros_cred', 'desc_convenio', 'outros_desc', 'data_emissao', 'autor')
 
 admin.site.register(NfServicoPj, NfServicoPjAdmin)
 

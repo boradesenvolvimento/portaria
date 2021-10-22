@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxLengthValidator, DecimalValidator
 from django.db import models
-from django.db.models import SET_NULL
+from django.db.models import PROTECT
 from django.utils import timezone
 
 #validators
@@ -207,13 +207,14 @@ class FuncPj(models.Model):
 
 class NfServicoPj(models.Model):
     id = models.BigAutoField(primary_key=True)
-    funcionario = models.ForeignKey(FuncPj, on_delete=models.CASCADE)
+    funcionario = models.ForeignKey(FuncPj, on_delete=PROTECT)
     faculdade = models.FloatField()
     cred_convenio = models.FloatField()
     outros_cred = models.FloatField()
     desc_convenio = models.FloatField()
     outros_desc = models.FloatField()
     data_emissao = models.DateField(default=timezone.now)
+    autor = models.ForeignKey(User, on_delete=PROTECT)
 
     def __str__(self):
        return str(self.id)

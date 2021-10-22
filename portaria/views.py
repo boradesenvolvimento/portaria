@@ -198,10 +198,12 @@ def consultanfpj(request):
 def cadservicospj(request, args):
     form = ServicoPjForm(request.POST or None)
     func = get_object_or_404(FuncPj, pk=args)
+    autor = request.user
     if request.method == 'POST':
         if form.is_valid():
             calc = form.save(commit=False)
             calc.funcionario = func
+            calc.autor = autor
             calc.save()
             messages.success(request, f'Valores cadastrados com sucesso para {calc.funcionario}')
             return HttpResponseRedirect(reverse('portaria:servicospj'))
