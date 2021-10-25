@@ -4,17 +4,20 @@
 {% load groupscheck %}
 {% if request.user|has_group:"frota" %}
 <div class="container mt-5">
+    {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+            {% endfor %}
     <div class="row">
         <div class="col-12">
-            <form method="get" class="linha-baixo">
-                <h2 class="title-cad">Insira a placa {{ form }}
-                <input type="submit" class="button"></h2>
+            <form action="{% url 'portaria:frota' %}" method="get" class="linha-baixo">
+                <h2 class="title-cad">Insira a placa:<input type="text" name="placa_"></h2>
+                <h2 class="title-cad">Insira a motorista:<input type="text" name="moto_"></h2>
+                <input type="submit" class="button">
             </form>
-            {% if error_message %}
-            <strong><p>{{ error_message }}</p></strong>
-            {% elif success_message %}
-            <strong><p>{{ success_message }}</p></strong>
-            {% endif %}
         </div>
     </div>
 </div>
