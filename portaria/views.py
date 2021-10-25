@@ -144,7 +144,7 @@ def frota(request):
                               {'form': form, 'error_message': 'Cadastro não encontrado'})
             else:
                 return redirect('portaria:checklistfrota',placa_id = bar)
-    return render(request, 'portaria/frota.html', context)
+    return render(request, 'portaria/frota.html', {'form':form})
 
 @login_required
 def checklistfrota(request, placa_id):
@@ -167,7 +167,7 @@ def checklistfrota(request, placa_id):
 def servicospj(request):
     func = request.GET.get('nomefunc')
     array = []
-    qnt_funcs = FuncPj.objects.filter(ativo=True)
+    qnt_funcs = FuncPj.objects.filter(ativo=True).order_by('nome')
     for q in qnt_funcs:
         query = FuncPj.objects.filter(pk=q.id)
         array.extend(query)
