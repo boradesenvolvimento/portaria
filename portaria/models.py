@@ -80,7 +80,6 @@ class PaletControl(models.Model):
 
 class Motorista(models.Model):
     codigomot = models.BigAutoField(primary_key=True)
-    codigoveic = models.IntegerField()
     empresa = models.IntegerField(default=1)
     filial = models.IntegerField(default=1)
     nome = models.CharField(max_length=100)

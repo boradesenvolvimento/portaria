@@ -131,24 +131,25 @@ class PaletView(generic.ListView):
         return qs
 
 def frota(request):
-    context = {}
-    form = FilterForm()
-    context['form'] = form
     if request.method == "GET":
-        foo = request.GET.get('filter_')
-        if foo:
+        pla = request.GET.get('placa_')
+        mot = request.GET.get('moto_')
+        print(pla,mot)
+        if pla and mot:
             try:
-                bar = Veiculos.objects.get(prefixoveic=foo)
+                pla1 = Veiculos.objects.get(prefixoveic=pla)
+                mot1 = Motorista.objects.get(nome=mot)
             except ObjectDoesNotExist:
-                return render(request, 'portaria/frota.html',
-                              {'form': form, 'error_message': 'Cadastro não encontrado'})
+                messages.error(request,'Cadastro não encontrado')
+                return render(request, 'portaria/frota.html')
             else:
-                return redirect('portaria:checklistfrota',placa_id = bar)
-    return render(request, 'portaria/frota.html', {'form':form})
+                return redirect('portaria:checklistfrota',placa_id = pla1, moto_id=mot1)
+    return render(request, 'portaria/frota.html')
 
 @login_required
-def checklistfrota(request, placa_id):
-    test = get_object_or_404(Veiculos, prefixoveic = placa_id)
+def checklistfrota(request, placa_id, moto_id):
+    pla = get_object_or_404(Veiculos, prefixoveic = placa_id)
+    mot = get_object_or_404(Motorista, nome=moto_id)
     context = {}
     form = ChecklistForm
     context['form'] = form
@@ -156,13 +157,14 @@ def checklistfrota(request, placa_id):
         form = ChecklistForm(request.POST)
         if form.is_valid():
             obar = form.save(commit=False)
-            obar.placaveic = test
-            obar.kmanterior = test.kmatualveic
+            obar.placaveic = pla
+            obar.kmanterior = pla.kmatualveic
+            obar.motoristaveic = mot
             obar.save()
-            test.kmatualveic = obar.kmatual
-            test.save()
+            pla.kmatualveic = obar.kmatual
+            pla.save()
             return HttpResponseRedirect(reverse('portaria:frota'), {'success_message': 'success_message'})
-    return render(request,'portaria/checklistfrota.html', {'form':form,'test':test})
+    return render(request,'portaria/checklistfrota.html', {'form':form,'pla':pla, 'mot':mot})
 
 def servicospj(request):
     func = request.GET.get('nomefunc')
