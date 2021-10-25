@@ -9,12 +9,14 @@ https://docs.djangoproject.com/en/3.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
+import json
 import os.path
 from pathlib import Path
 import MySQLdb
 from django.urls import reverse_lazy
 from django.core.management.utils import get_random_secret_key
 from django.contrib.messages import constants as messages
+from django.core.exceptions import ImproperlyConfigured
 
 MESSAGE_TAGS = {
         messages.DEBUG: 'alert-secondary',
@@ -27,13 +29,20 @@ MESSAGE_TAGS = {
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+with open(os.path.join(BASE_DIR, 'secrets.json')) as secret_file:
+    secrets = json.load(secret_file)
+
+def get_secret(setting, secrets=secrets):
+    try:
+        return secrets[setting]
+    except KeyError:
+        raise ImproperlyConfigured(f"Set the {setting} setting")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'cg#p$g+j9tax!#a3cup@1$8obt2_+&k3q+pmu)5%asj6yjpkag')
-
+SECRET_KEY = get_secret('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 
 #develop
@@ -104,9 +113,9 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'bora',
-        'USER': 'bora',
-        'PASSWORD': 'Bor4dev01230database',
-        'HOST': 'mysql.bora.tec.br',
+        'USER': get_secret('DB_USER'),
+        'PASSWORD': get_secret('DB_PASS'),
+        'HOST': get_secret('DB_HOST'),
         'PORT': '3306',
     }
 }
@@ -150,9 +159,9 @@ USE_TZ = False
 
 STATIC_URL = '/static/'
 #develop
-#STATIC_ROOT = os.path.join(BASE_DIR, 'portaria/static')
+STATIC_ROOT = get_secret('STATIC_ROOT') #os.path.join(BASE_DIR, 'portaria/static')
 #production
-STATIC_ROOT = '/home/bora/www/static'
+#STATIC_ROOT = '/home/bora/www/static'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
@@ -171,4 +180,9 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 
 #EMAIL CONFIG
-
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = get_secret('E_HOST')
+EMAIL_PORT = get_secret('E_PORT')
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = get_secret('E_UMAIL')
+EMAIL_HOST_PASSWORD = get_secret('E_UPASS')
