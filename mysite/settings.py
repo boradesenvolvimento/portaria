@@ -46,12 +46,12 @@ SECRET_KEY = get_secret('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 
 #develop
-DEBUG = True
-ALLOWED_HOSTS = []
+#DEBUG = True
+#ALLOWED_HOSTS = []
 
 #production
-#DEBUG = False
-#ALLOWED_HOSTS = ["www.bora.tec.br","www.bora.tec.br/portaria", "bora.tec.br", "bora.tec.br/portaria"]
+DEBUG = False
+ALLOWED_HOSTS = ["www.bora.tec.br","www.bora.tec.br/portaria", "bora.tec.br", "bora.tec.br/portaria"]
 
 # Application definition
 
