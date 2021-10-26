@@ -46,12 +46,12 @@ SECRET_KEY = get_secret('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 
 #develop
-#DEBUG = True
-#ALLOWED_HOSTS = []
+DEBUG = True
+ALLOWED_HOSTS = []
 
 #production
-DEBUG = False
-ALLOWED_HOSTS = ["www.bora.tec.br","www.bora.tec.br/portaria", "bora.tec.br", "bora.tec.br/portaria"]
+#DEBUG = False
+#ALLOWED_HOSTS = ["www.bora.tec.br","www.bora.tec.br/portaria", "bora.tec.br", "bora.tec.br/portaria"]
 
 # Application definition
 
@@ -158,10 +158,8 @@ USE_TZ = False
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 STATIC_URL = '/static/'
-#develop
-STATIC_ROOT = get_secret('STATIC_ROOT') #os.path.join(BASE_DIR, 'portaria/static')
-#production
-#STATIC_ROOT = '/home/bora/www/static'
+STATIC_ROOT = get_secret('STATIC_ROOT')
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field

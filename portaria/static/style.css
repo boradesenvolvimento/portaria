@@ -26,7 +26,7 @@ html{
 
 body{
     background: var(--background);
-    margin-bottom: 10rem;
+    padding-bottom: 10rem
 }
 /* global */
 .navbar{
@@ -57,12 +57,13 @@ body{
     font-weight: 900;
     align-items: center;
 }
+
 .footer1{
   position: fixed;
-  left: 0;
+  margin: auto;
+  height: 7rem;
   bottom: 0;
   width: 100%;
-  height: 7rem;
   color: white;
   text-align: center;
 }
