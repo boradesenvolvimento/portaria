@@ -1,7 +1,8 @@
 from django import forms
+from django.conf import settings
+from django.forms import Textarea, DateField
 
-
-from .models import Cadastro, TIPO_GARAGEM, ChecklistFrota, NfServicoPj
+from .models import Cadastro, TIPO_GARAGEM, ChecklistFrota, NfServicoPj, ManutencaoFrota
 
 #forms
 class DateInput(forms.DateInput):
@@ -36,7 +37,7 @@ class CadastroForm(forms.ModelForm):
             'autor'
         ]
 
-class TPaletsForm(forms.Form):
+class TPaletesForm(forms.Form):
     origem_ = forms.ChoiceField(choices=TIPO_GARAGEM)
     destino_ = forms.ChoiceField(choices=TIPO_GARAGEM)
     quantidade_ = forms.IntegerField()
@@ -99,3 +100,24 @@ class ServicoPjForm(forms.ModelForm):
             'outros_desc',
             'data_emissao'
         ]
+
+class ManutencaoForm(forms.ModelForm):
+    class Meta:
+        model = ManutencaoFrota
+        fields = [
+            'socorro',
+            'tp_manutencao',
+            'local_manu',
+            'km_ult_troca_oleo',
+            'tp_servico',
+            'filial',
+            'prev_entrega',
+            'observacao'
+        ]
+        widgets = {
+            'observacao': Textarea(attrs={'cols': 30, 'rows': 3}),
+            'dt_entrada': forms.DateInput(format='%d/%m/%Y'),
+            'dt_saida': forms.DateInput(format='%d/%m/%Y'),
+            'prev_entrega': forms.DateInput(format='%d/%m/%Y'),
+
+        }

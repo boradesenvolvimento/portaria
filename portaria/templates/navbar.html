@@ -31,14 +31,14 @@
           {% if request.user|has_group:"palets" %}
           <div class="dropdown">
             <button class="dropdown-toggle menutext-navbar nav-link1" type="button" style="background-color: #3188E8;" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-              Palets
+              Paletes
             </button>
             <ul class="dropdown-menu" style="background-color: #3188E8;" aria-labelledby="dropdownMenuButton1">
               <li class="nav-item">
-                <a class="nav-link1" href="{% url 'portaria:paletview' %}">Palets</a>
+                <a class="nav-link1" href="{% url 'portaria:paleteview' %}">Paletes</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link1" href="{% url 'portaria:transfpalets' %}">Transferir</a>
+                <a class="nav-link1" href="{% url 'portaria:transfpaletes' %}">Transferir</a>
               </li>
             </ul>
           </div>
@@ -51,6 +51,7 @@
             <ul class="dropdown-menu" style="background-color: #3188E8;" aria-labelledby="dropdownMenuButton1">
               <li class="nav-item">
                 <a class="nav-link1" href="{% url 'portaria:frota' %}">Checklist</a>
+                <a class="nav-link1" href="{% url 'portaria:manutencaofrota' %}">Manutencao</a>
               </li>
             </ul>
           </div>
