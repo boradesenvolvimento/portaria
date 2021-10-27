@@ -63,7 +63,7 @@ class Cadastro(models.Model):
     def __str__(self):
        return self.placa
 
-class PaletControl(models.Model):
+class PaleteControl(models.Model):
     id = models.BigAutoField(primary_key=True)
     loc_atual = models.CharField(max_length=3, choices=TIPO_GARAGEM)
     ultima_viagem = models.DateField()
@@ -72,8 +72,8 @@ class PaletControl(models.Model):
     placa_veic = models.CharField(max_length=7)
 
     class Meta:
-        verbose_name = 'PaletControl'
-        verbose_name_plural = 'PaletControl'
+        verbose_name = 'PaleteControl'
+        verbose_name_plural = 'PaleteControl'
 
     def __int__(self):
         return str(self.id)
@@ -217,3 +217,43 @@ class NfServicoPj(models.Model):
 
     def __str__(self):
        return str(self.id)
+
+class ManutencaoFrota(models.Model):
+    TIPO_MANUTENCAO_CHOICES = [
+        ('PREVENTIVA', 'PREVENTIVA'),
+        ('CORRETIVA', 'CORRETIVA')
+    ]
+    FILIAL_CHOICES = [
+        ('SPO', 'SPO'),
+        ('VDC', 'VDC')
+    ]
+    LOCAL_MANU_CHOICES = [
+        ('I','INTERNO'),
+        ('E','EXTERNO')
+    ]
+    SERVICO_CHOICES = [
+        ('TROCA_OLEO','TROCA_OLEO'),
+        ('PNEUS','PNEUS'),
+        ('FREIOS', 'FREIOS')
+    ]
+    id = models.BigAutoField(primary_key=True)
+    veiculo = models.ForeignKey(Veiculos, on_delete=PROTECT)
+    tp_manutencao = models.CharField('Tipo manutenção',max_length=10,choices=TIPO_MANUTENCAO_CHOICES)
+    local_manu = models.CharField('Local manutenção',max_length=1, choices=LOCAL_MANU_CHOICES)
+    dt_ult_manutencao = models.DateField('Data da última manutenção', blank=True, null=True)
+    dt_entrada = models.DateField()
+    dt_saida = models.DateField(blank=True, null=True)
+    dias_veic_parado = models.CharField(max_length=20, blank=True, null=True)
+    km_ult_troca_oleo = models.IntegerField('Kilometragem da última troca de óleo')
+    tp_servico = models.CharField('Tipo serviço',max_length=10, choices=SERVICO_CHOICES)
+    valor_maodeobra = models.FloatField('Valor mão de obra', blank=True, null=True)
+    valor_peca = models.FloatField('Valor peça', blank=True, null=True)
+    filial = models.CharField(max_length=3, choices=FILIAL_CHOICES)
+    socorro = models.BooleanField()
+    prev_entrega = models.DateField()
+    observacao = models.TextField(blank=True)
+
+    def __str__(self):
+        return str(self.id)
+
+

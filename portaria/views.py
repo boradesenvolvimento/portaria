@@ -121,20 +121,19 @@ def outputs(request):
     return render(request, 'portaria/outputs.html')
 
 
-class PaletView(generic.ListView):
+class PaleteView(generic.ListView):
     paginate_by = 10
-    template_name = 'portaria/palets.html'
+    template_name = 'portaria/paletes.html'
     context_object_name = 'lista'
 
     def get_queryset(self):
-        qs = PaletControl.objects.values("loc_atual").annotate(num_ratings=Count("id"))
+        qs = PaleteControl.objects.values("loc_atual").annotate(num_ratings=Count("id"))
         return qs
 
 def frota(request):
     if request.method == "GET":
         pla = request.GET.get('placa_')
         mot = request.GET.get('moto_')
-        print(pla,mot)
         if pla and mot:
             try:
                 pla1 = Veiculos.objects.get(prefixoveic=pla)
@@ -143,12 +142,12 @@ def frota(request):
                 messages.error(request,'Cadastro não encontrado')
                 return render(request, 'portaria/frota.html')
             else:
-                return redirect('portaria:checklistfrota',placa_id = pla1, moto_id=mot1)
+                return redirect('portaria:checklistfrota', placa_id=pla1, moto_id=mot1)
     return render(request, 'portaria/frota.html')
 
 @login_required
 def checklistfrota(request, placa_id, moto_id):
-    pla = get_object_or_404(Veiculos, prefixoveic = placa_id)
+    pla = get_object_or_404(Veiculos, prefixoveic=placa_id)
     mot = get_object_or_404(Motorista, nome=moto_id)
     context = {}
     form = ChecklistForm
@@ -209,36 +208,114 @@ def cadservicospj(request, args):
             calc.save()
             messages.success(request, f'Valores cadastrados com sucesso para {calc.funcionario}')
             return HttpResponseRedirect(reverse('portaria:servicospj'))
-
     return render(request, 'portaria/cadservicospj.html', {'form':form,'func':func})
 
+def manutencaofrota(request):
+    if request.method == 'GET':
+        pla = request.GET.get('placa')
+        if pla:
+            try:
+                Veiculos.objects.get(prefixoveic=pla)
+            except ObjectDoesNotExist:
+                messages.error(request, 'Veículo não encontrado')
+                return render(request, 'portaria/manutencaofrota.html')
+            else:
+                return redirect('portaria:manuentrada', placa_id=pla)
+
+    if request.method == 'POST':
+        idmanu = request.POST.get('idmanu')
+        try:
+            ManutencaoFrota.objects.get(pk=idmanu)
+        except ObjectDoesNotExist:
+            messages.error(request, 'OS não encontrado')
+            return render(request, 'portaria/manutencaofrota.html')
+        else:
+            return redirect('portaria:manusaida', osid=idmanu)
+    return render(request, 'portaria/manutencaofrota.html')
+
+def manuentrada(request, placa_id):
+    placa = get_object_or_404(Veiculos, prefixoveic=placa_id)
+    form = ManutencaoForm
+
+    ult_manu = Veiculos.objects.filter(pk=placa.codigoveic).values_list('manutencaofrota__dt_saida').order_by('-manutencaofrota__dt_saida').first()
+    date_ult_manu = ult_manu[0]
+    if date_ult_manu == None: date_ult_manu = timezone.now()
+    if request.method == 'POST':
+        form = ManutencaoForm(request.POST or None)
+        if form.is_valid():
+            manu = form.save(commit=False)
+            manu.veiculo_id = placa.codigoveic
+            manu.dt_ult_manutencao = date_ult_manu
+            manu.dt_entrada = timezone.now()
+            manu.save()
+            messages.success(request, f'Cadastro de manutenção do veículo {placa} feito com sucesso!')
+            return redirect('portaria:manutencaoprint', osid= manu.id)
+    return render(request, 'portaria/manuentrada.html', {'placa':placa,'form':form})
+
+def manusaida(request, osid):
+    get_os = get_object_or_404(ManutencaoFrota, pk=osid)
+    if get_os.dt_saida == None:
+        dtsaida = request.POST.get('dtsaida')
+        vlmao = request.POST.get('vlmao')
+        vlpeca = request.POST.get('vlpeca')
+        if dtsaida and vlpeca and vlmao:
+            date_dtsaida = datetime.datetime.strptime(dtsaida, '%d/%m/%Y').date()
+            print(date_dtsaida,get_os.dt_entrada)
+            between_days = (date_dtsaida - get_os.dt_entrada).days
+            ManutencaoFrota.objects.filter(pk=get_os.id).update(dt_saida=date_dtsaida,
+                                                                dias_veic_parado=str(between_days))
+            print(dtsaida,vlpeca,vlmao)
+            messages.success(request, f'Saída cadastrada para OS {get_os.id}, placa {get_os.veiculo}')
+            return redirect('portaria:manutencaofrota')
+        return render(request, 'portaria/manusaida.html',{'get_os':get_os})
+    else:
+        messages.error(request, 'Saída já cadastrada para OS')
+        return redirect('portaria:manutencaofrota')
+
+class ManutencaoListView(generic.ListView):
+    template_name = 'portaria/manutencaoview.html'
+    context_object_name = 'lista'
+
+    def get_queryset(self):
+        qs = ManutencaoFrota.objects.filter(dt_saida=None).order_by('dt_entrada')
+        try:
+            placa = self.request.GET.get('isplaca')
+            if placa:
+                qs = ManutencaoFrota.objects.filter(dt_saida=None, veiculo__prefixoveic=placa).order_by('dt_entrada')
+        except ObjectDoesNotExist:
+            raise Exception('Valor digitado inválido')
+        return qs
+
+def manutencaoprint(request, osid):
+    os = get_object_or_404(ManutencaoFrota, pk=osid)
+    return render(request, 'portaria/manutencaoprint.html', {'os':os})
 
 #fim das views
 
 
 #funcoes variadas
 @login_required
-def transfpalet(request):
+def transfpalete(request):
     context = {}
-    form = TPaletsForm()
+    form = TPaletesForm()
     context['form'] = form
     if request.method == 'POST':
         ori = request.POST.get('origem_')
         des = request.POST.get('destino_')
         qnt = int(request.POST.get('quantidade_'))
         plc = request.POST.get('placa_veic')
-        if qnt <= PaletControl.objects.filter(loc_atual=ori).count():
+        if qnt <= PaleteControl.objects.filter(loc_atual=ori).count():
             for x in range(qnt):
-                q = PaletControl.objects.filter(loc_atual=ori).first()
-                PaletControl.objects.filter(pk=q.id).update(origem=ori,destino=des, loc_atual=des, placa_veic=plc,ultima_viagem=timezone.now())
+                q = PaleteControl.objects.filter(loc_atual=ori).first()
+                PaleteControl.objects.filter(pk=q.id).update(origem=ori,destino=des, loc_atual=des, placa_veic=plc,ultima_viagem=timezone.now())
 
-            messages.success(request, f'{qnt} palet transferido de {ori} para {des}')
-            return render(request,'portaria/transfpalets.html', {'form':form})
+            messages.success(request, f'{qnt} palete transferido de {ori} para {des}')
+            return render(request,'portaria/transfpaletes.html', {'form':form})
         else:
             messages.error(request,'Quantidade solicitada maior que a disponível')
-            return render(request,'portaria/transfpalets.html', {'form':form})
+            return render(request,'portaria/transfpaletes.html', {'form':form})
 
-    return render(request,'portaria/transfpalets.html', context)
+    return render(request,'portaria/transfpaletes.html', context)
 
 def get_nfpj_csv(request):
     data1 = request.POST.get('dataIni')
@@ -299,15 +376,34 @@ def get_portaria_csv(request):
         print(placa)
     return response
 
-def get_palet_csv(request):
+def get_palete_csv(request):
     response = HttpResponse(content_type='text/csv',
-                            headers={'Content-Disposition':'attachment; filename="palets.csv"'})
+                            headers={'Content-Disposition':'attachment; filename="paletes.csv"'})
     writer = csv.writer(response)
     writer.writerow(['id','loc_atual','ultima_viagem','origem','destino','placa_veic'])
-    palet = PaletControl.objects.all().values_list(
+    palete = PaleteControl.objects.all().values_list(
         'id', 'loc_atual', 'ultima_viagem', 'origem', 'destino', 'placa_veic'
     )
-    for id in palet:
+    for id in palete:
+        writer.writerow(id)
+    return response
+
+def get_manu_csv(request):
+    data1 = request.POST.get('dataIni')
+    data2 = request.POST.get('dataFin')
+    dateparse = datetime.datetime.strptime(data1, '%d/%m/%Y')
+    dateparse1 = datetime.datetime.strptime(data2, '%d/%m/%Y')
+    response = HttpResponse(content_type='text/csv',
+                            headers={'Content-Disposition':f'attatchment; filename="manutencao{dateparse}-{dateparse1}.csv"'})
+    response.write(u'\ufeff'.encode('utf8'))
+    writer = csv.writer(response)
+    writer.writerow(['id','veiculo','tp_manutencao','local_manu','dt_ult_manutencao','dt_entrada','dt_saida',
+                        'dias_veic_parado','km_ult_troca_oleo','tp_servico','valor_maodeobra','valor_peca',
+                            'filial','socorro','prev_entrega','observacao'])
+    manutencao = ManutencaoFrota.objects.all().values_list('id','veiculo','tp_manutencao','local_manu','dt_ult_manutencao','dt_entrada','dt_saida',
+                        'dias_veic_parado','km_ult_troca_oleo','tp_servico','valor_maodeobra','valor_peca',
+                            'filial','socorro','prev_entrega','observacao').filter(dt_entrada__gte=dateparse, dt_entrada__lte=dateparse1)
+    for id in manutencao:
         writer.writerow(id)
     return response
 

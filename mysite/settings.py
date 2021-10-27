@@ -143,6 +143,10 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
 DATETIME_FORMAT = '%d/%m/%Y %H:%M'
 
+DATE_INPUT_FORMATS = [
+    '%d/%m/%Y'
+]
+
 LANGUAGE_CODE = 'pt-br'
 
 TIME_ZONE = 'America/Sao_Paulo'

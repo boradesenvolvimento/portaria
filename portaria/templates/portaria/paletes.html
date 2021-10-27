@@ -4,14 +4,14 @@
 {% if request.user|has_group:"palets" %}
         <div class="container mt-5">
             <div class="row linha-baixo">
-                <h2 class="title-cad">Quantidade de Palets por garagem</h2>
+                <h2 class="title-cad">Quantidade de Paletes por garagem</h2>
             </div>
             <div class="row" style="margin-left: 6rem; ">
-            {% for palet in lista %}
+            {% for palete in lista %}
             <div class="card" style="width: 10rem; margin-top: 5rem;">
                 <div class="card-body" style="text-align:center;">
-                    <h5 class="card-title">{{ palet.loc_atual}}</h5>
-                    <p class="card-text">{{ palet.num_ratings }}</p>
+                    <h5 class="card-title">{{ palete.loc_atual}}</h5>
+                    <p class="card-text">{{ palete.num_ratings }}</p>
                 </div>
             </div>
             {% endfor %}

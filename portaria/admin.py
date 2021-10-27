@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Cadastro, PaletControl, Motorista, Veiculos, ChecklistFrota, NfServicoPj, FuncPj
+from .models import * #Cadastro, PaletControl, Motorista, Veiculos, ChecklistFrota, NfServicoPj, FuncPj, ManutencaoFrota
 
 
 # Register your models here.
@@ -21,7 +21,7 @@ class CadastroAdmin(admin.ModelAdmin):
     list_display = ('id','placa', 'placa2', 'motorista', 'empresa','origem','destino','tipo_viagem','tipo_mot','hr_chegada','hr_saida', 'autor')
 admin.site.register(Cadastro, CadastroAdmin)
 
-class PaletControlAdmin(admin.ModelAdmin):
+class PaleteControlAdmin(admin.ModelAdmin):
     fieldsets = (
         ('loc_atual',{'fields':['loc_atual']}) ,
         ('ultima_viagem',{'fields':['ultima_viagem']}),
@@ -30,7 +30,7 @@ class PaletControlAdmin(admin.ModelAdmin):
         ('placa_veic',{'fields':['placa_veic']})
     )
     list_display = ('id','loc_atual','ultima_viagem','origem','destino','placa_veic')
-admin.site.register(PaletControl, PaletControlAdmin)
+admin.site.register(PaleteControl, PaleteControlAdmin)
 
 class MotoristaAdmin(admin.ModelAdmin):
     pass
@@ -62,3 +62,7 @@ admin.site.register(NfServicoPj, NfServicoPjAdmin)
 class FuncPjAdmin(admin.ModelAdmin):
     pass
 admin.site.register(FuncPj, FuncPjAdmin)
+
+class ManutencaoFrotaAdmin(admin.ModelAdmin):
+    pass
+admin.site.register(ManutencaoFrota, ManutencaoFrotaAdmin)
