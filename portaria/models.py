@@ -93,6 +93,9 @@ class Motorista(models.Model):
     cep = models.CharField(max_length=8, validators=[only_int])
     data_nasc = models.DateField()
 
+    class Meta:
+        ordering=['nome']
+
     def __str__(self):
        return self.nome
 
