@@ -19,6 +19,7 @@ def only_int(value):
 TIPO_MOT = (
     ('INTERNO', 'INTERNO'),
     ('AGREGADO', 'AGREGADO'),
+    ('SEM_VINCULO', 'SEM_VINCULO'),
 )
 TIPO_VIAGEM = (
     ('COLETA', 'COLETA'),
@@ -54,7 +55,7 @@ class Cadastro(models.Model):
     empresa = models.CharField(max_length=30)
     origem = models.CharField(max_length=5, choices=TIPO_GARAGEM)
     destino = models.CharField(max_length=5, choices=TIPO_GARAGEM, blank=True, null=True)
-    tipo_mot = models.CharField(max_length=10, choices=TIPO_MOT)
+    tipo_mot = models.CharField(max_length=11, choices=TIPO_MOT)
     tipo_viagem = models.CharField(max_length=10, choices=TIPO_VIAGEM)
     hr_chegada = models.DateTimeField(blank=True)
     hr_saida = models.DateTimeField(blank=True, null=True)
@@ -80,8 +81,7 @@ class PaleteControl(models.Model):
 
 class Motorista(models.Model):
     codigomot = models.BigAutoField(primary_key=True)
-    empresa = models.IntegerField(default=1)
-    filial = models.IntegerField(default=1)
+    filial = models.CharField(max_length=3, choices=TIPO_GARAGEM)
     nome = models.CharField(max_length=100)
     RG = models.CharField(max_length=20, validators=[only_int])
     CPF = models.CharField(max_length=11, validators=[only_int])
@@ -120,13 +120,10 @@ class Veiculos(models.Model):
     codigotpveic = models.CharField(max_length=5, choices=CODIGOTPVEIC_CHOICES)
     filial = models.CharField(max_length=3, choices=TIPO_GARAGEM)
     prefixoveic = models.CharField(max_length=7)
-    condicaoveic = models.CharField(max_length=20)
-    capacidadetanqueveic = models.CharField(max_length=20)
     kmatualveic = models.IntegerField()
     obsveic = models.CharField(max_length=30, blank=True, null=True)
     renavanveic = models.CharField(max_length=11)
     modeloveic = models.CharField(max_length=20)
-
 
     def __str__(self):
        return self.prefixoveic

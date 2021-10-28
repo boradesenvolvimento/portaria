@@ -50,6 +50,7 @@ class ChecklistForm(forms.ModelForm):
             'placacarreta',
             'kmatual',
             'horimetro',
+            'motoristaveic',
             'p1_1',
             'p1_2',
             'p2_1',

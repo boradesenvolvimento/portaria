@@ -130,25 +130,23 @@ class PaleteView(generic.ListView):
         qs = PaleteControl.objects.values("loc_atual").annotate(num_ratings=Count("id"))
         return qs
 
+@login_required
 def frota(request):
     if request.method == "GET":
         pla = request.GET.get('placa_')
-        mot = request.GET.get('moto_')
-        if pla and mot:
+        if pla:
             try:
                 pla1 = Veiculos.objects.get(prefixoveic=pla)
-                mot1 = Motorista.objects.get(nome=mot)
             except ObjectDoesNotExist:
                 messages.error(request,'Cadastro não encontrado')
                 return render(request, 'portaria/frota.html')
             else:
-                return redirect('portaria:checklistfrota', placa_id=pla1, moto_id=mot1)
+                return redirect('portaria:checklistfrota', placa_id=pla1)
     return render(request, 'portaria/frota.html')
 
 @login_required
-def checklistfrota(request, placa_id, moto_id):
+def checklistfrota(request, placa_id):
     pla = get_object_or_404(Veiculos, prefixoveic=placa_id)
-    mot = get_object_or_404(Motorista, nome=moto_id)
     context = {}
     form = ChecklistForm
     context['form'] = form
@@ -158,13 +156,13 @@ def checklistfrota(request, placa_id, moto_id):
             obar = form.save(commit=False)
             obar.placaveic = pla
             obar.kmanterior = pla.kmatualveic
-            obar.motoristaveic = mot
             obar.save()
             pla.kmatualveic = obar.kmatual
             pla.save()
             return HttpResponseRedirect(reverse('portaria:frota'), {'success_message': 'success_message'})
-    return render(request,'portaria/checklistfrota.html', {'form':form,'pla':pla, 'mot':mot})
+    return render(request,'portaria/checklistfrota.html', {'form':form,'pla':pla})
 
+@login_required
 def servicospj(request):
     func = request.GET.get('nomefunc')
     array = []
@@ -181,6 +179,7 @@ def servicospj(request):
                 array.extend(query)
     return render(request, 'portaria/servicospj.html', {'array': array})
 
+@login_required
 def consultanfpj(request):
     arrya = []
     qnt_funcs = FuncPj.objects.filter(ativo=True)
@@ -196,6 +195,7 @@ def consultanfpj(request):
         arrya.extend(query)
     return render(request, 'portaria/consultanfpj.html', {'arrya': arrya})
 
+@login_required
 def cadservicospj(request, args):
     form = ServicoPjForm(request.POST or None)
     func = get_object_or_404(FuncPj, pk=args)
@@ -210,6 +210,7 @@ def cadservicospj(request, args):
             return HttpResponseRedirect(reverse('portaria:servicospj'))
     return render(request, 'portaria/cadservicospj.html', {'form':form,'func':func})
 
+@login_required
 def manutencaofrota(request):
     if request.method == 'GET':
         pla = request.GET.get('placa')
@@ -233,6 +234,7 @@ def manutencaofrota(request):
             return redirect('portaria:manusaida', osid=idmanu)
     return render(request, 'portaria/manutencaofrota.html')
 
+@login_required
 def manuentrada(request, placa_id):
     placa = get_object_or_404(Veiculos, prefixoveic=placa_id)
     form = ManutencaoForm
@@ -252,6 +254,7 @@ def manuentrada(request, placa_id):
             return redirect('portaria:manutencaoprint', osid= manu.id)
     return render(request, 'portaria/manuentrada.html', {'placa':placa,'form':form})
 
+@login_required
 def manusaida(request, osid):
     get_os = get_object_or_404(ManutencaoFrota, pk=osid)
     if get_os.dt_saida == None:
@@ -286,6 +289,7 @@ class ManutencaoListView(generic.ListView):
             raise Exception('Valor digitado inválido')
         return qs
 
+@login_required
 def manutencaoprint(request, osid):
     os = get_object_or_404(ManutencaoFrota, pk=osid)
     return render(request, 'portaria/manutencaoprint.html', {'os':os})
@@ -317,6 +321,7 @@ def transfpalete(request):
 
     return render(request,'portaria/transfpaletes.html', context)
 
+@login_required
 def get_nfpj_csv(request):
     data1 = request.POST.get('dataIni')
     data2 = request.POST.get('dataFim')
