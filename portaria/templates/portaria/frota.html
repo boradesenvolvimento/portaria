@@ -13,10 +13,24 @@
             {% endfor %}
     <div class="row">
         <div class="col-12">
-            <form action="{% url 'portaria:frota' %}" method="get" class="linha-baixo">
-                <h2 class="title-cad">Insira a placa:<input type="text" name="placa_"></h2>
-                <input type="submit" class="button">
+            <form action="{% url 'portaria:frota' %}" method="post" class="linha-baixo">
+                {% csrf_token %}
+                <h2 class="title-cad">Motorista:<input type="text" name="moto_src"><input type="submit" value="Buscar motorista" class="button"></h2>
             </form>
+            <form method="get" class="linha-baixo">
+                <h2 class="title-cad">Insira a placa:<input type="text" name="placa_"></h2>
+                <table>
+                {% for q in qs %}
+                    <tr>
+                        <td><input type="radio" name="moto_" value="{{ q.codigomot }}"></td><td>{{ q.nome }}</td>
+                    </tr>
+                {% endfor %}
+                </table>
+                <div>
+                <input type="submit" class="button">
+                </div>
+            </form>
+
         </div>
     </div>
 </div>

@@ -36,6 +36,10 @@ class CadastroForm(forms.ModelForm):
             'hr_saida',
             'autor'
         ]
+        widgets = {
+            'hr_chegada': forms.DateInput(format='%d/%m/%Y'),
+            'hr_saida': forms.DateInput(format='%d/%m/%Y')
+        }
 
 class TPaletesForm(forms.Form):
     origem_ = forms.ChoiceField(choices=TIPO_GARAGEM)
@@ -50,7 +54,6 @@ class ChecklistForm(forms.ModelForm):
             'placacarreta',
             'kmatual',
             'horimetro',
-            'motoristaveic',
             'p1_1',
             'p1_2',
             'p2_1',
@@ -86,8 +89,6 @@ class ChecklistForm(forms.ModelForm):
             'p3_7',
             'p3_8'
         ]
-
-
 
 
 class ServicoPjForm(forms.ModelForm):

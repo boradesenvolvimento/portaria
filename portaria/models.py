@@ -71,6 +71,7 @@ class PaleteControl(models.Model):
     origem = models.CharField(max_length=3,choices=TIPO_GARAGEM)
     destino = models.CharField(max_length=3, choices=TIPO_GARAGEM)
     placa_veic = models.CharField(max_length=7)
+    autor = models.ForeignKey(User, on_delete=models.PROTECT)
 
     class Meta:
         verbose_name = 'PaleteControl'
@@ -174,6 +175,7 @@ class ChecklistFrota(models.Model):
     p3_6 = models.BooleanField('Foi verificado a luz de ré?')
     p3_7 = models.BooleanField('Foi verificado se as luzes da lanterna traseira direita funciona?')
     p3_8 = models.BooleanField('Foi verificado se as luzes da lanterna traseira esquerda funciona?')
+    autor = models.ForeignKey(User, on_delete=models.PROTECT)
 
     def __str__(self):
        return str(self.idchecklist)
@@ -232,10 +234,19 @@ class ManutencaoFrota(models.Model):
         ('E','EXTERNO')
     ]
     SERVICO_CHOICES = [
-        ('TROCA_OLEO','TROCA_OLEO'),
+        ('TROCA_OLEO',(
+            ('troca','troca'),
+            ('oleo','oleo'),
+         )),
         ('PNEUS','PNEUS'),
         ('FREIOS', 'FREIOS')
     ]
+    STATUS_CHOICES = [
+        ('ANDAMENTO', 'ANDAMENTO'),
+        ('PENDENTE', 'PENDENTE'),
+        ('CONCLUIDO', 'CONCLUIDO')
+    ]
+
     id = models.BigAutoField(primary_key=True)
     veiculo = models.ForeignKey(Veiculos, on_delete=PROTECT)
     tp_manutencao = models.CharField('Tipo manutenção',max_length=10,choices=TIPO_MANUTENCAO_CHOICES)
@@ -245,13 +256,15 @@ class ManutencaoFrota(models.Model):
     dt_saida = models.DateField(blank=True, null=True)
     dias_veic_parado = models.CharField(max_length=20, blank=True, null=True)
     km_ult_troca_oleo = models.IntegerField('Kilometragem da última troca de óleo')
-    tp_servico = models.CharField('Tipo serviço',max_length=10, choices=SERVICO_CHOICES)
+    tp_servico = models.CharField('Tipo serviço', max_length=10, choices=SERVICO_CHOICES)
     valor_maodeobra = models.FloatField('Valor mão de obra', blank=True, null=True)
     valor_peca = models.FloatField('Valor peça', blank=True, null=True)
     filial = models.CharField(max_length=3, choices=FILIAL_CHOICES)
     socorro = models.BooleanField()
     prev_entrega = models.DateField()
     observacao = models.TextField(blank=True)
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES)
+    autor = models.ForeignKey(User, on_delete=models.PROTECT)
 
     def __str__(self):
         return str(self.id)

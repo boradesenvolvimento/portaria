@@ -132,21 +132,36 @@ class PaleteView(generic.ListView):
 
 @login_required
 def frota(request):
+    if request.method == 'POST':
+        mot = request.POST.get('moto_src')
+        if mot:
+            qs = Motorista.objects.filter(nome__icontains=mot)
+            return render(request, 'portaria/frota.html', {'qs':qs})
+
     if request.method == "GET":
         pla = request.GET.get('placa_')
-        if pla:
+        mot = request.GET.get('moto_')
+        if pla and mot:
             try:
                 pla1 = Veiculos.objects.get(prefixoveic=pla)
+                mot1 = Motorista.objects.get(pk=mot)
             except ObjectDoesNotExist:
                 messages.error(request,'Cadastro não encontrado')
                 return render(request, 'portaria/frota.html')
             else:
-                return redirect('portaria:checklistfrota', placa_id=pla1)
+                return redirect('portaria:checklistfrota', placa_id=pla1, moto_id=mot1.codigomot)
+        elif pla and not mot:
+            messages.error(request, 'Insira o motorista e selecione')
+            return render(request, 'portaria/frota.html')
+        elif mot and not pla:
+            messages.error(request, 'Insira a placa')
+            return render(request, 'portaria/frota.html')
     return render(request, 'portaria/frota.html')
 
 @login_required
-def checklistfrota(request, placa_id):
+def checklistfrota(request, placa_id, moto_id):
     pla = get_object_or_404(Veiculos, prefixoveic=placa_id)
+    mot = get_object_or_404(Motorista, pk=moto_id)
     context = {}
     form = ChecklistForm
     context['form'] = form
@@ -156,11 +171,13 @@ def checklistfrota(request, placa_id):
             obar = form.save(commit=False)
             obar.placaveic = pla
             obar.kmanterior = pla.kmatualveic
+            obar.motoristaveic = mot
+            obar.autor = request.user
             obar.save()
             pla.kmatualveic = obar.kmatual
             pla.save()
             return HttpResponseRedirect(reverse('portaria:frota'), {'success_message': 'success_message'})
-    return render(request,'portaria/checklistfrota.html', {'form':form,'pla':pla})
+    return render(request,'portaria/checklistfrota.html', {'form':form,'pla':pla, 'mot':mot})
 
 @login_required
 def servicospj(request):
@@ -238,21 +255,42 @@ def manutencaofrota(request):
 def manuentrada(request, placa_id):
     placa = get_object_or_404(Veiculos, prefixoveic=placa_id)
     form = ManutencaoForm
-
-    ult_manu = Veiculos.objects.filter(pk=placa.codigoveic).values_list('manutencaofrota__dt_saida').order_by('-manutencaofrota__dt_saida').first()
-    date_ult_manu = ult_manu[0]
-    if date_ult_manu == None: date_ult_manu = timezone.now()
+    autor = request.user
+    ult_manu = Veiculos.objects.filter(pk=placa.codigoveic).values_list('manutencaofrota__dt_saida', flat=True).order_by('-manutencaofrota__dt_saida').first()
+    if ult_manu == None: ult_manu = timezone.now()
     if request.method == 'POST':
         form = ManutencaoForm(request.POST or None)
         if form.is_valid():
             manu = form.save(commit=False)
             manu.veiculo_id = placa.codigoveic
-            manu.dt_ult_manutencao = date_ult_manu
+            manu.dt_ult_manutencao = ult_manu
             manu.dt_entrada = timezone.now()
+            manu.status = 'ANDAMENTO'
+            manu.autor = autor
             manu.save()
             messages.success(request, f'Cadastro de manutenção do veículo {placa} feito com sucesso!')
             return redirect('portaria:manutencaoprint', osid= manu.id)
     return render(request, 'portaria/manuentrada.html', {'placa':placa,'form':form})
+
+def manupendentes(request):
+    qs = ManutencaoFrota.objects.filter(status='PENDENTE').order_by('dt_entrada')
+
+    if request.method == 'GET':
+        placa = request.GET.get('isplaca')
+        if placa:
+            qs = ManutencaoFrota.objects.filter(status='PENDENTE', veiculo__prefixoveic=placa).order_by('dt_entrada')
+    if request.method == 'POST':
+        osid = request.POST.get('os')
+        try:
+            isos = get_object_or_404(ManutencaoFrota, pk=osid)
+            ManutencaoFrota.objects.filter(pk=isos.id).update(status='CONCLUIDO', autor=request.user)
+        except ObjectDoesNotExist:
+            return redirect('portaria:manupendentes')
+        else:
+            messages.success(request, f'Confirmado conclusão da os {isos}')
+            return redirect('portaria:manupendentes')
+    return render(request,'portaria/manutencaopendencia.html', {'qs':qs})
+
 
 @login_required
 def manusaida(request, osid):
@@ -263,11 +301,13 @@ def manusaida(request, osid):
         vlpeca = request.POST.get('vlpeca')
         if dtsaida and vlpeca and vlmao:
             date_dtsaida = datetime.datetime.strptime(dtsaida, '%d/%m/%Y').date()
-            print(date_dtsaida,get_os.dt_entrada)
             between_days = (date_dtsaida - get_os.dt_entrada).days
-            ManutencaoFrota.objects.filter(pk=get_os.id).update(dt_saida=date_dtsaida,
-                                                                dias_veic_parado=str(between_days))
-            print(dtsaida,vlpeca,vlmao)
+            ManutencaoFrota.objects.filter(pk=get_os.id).update(valor_peca=vlpeca,valor_maodeobra=vlmao,
+                                                                dt_saida=date_dtsaida,
+                                                                dias_veic_parado=str(between_days),
+                                                                status='PENDENTE',
+                                                                autor=request.user)
+
             messages.success(request, f'Saída cadastrada para OS {get_os.id}, placa {get_os.veiculo}')
             return redirect('portaria:manutencaofrota')
         return render(request, 'portaria/manusaida.html',{'get_os':get_os})
@@ -311,7 +351,7 @@ def transfpalete(request):
         if qnt <= PaleteControl.objects.filter(loc_atual=ori).count():
             for x in range(qnt):
                 q = PaleteControl.objects.filter(loc_atual=ori).first()
-                PaleteControl.objects.filter(pk=q.id).update(origem=ori,destino=des, loc_atual=des, placa_veic=plc,ultima_viagem=timezone.now())
+                PaleteControl.objects.filter(pk=q.id).update(origem=ori,destino=des, loc_atual=des, placa_veic=plc,ultima_viagem=timezone.now(), autor=request.user)
 
             messages.success(request, f'{qnt} palete transferido de {ori} para {des}')
             return render(request,'portaria/transfpaletes.html', {'form':form})
@@ -385,9 +425,9 @@ def get_palete_csv(request):
     response = HttpResponse(content_type='text/csv',
                             headers={'Content-Disposition':'attachment; filename="paletes.csv"'})
     writer = csv.writer(response)
-    writer.writerow(['id','loc_atual','ultima_viagem','origem','destino','placa_veic'])
+    writer.writerow(['id','loc_atual','ultima_viagem','origem','destino','placa_veic','autor'])
     palete = PaleteControl.objects.all().values_list(
-        'id', 'loc_atual', 'ultima_viagem', 'origem', 'destino', 'placa_veic'
+        'id', 'loc_atual', 'ultima_viagem', 'origem', 'destino', 'placa_veic','autor'
     )
     for id in palete:
         writer.writerow(id)
@@ -404,10 +444,10 @@ def get_manu_csv(request):
     writer = csv.writer(response)
     writer.writerow(['id','veiculo','tp_manutencao','local_manu','dt_ult_manutencao','dt_entrada','dt_saida',
                         'dias_veic_parado','km_ult_troca_oleo','tp_servico','valor_maodeobra','valor_peca',
-                            'filial','socorro','prev_entrega','observacao'])
+                            'filial','socorro','prev_entrega','observacao','status','autor'])
     manutencao = ManutencaoFrota.objects.all().values_list('id','veiculo','tp_manutencao','local_manu','dt_ult_manutencao','dt_entrada','dt_saida',
                         'dias_veic_parado','km_ult_troca_oleo','tp_servico','valor_maodeobra','valor_peca',
-                            'filial','socorro','prev_entrega','observacao').filter(dt_entrada__gte=dateparse, dt_entrada__lte=dateparse1)
+                            'filial','socorro','prev_entrega','observacao','status','autor').filter(dt_entrada__gte=dateparse, dt_entrada__lte=dateparse1)
     for id in manutencao:
         writer.writerow(id)
     return response
