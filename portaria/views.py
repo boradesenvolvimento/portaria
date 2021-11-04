@@ -4,7 +4,6 @@ import datetime
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.contrib.postgres.aggregates import StringAgg
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
 from django.db.models import Count, Sum, F, Q, Value, Subquery, OuterRef, CharField
