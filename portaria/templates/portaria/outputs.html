@@ -3,6 +3,13 @@
 {% load groupscheck %}
 {% if request.user|has_group:"outputs" %}
     <div class="container mt-5">
+        {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+            {% endfor %}
     <div class="row linha-baixo mb-3">
         <div class="col col-lg-12 col-md-12 col-sm-12 col-xs-12">
             <h3 class="title-cad">Exportar CSV portaria</h3>
@@ -26,15 +33,4 @@
     </div>
 {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
 
-    <!-- JS -->
-    <script>
-      $(function () {
-        $("#id_date").datepicker({
-            format:'dd/mm/yyyy'
-        });
-        $("#id_date1").datepicker({
-            format:'dd/mm/yyyy'
-        });
-      });
-    </script>
 {% endblock %}

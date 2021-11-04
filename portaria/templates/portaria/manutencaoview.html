@@ -33,8 +33,6 @@
                 <td>ENTRADA</td>
                 <td>PREVISAO</td>
                 <td>STATUS</td>
-                <td>IMPRESSAO</td>
-                <td>CADASTRAR SAIDA</td>
             </tr>
             </thead>
             <tbody>
@@ -43,13 +41,12 @@
                 <th>{{ c.id }}</th>
                 <th>{{ c.veiculo }}</th>
                 <th>{{ c.tp_manutencao }}</th>
-                <th>{{ c.tp_servico }}</th>
+                <th>{% for i in form %}{% if i.id_os_id == c.id %}{{ i.id_svs }}, {% endif %}{% endfor %}</th>
                 <th>{{ c.dt_entrada|date:'d/m/Y' }}</th>
                 <th>{{ c.prev_entrega|date:'d/m/Y' }}</th>
                 {% now 'd/m/Y' as hoje %}
                 <th>{% if c.prev_entrega|date:'d/m/Y' > hoje %}NORMAL{% elif c.prev_entrega|date:'d/m/Y' <= hoje %}ATRASADO{% endif %}</th>
-                <th><a href="{% url 'portaria:manutencaoprint' osid=c.id %}">Print</a></th>
-                <th><a href="{% url 'portaria:manusaida' osid=c.id %}">Saida</a></th>
+                <th><a href="{% url 'portaria:manutencaoprint' c.id %}">Print</a> | <a href="{% url 'portaria:manusaida' c.id %}">Saida</a></th>
             </tr>
             {% endfor %}
             </tbody>

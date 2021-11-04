@@ -14,7 +14,7 @@
             <p>Local: {% if os.local_manu == 'E' %}EXTERNO{% else %}INTERNO{% endif %}</p>
             <p>Última manutenção: {{ os.dt_ult_manutencao|date:'d/m/Y' }}</p>
             <p>Km última troca de óleo: {{ os.km_ult_troca_oleo }}km</p>
-            <p>Tipo de serviço: {{ os.tp_servico }}</p>
+            <p>Tipo de serviço: {% for b in aa %}{{ b }},{% endfor %}</p>
             <p>Filial: {{ os.filial }}</p>
             <p>Previsão entrega: {{ os.prev_entrega|date:'d/m/Y' }}</p>
             <p>Observação: {{ os.observacao }}</p>

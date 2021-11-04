@@ -61,6 +61,10 @@ class Cadastro(models.Model):
     hr_saida = models.DateTimeField(blank=True, null=True)
     autor = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
 
+    class Meta:
+        verbose_name = 'Cadastro'
+        verbose_name_plural = 'Cadastro'
+
     def __str__(self):
        return self.placa
 
@@ -95,6 +99,8 @@ class Motorista(models.Model):
     data_nasc = models.DateField()
 
     class Meta:
+        verbose_name = 'Motorista'
+        verbose_name_plural = 'Motorista'
         ordering=['nome']
 
     def __str__(self):
@@ -128,6 +134,10 @@ class Veiculos(models.Model):
     obsveic = models.CharField(max_length=30, blank=True, null=True)
     renavanveic = models.CharField(max_length=11)
     modeloveic = models.CharField(max_length=20)
+
+    class Meta:
+        verbose_name = 'Veiculos'
+        verbose_name_plural = 'Veiculos'
 
     def __str__(self):
        return self.prefixoveic
@@ -177,6 +187,10 @@ class ChecklistFrota(models.Model):
     p3_8 = models.BooleanField('Foi verificado se as luzes da lanterna traseira esquerda funciona?')
     autor = models.ForeignKey(User, on_delete=models.PROTECT)
 
+    class Meta:
+        verbose_name = 'ChecklistFrota'
+        verbose_name_plural = 'ChecklistFrota'
+
     def __str__(self):
        return str(self.idchecklist)
 
@@ -203,6 +217,10 @@ class FuncPj(models.Model):
     email = models.EmailField(max_length=254)
     ativo = models.BooleanField(default=True)
 
+    class Meta:
+        verbose_name = 'Funcpj'
+        verbose_name_plural = 'Funcpj'
+
     def __str__(self):
        return self.nome
 
@@ -216,6 +234,10 @@ class NfServicoPj(models.Model):
     outros_desc = models.FloatField()
     data_emissao = models.DateField(default=timezone.now)
     autor = models.ForeignKey(User, on_delete=PROTECT)
+
+    class Meta:
+        verbose_name = 'NfServicoPj'
+        verbose_name_plural = 'NfServicoPj'
 
     def __str__(self):
        return str(self.id)
@@ -239,7 +261,10 @@ class ManutencaoFrota(models.Model):
             ('oleo','oleo'),
          )),
         ('PNEUS','PNEUS'),
-        ('FREIOS', 'FREIOS')
+        ('FREIOS', 'FREIOS'),
+        ('aaaa', 'aaaaa'),
+        ('dasdasd', 'dasdasd'),
+
     ]
     STATUS_CHOICES = [
         ('ANDAMENTO', 'ANDAMENTO'),
@@ -266,7 +291,35 @@ class ManutencaoFrota(models.Model):
     status = models.CharField(max_length=30, choices=STATUS_CHOICES)
     autor = models.ForeignKey(User, on_delete=models.PROTECT)
 
+    class Meta:
+        verbose_name = 'ManutencaoFrota'
+        verbose_name_plural = 'ManutencaoFrota'
+
     def __str__(self):
         return str(self.id)
 
+class ServJoinManu(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    id_os = models.ForeignKey(ManutencaoFrota, on_delete=PROTECT)
+    id_svs = models.CharField(max_length=20)
+    pub_date = models.DateField(auto_now=True)
+    autor = models.ForeignKey(User, on_delete=PROTECT)
+
+    class Meta:
+        verbose_name = 'ServJoinManu'
+        verbose_name_plural = 'ServJoinManu'
+
+    def __str__(self):
+        return (self.id_os,self.id_svs)
+
+class CardFuncionario(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    nome = models.CharField(max_length=100)
+    empresa = models.CharField(max_length=30)
+    cargo = models.CharField(max_length=20)
+    email = models.EmailField(max_length=255)
+    celular = models.IntegerField(validators=[only_int])
+
+    def __str__(self):
+        return self.nome
 

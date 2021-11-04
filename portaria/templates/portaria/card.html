@@ -8,8 +8,8 @@
 <div class="profile-main-body">
     <center>
     <img src="{% static 'images/avatar.png' %}" style="max-width:20%">
-    <h2>Thiago Ruiz</h2>
-    <h3>Diretor</h3>
+    <h2>{{ form.nome }}</h2>
+    <h3>{{ form.cargo }}</h3>
     <div class="item-social"><button onclick="makeQR()" name="submit">QR-Code</button></div>
 <table class="profile-icons-row">
     <th><div class="item-social" onclick="call()"><img src="{% static 'images/call-icon.png' %}" width="50"></div></th>
@@ -25,12 +25,6 @@
 
 
 <script type="text/javascript">
-var name = 'Thiago'
-var lname = 'Ruiz'
-var title = 'Diretor'
-var cel = '11940113848'
-var email = 'thiago@bora.com.br'
-
 function makeQR(){
     $('.qrcode-cont').toggle();
     if($('#qrcode').html() == ""){
@@ -38,13 +32,13 @@ function makeQR(){
 
     str_vcard= 'BEGIN:VCARD\n'+
 'VERSION:3.0\n'+
-'N:'+name+';'+lname+
-'\nFN:'+name+' '+lname+
+'N:{{ form.nome }};'+
+'\nFN:{{ form.nome }}'+
 '\nORG:BORA TRANSPORTES'+
-'\nTITLE:'+title+
-'\nTEL;TYPE=CELL:'+cel+
-'\nEMAIL:'+email+
-'\nURL:http://bora.tec.br/portaria/telausuariothiago'+
+'\nTITLE:{{ form.cargo }}'+
+'\nTEL;TYPE=CELL:{{ form.celular }}'+
+'\nEMAIL:{{ form.email }}'+
+'\nURL:{{ request.build_absolute_uri }}'+
 '\nEND:VCARD'
         const enc_vcard = encodeURI(str_vcard);
 	    $('#qrcode').attr('src',goog_chart+enc_vcard);
@@ -53,17 +47,17 @@ function makeQR(){
 }
 function whatsapp() {
     if(false) {
-      location.href = 'whatsapp://send?phone=55'+cel;
+      location.href = 'whatsapp://send?phone=55{{ form.celular }}';
     } else {
-      location.href = 'https://api.whatsapp.com/send?phone=55'+cel;
+      location.href = 'https://api.whatsapp.com/send?phone=55{{ form.celular }}';
     }
   }
 
 function mail(){
-    location.href = 'mailto:{{ request.user.email }}';
+    location.href = 'mailto:{{ form.email }}';
   }
 function call(){
-    location.href = 'tel:+55'+cel;
+    location.href = 'tel:+55{{ form.celular }}';
 }
 </script>
 

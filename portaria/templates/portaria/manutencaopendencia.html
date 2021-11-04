@@ -27,7 +27,6 @@
                 <td>SERVICO</td>
                 <td>OBSERVACAO</td>
                 <td>STATUS</td>
-                <td>CONFIRMAR</td>
             </tr>
             </thead>
             <tbody>
@@ -37,11 +36,11 @@
                     {% csrf_token %}
                 <th>{{ c.id }}</th>
                 <th>{{ c.veiculo }}</th>
-                <th>{{ c.tp_servico }}</th>
+                <th>{% for i in qs2 %}{% if i.id_os_id == c.id %}{{ i.id_svs }}, {% endif %}{% endfor %}</th>
                 <th>{{ c.observacao }}</th>
                 <th>{{ c.status }}</th>
                 <th><input type="hidden" id="idos" name="os" value="{{ c.id }}">
-                    <input type="submit" class="button">
+                    <input type="submit" value="Confirmar" class="button">
                 </form>
             </tr>
             {% endfor %}

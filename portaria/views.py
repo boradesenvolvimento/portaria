@@ -1,13 +1,13 @@
 import csv
 import datetime
 
-
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.postgres.aggregates import StringAgg
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
-from django.db.models import Count, Sum, F, Q, Value, FloatField, DecimalField
+from django.db.models import Count, Sum, F, Q, Value, Subquery, OuterRef, CharField
 from django.db.models.functions import Coalesce
 from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, Http404
 from django.shortcuts import get_object_or_404, render, redirect
@@ -15,6 +15,7 @@ from django.template.defaultfilters import upper
 from django.urls import reverse
 from django.utils import timezone
 from django.views import generic
+
 
 
 from .models import * #Cadastro, PaletControl, ChecklistFrota, Veiculos, NfServicoPj
@@ -25,6 +26,27 @@ def telausuariothiago(request):
 
 def telausuariorodrigo(request):
     return render(request, "portaria/telausuariorodrigo.html")
+
+def cardusuario(request):
+    form = CardFuncionario.objects.all()
+    src = request.GET.get('srcfunc')
+
+    if src:
+        print(src)
+        try:
+            src1 = CardFuncionario.objects.filter(nome__contains=src)
+        except ObjectDoesNotExist:
+            messages.error(request, 'Não encontrado')
+            return render(request, 'portaria/cardusuario.html', {'form':form})
+        else:
+            form = src1
+            return render(request, 'portaria/cardusuario.html',{'form':form})
+    return render(request, 'portaria/cardusuario.html', {'form':form})
+
+def card(request, id):
+    idcard = get_object_or_404(CardFuncionario, pk=id)
+    form = CardFuncionario.objects.get(pk=idcard.id)
+    return render(request, 'portaria/card.html', {'form':form})
 
 #views
 @login_required
@@ -65,12 +87,10 @@ def cadastroentrada(request):
         if request.method == 'POST':
             if form.is_valid():
                 uplaca = upper(form.cleaned_data['placa'])
-                new_date_str = datetime.datetime.strftime(timezone.now(), settings.DATETIME_FORMAT)
-                new_date_date = datetime.datetime.strptime(new_date_str, settings.DATETIME_FORMAT)
                 order = form.save(commit=False)
                 order.placa = uplaca
                 order.autor = autor
-                order.hr_chegada = new_date_date
+                order.hr_chegada = timezone.now()
                 order.save()
                 messages.success(request,'Entrada cadastrada com sucesso.')
                 return redirect('portaria:cadastro')
@@ -89,8 +109,8 @@ def cadastrosaida(request):
             if form.is_valid():
                 s_query = upper(form.cleaned_data['search_placa'])
                 q_query = upper(form.cleaned_data['search_dest'])
-                #five_days_back = timezone.now() - datetime.timedelta(days=5)
-                loc_placa = Cadastro.objects.filter(placa=s_query, hr_chegada__month=datetime.datetime.now().month,
+                days_back = timezone.now() - datetime.timedelta(days=30)
+                loc_placa = Cadastro.objects.filter(placa=s_query, hr_chegada__gte=days_back,
                                                     hr_saida=None).order_by('-hr_chegada').first()
                 try:
                     Cadastro.objects.get(pk=loc_placa.id)
@@ -98,9 +118,7 @@ def cadastrosaida(request):
                     messages.error(request, 'Não encontrado')
                     return render(request, 'portaria/cadastrosaida.html', {'form':form})
                 else:
-                    new_date_str = datetime.datetime.strftime(timezone.now(), settings.DATETIME_FORMAT)
-                    new_date_date = datetime.datetime.strptime(new_date_str, settings.DATETIME_FORMAT)
-                    Cadastro.objects.filter(pk=loc_placa.id).update(hr_saida=new_date_date, destino=q_query, autor=request.user)
+                    Cadastro.objects.filter(pk=loc_placa.id).update(hr_saida=timezone.now(), destino=q_query, autor=request.user)
                     messages.success(request, 'Saida cadastrada com sucesso.')
                     return HttpResponseRedirect(reverse('portaria:cadastro'))
         return render(request, 'portaria/cadastrosaida.html', {'form':form})
@@ -176,7 +194,8 @@ def checklistfrota(request, placa_id, moto_id):
             obar.save()
             pla.kmatualveic = obar.kmatual
             pla.save()
-            return HttpResponseRedirect(reverse('portaria:frota'), {'success_message': 'success_message'})
+            messages.success(request, f'Checklist para placa {pla} e motorista {mot} concluído!')
+            return HttpResponseRedirect(reverse('portaria:frota'))
     return render(request,'portaria/checklistfrota.html', {'form':form,'pla':pla, 'mot':mot})
 
 @login_required
@@ -247,6 +266,9 @@ def manutencaofrota(request):
         except ObjectDoesNotExist:
             messages.error(request, 'OS não encontrado')
             return render(request, 'portaria/manutencaofrota.html')
+        except ValueError:
+            messages.error(request, 'Por gentileza digite o OS corretamente')
+            return render(request, 'portaria/manutencaofrota.html')
         else:
             return redirect('portaria:manusaida', osid=idmanu)
     return render(request, 'portaria/manutencaofrota.html')
@@ -256,9 +278,12 @@ def manuentrada(request, placa_id):
     placa = get_object_or_404(Veiculos, prefixoveic=placa_id)
     form = ManutencaoForm
     autor = request.user
-    ult_manu = Veiculos.objects.filter(pk=placa.codigoveic).values_list('manutencaofrota__dt_saida', flat=True).order_by('-manutencaofrota__dt_saida').first()
+    ult_manu = Veiculos.objects.filter(pk=placa.codigoveic).values_list('manutencaofrota__dt_saida', flat=True)\
+        .order_by('-manutencaofrota__dt_saida').first()
     if ult_manu == None: ult_manu = timezone.now()
     if request.method == 'POST':
+        count = request.POST.get('setcount')
+        tp_sv = request.POST.get('tp_servico')
         form = ManutencaoForm(request.POST or None)
         if form.is_valid():
             manu = form.save(commit=False)
@@ -268,13 +293,25 @@ def manuentrada(request, placa_id):
             manu.status = 'ANDAMENTO'
             manu.autor = autor
             manu.save()
+            ServJoinManu.objects.create(id_svs=tp_sv,autor=autor,id_os_id=manu.id)
+            if count:
+                ncount = int(count)
+                if ncount > 0:
+                    for c in range(0, ncount):
+                        d = c + 1
+                        variable = 'tp_servico' + str(d)
+                        tp_sv = request.POST.get(variable)
+                        if tp_sv:
+                            ServJoinManu.objects.create(id_svs=tp_sv,autor=autor,id_os_id=manu.id)
+                        else:
+                            continue
             messages.success(request, f'Cadastro de manutenção do veículo {placa} feito com sucesso!')
             return redirect('portaria:manutencaoprint', osid= manu.id)
     return render(request, 'portaria/manuentrada.html', {'placa':placa,'form':form})
 
 def manupendentes(request):
     qs = ManutencaoFrota.objects.filter(status='PENDENTE').order_by('dt_entrada')
-
+    qs2 = ServJoinManu.objects.all()
     if request.method == 'GET':
         placa = request.GET.get('isplaca')
         if placa:
@@ -289,7 +326,7 @@ def manupendentes(request):
         else:
             messages.success(request, f'Confirmado conclusão da os {isos}')
             return redirect('portaria:manupendentes')
-    return render(request,'portaria/manutencaopendencia.html', {'qs':qs})
+    return render(request,'portaria/manutencaopendencia.html', {'qs':qs,'qs2':qs2})
 
 
 @login_required
@@ -299,17 +336,22 @@ def manusaida(request, osid):
         dtsaida = request.POST.get('dtsaida')
         vlmao = request.POST.get('vlmao')
         vlpeca = request.POST.get('vlpeca')
-        if dtsaida and vlpeca and vlmao:
-            date_dtsaida = datetime.datetime.strptime(dtsaida, '%d/%m/%Y').date()
-            between_days = (date_dtsaida - get_os.dt_entrada).days
-            ManutencaoFrota.objects.filter(pk=get_os.id).update(valor_peca=vlpeca,valor_maodeobra=vlmao,
-                                                                dt_saida=date_dtsaida,
-                                                                dias_veic_parado=str(between_days),
-                                                                status='PENDENTE',
-                                                                autor=request.user)
+        if dtsaida:
+            try:
+                date_dtsaida = datetime.datetime.strptime(dtsaida, '%d/%m/%Y').date()
+            except ValueError:
+                messages.error(request, 'Por favor digite uma data válida')
+                return render(request, 'portaria/manusaida.html',{'get_os':get_os})
+            else:
+                between_days = (date_dtsaida - get_os.dt_entrada).days
+                ManutencaoFrota.objects.filter(pk=get_os.id).update(valor_peca=vlpeca,valor_maodeobra=vlmao,
+                                                                    dt_saida=date_dtsaida,
+                                                                    dias_veic_parado=str(between_days),
+                                                                    status='PENDENTE',
+                                                                    autor=request.user)
 
-            messages.success(request, f'Saída cadastrada para OS {get_os.id}, placa {get_os.veiculo}')
-            return redirect('portaria:manutencaofrota')
+                messages.success(request, f'Saída cadastrada para OS {get_os.id}, placa {get_os.veiculo}')
+                return redirect('portaria:manutencaoview')
         return render(request, 'portaria/manusaida.html',{'get_os':get_os})
     else:
         messages.error(request, 'Saída já cadastrada para OS')
@@ -320,7 +362,8 @@ class ManutencaoListView(generic.ListView):
     context_object_name = 'lista'
 
     def get_queryset(self):
-        qs = ManutencaoFrota.objects.filter(dt_saida=None).order_by('dt_entrada')
+        qs = ManutencaoFrota.objects.filter(dt_saida=None,).order_by('dt_entrada')
+
         try:
             placa = self.request.GET.get('isplaca')
             if placa:
@@ -329,10 +372,18 @@ class ManutencaoListView(generic.ListView):
             raise Exception('Valor digitado inválido')
         return qs
 
+    def get_context_data(self, **kwargs):
+        data = ServJoinManu.objects.all()
+        context = super().get_context_data(**kwargs)
+        context['form'] = data
+        return context
+
+
 @login_required
 def manutencaoprint(request, osid):
     os = get_object_or_404(ManutencaoFrota, pk=osid)
-    return render(request, 'portaria/manutencaoprint.html', {'os':os})
+    aa = ServJoinManu.objects.filter(id_os=os.id).values_list('id_svs', flat=True)
+    return render(request, 'portaria/manutencaoprint.html', {'os':os,'aa':aa})
 
 #fim das views
 
@@ -351,7 +402,8 @@ def transfpalete(request):
         if qnt <= PaleteControl.objects.filter(loc_atual=ori).count():
             for x in range(qnt):
                 q = PaleteControl.objects.filter(loc_atual=ori).first()
-                PaleteControl.objects.filter(pk=q.id).update(origem=ori,destino=des, loc_atual=des, placa_veic=plc,ultima_viagem=timezone.now(), autor=request.user)
+                PaleteControl.objects.filter(pk=q.id).update(origem=ori,destino=des, loc_atual=des,
+                                                             placa_veic=plc,ultima_viagem=timezone.now(), autor=request.user)
 
             messages.success(request, f'{qnt} palete transferido de {ori} para {des}')
             return render(request,'portaria/transfpaletes.html', {'form':form})
@@ -403,23 +455,30 @@ def get_nfpj_csv(request):
     return redirect('portaria:index')
 
 def get_portaria_csv(request):
-    data1 = request.POST.get('dataIni')
-    data2 = request.POST.get('dataFim')
-    response = HttpResponse(content_type='text/csv',
-                            headers={'Content-Disposition': 'attachment; filename="portaria.csv"'},
-                            )
-    dateparse = datetime.datetime.strptime(data1, '%d/%m/%Y').replace(hour=00, minute=00)
-    dateparse1 = datetime.datetime.strptime(data2, '%d/%m/%Y').replace(hour=23, minute=59)
-    response.write(u'\ufeff'.encode('utf8'))
-    writer = csv.writer(response)
-    writer.writerow(['Placa','Placa2','Motorista','Empresa','Origem','Destino','Tipo_mot','Tipo_viagem','Hr_entrada','Hr_Saida','autor'])
-    cadastro = Cadastro.objects.all().values_list(
-                        'placa', 'placa2', 'motorista', 'empresa', 'origem','destino',
-                            'tipo_mot', 'tipo_viagem', 'hr_chegada', 'hr_saida', 'autor').filter(hr_chegada__gte=dateparse,hr_chegada__lte=dateparse1)
-    for placa in cadastro:
-        writer.writerow(placa)
-        print(placa)
-    return response
+    try:
+        data1 = request.POST.get('dataIni')
+        data2 = request.POST.get('dataFim')
+        dateparse = datetime.datetime.strptime(data1, '%d/%m/%Y').replace(hour=00, minute=00)
+        dateparse1 = datetime.datetime.strptime(data2, '%d/%m/%Y').replace(hour=23, minute=59)
+    except ValueError:
+        messages.error(request,'Por favor digite uma data válida')
+        return redirect('portaria:outputs')
+    else:
+        response = HttpResponse(content_type='text/csv',
+                                headers={'Content-Disposition': 'attachment; filename="portaria.csv"'},
+                                )
+
+        response.write(u'\ufeff'.encode('utf8'))
+        writer = csv.writer(response)
+        writer.writerow(['Placa','Placa2','Motorista','Empresa','Origem','Destino','Tipo_mot','Tipo_viagem',
+                         'Hr_entrada','Hr_Saida','autor'])
+        cadastro = Cadastro.objects.all().values_list(
+                            'placa', 'placa2', 'motorista', 'empresa', 'origem','destino',
+                                'tipo_mot', 'tipo_viagem', 'hr_chegada', 'hr_saida', 'autor')\
+            .filter(hr_chegada__gte=dateparse,hr_chegada__lte=dateparse1)
+        for placa in cadastro:
+            writer.writerow(placa)
+        return response
 
 def get_palete_csv(request):
     response = HttpResponse(content_type='text/csv',
@@ -434,23 +493,28 @@ def get_palete_csv(request):
     return response
 
 def get_manu_csv(request):
-    data1 = request.POST.get('dataIni')
-    data2 = request.POST.get('dataFin')
-    dateparse = datetime.datetime.strptime(data1, '%d/%m/%Y')
-    dateparse1 = datetime.datetime.strptime(data2, '%d/%m/%Y')
-    response = HttpResponse(content_type='text/csv',
-                            headers={'Content-Disposition':f'attatchment; filename="manutencao{dateparse}-{dateparse1}.csv"'})
-    response.write(u'\ufeff'.encode('utf8'))
-    writer = csv.writer(response)
-    writer.writerow(['id','veiculo','tp_manutencao','local_manu','dt_ult_manutencao','dt_entrada','dt_saida',
-                        'dias_veic_parado','km_ult_troca_oleo','tp_servico','valor_maodeobra','valor_peca',
-                            'filial','socorro','prev_entrega','observacao','status','autor'])
-    manutencao = ManutencaoFrota.objects.all().values_list('id','veiculo','tp_manutencao','local_manu','dt_ult_manutencao','dt_entrada','dt_saida',
-                        'dias_veic_parado','km_ult_troca_oleo','tp_servico','valor_maodeobra','valor_peca',
-                            'filial','socorro','prev_entrega','observacao','status','autor').filter(dt_entrada__gte=dateparse, dt_entrada__lte=dateparse1)
-    for id in manutencao:
-        writer.writerow(id)
-    return response
+    try:
+        data1 = request.POST.get('dataIni')
+        data2 = request.POST.get('dataFin')
+        dateparse = datetime.datetime.strptime(data1, '%d/%m/%Y')
+        dateparse1 = datetime.datetime.strptime(data2, '%d/%m/%Y')
+    except ValueError:
+        messages.error(request,'Por favor digite uma data válida')
+        return redirect('portaria:manutencaofrota')
+    else:
+        response = HttpResponse(content_type='text/csv',
+                                headers={'Content-Disposition':f'attatchment; filename="manutencao{dateparse}-{dateparse1}.csv"'})
+        response.write(u'\ufeff'.encode('utf8'))
+        writer = csv.writer(response)
+        writer.writerow(['id','veiculo','tp_manutencao','local_manu','dt_ult_manutencao','dt_entrada','dt_saida',
+                            'dias_veic_parado','km_ult_troca_oleo','tp_servico','valor_maodeobra','valor_peca',
+                                'filial','socorro','prev_entrega','observacao','status','autor'])
+        manutencao = ManutencaoFrota.objects.all().values_list('id','veiculo','tp_manutencao','local_manu','dt_ult_manutencao','dt_entrada','dt_saida',
+                            'dias_veic_parado','km_ult_troca_oleo','tp_servico','valor_maodeobra','valor_peca',
+                                'filial','socorro','prev_entrega','observacao','status','autor').filter(dt_entrada__gte=dateparse, dt_entrada__lte=dateparse1)
+        for id in manutencao:
+            writer.writerow(id)
+        return response
 
 
 

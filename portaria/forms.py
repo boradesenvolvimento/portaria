@@ -2,7 +2,8 @@ from django import forms
 from django.conf import settings
 from django.forms import Textarea, DateField
 
-from .models import Cadastro, TIPO_GARAGEM, ChecklistFrota, NfServicoPj, ManutencaoFrota
+from .models import Cadastro, TIPO_GARAGEM, ChecklistFrota, NfServicoPj, ManutencaoFrota, ServJoinManu
+
 
 #forms
 class DateInput(forms.DateInput):
@@ -37,8 +38,8 @@ class CadastroForm(forms.ModelForm):
             'autor'
         ]
         widgets = {
-            'hr_chegada': forms.DateInput(format='%d/%m/%Y'),
-            'hr_saida': forms.DateInput(format='%d/%m/%Y')
+            'hr_chegada': forms.DateInput(format='%d/%m/%Y %H:%m'),
+            'hr_saida': forms.DateInput(format='%d/%m/%Y %H:%m')
         }
 
 class TPaletesForm(forms.Form):
@@ -111,15 +112,22 @@ class ManutencaoForm(forms.ModelForm):
             'tp_manutencao',
             'local_manu',
             'km_ult_troca_oleo',
-            'tp_servico',
             'filial',
             'prev_entrega',
-            'observacao'
+            'observacao',
+            'tp_servico'
         ]
         widgets = {
             'observacao': Textarea(attrs={'cols': 30, 'rows': 3}),
             'dt_entrada': forms.DateInput(format='%d/%m/%Y'),
             'dt_saida': forms.DateInput(format='%d/%m/%Y'),
             'prev_entrega': forms.DateInput(format='%d/%m/%Y'),
-
         }
+
+class ServJoinManuForm(forms.ModelForm):
+    class Meta:
+        model = ServJoinManu
+        fields = [
+            'id_os',
+            'id_svs'
+        ]

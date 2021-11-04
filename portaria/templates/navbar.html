@@ -62,6 +62,9 @@
           {% if request.user|has_group:"servicopj" %}
           <li class="nav-item"><a class="nav-link1" href="{% url 'portaria:servicospj' %}">Servicos PJ</a></li>
           {% endif %}
+          {% if request.user|has_group:"adm_rh" %}
+          <li class="nav-item"><a class="nav-link1" href="{% url 'portaria:cardusuario' %}">Cards</a></li>
+          {% endif %}
         </ul>
       </div>
     </div>

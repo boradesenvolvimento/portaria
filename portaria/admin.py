@@ -66,3 +66,11 @@ admin.site.register(FuncPj, FuncPjAdmin)
 class ManutencaoFrotaAdmin(admin.ModelAdmin):
     pass
 admin.site.register(ManutencaoFrota, ManutencaoFrotaAdmin)
+
+class ServJoinManuAdmin(admin.ModelAdmin):
+    pass
+admin.site.register(ServJoinManu, ServJoinManuAdmin)
+
+class CardFuncionarioAdmin(admin.ModelAdmin):
+    pass
+admin.site.register(CardFuncionario, CardFuncionarioAdmin)

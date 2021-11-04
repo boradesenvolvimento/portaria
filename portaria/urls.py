@@ -28,6 +28,8 @@ urlpatterns = [
     path(r'export-csv-port/', views.get_portaria_csv, name='get_portaria_csv'),
     path(r'export-csv-palete/', views.get_palete_csv, name='get_palete_csv'),
     path(r'export-csv-manu/', views.get_manu_csv, name='get_manu_csv'),
+    path('cardusuario/', views.cardusuario, name="cardusuario"),
+    path('cardusuario/<int:id>/card', views.card, name="card"),
     path('telausuariorodrigo/', views.telausuariorodrigo, name='telausuariorodrigo'),
     path('telausuariothiago/', views.telausuariothiago, name='telausuariothiago')
 
