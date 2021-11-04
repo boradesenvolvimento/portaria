@@ -26,7 +26,7 @@
         {% endif %}
     </div>
     <div class="row linha-baixo">
-        <table>
+        <table class="table1">
             <thead>
                 <tr>
                     <th>Nome</th>
@@ -36,7 +36,7 @@
             </thead>
         {% for q in array %}
                 <tr>
-                    <th>{{ q.nome }}</th>
+                    <th>{{ q.nome|upper }}</th>
                     <th>{{ q.filial }}</th>
                     <th>{{ q.cpf_cnpj }}</th>
                     <th><a href="{% url 'portaria:cadservicospj' q.id %}">Edit</a></th>

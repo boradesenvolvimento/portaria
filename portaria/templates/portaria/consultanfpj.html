@@ -38,10 +38,10 @@
                     <th class="title-cad">Total a Pagar</th>
                 </tr>
             </thead>
-        {% for q in arrya %}
+        {% for q in arrya|dictsort:"nome" %}
             <tbody>
                 <tr>
-                    <th>{{ q.nome }}</th>
+                    <th>{{ q.nome|upper }}</th>
                     <th>R$ {{ q.salario|floatformat:2 }}</th>
                     <th>R$ {{ q.faculdade|floatformat:2 }}</th>
                     <th>R$ {{ q.ajuda_custo|floatformat:2 }}</th>
