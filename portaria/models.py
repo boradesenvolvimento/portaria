@@ -318,7 +318,7 @@ class CardFuncionario(models.Model):
     empresa = models.CharField(max_length=30)
     cargo = models.CharField(max_length=20)
     email = models.EmailField(max_length=255)
-    celular = models.IntegerField(validators=[only_int])
+    celular = models.CharField(max_length=11,validators=[only_int])
 
     def __str__(self):
         return self.nome
