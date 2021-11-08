@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load groupscheck %}
+<div class="container mt-5">
+{% if auth_message %}
+    <p><strong>{{ auth_message }}</strong></p>
+{% else %}
+{% if request.user|has_group:"adm_rh" %}
+        {% for message in messages %}
+        <div class="container-fluid p-0">
+            <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                {{ message }}
+            </div>
+        </div>
+        {% endfor %}
+    <div class="row linha-baixo">
+            <div class="sr-only" id="sendmail">
+                <form class="form-box col-12" action="{% url 'portaria:get_pj13_mail' %}" method="post">
+                    {% csrf_token %}
+                    <h3 class="title-cad">Clique para enviar o email para {{ array|length }} funcionários
+                    <input type="submit" class="button"></h3>
+                    <input type="hidden" name="period" id="period">
+                </form>
+            </div>
+            <div class="col-9">
+                    <button onclick="isactive()" class="button">Enviar emails</button>
+            </div>
+            <div class="col-3">
+                <form method="get">
+                <select name="filter" id="getvalue">
+                    <option value='pgto_parcela_1'>1 parcela</option>
+                    <option value='pgto_parcela_2'>2 parcela</option>
+                </select>
+                <input type="submit" value="Visualizar" class="button">
+                </form>
+            </div>
+        </div>
+    <div class="row linha-baixo">
+        <table class="table1">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>CPF</th>
+                    <th>Filial</th>
+                    <th>Salario</th>
+                    <th>Período</th>
+                    <th>Valor</th>
+                    <th>1 Parcela</th>
+                    <th>2 Parcela</th>
+                </tr>
+            </thead>
+        {% for q in array %}
+            <tr>
+                <th>{{ q|upper }}</th>
+                <th>{{ q.cpf_cnpj }}</th>
+                <th>{{ q.filial }}</th>
+                <th>{{ q.salario }}</th>
+                <th>{{ q.periodo }}</th>
+                <th>{{ q.valor|floatformat:2 }}</th>
+                <th>{{ q.parc_1|date:'d/m/Y' }}</th>
+                <th>{{ q.parc_2|date:'d/m/Y' }}</th>
+            </tr>
+        {% endfor %}
+        </table>
+    </div>
+    <div class="container mt-5">
+        <button type="button" class="button"><a style="color:white;" href="{% url 'portaria:get_pj13_csv' %}">Exportar CSV</a></button>
+    </div>
+</div>
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+{% endif %}
+<script type="text/javascript">
+  function isactive(){
+    if(document.getElementById("sendmail").classList.contains('sr-only')){
+        document.getElementById("sendmail").classList.remove('sr-only')
+    } else {
+        document.getElementById("sendmail").classList.add('sr-only')
+    }
+  }
+
+
+    var url = new URL('{{ request.build_absolute_uri }}');
+    var a = url.searchParams.get('filter')
+    document.getElementById('period').value = a;
+
+</script>
+{% endblock %}

@@ -74,3 +74,7 @@ admin.site.register(ServJoinManu, ServJoinManuAdmin)
 class CardFuncionarioAdmin(admin.ModelAdmin):
     pass
 admin.site.register(CardFuncionario, CardFuncionarioAdmin)
+
+class pj13Admin(admin.ModelAdmin):
+    pass
+admin.site.register(pj13, pj13Admin)

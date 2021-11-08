@@ -242,6 +242,16 @@ class NfServicoPj(models.Model):
     def __str__(self):
        return str(self.id)
 
+
+class pj13(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    periodo_meses = models.IntegerField()
+    valor = models.FloatField(blank=True, null=True)
+    pgto_parc_1 = models.DateField()
+    pgto_parc_2 = models.DateField(blank=True, null=True)
+    funcionario = models.ForeignKey(FuncPj, on_delete=PROTECT)
+    autor = models.ForeignKey(User, on_delete=PROTECT)
+
 class ManutencaoFrota(models.Model):
     TIPO_MANUTENCAO_CHOICES = [
         ('PREVENTIVA', 'PREVENTIVA'),
