@@ -1,0 +1,56 @@
+    {% extends 'base.html' %}
+    {% block content %}
+    {% load groupscheck %}
+    <div class="container mt-5">
+    {% if auth_message %}
+        <p><strong>{{ auth_message }}</strong></p>
+    {% else %}
+    {% if request.user|has_group:"servicopj" %}
+            {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+            {% endfor %}
+        <div class="row linha-baixo">
+            <h2 class="title-cad col-3">Buscar Funcionário</h2>
+            <form method="get" class="col-7">
+                <input name="srcfunc" type="text">
+                <input type="submit" value="Buscar" style="margin-top:0px;" class="button">
+            </form>
+            {% if request.user|has_group:'adm_rh' %}
+            <div class="col-2" style="margin-top:5px; text-align:right;">
+                <a class="button" href="{% url 'portaria:decimoview' %}">Já cadastrados</a>
+            </div>
+            {% endif %}
+        </div>
+        <div class="row linha-baixo">
+            <table class="table1">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>CPF</th>
+                        <th>Filial</th>
+                        <th>1 Parcela</th>
+                        <th>2 Parcela</th>
+                    </tr>
+                </thead>
+            {% for q in allfunc %}
+                <tr>
+                    <th>{{ q|upper }}</th>
+                    <th>{{ q.cpf_cnpj }}</th>
+                    <th>{{ q.filial }}</th>
+                    <th>{% if q.parc1 is None %}<a href="{% url 'portaria:caddecimo1' q.id %}">cadastrar</a>{% else %}{{ q.parc1|date:'d/m/Y' }}{% endif %}</th>
+                    <th>{% if q.parc1 is None %}Não liberado{% elif q.parc2 is None %}<a href="{% url 'portaria:caddecimo2' q.id %}">cadastrar</a>{% else %}{{ q.parc2|date:'d/m/Y' }}{% endif %}</th>
+                </tr>
+            {% endfor %}
+            </table>
+        </div>
+        <div class="row">
+
+        </div>
+    </div>
+    {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+    {% endif %}
+    {% endblock %}

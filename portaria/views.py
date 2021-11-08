@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
-from django.db.models import Count, Sum, F, Q, Value, Subquery, OuterRef, CharField
+from django.db.models import Count, Sum, F, Q, Value
 from django.db.models.functions import Coalesce
 from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, Http404
 from django.shortcuts import get_object_or_404, render, redirect
@@ -31,7 +31,6 @@ def cardusuario(request):
     src = request.GET.get('srcfunc')
 
     if src:
-        print(src)
         try:
             src1 = CardFuncionario.objects.filter(nome__contains=src)
         except ObjectDoesNotExist:
@@ -245,6 +244,65 @@ def cadservicospj(request, args):
             return HttpResponseRedirect(reverse('portaria:servicospj'))
     return render(request, 'portaria/cadservicospj.html', {'form':form,'func':func})
 
+def decimopj(request):
+    allfunc = FuncPj.objects.filter(ativo=True).annotate(parc1=F('pj13__pgto_parc_1'),parc2=F('pj13__pgto_parc_2'))
+    func = request.GET.get('srcfunc')
+    if func:
+        allfunc = FuncPj.objects.filter(nome__icontains=func, ativo=True).annotate(parc1=F('pj13__pgto_parc_1'),parc2=F('pj13__pgto_parc_2'))
+        return render(request, 'portaria/decimopj.html', {'allfunc': allfunc})
+    return render(request,'portaria/decimopj.html', {'allfunc':allfunc})
+
+def caddecimo1(request, idfunc):
+    func = get_object_or_404(FuncPj, pk=idfunc)
+    sal = func.salario
+    autor = request.user
+    meses = request.POST.get('meses')
+    parc = request.POST.get('pgto_parc')
+    if parc and meses:
+        val = ((sal/12)*float(meses))/2
+        pj13.objects.create(valor=val,pgto_parc_1=timezone.now(),periodo_meses=meses,funcionario=func, autor=autor)
+        messages.success(request, 'Cadastro primeira parcela feito com sucesso')
+        return redirect('portaria:decimopj')
+    return render(request, 'portaria/caddecimo1.html', {'func': func})
+
+def caddecimo2(request, idfunc):
+    func = get_object_or_404(FuncPj, pk=idfunc)
+    autor = request.user
+    if pj13.objects.filter(funcionario=func, pgto_parc_2=None).exists():
+        form = pj13.objects.get(funcionario=func)
+        parc = request.GET.get('pgto_parc')
+        if parc:
+            pj13.objects.filter(funcionario=func).update(pgto_parc_2=timezone.now(), autor=autor)
+            messages.success(request, 'Cadastro segunda parcela feito com sucesso')
+            return redirect('portaria:decimopj')
+        return render(request, 'portaria/caddecimo2.html', {'func': func, 'form': form})
+
+def decimoview(request):
+    period = request.GET.get('filter')
+    if period:
+        if period == 'pgto_parcela_1':
+            array = []
+            allfuncs = FuncPj.objects.filter(ativo=True, pj13__pgto_parc_1__isnull=False,pj13__pgto_parc_2__isnull=True)
+            for q in allfuncs:
+                query = FuncPj.objects.filter(pk=q.id).annotate(valor=F('pj13__valor'),
+                                                                parc_1=F('pj13__pgto_parc_1'),
+                                                                parc_2=F('pj13__pgto_parc_2'),
+                                                                periodo=F('pj13__periodo_meses'))
+                array.extend(query)
+            return render(request, 'portaria/decimoview.html', {'allfuncs': allfuncs, 'array': array})
+        elif period == 'pgto_parcela_2':
+            array = []
+            allfuncs = FuncPj.objects.filter(ativo=True, pj13__pgto_parc_2__isnull=False)
+            for q in allfuncs:
+                query = FuncPj.objects.filter(pk=q.id).annotate(valor=F('pj13__valor'),
+                                                                parc_1=F('pj13__pgto_parc_1'),
+                                                                parc_2=F('pj13__pgto_parc_2'),
+                                                                periodo=F('pj13__periodo_meses'))
+                array.extend(query)
+            return render(request, 'portaria/decimoview.html', {'allfuncs': allfuncs, 'array': array})
+    return render(request, 'portaria/decimoview.html')
+
+
 @login_required
 def manutencaofrota(request):
     if request.method == 'GET':
@@ -453,6 +511,55 @@ def get_nfpj_csv(request):
         )
     return redirect('portaria:index')
 
+def get_pj13_mail(request):
+    getperiod = request.POST.get('period')
+    array = []
+    print(getperiod)
+    if getperiod == 'pgto_parcela_1':
+        allfuncs = FuncPj.objects.filter(ativo=True, pj13__pgto_parc_1__isnull=False, pj13__pgto_parc_2__isnull=True)
+        for q in allfuncs:
+            query = FuncPj.objects.filter(pk=q.id).annotate(valor=F('pj13__valor'),
+                                                            parc_1=F('pj13__pgto_parc_1'),
+                                                            parc_2=F('pj13__pgto_parc_2'),
+                                                            periodo=F('pj13__periodo_meses'))
+            array.extend(query)
+    elif getperiod == 'pgto_parcela_2':
+        allfuncs = FuncPj.objects.filter(ativo=True, pj13__pgto_parc_2__isnull=False)
+        for q in allfuncs:
+            query = FuncPj.objects.filter(pk=q.id).annotate(valor=F('pj13__valor'),
+                                                            parc_1=F('pj13__pgto_parc_1'),
+                                                            parc_2=F('pj13__pgto_parc_2'),
+                                                            periodo=F('pj13__periodo_meses'))
+            array.extend(query)
+    for q in array:
+        send_mail(
+            subject='Pagamento Bonificação 13º',
+            message=f'''
+                                Unidade: {q.filial}
+                                Nome: {q.nome}
+                                Cpf: {q.cpf_cnpj}
+                                Salario: {q.salario:.2f}
+                                1ª Parcela: {q.valor:.2f}
+                                2ª Parcela: {q.valor:.2f}
+                            ''',
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=[q.email]
+        )
+    messages.success(request, f'Emails enviados para {len(array)} funcionarios')
+    return redirect('portaria:decimopj')
+
+def get_pj13_csv(request):
+    response = HttpResponse(content_type='text/csv',
+                            headers={'Content-Disposition': 'attachment; filename="paletes.csv"'})
+    writer = csv.writer(response)
+    writer.writerow(['id', 'periodo_meses', 'valor', 'pgto_parc_1', 'pgto_parc_2', 'funcionario', 'autor'])
+    pj = pj13.objects.all().values_list(
+        'id', 'periodo_meses', 'valor', 'pgto_parc_1', 'pgto_parc_2', 'funcionario__nome', 'autor__username'
+    )
+    for id in pj:
+        writer.writerow(id)
+    return response
+
 def get_portaria_csv(request):
     try:
         data1 = request.POST.get('dataIni')
@@ -473,7 +580,7 @@ def get_portaria_csv(request):
                          'Hr_entrada','Hr_Saida','autor'])
         cadastro = Cadastro.objects.all().values_list(
                             'placa', 'placa2', 'motorista', 'empresa', 'origem','destino',
-                                'tipo_mot', 'tipo_viagem', 'hr_chegada', 'hr_saida', 'autor')\
+                                'tipo_mot', 'tipo_viagem', 'hr_chegada', 'hr_saida', 'autor__username')\
             .filter(hr_chegada__gte=dateparse,hr_chegada__lte=dateparse1)
         for placa in cadastro:
             writer.writerow(placa)
@@ -485,7 +592,7 @@ def get_palete_csv(request):
     writer = csv.writer(response)
     writer.writerow(['id','loc_atual','ultima_viagem','origem','destino','placa_veic','autor'])
     palete = PaleteControl.objects.all().values_list(
-        'id', 'loc_atual', 'ultima_viagem', 'origem', 'destino', 'placa_veic','autor'
+        'id', 'loc_atual', 'ultima_viagem', 'origem', 'destino', 'placa_veic','autor_username'
     )
     for id in palete:
         writer.writerow(id)
@@ -510,10 +617,7 @@ def get_manu_csv(request):
                                 'filial','socorro','prev_entrega','observacao','status','autor'])
         manutencao = ManutencaoFrota.objects.all().values_list('id','veiculo','tp_manutencao','local_manu','dt_ult_manutencao','dt_entrada','dt_saida',
                             'dias_veic_parado','km_ult_troca_oleo','tp_servico','valor_maodeobra','valor_peca',
-                                'filial','socorro','prev_entrega','observacao','status','autor').filter(dt_entrada__gte=dateparse, dt_entrada__lte=dateparse1)
+                                'filial','socorro','prev_entrega','observacao','status','autor__username').filter(dt_entrada__gte=dateparse, dt_entrada__lte=dateparse1)
         for id in manutencao:
             writer.writerow(id)
         return response
-
-
-

@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load groupscheck %}
+<div class="container mt-5">
+{% if request.user|has_group:"servicopj" %}
+        {% for message in messages %}
+        <div class="container-fluid p-0">
+            <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                {{ message }}
+            </div>
+        </div>
+        {% endfor %}
+    <div class="row">
+        <h2 class="title-cad col-3">Décimo Terceiro</h2>
+    </div>
+    <div class="container">
+        <form method="get">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Período trabalhado</th>
+                    <th>Valor parcela</th>
+                    <th>Pgto Parcela 1</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tr>
+                <th>{{ func }}</th>
+                <th>{{ form.periodo_meses }}</th>
+                <th>{{ form.valor }}</th>
+                <th>{{ form.pgto_parc_1|date:'d/m/Y' }}</th>
+                <th><select name="pgto_parc">
+                        <option value='pgto_parcela_2'>2 parcela</option>
+                </select></th>
+            </tr>
+        </table>
+        <input type="submit" class="button" style="margin-top:0px;">
+        </form>
+    </div>
+
+</div>
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+{% endblock %}

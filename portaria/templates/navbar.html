@@ -60,7 +60,17 @@
           <li class="nav-item"><a class="nav-link1" href="{% url 'portaria:outputs' %}">Gerar CSVs</a></li>
           {% endif %}
           {% if request.user|has_group:"servicopj" %}
-          <li class="nav-item"><a class="nav-link1" href="{% url 'portaria:servicospj' %}">Servicos PJ</a></li>
+          <div class="dropdown">
+            <button class="dropdown-toggle menutext-navbar nav-link1" type="button" style="background-color: #3188E8;" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+              Ferramentas PJ
+            </button>
+            <ul class="dropdown-menu" style="background-color: #3188E8;" aria-labelledby="dropdownMenuButton1">
+              <li class="nav-item">
+                <a class="nav-link1" href="{% url 'portaria:servicospj' %}">Servicos PJ</a>
+                <a class="nav-link1" href="{% url 'portaria:decimopj' %}">13º PJ</a>
+              </li>
+            </ul>
+          </div>
           {% endif %}
           {% if request.user|has_group:"adm_rh" %}
           <li class="nav-item"><a class="nav-link1" href="{% url 'portaria:cardusuario' %}">Cards</a></li>
