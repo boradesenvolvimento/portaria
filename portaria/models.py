@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxLengthValidator, DecimalValidator
 from django.db import models
-from django.db.models import PROTECT
+from django.db.models import PROTECT, Sum, F
 from django.utils import timezone
 
 #validators
@@ -251,6 +251,30 @@ class pj13(models.Model):
     pgto_parc_2 = models.DateField(blank=True, null=True)
     funcionario = models.ForeignKey(FuncPj, on_delete=PROTECT)
     autor = models.ForeignKey(User, on_delete=PROTECT)
+
+class feriaspj(models.Model):
+    PGTO_CHOICES = [
+        ('INTEGRAL','INTEGRAL'),
+        ('PARCIAL','PARCIAL')
+    ]
+    id = models.BigAutoField(primary_key=True)
+    ultimas_ferias_ini = models.DateField()
+    ultimas_ferias_fim = models.DateField()
+    periodo = models.CharField(max_length=2, validators=[only_int],blank=True, null=True)
+    quitado = models.BooleanField(default=0)
+    funcionario = models.ForeignKey(FuncPj, on_delete=PROTECT, blank=True)
+    vencimento = models.DateField()
+    tp_pgto = models.CharField(max_length=8, choices=PGTO_CHOICES)
+    agendamento_ini = models.DateField(blank=True, null=True)
+    agendamento_fim = models.DateField(blank=True, null=True)
+    valor_integral = models.FloatField(blank=True, null=True)
+    valor_parcial1 = models.FloatField(blank=True, null=True)
+    valor_parcial2 = models.FloatField(blank=True, null=True)
+    dt_quitacao = models.DateField(blank=True, null=True)
+    alerta_venc_enviado = models.BooleanField(default=0)
+
+    def __str__(self):
+       return self.funcionario.nome
 
 class ManutencaoFrota(models.Model):
     TIPO_MANUTENCAO_CHOICES = [

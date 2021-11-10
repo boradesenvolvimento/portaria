@@ -1,0 +1,62 @@
+    {% extends 'base.html' %}
+    {% block content %}
+    {% load groupscheck %}
+    <div class="container mt-5">
+    {% if auth_message %}
+        <p><strong>{{ auth_message }}</strong></p>
+    {% else %}
+    {% if request.user|has_group:"servicopj" %}
+            {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+            {% endfor %}
+        <div class="row">
+            <h2 class="title-cad col-3">Férias PJ</h2>
+            <form method="post">
+                {% csrf_token %}
+            <input type="text" name="textbox" placeholder="Digite o nome" class="col-2">
+
+            <select name="option" class="col-2">
+                <option></option>
+                <option>Férias Vencidas</option>
+                <option>Próximas do vencimento</option>
+            </select>
+            <input type="submit" class="button col-1">
+            </form>
+        </div>
+        <div class="container">
+            <table class="table table1">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Ultimas Ferias</th>
+                        <th>Periodo</th>
+                        <th>Quitado</th>
+                        <th>Vencimento</th>
+                        <th>Agendamento</th>
+                        <th></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for q in qs %}
+                    <tr><th>{{ q.funcionario|upper }}</th>
+                    <th>{{ q.ultimas_ferias_ini|date:'d/m/Y' }}</th>
+                    <th>{{ q.periodo }}</th>
+                    <th>{{ q.quitado|yesno:'Sim,Não' }}</th>
+                    <th>{{ q.vencimento|date:'d/m/Y' }}</th>
+                    <th>{% if q.agendamento_ini is None %}---{% else %}{{ q.agendamento_ini|date:'d/m/Y' }} - {{ q.agendamento_fim|date:'d/m/Y' }}{% endif %}</th>
+                    <th>{% if hoje > q.vencimento %}Ferias vencidas{% else %}{{ q.vencimento|timeuntil:hoje }} {% endif %}</th>
+                    <th><a href="{% url 'portaria:feriasagen' idfpj=q.id %}">Opções</a> | <a href="{% url 'portaria:feriasquit' idfpj=q.id %}">Quitar</a></th></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+    {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+    {% endif %}
+    {% endblock %}

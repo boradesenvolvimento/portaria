@@ -2,7 +2,7 @@ from django import forms
 from django.conf import settings
 from django.forms import Textarea, DateField
 
-from .models import Cadastro, TIPO_GARAGEM, ChecklistFrota, NfServicoPj, ManutencaoFrota, ServJoinManu
+from .models import Cadastro, TIPO_GARAGEM, ChecklistFrota, NfServicoPj, ManutencaoFrota, ServJoinManu, feriaspj
 
 
 #forms
@@ -131,3 +131,22 @@ class ServJoinManuForm(forms.ModelForm):
             'id_os',
             'id_svs'
         ]
+
+class feriaspjForm(forms.ModelForm):
+    class Meta:
+        model = feriaspj
+        fields = [
+            'ultimas_ferias_ini',
+            'ultimas_ferias_fim',
+            'periodo',
+            'quitado',
+            'funcionario',
+            'tp_pgto',
+            'valor_integral',
+            'valor_parcial1',
+            'valor_parcial2',
+        ]
+        widgets = {
+            'ultimas_ferias_ini': forms.DateInput(format='%d/%m/%Y'),
+            'ultimas_ferias_fim': forms.DateInput(format='%d/%m/%Y'),
+        }

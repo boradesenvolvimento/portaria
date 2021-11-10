@@ -78,3 +78,7 @@ admin.site.register(CardFuncionario, CardFuncionarioAdmin)
 class pj13Admin(admin.ModelAdmin):
     pass
 admin.site.register(pj13, pj13Admin)
+
+class feriaspjAdmin(admin.ModelAdmin):
+    pass
+admin.site.register(feriaspj, feriaspjAdmin)
