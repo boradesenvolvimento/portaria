@@ -54,7 +54,7 @@
                 <th>{{ q|upper }}</th>
                 <th>{{ q.cpf_cnpj }}</th>
                 <th>{{ q.filial }}</th>
-                <th>{{ q.salario }}</th>
+                <th>{{ q.salario|floatformat:2 }}</th>
                 <th>{{ q.periodo }}</th>
                 <th>{{ q.valor|floatformat:2 }}</th>
                 <th>{{ q.parc_1|date:'d/m/Y' }}</th>

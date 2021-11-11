@@ -25,6 +25,18 @@
                     <button class="button col-1"><a href="{% url 'portaria:feriasview' %}" style="text-decoration:none;color:white;">Entrar</a></button>
                 </div>
             </div>
+            <div class="container">
+                <div class="row linha-baixo">
+                    <h2 class="title-cad col-3">Exportar CSV</h2>
+                    <p>Selecione o período</p>
+                    <form method="post" action="{% url 'portaria:get_ferias_csv' %}">
+                        {% csrf_token %}
+                        <input class="col-2" type="text" name="dataini" placeholder="Data inicio">
+                        <input class="col-2" type="text" name="datafim" placeholder="Data fim">
+                        <button class="col-1">Exportar</button>
+                    </form>
+                </div>
+            </div>
     </div>
     {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
     {% endif %}

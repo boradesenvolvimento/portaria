@@ -19,7 +19,9 @@
                 <h2 class="title-cad">Motorista:<input type="text" name="moto_src"><input type="submit" value="Buscar motorista" class="button"></h2>
             </form>
             <form method="get" class="linha-baixo">
-                <h2 class="title-cad">Insira a placa:<input type="text" name="placa_"></h2>
+                <div>
+                <h2 class="title-cad">Insira a placa:<input type="text" name="placa_"><button class="button" type="submit">Enviar</button></h2>
+                </div>
                 <table>
                 {% for q in qs %}
                     <tr>
@@ -27,11 +29,13 @@
                     </tr>
                 {% endfor %}
                 </table>
-                <div>
-                <input type="submit" class="button">
-                </div>
             </form>
+        </div>
+    </div>
 
+    <div class="container linha-baixo">
+        <div class="row">
+            <h2 class="title-cad">Painel de checklists<button type="submit"><a style="color:white;" href="{% url 'portaria:checklistview' %}">Acessar</a></button></h2>
         </div>
     </div>
 </div>

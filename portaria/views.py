@@ -149,6 +149,7 @@ class PaleteView(generic.ListView):
 
 @login_required
 def frota(request):
+    form = ChecklistFrota.objects.all()
     if request.method == 'POST':
         mot = request.POST.get('moto_src')
         if mot:
@@ -173,7 +174,7 @@ def frota(request):
         elif mot and not pla:
             messages.error(request, 'Insira a placa')
             return render(request, 'portaria/frota.html')
-    return render(request, 'portaria/frota.html')
+    return render(request, 'portaria/frota.html',{'form':form})
 
 @login_required
 def checklistfrota(request, placa_id, moto_id):
@@ -196,6 +197,14 @@ def checklistfrota(request, placa_id, moto_id):
             messages.success(request, f'Checklist para placa {pla} e motorista {mot} concluído!')
             return HttpResponseRedirect(reverse('portaria:frota'))
     return render(request,'portaria/checklistfrota.html', {'form':form,'pla':pla, 'mot':mot})
+
+def checklistview(request):
+    form = ChecklistFrota.objects.all().order_by('-datachecklist')
+    return render(request, 'portaria/checklistview.html', {'form':form})
+
+def checklistdetail(request, idckl):
+    form = get_object_or_404(ChecklistFrota, pk=idckl)
+    return render(request, 'portaria/checklistdetail.html', {'form':form})
 
 @login_required
 def servicospj(request):
@@ -246,10 +255,10 @@ def cadservicospj(request, args):
     return render(request, 'portaria/cadservicospj.html', {'form':form,'func':func})
 
 def decimopj(request):
-    allfunc = FuncPj.objects.filter(ativo=True).annotate(parc1=F('pj13__pgto_parc_1'),parc2=F('pj13__pgto_parc_2'))
+    allfunc = FuncPj.objects.filter(ativo=True).annotate(parc1=F('pj13__pgto_parc_1'),parc2=F('pj13__pgto_parc_2')).order_by('nome')
     func = request.GET.get('srcfunc')
     if func:
-        allfunc = FuncPj.objects.filter(nome__icontains=func, ativo=True).annotate(parc1=F('pj13__pgto_parc_1'),parc2=F('pj13__pgto_parc_2'))
+        allfunc = FuncPj.objects.filter(nome__icontains=func, ativo=True).annotate(parc1=F('pj13__pgto_parc_1'),parc2=F('pj13__pgto_parc_2')).order_by('nome')
         return render(request, 'portaria/decimopj.html', {'allfunc': allfunc})
     return render(request,'portaria/decimopj.html', {'allfunc':allfunc})
 
@@ -554,7 +563,7 @@ def transfpalete(request):
     return render(request,'portaria/transfpaletes.html', context)
 
 @login_required
-def get_nfpj_csv(request):
+def get_nfpj_mail(request):
     data1 = request.POST.get('dataIni')
     data2 = request.POST.get('dataFim')
     dateparse = datetime.datetime.strptime(data1, '%d/%m/%Y').replace(hour=00, minute=00)
@@ -738,3 +747,77 @@ def mailferias(request,idfpj):
         return redirect('portaria:feriasview')
 
 
+def get_nfpj_csv(request):
+    response = HttpResponse(content_type='text/csv',
+                            headers={'Content-Disposition':'attatchment; filename="servicospj.csv"'})
+    response.write(u'\ufeff'.encode('utf8'))
+    writer = csv.writer(response)
+    writer.writerow(['nome','cpf/cnpj','salario','ajuda de custo','adiantamento','credito convenio','outros creditos',
+                     'desconto convenio','outros descontos','total a pagar'])
+    arrya = []
+    qnt_funcs = FuncPj.objects.filter(ativo=True)
+    for q in qnt_funcs:
+        query = FuncPj.objects.filter(pk=q.id) \
+            .annotate(
+            faculdade=Coalesce(Sum('nfservicopj__faculdade', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month)),Value(0.0)),
+            cred_convenio=Coalesce(Sum('nfservicopj__cred_convenio', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month)), Value(0.0)),
+            outros_cred=Coalesce(Sum('nfservicopj__outros_cred', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month)), Value(0.0)),
+            desc_convenio=Coalesce(Sum('nfservicopj__desc_convenio', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month)), Value(0.0)),
+            outros_desc=Coalesce(Sum('nfservicopj__outros_desc', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month)), Value(0.0)),) \
+            .annotate(total=((F('salario') + F('ajuda_custo') + F('faculdade') + F('cred_convenio') + F('outros_cred')) - (F('adiantamento') + F('desc_convenio') + F('outros_desc'))))
+        arrya.extend(query)
+    for q in arrya:
+        writer.writerow([q.nome,q.cpf_cnpj,q.salario,q.faculdade,q.cred_convenio,q.outros_cred,q.outros_cred,q.desc_convenio,q.outros_desc,q.total])
+    return response
+
+def get_checklist_csv(request):
+    try:
+        ini = datetime.datetime.strptime(request.POST.get('dataini'), '%d/%m/%Y').date()
+        fim = datetime.datetime.strptime(request.POST.get('datafim'), '%d/%m/%Y').date()
+    except ValueError:
+        messages.error(request, 'Por favor digite uma data válida')
+        return redirect('portaria:frota')
+    else:
+        response = HttpResponse(content_type='text/csv',
+                                headers={'Content-Disposition':'attachment; filename="servicospj.csv"'})
+        response.write(u'\ufeff'.encode('utf8'))
+        writer = csv.writer(response)
+        writer.writerow(['data','placa','motorista','placa carreta','km anterior','km atual','horimetro','uniforme da empresa',
+                         'motorista identificado por crachá','lanterna do farol dianteiro funcionando?','farol baixo funcionando?',
+                         'farol alto funcionando?','lanterna direita funcionando?','lanterna esquerda funcionando?','lanternas traseiras funcionando?',
+                         'luz de ré funcionando?','retrovisores estão em perfeito estado?','água no radiador está no nível','óleo de freio está no nível',
+                         'óleo de motor está no nivel?','verificado todas as luzes de advertências?','verificado o freio de emergência?','verificado o alarme sonoro da ré?',
+                         'verificado se existe vazamentos de óleo de motor?','verificado se existe vazamento de ar','verificado se existe vazamento de óleo hidráulico?',
+                         'verificado se existe vazamento de água no radiador?','verificado se as mangueiras estão em condições boas?',
+                         'pneus em boas condições?','as lonas de freio estão em boas condições?','os estepes estão bons?','a suspensão está em condições perfeitas?',
+                         'o carro está limpo e higienizado?','foi verificado as luzes de advertência das laterais?','foi verificado o lacre da placa?',
+                         'foi verificado se o aparelho thermoking apresenta falhas?','foi verificado a carroceria assoalho e bau?',
+                         'foi verificado a luz de freio?','foi verificado a luz de ré?','foi verificado se as luzes da lanterna traseira direita funciona?',
+                         'foi verificado se as luzes da lanterna traseira esquerda funciona','autor'])
+        checklist = ChecklistFrota.objects.all().values_list('datachecklist','placaveic','motoristaveic','placacarreta','kmanterior','kmatual','horimetro','p1_1','p1_2','p2_1','p2_2','p2_3','p2_4','p2_5','p2_6','p2_7',
+                                                            'p2_8','p2_9','p2_10','p2_11','p2_12','p2_13','p2_14','p2_15','p2_16','p2_17','p2_18','p2_19','p2_20','p2_21','p2_22','p2_23','p2_24','p3_1',
+                                                            'p3_2','p3_3','p3_4','p3_5','p3_6','p3_7','p3_8','autor__username').filter(datachecklist__gte=ini,datachecklist__lte=fim)
+        for c in checklist:
+            writer.writerow(c)
+        return response
+
+def get_ferias_csv(request):
+    try:
+        ini = datetime.datetime.strptime(request.POST.get('dataini'), '%d/%m/%Y').date()
+        fim = datetime.datetime.strptime(request.POST.get('datafim'), '%d/%m/%Y').date()
+    except ValueError:
+        messages.error(request, 'Por favor digite uma data válida')
+        return redirect('portaria:feriaspjv')
+    else:
+        response = HttpResponse(content_type='text/csv',
+                                headers={'Content-Disposition':'attatchment; filename="ferias.csv"'})
+        response.write(u'\ufeff'.encode('utf8'))
+        writer = csv.writer(response)
+        writer.writerow(['ultimas ferias inicio','ultimas ferias fim','periodo','quitado','funcionario','vencimento','tipo pagamento',
+                         'agendamento inicio','agendamento fim','valor integral','valor parcial 1', 'valor parcial 2','data quitacao','alerta vencimento'])
+        ferias = feriaspj.objects.all().values_list('ultimas_ferias_ini','ultimas_ferias_fim','periodo','quitado','funcionario','vencimento',
+                                                    'tp_pgto','agendamento_ini','agendamento_fim','valor_integral','valor_parcial1','valor_parcial2',
+                                                    'dt_quitacao','alerta_venc_enviado').filter(ultimas_ferias_ini__gte=ini,ultimas_ferias_fim__lte=fim)
+        for q in ferias:
+            writer.writerow(q)
+        return response
