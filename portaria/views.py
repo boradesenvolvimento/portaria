@@ -255,10 +255,10 @@ def cadservicospj(request, args):
     return render(request, 'portaria/cadservicospj.html', {'form':form,'func':func})
 
 def decimopj(request):
-    allfunc = FuncPj.objects.filter(ativo=True).annotate(parc1=F('pj13__pgto_parc_1'),parc2=F('pj13__pgto_parc_2'))
+    allfunc = FuncPj.objects.filter(ativo=True).annotate(parc1=F('pj13__pgto_parc_1'),parc2=F('pj13__pgto_parc_2')).order_by('nome')
     func = request.GET.get('srcfunc')
     if func:
-        allfunc = FuncPj.objects.filter(nome__icontains=func, ativo=True).annotate(parc1=F('pj13__pgto_parc_1'),parc2=F('pj13__pgto_parc_2'))
+        allfunc = FuncPj.objects.filter(nome__icontains=func, ativo=True).annotate(parc1=F('pj13__pgto_parc_1'),parc2=F('pj13__pgto_parc_2')).order_by('nome')
         return render(request, 'portaria/decimopj.html', {'allfunc': allfunc})
     return render(request,'portaria/decimopj.html', {'allfunc':allfunc})
 
