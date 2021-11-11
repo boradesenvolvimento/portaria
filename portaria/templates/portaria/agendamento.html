@@ -1,0 +1,42 @@
+    {% extends 'base.html' %}
+    {% block content %}
+    {% load groupscheck %}
+    <div class="container mt-5">
+    {% if auth_message %}
+        <p><strong>{{ auth_message }}</strong></p>
+    {% else %}
+    {% if request.user|has_group:"servicopj" %}
+            {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+            {% endfor %}
+            <div class="container">
+                <div class="row linha-baixo">
+                <h2>Agendamento para {{ fer }}</h2>
+                </div>
+                <div class="row linha-baixo">
+                    <p>Vencimento: {{ fer.vencimento }}</p>
+                    <p>Inicio: {{ fer.ultimas_ferias_ini }}</p>
+                    <p>Fim: {{ fer.ultimas_ferias_fim }}</p>
+                    <p>Periodo: {{ fer.periodo }}</p>
+                    <p>Tipo Pgto: {{ fer.tp_pgto }}</p>
+                    <p>Valor:{% if fer.tp_pgto == 'INTEGRAL' %}R${{ fer.valor_integral }}{% else %}1º:R${{ fer.valor_parcial1 }} | 2º:R${{ fer.valor_parcial1 }}{% endif %}</p>
+                </div>
+                <div class="container linha-baixo">
+                    <form method="get">
+                    <input type="text" placeholder="Data início" name="agendamento1">
+                    <input type="text" placeholder="Data fim" name="agendamento2">
+                    <button type="submit">Agendar</button>
+                    </form>
+                </div>
+                <div class="container linha-baixo">
+                    <h2>Enviar email de confirmação<button class="button"><a style="color:white;text-decoration:none;" href="{% url 'portaria:mailferias' idfpj=fer.id %}">Enviar</a></button></h2>
+                </div>
+            </div>
+    </div>
+    {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+    {% endif %}
+    {% endblock %}

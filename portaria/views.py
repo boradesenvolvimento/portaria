@@ -6,8 +6,9 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
-from django.db.models import Count, Sum, F, Q, Value
-from django.db.models.functions import Coalesce
+from django.db.models import Count, Sum, F, Q, Value, CharField, ExpressionWrapper, DurationField, DateTimeField, \
+    DecimalField, IntegerField
+from django.db.models.functions import Coalesce, TruncDate, Cast
 from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, Http404
 from django.shortcuts import get_object_or_404, render, redirect
 from django.template.defaultfilters import upper
@@ -302,6 +303,88 @@ def decimoview(request):
             return render(request, 'portaria/decimoview.html', {'allfuncs': allfuncs, 'array': array})
     return render(request, 'portaria/decimoview.html')
 
+def feriaspjv(request):
+    return render(request,'portaria/feriaspj.html')
+
+def feriascad(request):
+    form = feriaspjForm
+    deadline = datetime.timedelta(weeks=40, days=85, hours=23, minutes=50, seconds=600)
+    if request.method == 'POST':
+        form = feriaspjForm(request.POST or None)
+        if form.is_valid():
+            fim = form.cleaned_data['ultimas_ferias_fim']
+            ini = form.cleaned_data['ultimas_ferias_ini']
+            per = str(fim - ini)
+            prox = fim + deadline
+            setval = form.save(commit=False)
+            setval.periodo = per.split(' days')[0]
+            setval.vencimento = prox
+            setval.save()
+            messages.success(request, 'Cadastrado com sucesso!')
+            return redirect('portaria:feriaspjv')
+
+    return render(request,'portaria/feriascad.html', {'form':form})
+
+def feriasview(request):
+    hoje = datetime.date.today()
+    dias = hoje + datetime.timedelta(days=60)
+    aa = FuncPj.objects.filter(ativo=True).values_list('id', flat=True)
+    qs = feriaspj.objects.filter(quitado=False, funcionario_id__in=aa).order_by('vencimento')
+    name = request.POST.get('textbox')
+    opt = request.POST.get('option')
+    if name or opt:
+        if name == '' and opt:
+            if opt == 'Férias Vencidas':
+                qs = feriaspj.objects.filter(quitado=False, funcionario_id__in=aa, vencimento__lte=hoje).order_by('vencimento')
+                return render(request, 'portaria/feriasview.html', {'qs': qs, 'dias': dias, 'hoje': hoje})
+            elif opt == 'Próximas do vencimento':
+                qs = feriaspj.objects.filter(quitado=False, funcionario_id__in=aa, vencimento__gte= hoje,vencimento__lte=dias).order_by('vencimento')
+                return render(request, 'portaria/feriasview.html', {'qs': qs, 'dias': dias, 'hoje': hoje})
+            else:
+                pass
+        elif opt == '' and name:
+            qs = feriaspj.objects.filter(quitado=False, funcionario_id__in=aa, funcionario__nome__contains=name).order_by('vencimento')
+            return render(request, 'portaria/feriasview.html', {'qs': qs, 'dias': dias, 'hoje': hoje})
+        elif name and opt:
+            if opt == 'Férias Vencidas':
+                qs = feriaspj.objects.filter(quitado=False, funcionario_id__in=aa, vencimento__lte = hoje, funcionario__nome__contains=name).order_by('vencimento')
+                return render(request, 'portaria/feriasview.html', {'qs': qs,'dias':dias,'hoje':hoje})
+            elif opt == 'Próximas do vencimento':
+                qs = feriaspj.objects.filter(quitado=False, funcionario_id__in=aa, vencimento__gte= hoje,vencimento__lte=dias, funcionario__nome__contains=name).order_by('vencimento')
+                return render(request, 'portaria/feriasview.html', {'qs': qs,'dias':dias,'hoje':hoje})
+            return render(request, 'portaria/feriasview.html', {'qs': qs, 'dias': dias, 'hoje': hoje})
+
+
+    return render(request, 'portaria/feriasview.html', {'qs': qs,'dias':dias,'hoje':hoje})
+
+def feriasagen(request, idfpj):
+    form = feriaspjForm
+    fer = get_object_or_404(feriaspj, pk=idfpj)
+    agen1 = request.GET.get('agendamento1')
+    agen2 = request.GET.get('agendamento2')
+    if agen1 and agen2:
+        try:
+            agenparse1 = datetime.datetime.strptime(agen1, '%d/%m/%Y').date()
+            agenparse2 = datetime.datetime.strptime(agen2, '%d/%m/%Y').date()
+            feriaspj.objects.filter(pk=fer.id).update(agendamento_ini=agenparse1, agendamento_fim=agenparse2)
+        except ValueError:
+            messages.error(request, 'Por favor digite uma data válida')
+            return render(request, 'portaria/agendamento.html', {'fer':fer})
+        else:
+            messages.success(request, 'Agendamento feito com sucesso')
+            return redirect('portaria:feriasview')
+    return render(request, 'portaria/agendamento.html', {'fer':fer,'form':form})
+
+def feriasquit(request, idfpj):
+    fer = get_object_or_404(feriaspj, pk=idfpj)
+    try:
+        feriaspj.objects.filter(pk=fer.id).update(quitado=True, dt_quitacao=timezone.now())
+    except ObjectDoesNotExist:
+        messages.error(request, 'Erro')
+        return redirect('portaria:feriasview')
+    else:
+        messages.success(request, f'Férias quitadas para o funcionário {fer}')
+        return redirect('portaria:feriasview')
 
 @login_required
 def manutencaofrota(request):
@@ -621,3 +704,37 @@ def get_manu_csv(request):
         for id in manutencao:
             writer.writerow(id)
         return response
+
+def mailferias(request,idfpj):
+    fer = get_object_or_404(feriaspj, pk=idfpj)
+    func = get_object_or_404(FuncPj, pk=fer.funcionario_id)
+    valor = 0
+    if fer.tp_pgto == 'INTEGRAL':
+        valor = fer.valor_integral
+    else:
+        valor = fer.valor_parcial1 + fer.valor_parcial2
+    try:
+        send_mail(
+            subject='Informações Férias',
+            message=f'''
+                                        Unidade: {func.filial}
+                                        Nome: {func.nome}
+                                        Cpf: {func.cpf_cnpj}
+                                        Início Férias: {fer.ultimas_ferias_ini}
+                                        Fim Férias: {fer.ultimas_ferias_fim}
+                                        Período  dias: {fer.periodo}
+                                        Tipo Pgto: {fer.tp_pgto}
+                                        Valor a receber: {valor}
+                                    ''',
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=[func.email]
+        )
+
+    except ValueError:
+        messages.error(request, 'Erro')
+        return redirect('portaria:feriasview')
+    else:
+        messages.success(request, f'Email enviado para {func}')
+        return redirect('portaria:feriasview')
+
+
