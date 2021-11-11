@@ -6,7 +6,7 @@
     <div class="container mt-5">
         <div class="row">
             <div class="col col-lg-9 col-md-9 col-sm-9 sr-only" id="sendmail">
-                <form class="form-box" action="{% url 'portaria:get_nfpj_csv' %}" method="post">
+                <form class="form-box" action="{% url 'portaria:get_nfpj_mail' %}" method="post">
                     {% csrf_token %}
                     <h3 class="title-cad">Selecione o período:
                     <input type="text" placeholder="Data inicio" name="dataIni">
@@ -15,8 +15,11 @@
                     </h3>
                 </form>
             </div>
-            <div class="col-6">
+            <div class="col-10">
                     <button onclick="isactive()" class="button">Enviar emails</button>
+            </div>
+            <div class="col-2">
+                <button class="button"><a href="{% url 'portaria:get_nfpj_csv' %}" style="text-decoration:none;color:white;">Exportar CSV</a></button>
             </div>
         </div>
         <div class="row">

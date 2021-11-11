@@ -42,8 +42,8 @@
                         <th>{{ cadastro.destino }}</th>
                         <th>{{ cadastro.tipo_mot }}</th>
                         <th>{{ cadastro.tipo_viagem }}</th>
-                        <th>{{ cadastro.hr_chegada|date:'d/m/Y' }}</th>
-                        <th>{{ cadastro.hr_saida|date:'d/m/Y' }}</th>
+                        <th>{{ cadastro.hr_chegada|date:'d/m/Y H:i' }}</th>
+                        <th>{{ cadastro.hr_saida|date:'d/m/Y H:i' }}</th>
                         <th>{{ cadastro.autor }}</th>
                     </tr>
                     {% endfor %}
