@@ -15,7 +15,7 @@
         <div class="row">
             <form method="post" action="{% url 'portaria:get_checklist_csv' %}">
                 {% csrf_token %}
-                <h3 class="title-cad">Exportar
+                <h3 class="title-cad">Exportar CSV:
                     <input type="text" class="col-2" placeholder="Data Início" name="dataini">
                     <input type="text" class="col-2" placeholder="Data Fim" name="datafim">
                     <button class="col-1" type="submit">Exportar</button>
@@ -41,7 +41,7 @@
                 <th>{{ q.datachecklist }}</th>
                 <th>{{ q.placaveic }}</th>
                 <th>{{ q.motoristaveic }}</th>
-                <th><a href="{% url 'portaria:checklistdetail' idckl=q.idchecklist %}">detail</a></th>
+                <th><a href="{% url 'portaria:checklistdetail' idckl=q.idchecklist %}">detalhes</a></th>
             </tr>
         {% endfor %}
         </table>

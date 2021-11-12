@@ -4,7 +4,14 @@
 {% if request.user|has_group:"paletes" %}
         <div class="container mt-5">
             <div class="row linha-baixo">
-                <h2 class="title-cad">Quantidade de Paletes por garagem</h2>
+                <h2 class="title-cad col-9">Quantidade de Paletes por garagem</h2>
+
+                <div class="col-3">
+                    <form class="form-box" action="{% url 'portaria:get_palete_csv' %}" method="post">
+                        {% csrf_token %}
+                        <h3 class="title-cad">Exportar CSV<input type="submit" class="button"></h3>
+                    </form>
+                </div>
             </div>
             <div class="row" style="margin-left: 6rem; ">
             {% for palete in lista %}
