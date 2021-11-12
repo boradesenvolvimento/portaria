@@ -28,6 +28,19 @@
                     </button></h3>
                 </div>
             </div>
+
+            <div class="row linha-baixo mb-3">
+                <div class="col col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                    <h3 class="title-cad">Exportar CSV portaria</h3>
+                    <form class="form-box" action="{% url 'portaria:get_portaria_csv' %}" method="post">
+                        {% csrf_token %}
+                        <input type="text" placeholder="Data inicio" name="dataIni" id="id_date">
+                        <input type="text" placeholder="Data final" name="dataFim" id="id_date1">
+                        <input type="submit" class="button">
+                    </form>
+                </div>
+            </div>
+    </div>
     </div>
     {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
     {% endif %}

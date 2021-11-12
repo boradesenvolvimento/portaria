@@ -14,8 +14,8 @@
     <div class="container">
         <div class="row">
             <h2 class="title-cad">Checklist nº {{ form.idchecklist }}</h2>
-            <h3>Placa:{{ form.placaveic }} | Motorista: {{ form.motoristaveic }} | Data: {{ form.datachecklist|date:'d/m/Y' }}</h3>
-            <h3>Placa Carreta:{% if form.placacarreta %}{{ form.placacarreta }}{% else %}---- {% endif %}| Km anterior:{{ form.kmanterior }} | Km:{{ form.kmatual }} | Horimetro: {{ form.horimetro }}</h3>
+            <h3><strong>Placa: </strong>{{ form.placaveic }} | <strong>Motorista: </strong>{{ form.motoristaveic }} | <strong>Data: </strong>{{ form.datachecklist|date:'d/m/Y' }}</h3>
+            <h3><strong>Placa Carreta: </strong>{% if form.placacarreta %}{{ form.placacarreta }}{% else %}---- {% endif %}| <strong>Km anterior: </strong>{{ form.kmanterior }} | <strong>Km: </strong>{{ form.kmatual }} | <strong>Horimetro: </strong>{{ form.horimetro }}</h3>
         </div>
         <table class="table table1 linha-baixo">
             <tr><th>Uniforme da Empresa</th><th>{{ form.p1_1|yesno:'SIM,NÃO' }}</th></tr>
