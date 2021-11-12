@@ -6,8 +6,8 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
-from django.db.models import Count, Sum, F, Q, Value, CharField, ExpressionWrapper, DurationField, DateTimeField, \
-    DecimalField, IntegerField
+from django.db import IntegrityError
+from django.db.models import Count, Sum, F, Q, Value
 from django.db.models.functions import Coalesce, TruncDate, Cast
 from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, Http404
 from django.shortcuts import get_object_or_404, render, redirect
@@ -206,6 +206,21 @@ def checklistdetail(request, idckl):
     form = get_object_or_404(ChecklistFrota, pk=idckl)
     return render(request, 'portaria/checklistdetail.html', {'form':form})
 
+
+def cadfuncionariopj(request):
+    form = FuncPjForm
+    if request.method == 'POST':
+        form = FuncPjForm(request.POST or None)
+        if form.is_valid():
+            try:
+                form.save()
+            except IntegrityError:
+                raise ValidationError('Erro')
+            else:
+                messages.success(request, 'Cadastrado com sucesso')
+                return redirect('portaria:index')
+    return render(request, 'portaria/cadfuncionariopj.html', {'form':form})
+
 @login_required
 def servicospj(request):
     func = request.GET.get('nomefunc')
@@ -394,6 +409,29 @@ def feriasquit(request, idfpj):
     else:
         messages.success(request, f'Férias quitadas para o funcionário {fer}')
         return redirect('portaria:feriasview')
+
+def frotacadastros(request):
+    return render(request, 'portaria/frotacadastros.html')
+
+def cadmotorista(request):
+    form = MotoristaForm
+    if request.method == 'POST':
+        form = MotoristaForm(request.POST or None)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Cadastrado com sucesso')
+            return redirect('portaria:frotacadastros')
+    return render(request, 'portaria/cadmotorista.html', {'form':form})
+
+def cadveiculo(request):
+    form = VeiculosForm
+    if request.method == 'POST':
+        form = VeiculosForm(request.POST or None)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Cadastrado com sucesso')
+            return redirect('portaria:frotacadastros')
+    return render(request, 'portaria/cadveiculo.html', {'form': form})
 
 @login_required
 def manutencaofrota(request):
@@ -660,7 +698,7 @@ def get_portaria_csv(request):
         dateparse1 = datetime.datetime.strptime(data2, '%d/%m/%Y').replace(hour=23, minute=59)
     except ValueError:
         messages.error(request,'Por favor digite uma data válida')
-        return redirect('portaria:outputs')
+        return redirect('portaria:cadastro')
     else:
         response = HttpResponse(content_type='text/csv',
                                 headers={'Content-Disposition': 'attachment; filename="portaria.csv"'},

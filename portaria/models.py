@@ -8,12 +8,14 @@ from django.db import models
 from django.db.models import PROTECT, Sum, F
 from django.utils import timezone
 
+
+
 #validators
 def only_int(value):
     try:
         int(value)
     except (ValueError,TypeError):
-        raise ValidationError('NaN')
+        raise ValidationError('Valor digitado não é um número')
 
 
 TIPO_MOT = (
@@ -129,10 +131,10 @@ class Veiculos(models.Model):
     codigoveic = models.BigAutoField(primary_key=True)
     codigotpveic = models.CharField(max_length=5, choices=CODIGOTPVEIC_CHOICES)
     filial = models.CharField(max_length=3, choices=TIPO_GARAGEM)
-    prefixoveic = models.CharField(max_length=7)
+    prefixoveic = models.CharField(max_length=7, unique=True, error_messages={'unique':'Esta Placa já está cadastrada, gentileza verificar'})
     kmatualveic = models.IntegerField()
     obsveic = models.CharField(max_length=30, blank=True, null=True)
-    renavanveic = models.CharField(max_length=11)
+    renavanveic = models.CharField(max_length=11, validators=[only_int])
     modeloveic = models.CharField(max_length=20)
 
     class Meta:
@@ -215,6 +217,7 @@ class FuncPj(models.Model):
     conta = models.IntegerField()
     op = models.IntegerField()
     email = models.EmailField(max_length=254)
+    admissao = models.DateField(default=timezone.now)
     ativo = models.BooleanField(default=True)
 
     class Meta:

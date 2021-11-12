@@ -2,7 +2,8 @@ from django import forms
 from django.conf import settings
 from django.forms import Textarea, DateField
 
-from .models import Cadastro, TIPO_GARAGEM, ChecklistFrota, NfServicoPj, ManutencaoFrota, ServJoinManu, feriaspj
+from .models import Cadastro, TIPO_GARAGEM, ChecklistFrota, NfServicoPj, ManutencaoFrota, ServJoinManu, feriaspj, \
+    FuncPj, Motorista, Veiculos
 
 
 #forms
@@ -47,6 +48,54 @@ class TPaletesForm(forms.Form):
     destino_ = forms.ChoiceField(choices=TIPO_GARAGEM)
     quantidade_ = forms.IntegerField()
     placa_veic = forms.CharField(max_length=7)
+
+class FuncPjForm(forms.ModelForm):
+    class Meta:
+        model = FuncPj
+        fields = [
+            'filial',
+            'nome',
+            'salario',
+            'adiantamento',
+            'ajuda_custo',
+            'cpf_cnpj',
+            'tipo_contrato',
+            'banco',
+            'ag',
+            'conta',
+            'op',
+            'email'
+        ]
+
+class MotoristaForm(forms.ModelForm):
+    class Meta:
+        model = Motorista
+        fields = [
+            'filial',
+            'nome',
+            'RG',
+            'CPF',
+            'telefone',
+            'endereco',
+            'bairro',
+            'cidade',
+            'UF',
+            'cep',
+            'data_nasc'
+        ]
+
+class VeiculosForm(forms.ModelForm):
+    class Meta:
+        model = Veiculos
+        fields = [
+            'codigotpveic',
+            'filial',
+            'prefixoveic',
+            'kmatualveic',
+            'obsveic',
+            'renavanveic',
+            'modeloveic'
+        ]
 
 class ChecklistForm(forms.ModelForm):
     class Meta:
@@ -119,7 +168,7 @@ class ManutencaoForm(forms.ModelForm):
         ]
         widgets = {
             'observacao': Textarea(attrs={'cols': 30, 'rows': 3}),
-            'dt_entrada': forms.DateInput(format='%d/%m/%Y'),
+            'dt_entrada': DateInput(format='%d/%m/%Y'),
             'dt_saida': forms.DateInput(format='%d/%m/%Y'),
             'prev_entrega': forms.DateInput(format='%d/%m/%Y'),
         }
