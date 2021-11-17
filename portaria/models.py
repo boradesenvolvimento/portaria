@@ -356,6 +356,7 @@ class CardFuncionario(models.Model):
     cargo = models.CharField(max_length=20)
     email = models.EmailField(max_length=255)
     celular = models.CharField(max_length=11,validators=[only_int])
+    foto = models.ImageField(upload_to='images/', null=True)
 
     def __str__(self):
         return self.nome

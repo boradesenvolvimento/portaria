@@ -52,4 +52,4 @@ urlpatterns = [
     path('cardusuario/', views.cardusuario, name='cardusuario'),
     path('cardusuario/<int:id>/card', views.card, name='card')
 
-] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

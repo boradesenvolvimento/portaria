@@ -1,13 +1,14 @@
 {% extends 'base.html' %}
 {% block content %}
 {% load static %}
+
 <input id="text" class="sr-only" value="{{ request.build_absolute_uri }}" type="text"/>
 
 
 
 <div class="profile-main-body">
     <center>
-    <img src="{% static 'images/avatar.png' %}" style="max-width:20%">
+    <img src="/media/{{ form.foto }}">
     <h2>{{ form.nome }}</h2>
     <h3>{{ form.cargo }}</h3>
     <div class="item-social"><button onclick="makeQR()" name="submit">QR-Code</button></div>
