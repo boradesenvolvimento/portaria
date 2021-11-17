@@ -21,10 +21,23 @@
         </center>
 </div>
 
-
-
+<div class="sr-only" id="urlqrcode">
+</div>
 
 <script type="text/javascript">
+
+function download(){
+    var getsrc = document.getElementById('urlqrcode').getElementsByTagName('img')[0].currentSrc
+    console.log(getsrc)
+}
+
+var urlqrcode = new QRCode("urlqrcode");
+function urlQR(){
+    var elText = document.getElementById("text");
+    urlqrcode.makeCode(elText.value)
+}
+urlQR();
+
 function makeQR(){
     $('.qrcode-cont').toggle();
     if($('#qrcode').html() == ""){
