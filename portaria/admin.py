@@ -22,15 +22,16 @@ class CadastroAdmin(admin.ModelAdmin):
 admin.site.register(Cadastro, CadastroAdmin)
 
 class PaleteControlAdmin(admin.ModelAdmin):
-    fieldsets = (
-        ('loc_atual',{'fields':['loc_atual']}) ,
-        ('ultima_viagem',{'fields':['ultima_viagem']}),
-        ('origem',{'fields':['origem']}),
-        ('destino',{'fields':['destino']}),
-        ('placa_veic',{'fields':['placa_veic']})
-    )
-    list_display = ('id','loc_atual','ultima_viagem','origem','destino','placa_veic')
+    pass
 admin.site.register(PaleteControl, PaleteControlAdmin)
+
+class MovPaleteAdmin(admin.ModelAdmin):
+    pass
+admin.site.register(MovPalete, MovPaleteAdmin)
+
+class ClienteAdmin(admin.ModelAdmin):
+    pass
+admin.site.register(Cliente, ClienteAdmin)
 
 class MotoristaAdmin(admin.ModelAdmin):
     pass

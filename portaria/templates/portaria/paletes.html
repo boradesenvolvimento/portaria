@@ -12,13 +12,35 @@
                         <h3 class="title-cad">Exportar CSV<input type="submit" class="button"></h3>
                     </form>
                 </div>
+                <div class="col-7">
+                    <h2 class="title-cad">Total: {{ ttcount.total_amount }}</h2>
+                </div>
+                <div class="col-5">
+                    <form method="get">
+                    Filial:
+                    <select name="filial">
+                        <option></option>
+                        {% for t,p in tp_fil %}
+                            <option value="{{ t }}">{{ p }}</option>
+                        {% endfor %}
+                    </select>
+                    Tipo Palete:
+                    <select name="tp_palete">
+                        <option></option>
+                        <option value="PBR">PBR</option>
+                        <option value="CHEP">CHEP</option>
+                    </select>
+                    <button type="submit">Filtrar</button>
+                    </form>
+                </div>
             </div>
-            <div class="row" style="margin-left: 6rem; ">
-            {% for palete in lista %}
-            <div class="card" style="width: 10rem; margin-top: 5rem;">
-                <div class="card-body" style="text-align:center;">
-                    <h5 class="card-title">{{ palete.loc_atual}}</h5>
-                    <p class="card-text">{{ palete.num_ratings }}</p>
+            <div class="row" style="margin-left: 6rem;">
+            {% for palete in form %}
+            <div class="card text-center" style="width: 11rem; margin-top: 5rem;">
+                <div class="card-body">
+                    <h4 class="card-title">{{ palete.loc_atual}}</h4>
+                    <p class="card-text">{{ palete.tp_palete }}</p>
+                    <strong><p class="card-text">{{ palete.num_ratings }}</p></strong>
                 </div>
             </div>
             {% endfor %}

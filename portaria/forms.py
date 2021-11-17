@@ -3,7 +3,7 @@ from django.conf import settings
 from django.forms import Textarea, DateField
 
 from .models import Cadastro, TIPO_GARAGEM, ChecklistFrota, NfServicoPj, ManutencaoFrota, ServJoinManu, feriaspj, \
-    FuncPj, Motorista, Veiculos
+    FuncPj, Motorista, Veiculos, Cliente, PaleteControl
 
 
 #forms
@@ -48,6 +48,7 @@ class TPaletesForm(forms.Form):
     destino_ = forms.ChoiceField(choices=TIPO_GARAGEM)
     quantidade_ = forms.IntegerField()
     placa_veic = forms.CharField(max_length=7)
+    tp_palete = forms.ChoiceField(choices=PaleteControl.TIPO_PALETE_CHOICES)
 
 class FuncPjForm(forms.ModelForm):
     class Meta:
