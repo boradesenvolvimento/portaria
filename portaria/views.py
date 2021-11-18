@@ -141,22 +141,22 @@ def outputs(request):
 def paleteview(request):
     tp_fil = TIPO_GARAGEM
     tp_emp = Cliente.objects.values_list('razao_social', flat=True)
-    form = PaleteControl.objects.values('loc_atual','tp_palete').annotate(num_ratings=Count('id')).annotate(total=ExpressionWrapper(F('num_ratings'), output_field=IntegerField()))
+    form = PaleteControl.objects.values('loc_atual').annotate(pbr=Count('id', filter=Q(tp_palete='PBR')),chep=Count('id', filter=Q(tp_palete='CHEP'))).annotate(total=ExpressionWrapper(Count('id'), output_field=IntegerField()))
     ttcount = form.aggregate(total_amount=Sum('total'))
     fil = request.GET.get('filial')
     tp_p = request.GET.get('tp_palete')
     #switch case moral
     if fil and tp_p:
         #busca todos os campos
-        form = PaleteControl.objects.filter(loc_atual=fil, tp_palete=tp_p).values('loc_atual','tp_palete').annotate(num_ratings=Count('id')).annotate(total=ExpressionWrapper(F('num_ratings'), output_field=IntegerField()))
+        form = PaleteControl.objects.filter(loc_atual=fil, tp_palete=tp_p).values('loc_atual').annotate(pbr=Count('id', filter=Q(tp_palete='PBR')),chep=Count('id', filter=Q(tp_palete='CHEP'))).annotate(total=ExpressionWrapper(Count('id'), output_field=IntegerField()))
         ttcount = form.aggregate(total_amount=Sum('total'))
     elif fil and not tp_p:
         #busca somente filial
-        form = PaleteControl.objects.filter(loc_atual=fil).values('loc_atual', 'tp_palete').annotate(num_ratings=Count('id')).annotate(total=ExpressionWrapper(F('num_ratings'), output_field=IntegerField()))
+        form = PaleteControl.objects.filter(loc_atual=fil).values('loc_atual').annotate(pbr=Count('id', filter=Q(tp_palete='PBR')),chep=Count('id', filter=Q(tp_palete='CHEP'))).annotate(total=ExpressionWrapper(Count('id'), output_field=IntegerField()))
         ttcount = form.aggregate(total_amount=Sum('total'))
     elif tp_p and not fil:
         #busca somente tipo do palete
-        form = PaleteControl.objects.filter(tp_palete=tp_p).values('loc_atual','tp_palete').annotate(num_ratings=Count('id')).annotate(total=ExpressionWrapper(F('num_ratings'), output_field=IntegerField()))
+        form = PaleteControl.objects.filter(tp_palete=tp_p).values('loc_atual').annotate(pbr=Count('id', filter=Q(tp_palete='PBR')),chep=Count('id', filter=Q(tp_palete='CHEP'))).annotate(total=ExpressionWrapper(Count('id'), output_field=IntegerField()))
         ttcount = form.aggregate(total_amount=Sum('total'))
     return render(request, 'portaria/paletes.html', {'form':form,'tp_fil':tp_fil,'tp_emp':tp_emp,'ttcount':ttcount})
 

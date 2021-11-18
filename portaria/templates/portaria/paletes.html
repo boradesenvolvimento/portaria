@@ -12,10 +12,10 @@
                         <h3 class="title-cad">Exportar CSV<input type="submit" class="button"></h3>
                     </form>
                 </div>
-                <div class="col-7">
+                <div class="col-9">
                     <h2 class="title-cad">Total: {{ ttcount.total_amount }}</h2>
                 </div>
-                <div class="col-5">
+                <div class="col-3">
                     <form method="get">
                     Filial:
                     <select name="filial">
@@ -24,23 +24,20 @@
                             <option value="{{ t }}">{{ p }}</option>
                         {% endfor %}
                     </select>
-                    Tipo Palete:
-                    <select name="tp_palete">
-                        <option></option>
-                        <option value="PBR">PBR</option>
-                        <option value="CHEP">CHEP</option>
-                    </select>
                     <button type="submit">Filtrar</button>
                     </form>
                 </div>
             </div>
             <div class="row" style="margin-left: 6rem;">
             {% for palete in form %}
-            <div class="card text-center" style="width: 11rem; margin-top: 5rem;">
-                <div class="card-body">
-                    <h4 class="card-title">{{ palete.loc_atual}}</h4>
-                    <p class="card-text">{{ palete.tp_palete }}</p>
-                    <strong><p class="card-text">{{ palete.num_ratings }}</p></strong>
+            <div class="card border-dark text-center" style="width: 13rem; margin-top: 3rem;">
+                <div class="card-header">
+                    <h3 class="card-title">{{ palete.loc_atual}}</h3>
+                </div>
+                <div class="card-body text-dark">
+                    <p>PBR:<strong>{{ palete.pbr }}</strong></p>
+                    <p>CHEP:<strong>{{ palete.chep }}</strong></p>
+                    <h5>Total:{{ palete.total }}</h5>
                 </div>
             </div>
             {% endfor %}
