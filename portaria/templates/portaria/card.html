@@ -1,14 +1,15 @@
 {% extends 'base.html' %}
 {% block content %}
 {% load static %}
-
+{% load groupscheck %}
 <input id="text" class="sr-only" value="{{ request.build_absolute_uri }}" type="text"/>
-
-
+{% if request.user|has_group:'adm_rh' %}
+<button onclick="download()">Download</button>
+{% endif %}
 
 <div class="profile-main-body">
     <center>
-    <img src="/media/{{ form.foto }}">
+        <img src="/media/{{ form.foto }}" class="fotocard" width="120px" height="120px">
     <h2>{{ form.nome }}</h2>
     <h3>{{ form.cargo }}</h3>
     <div class="item-social"><button onclick="makeQR()" name="submit">QR-Code</button></div>
@@ -24,14 +25,17 @@
 
 <div class="sr-only" id="urlqrcode">
 </div>
-
 <script type="text/javascript">
 
 function download(){
-    var getsrc = document.getElementById('urlqrcode').getElementsByTagName('img')[0].currentSrc
-    console.log(getsrc)
-}
+    var getsrc = document.getElementById('urlqrcode').getElementsByTagName('img')[0].src
+    var downloadLink = document.createElement("a");
+    var fileName = "qrcode.png";
 
+    downloadLink.href = getsrc;
+    downloadLink.download = fileName;
+    downloadLink.click();
+}
 var urlqrcode = new QRCode("urlqrcode");
 function urlQR(){
     var elText = document.getElementById("text");

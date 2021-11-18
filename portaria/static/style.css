@@ -113,6 +113,10 @@ td,th {
   font-family: 'Poppins', sans-serif;
   word-wrap: break-word;
 }
+.fotocard {
+    border:1px groove;
+    margin-bottom: 1rem;
+}
 /* endglobal */
 
 /* input and buttons*/
