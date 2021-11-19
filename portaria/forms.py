@@ -10,13 +10,15 @@ from .models import Cadastro, TIPO_GARAGEM, ChecklistFrota, NfServicoPj, Manuten
 class DateInput(forms.DateInput):
     input_type = 'date'
 
+
 class isPlacaForm(forms.Form):
     search_placa = forms.CharField(max_length=20, label='Placa')
     search_dest = forms.ChoiceField(choices=TIPO_GARAGEM, label='Destino')
 
 class DateForm(forms.Form):
-    date = forms.DateField()
-    date1 = forms.DateField()
+    date = forms.DateField(widget=DateInput(format=settings.DATE_FORMAT))
+    date1 = forms.DateField(widget=DateInput(format=settings.DATE_FORMAT))
+
 
 class FilterForm(forms.Form):
     filter_ = forms.CharField(max_length=30, label='')
@@ -38,10 +40,6 @@ class CadastroForm(forms.ModelForm):
             'hr_saida',
             'autor'
         ]
-        widgets = {
-            'hr_chegada': forms.DateInput(format='%d/%m/%Y %H:%m'),
-            'hr_saida': forms.DateInput(format='%d/%m/%Y %H:%m')
-        }
 
 class TPaletesForm(forms.Form):
     origem_ = forms.ChoiceField(choices=TIPO_GARAGEM)
@@ -83,6 +81,9 @@ class MotoristaForm(forms.ModelForm):
             'cep',
             'data_nasc'
         ]
+        widgets = {
+            'data_nasc': DateInput(),
+        }
 
 class VeiculosForm(forms.ModelForm):
     class Meta:
@@ -152,6 +153,9 @@ class ServicoPjForm(forms.ModelForm):
             'outros_desc',
             'data_emissao'
         ]
+        widgets = {
+            'data_emissao': DateInput(),
+        }
 
 class ManutencaoForm(forms.ModelForm):
     class Meta:
@@ -168,9 +172,7 @@ class ManutencaoForm(forms.ModelForm):
         ]
         widgets = {
             'observacao': Textarea(attrs={'cols': 30, 'rows': 3}),
-            'dt_entrada': DateInput(format='%d/%m/%Y'),
-            'dt_saida': forms.DateInput(format='%d/%m/%Y'),
-            'prev_entrega': forms.DateInput(format='%d/%m/%Y'),
+            'prev_entrega': DateInput(),
         }
 
 class ServJoinManuForm(forms.ModelForm):
@@ -196,6 +198,6 @@ class feriaspjForm(forms.ModelForm):
             'valor_parcial2',
         ]
         widgets = {
-            'ultimas_ferias_ini': forms.DateInput(format='%d/%m/%Y'),
-            'ultimas_ferias_fim': forms.DateInput(format='%d/%m/%Y'),
+            'ultimas_ferias_ini': DateInput(),
+            'ultimas_ferias_fim': DateInput(),
         }

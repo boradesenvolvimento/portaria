@@ -9,8 +9,8 @@
                 <form class="form-box" action="{% url 'portaria:get_nfpj_mail' %}" method="post">
                     {% csrf_token %}
                     <h3 class="title-cad">Selecione o período:
-                    <input type="text" placeholder="Data inicio" name="dataIni">
-                    <input type="text" placeholder="Data final" name="dataFim">
+                    <input type="date" placeholder="Data inicio" name="dataIni">
+                    <input type="date" placeholder="Data final" name="dataFim">
                     <input type="submit" class="button">
                     </h3>
                 </form>

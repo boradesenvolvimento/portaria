@@ -11,13 +11,13 @@
         </div>
         {% endfor %}
     <div class="row linha-baixo">
-        <h2 class="title-cad col-3">Décimo Terceiro</h2>
+        <h2 class="title-cad col-6">Cadastro primeira parcela 13º</h2>
     </div>
-    <div class="container">
+    <div class="container linha-baixo">
 
         <form method="post">
             {% csrf_token %}
-        <table>
+        <table class="table table1">
             <tr>
                 <th><h3 class="title-cad">{{ func }}</h3></th>
                 <th><input type="text" name="meses" placeholder="Período Trabalhado"></th>

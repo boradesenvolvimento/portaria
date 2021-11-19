@@ -7,8 +7,8 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
 from django.db import IntegrityError
-from django.db.models import Count, Sum, F, Q, Value
-from django.db.models.functions import Coalesce, TruncDate, Cast
+from django.db.models import Count, Sum, F, Q, Value, CharField, DateTimeField
+from django.db.models.functions import Coalesce, TruncDate, Cast, TruncMinute
 from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, Http404
 from django.shortcuts import get_object_or_404, render, redirect
 from django.template.defaultfilters import upper
@@ -60,15 +60,23 @@ class Visualizacao(generic.ListView):
     form = DateForm()
 
     def get_queryset(self):
-        qs = Cadastro.objects.all().filter(hr_chegada__month=datetime.datetime.now().month).order_by('-hr_chegada')
+        autor = self.request.user
+        if autor.is_staff:
+            qs = Cadastro.objects.all().filter(hr_chegada__month=datetime.datetime.now().month).order_by('-hr_chegada')
+        else:
+            qs = Cadastro.objects.all().filter(hr_chegada__month=datetime.datetime.now().month, autor=autor).order_by('-hr_chegada')
         try:
             form_input1 = self.request.GET.get('date')
             form_input2 = self.request.GET.get('date1')
             if form_input1 and form_input2:
-                self.dateparse1 = datetime.datetime.strptime(form_input1, '%d/%m/%Y').replace(hour=00, minute=00)
-                self.dateparse2 = datetime.datetime.strptime(form_input2, '%d/%m/%Y').replace(hour=23, minute=59)
-                qs = Cadastro.objects.all().filter(hr_chegada__gte=self.dateparse1,
-                                                   hr_chegada__lte=self.dateparse2).order_by('-hr_chegada')
+                self.dateparse1 = datetime.datetime.strptime(form_input1, '%Y-%m-%d').replace(hour=00, minute=00)
+                self.dateparse2 = datetime.datetime.strptime(form_input2, '%Y-%m-%d').replace(hour=23, minute=59)
+                if autor.is_staff:
+                    qs = Cadastro.objects.all().filter(hr_chegada__gte=self.dateparse1,
+                                                       hr_chegada__lte=self.dateparse2).order_by('-hr_chegada')
+                else:
+                    qs = Cadastro.objects.all().filter(hr_chegada__gte=self.dateparse1,
+                                                       hr_chegada__lte=self.dateparse2, autor=autor).order_by('-hr_chegada')
         except ValueError:
             raise Exception('Valor digitado inválido')
         return qs
@@ -89,7 +97,7 @@ def cadastroentrada(request):
                 order = form.save(commit=False)
                 order.placa = uplaca
                 order.autor = autor
-                order.hr_chegada = timezone.now()
+                order.hr_chegada = datetime.datetime.now()
                 order.save()
                 messages.success(request,'Entrada cadastrada com sucesso.')
                 return redirect('portaria:cadastro')
@@ -388,8 +396,8 @@ def feriasagen(request, idfpj):
     agen2 = request.GET.get('agendamento2')
     if agen1 and agen2:
         try:
-            agenparse1 = datetime.datetime.strptime(agen1, '%d/%m/%Y').date()
-            agenparse2 = datetime.datetime.strptime(agen2, '%d/%m/%Y').date()
+            agenparse1 = datetime.datetime.strptime(agen1, '%Y-%m-%d').date()
+            agenparse2 = datetime.datetime.strptime(agen2, '%Y-%m-%d').date()
             feriaspj.objects.filter(pk=fer.id).update(agendamento_ini=agenparse1, agendamento_fim=agenparse2)
         except ValueError:
             messages.error(request, 'Por favor digite uma data válida')
@@ -473,6 +481,7 @@ def manuentrada(request, placa_id):
         tp_sv = request.POST.get('tp_servico')
         form = ManutencaoForm(request.POST or None)
         if form.is_valid():
+
             manu = form.save(commit=False)
             manu.veiculo_id = placa.codigoveic
             manu.dt_ult_manutencao = ult_manu
@@ -604,8 +613,8 @@ def transfpalete(request):
 def get_nfpj_mail(request):
     data1 = request.POST.get('dataIni')
     data2 = request.POST.get('dataFim')
-    dateparse = datetime.datetime.strptime(data1, '%d/%m/%Y').replace(hour=00, minute=00)
-    dateparse1 = datetime.datetime.strptime(data2, '%d/%m/%Y').replace(hour=23, minute=59)
+    dateparse = datetime.datetime.strptime(data1, '%Y-%m-%d').replace(hour=00, minute=00)
+    dateparse1 = datetime.datetime.strptime(data2, '%Y-%m-%d').replace(hour=23, minute=59)
     arrya = []
     qs = FuncPj.objects.filter(ativo=True)
     for q in qs:
@@ -694,8 +703,8 @@ def get_portaria_csv(request):
     try:
         data1 = request.POST.get('dataIni')
         data2 = request.POST.get('dataFim')
-        dateparse = datetime.datetime.strptime(data1, '%d/%m/%Y').replace(hour=00, minute=00)
-        dateparse1 = datetime.datetime.strptime(data2, '%d/%m/%Y').replace(hour=23, minute=59)
+        dateparse = datetime.datetime.strptime(data1, '%Y-%m-%d').replace(hour=00, minute=00)
+        dateparse1 = datetime.datetime.strptime(data2, '%Y-%m-%d').replace(hour=23, minute=59)
     except ValueError:
         messages.error(request,'Por favor digite uma data válida')
         return redirect('portaria:cadastro')
@@ -708,10 +717,10 @@ def get_portaria_csv(request):
         writer = csv.writer(response)
         writer.writerow(['Placa','Placa2','Motorista','Empresa','Origem','Destino','Tipo_mot','Tipo_viagem',
                          'Hr_entrada','Hr_Saida','autor'])
-        cadastro = Cadastro.objects.all().values_list(
-                            'placa', 'placa2', 'motorista', 'empresa', 'origem','destino',
-                                'tipo_mot', 'tipo_viagem', 'hr_chegada', 'hr_saida', 'autor__username')\
-            .filter(hr_chegada__gte=dateparse,hr_chegada__lte=dateparse1)
+        cadastro = Cadastro.objects.all().annotate(hr_chegada_fmt=Cast(TruncMinute('hr_chegada', DateTimeField()),CharField()),
+                                                    hr_saida_fmt = Cast(TruncMinute('hr_chegada', DateTimeField()), CharField()))\
+            .values_list('placa', 'placa2', 'motorista', 'empresa', 'origem','destino',
+                                'tipo_mot', 'tipo_viagem', 'hr_chegada_fmt', 'hr_saida_fmt', 'autor__username').filter(hr_chegada__gte=dateparse,hr_chegada__lte=dateparse1)
         for placa in cadastro:
             writer.writerow(placa)
         return response
@@ -732,8 +741,8 @@ def get_manu_csv(request):
     try:
         data1 = request.POST.get('dataIni')
         data2 = request.POST.get('dataFin')
-        dateparse = datetime.datetime.strptime(data1, '%d/%m/%Y')
-        dateparse1 = datetime.datetime.strptime(data2, '%d/%m/%Y')
+        dateparse = datetime.datetime.strptime(data1, '%Y-%m-%d')
+        dateparse1 = datetime.datetime.strptime(data2, '%Y-%m-%d')
     except ValueError:
         messages.error(request,'Por favor digite uma data válida')
         return redirect('portaria:manutencaofrota')
@@ -810,8 +819,8 @@ def get_nfpj_csv(request):
 
 def get_checklist_csv(request):
     try:
-        ini = datetime.datetime.strptime(request.POST.get('dataini'), '%d/%m/%Y').date()
-        fim = datetime.datetime.strptime(request.POST.get('datafim'), '%d/%m/%Y').date()
+        ini = datetime.datetime.strptime(request.POST.get('dataini'), '%Y-%m-%d').date()
+        fim = datetime.datetime.strptime(request.POST.get('datafim'), '%Y-%m-%d').date()
     except ValueError:
         messages.error(request, 'Por favor digite uma data válida')
         return redirect('portaria:frota')
@@ -841,8 +850,8 @@ def get_checklist_csv(request):
 
 def get_ferias_csv(request):
     try:
-        ini = datetime.datetime.strptime(request.POST.get('dataini'), '%d/%m/%Y').date()
-        fim = datetime.datetime.strptime(request.POST.get('datafim'), '%d/%m/%Y').date()
+        ini = datetime.datetime.strptime(request.POST.get('dataini'), '%Y-%m-%d').date()
+        fim = datetime.datetime.strptime(request.POST.get('datafim'), '%Y-%m-%d').date()
     except ValueError:
         messages.error(request, 'Por favor digite uma data válida')
         return redirect('portaria:feriaspjv')
@@ -853,7 +862,7 @@ def get_ferias_csv(request):
         writer = csv.writer(response)
         writer.writerow(['ultimas ferias inicio','ultimas ferias fim','periodo','quitado','funcionario','vencimento','tipo pagamento',
                          'agendamento inicio','agendamento fim','valor integral','valor parcial 1', 'valor parcial 2','data quitacao','alerta vencimento'])
-        ferias = feriaspj.objects.all().values_list('ultimas_ferias_ini','ultimas_ferias_fim','periodo','quitado','funcionario','vencimento',
+        ferias = feriaspj.objects.all().values_list('ultimas_ferias_ini','ultimas_ferias_fim','periodo','quitado','funcionario__nome','vencimento',
                                                     'tp_pgto','agendamento_ini','agendamento_fim','valor_integral','valor_parcial1','valor_parcial2',
                                                     'dt_quitacao','alerta_venc_enviado').filter(ultimas_ferias_ini__gte=ini,ultimas_ferias_fim__lte=fim)
         for q in ferias:

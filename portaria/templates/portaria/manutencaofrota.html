@@ -36,8 +36,8 @@
             <h2 class="title-cad">Exportar por data csv</h2>
             <form method="post" action="{% url 'portaria:get_manu_csv' %}">
                 {% csrf_token %}
-                <input type="text" placeholder="Data início" name="dataIni">
-                <input type="text" placeholder="Data final" name="dataFin">
+                <input type="date" placeholder="Data início" name="dataIni">
+                <input type="date" placeholder="Data final" name="dataFin">
                 <input type="submit" class="button">
             </form>
         </div>
