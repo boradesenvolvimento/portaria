@@ -584,6 +584,9 @@ def manutencaoprint(request, osid):
     aa = ServJoinManu.objects.filter(id_os=os.id).values_list('id_svs', flat=True)
     return render(request, 'portaria/manutencaoprint.html', {'os':os,'aa':aa})
 
+def fatferramentas(request):
+    return render(request,'portaria/fatferramentas.html')
+
 #fim das views
 
 
@@ -887,3 +890,36 @@ def get_ferias_csv(request):
         for q in ferias:
             writer.writerow(q)
         return response
+
+def ediexceltosd1(request):
+    array = []
+    if request.method == 'POST':
+        get_xlsx = request.FILES['edi_excel']
+        response = HttpResponse(content_type='text/plain',
+                                headers={'Content-Disposition': 'attatchment; filename="teste.sd1"'})
+
+        if get_xlsx:
+            edi = pd.read_excel(get_xlsx)
+            for i,row in edi.iterrows():
+                array.append(row)
+            for q in range(len(array)):
+                response.write(str(array[q]['tipo_de_registro']))
+                response.write('    ')
+                response.write('000000000000000')
+                response.write(textwrap.wrap(array[q]['nome_do_cliente'], 40)[0])
+                response.write(str(array[q]['data_geracao']))
+                response.write(str(array[q]['qtde_de_registro']))
+                response.write('000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000')
+                response.write(str(array[q]['numero_sec_arq']))
+                response.write(str(array[q]['numero_sec_reg']))
+                response.write('\n')
+        return response
+
+def exedicorreios(request):
+
+    response = HttpResponse(content_type='application/vnd.ms-excel',
+                            headers={'Content-Disposition':'attatchment; filename="exemplo.xls"'})
+    writer = csv.writer(response)
+    writer.writerow(['tipo_de_registro','nome_do_cliente', 'data_geracao', 'qtde_de_registro', 'numero_sec_arq', 'numero_sec_reg'])
+    writer.writerow(['8','exemplo da silva', '1999/12/31','qnt registro do arquivo','numero sec arq','numero sec reg'])
+    return response

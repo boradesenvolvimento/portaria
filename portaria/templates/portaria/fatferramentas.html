@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load groupscheck %}
+<div class="container mt-5">
+{% if auth_message %}
+    <p><strong>{{ auth_message }}</strong></p>
+{% else %}
+{% if request.user|has_group:"portaria" %}
+        {% for message in messages %}
+        <div class="container-fluid p-0">
+            <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                {{ message }}
+            </div>
+        </div>
+        {% endfor %}
+        <div class="container">
+            <div class="row">
+                <h1 class="title-cad linha-baixo">Ferramentas</h1>
+            </div>
+            <div class="row linha-baixo">
+                <form method="post" action="{% url 'portaria:ediexceltosd1' %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <label class="title-cad" style="border-radius:2px;">EDI Correios:
+                <input style="border-radius:0;" type="file" name="edi_excel">
+                <input type="submit" class="button" placeholder="Upload">
+                    </label>
+                </form>
+                <h6><a href="{% url 'portaria:exedicorreios' %}">Exemplo para importar</a></h6>
+            </div>
+        </div>
+
+</div>
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+{% endif %}
+{% endblock %}
