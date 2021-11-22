@@ -34,9 +34,18 @@
                     <h3 class="title-cad">Exportar CSV portaria</h3>
                     <form class="form-box" action="{% url 'portaria:get_portaria_csv' %}" method="post">
                         {% csrf_token %}
+                        Por filial:
+                        <select name="filial">
+                            <option></option>
+                            {% for w,q in filiais %}
+                            <option value="{{ w }}">{{ q }}</option>
+                            {% endfor %}
+                        </select>
+                        Ou período:
                         <input type="date" placeholder="Data inicio" name="dataIni" id="id_date">
                         <input type="date" placeholder="Data final" name="dataFim" id="id_date1">
                         <input type="submit" class="button">
+                        <h6>Exporte por filial, periodo ou ambos</h6>
                     </form>
                 </div>
             </div>

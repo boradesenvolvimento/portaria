@@ -1,6 +1,8 @@
 import csv
 import datetime
+import textwrap
 
+import pandas as pd
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -136,7 +138,8 @@ def cadastrosaida(request):
 @login_required
 def cadastro(request):
     if request.user.is_authenticated:
-        return render(request, 'portaria/cadastro.html')
+        filiais = TIPO_GARAGEM
+        return render(request, 'portaria/cadastro.html', {'filiais':filiais})
     else:
         auth_message = 'Usuário não autenticado, por favor logue novamente'
         return render(request, 'portaria/cadastro.html', {'auth_message': auth_message})
@@ -700,30 +703,46 @@ def get_pj13_csv(request):
     return response
 
 def get_portaria_csv(request):
-    try:
-        data1 = request.POST.get('dataIni')
-        data2 = request.POST.get('dataFim')
+    data1 = request.POST.get('dataIni')
+    data2 = request.POST.get('dataFim')
+    fil = request.POST.get('filial')
+    print(fil, data1, data2)
+    if fil and not data1 and not data2:
+        cadastro = Cadastro.objects.all().annotate(
+            hr_chegada_fmt=Cast(TruncMinute('hr_chegada', DateTimeField()), CharField()),hr_saida_fmt=Cast(TruncMinute('hr_chegada', DateTimeField()), CharField())) \
+            .values_list('placa', 'placa2', 'motorista', 'empresa', 'origem', 'destino','tipo_mot', 'tipo_viagem', 'hr_chegada_fmt', 'hr_saida_fmt', 'autor__username')\
+            .filter(origem=fil)
+    elif data1 and data2 and not fil:
         dateparse = datetime.datetime.strptime(data1, '%Y-%m-%d').replace(hour=00, minute=00)
         dateparse1 = datetime.datetime.strptime(data2, '%Y-%m-%d').replace(hour=23, minute=59)
-    except ValueError:
-        messages.error(request,'Por favor digite uma data válida')
-        return redirect('portaria:cadastro')
+        cadastro = Cadastro.objects.all().annotate(
+            hr_chegada_fmt=Cast(TruncMinute('hr_chegada', DateTimeField()), CharField()),
+            hr_saida_fmt=Cast(TruncMinute('hr_chegada', DateTimeField()), CharField())) \
+            .values_list('placa', 'placa2', 'motorista', 'empresa', 'origem', 'destino', 'tipo_mot', 'tipo_viagem',
+                         'hr_chegada_fmt', 'hr_saida_fmt', 'autor__username') \
+            .filter(hr_chegada__gte=dateparse, hr_chegada__lte=dateparse1)
     else:
-        response = HttpResponse(content_type='text/csv',
-                                headers={'Content-Disposition': 'attachment; filename="portaria.csv"'},
-                                )
+        dateparse = datetime.datetime.strptime(data1, '%Y-%m-%d').replace(hour=00, minute=00)
+        dateparse1 = datetime.datetime.strptime(data2, '%Y-%m-%d').replace(hour=23, minute=59)
+        cadastro = Cadastro.objects.all().annotate(
+            hr_chegada_fmt=Cast(TruncMinute('hr_chegada', DateTimeField()), CharField()),
+            hr_saida_fmt=Cast(TruncMinute('hr_chegada', DateTimeField()), CharField())) \
+            .values_list('placa', 'placa2', 'motorista', 'empresa', 'origem', 'destino', 'tipo_mot', 'tipo_viagem',
+                         'hr_chegada_fmt', 'hr_saida_fmt', 'autor__username') \
+            .filter(hr_chegada__gte=dateparse, hr_chegada__lte=dateparse1, origem=fil)
 
-        response.write(u'\ufeff'.encode('utf8'))
-        writer = csv.writer(response)
-        writer.writerow(['Placa','Placa2','Motorista','Empresa','Origem','Destino','Tipo_mot','Tipo_viagem',
-                         'Hr_entrada','Hr_Saida','autor'])
-        cadastro = Cadastro.objects.all().annotate(hr_chegada_fmt=Cast(TruncMinute('hr_chegada', DateTimeField()),CharField()),
-                                                    hr_saida_fmt = Cast(TruncMinute('hr_chegada', DateTimeField()), CharField()))\
-            .values_list('placa', 'placa2', 'motorista', 'empresa', 'origem','destino',
-                                'tipo_mot', 'tipo_viagem', 'hr_chegada_fmt', 'hr_saida_fmt', 'autor__username').filter(hr_chegada__gte=dateparse,hr_chegada__lte=dateparse1)
-        for placa in cadastro:
-            writer.writerow(placa)
-        return response
+    response = HttpResponse(content_type='text/csv',
+                            headers={'Content-Disposition': 'attachment; filename="portaria.csv"'},
+                            )
+
+    response.write(u'\ufeff'.encode('utf8'))
+    writer = csv.writer(response)
+    writer.writerow(['Placa','Placa2','Motorista','Empresa','Origem','Destino','Tipo_mot','Tipo_viagem',
+                     'Hr_entrada','Hr_Saida','autor'])
+
+    for placa in cadastro:
+        writer.writerow(placa)
+    return response
 
 def get_palete_csv(request):
     response = HttpResponse(content_type='text/csv',
