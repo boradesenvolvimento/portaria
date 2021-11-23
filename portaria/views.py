@@ -584,6 +584,9 @@ def manutencaoprint(request, osid):
     aa = ServJoinManu.objects.filter(id_os=os.id).values_list('id_svs', flat=True)
     return render(request, 'portaria/manutencaoprint.html', {'os':os,'aa':aa})
 
+def fatferramentas(request):
+    return render(request,'portaria/fatferramentas.html')
+
 #fim das views
 
 
@@ -887,3 +890,54 @@ def get_ferias_csv(request):
         for q in ferias:
             writer.writerow(q)
         return response
+
+def ediexceltosd1(request):
+    array = []
+    if request.method == 'POST':
+        get_xlsx = request.FILES['edi_excel']
+        response = HttpResponse(content_type='text/plain',
+                                headers={'Content-Disposition': 'attatchment; filename="teste.sd1"'})
+
+        if get_xlsx:
+            edi = pd.read_excel(get_xlsx)
+            for i,row in edi.iterrows():
+                array.append(row)
+            for q in range(len(array)):
+                response.write(str(array[q]['tipo_de_registro']))
+                response.write('    ')
+                response.write('000000000000000')
+                response.write(textwrap.wrap(array[q]['nome_do_cliente'], 40)[0].ljust(40,' '))
+                response.write(str(array[q]['data_geracao']))
+                response.write(str(array[q]['qtde_de_registro']))
+                response.write('000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000')
+                response.write(str(array[q]['numero_sec_arq']))
+                response.write(str(array[q]['numero_sec_reg']))
+                response.write('\n')
+                response.write(str(array[q]['tipo_de_registro2']))
+                response.write('    ')
+                response.write('        ')
+                response.write('  ')
+                response.write('         ')
+                response.write(str(array[q]['pais_de_origem']))
+                response.write(str(array[q]['codigo_da_operacao']))
+                response.write(str(array[q]['conteudo']))
+                response.write(textwrap.wrap(str(array[q]['nome_dest']), 40)[0].ljust(40,' '))
+                response.write(textwrap.wrap(str(array[q]['end_dest']), 40)[0].ljust(40,' '))
+                response.write(textwrap.wrap(str(array[q]['cidade']), 30)[0].ljust(30,' '))
+                response.write(str(array[q]['uf']))
+                response.write(str(array[q]['cep']))
+                response.write('00000000')
+                response.write(str(array[q]['num_seq_arq2']))
+                response.write(str(array[q]['num_seq_reg2']))
+                response.write('\n')
+
+        return response
+
+def exedicorreios(request):
+
+    response = HttpResponse(content_type='application/vnd.ms-excel',
+                            headers={'Content-Disposition':'attatchment; filename="exemplo.xls"'})
+    writer = csv.writer(response)
+    writer.writerow(['tipo_de_registro','nome_do_cliente', 'data_geracao', 'qtde_de_registro', 'numero_sec_arq', 'numero_sec_reg','tipo_de_registro2','pais_de_origem','codigo_da_operacao','conteudo','nome_dest','end_dest','cidade','uf','cep','num_seq_arq2','num_seq_reg2'])
+    writer.writerow(['8','exemplo da silva', 'aaaa/mm/dd','qnt registro do arquivo','numero sec arq','numero sec reg','9','BR','1234','conteudo','destinatario','endereco','cidade','uf','cep','num_seq_arq2','num_seq_reg2'])
+    return response
