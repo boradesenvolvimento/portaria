@@ -90,6 +90,18 @@
             </ul>
           </div>
           {% endif %}
+          {% if request.user|has_group:"monitoramento" %}
+            <div class="dropdown">
+            <button class="dropdown-toggle menutext-navbar nav-link1" type="button" style="background-color: #3188E8;" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+              Monitoramento
+            </button>
+            <ul class="dropdown-menu" style="background-color: #3188E8;" aria-labelledby="dropdownMenuButton1">
+            <li class="nav-item">
+              <a class="nav-link1" href="{% url 'portaria:monitticket' %}">Ticket</a>
+            </li>
+            </ul>
+          </div>
+          {% endif %}
         </ul>
       </div>
     </div>

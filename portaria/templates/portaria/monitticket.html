@@ -1,0 +1,58 @@
+    {% extends 'base.html' %}
+    {% block content %}
+    {% load groupscheck %}
+    <div class="container mt-5">
+    {% if auth_message %}
+        <p><strong>{{ auth_message }}</strong></p>
+    {% else %}
+    {% if request.user|has_group:"monitoramento" %}
+            {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+            {% endfor %}
+        <section class="container">
+            <div class="row linha-baixo">
+                <h2 class="title-cad col-1">Tickets</h2>
+                <a class="col-1" href="{% url 'portaria:tktcreate' %}"><ion-icon size="large" name="add-circle-outline">
+                </ion-icon></a>
+                <div class="col-6"><button type="submit"><a href="{% url 'portaria:readmail_monitoramento' %}">Carregar Emails</a></button></div>
+                <div class="col-3">
+                    <input type="text" placeholder="Buscar Ticket por ID">
+                    <button type="submit"><ion-icon size="small" name="search"></ion-icon></button>
+                </div>
+            </div>
+            <div class="row tktcontainer">
+                <table class="table1 table">
+                    <thead>
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">Nome - TKT</th>
+                            <th scope="col">Aberto em</th>
+                            <th scope="col">Responsável</th>
+                            <th scope="col">Cliente</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for q in form %}
+                        <tr>
+                            <td>{{ q.id }}</td>
+                            <td>{{ q.assunto }}</td>
+                            <td>{{ q.dt_envio }}</td>
+                            <td>{{ q.mensagem }}</td>
+                            <td></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+            </div>
+        </section>
+
+
+    {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+    </div>
+    {% endif %}
+    {% endblock %}

@@ -361,3 +361,21 @@ class CardFuncionario(models.Model):
     def __str__(self):
         return self.nome
 
+class TicketMonitoramento(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    nome_tkt = models.CharField(max_length=100)
+    dt_abertura = models.DateField()
+    responsavel = models.ForeignKey(User, on_delete=PROTECT)
+    cliente = models.CharField(max_length=50)
+
+class EmailMonitoramento(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    assunto = models.CharField(max_length=100)
+    mensagem = models.TextField()
+    cc = models.CharField(max_length=200, blank=True, null=True)
+    dt_envio = models.DateField()
+    email_id = models.CharField(max_length=50, unique=True)
+    ult_resp = models.TextField(blank=True, null=True)
+    ult_rest_dt = models.DateField(blank=True, null=True)
+    tkt_ref = models.ForeignKey(TicketMonitoramento, on_delete=PROTECT)
+

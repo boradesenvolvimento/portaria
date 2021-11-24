@@ -1,15 +1,22 @@
+#imports geral
 import csv
 import datetime
+import email, smtplib
 import textwrap
-
+import poplib
+from email import policy
 import pandas as pd
+from email.mime.text import MIMEText
+from email.utils import make_msgid
+
+#imports django built-ins
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
 from django.db import IntegrityError
-from django.db.models import Count, Sum, F, Q, Value, CharField, DateTimeField
+from django.db.models import Count, Sum, F, Q, Value, CharField, DateTimeField, Subquery
 from django.db.models.functions import Coalesce, TruncDate, Cast, TruncMinute
 from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, Http404
 from django.shortcuts import get_object_or_404, render, redirect
@@ -19,7 +26,7 @@ from django.utils import timezone
 from django.views import generic
 
 
-
+#imports django projeto
 from .models import * #Cadastro, PaletControl, ChecklistFrota, Veiculos, NfServicoPj
 from .forms import * #CadastroForm, isPlacaForm, DateForm, FilterForm, TPaletsForm, TIPO_GARAGEM, ChecklistForm
 
@@ -587,6 +594,25 @@ def manutencaoprint(request, osid):
 def fatferramentas(request):
     return render(request,'portaria/fatferramentas.html')
 
+def monitticket(request):
+    form = EmailMonitoramento.objects.all()
+    return render(request, 'portaria/monitticket.html', {'form':form})
+
+def tktcreate(request):
+    if request.method == 'POST':
+        responsavel = request.user
+        cc = request.POST.get('cc')
+        cliente = request.POST.get('cliente')
+        assunto = request.POST.get('assunto')
+        mensagem = request.POST.get('msg')
+        if responsavel and cc and cliente and assunto and mensagem:
+            #return redirect('portaria:createtktandmail', resp=responsavel,cc=cc,cli=cliente,assunto=assunto,msg=mensagem)
+            createtktandmail(request,resp=responsavel,cc=cc,cli=cliente,assunto=assunto,msg=mensagem)
+        else:
+            messages.error(request, 'Está faltando campos')
+            return redirect('portaria:tktcreate')
+    return render(request, 'portaria/tktcreate.html')
+
 #fim das views
 
 
@@ -941,3 +967,84 @@ def exedicorreios(request):
     writer.writerow(['tipo_de_registro','nome_do_cliente', 'data_geracao', 'qtde_de_registro', 'numero_sec_arq', 'numero_sec_reg','tipo_de_registro2','pais_de_origem','codigo_da_operacao','conteudo','nome_dest','end_dest','cidade','uf','cep','num_seq_arq2','num_seq_reg2'])
     writer.writerow(['8','exemplo da silva', 'aaaa/mm/dd','qnt registro do arquivo','numero sec arq','numero sec reg','9','BR','1234','conteudo','destinatario','endereco','cidade','uf','cep','num_seq_arq2','num_seq_reg2'])
     return response
+
+def readmail_monitoramento(request):
+    host = 'pop.kinghost.net'
+    e_user = 'bora@bora.tec.br'
+    e_pass = 'Bor@dev#123'
+
+    pp = poplib.POP3(host)
+    pp.set_debuglevel(1)
+    pp.user(e_user)
+    pp.pass_(e_pass)
+
+    num_messages = len(pp.list()[1])
+    for i in range(num_messages):
+        try:
+            raw_email = b'\n'.join(pp.retr(i+1)[1])
+            parsed_email = email.message_from_bytes(raw_email, policy=policy.compat32)
+        except Exception as e:
+            print(f'parsed -- ErrorType: {type(e).__name__}, Error: {e}')
+        else:
+            if parsed_email.is_multipart():
+                for part in parsed_email.walk():
+                    ctype = part.get_content_type()
+                    cdispo = str(part.get('Content-Disposition'))
+                    if ctype == 'text/plain' and 'attatchment' not in cdispo:
+                        body = part.get_payload(decode=True)
+            else:
+                body = parsed_email.get_payload(decode=True)
+            cs = parsed_email.get_charsets()
+            for q in cs:
+                if q is None: continue
+                else: cs = q
+            try:
+                e_title = parsed_email['Subject']
+                e_from = parsed_email['From']
+                e_to = parsed_email['To']
+                e_cc = parsed_email['CC']
+                e_id = parsed_email['Message-ID']
+                e_ref = parsed_email['References']
+                e_body = body.decode(cs)
+                if e_ref is not None: e_ref = e_ref.split(' ')[0]
+            except Exception as e:
+                print(f'insert data -- ErrorType: {type(e).__name__}, Error: {e}')
+            else:
+                form = EmailMonitoramento.objects.all()
+                if form.filter(email_id=e_ref).exists():
+                    form.filter(email_id=e_ref).update(ult_resp=e_body,ult_rest_dt=timezone.now())
+                pp.dele(i+1)
+    pp.quit()
+    return redirect('portaria:monitticket')
+
+def createtktandmail(request,resp,cc,cli,assunto,msg):
+    print('entrou na funcao')
+    msg1 = MIMEText(msg, 'html', 'utf-8')
+    print('carregou mimetext')
+    msg1['Subject'] = assunto
+    msg1['From'] = 'bora@bora.tec.br'
+    msg1['To'] = cli
+    msg1['CC'] = cc
+    msg_id = make_msgid(idstring=None, domain='bora.tec.br')
+    msg1['Message-ID'] = msg_id
+    smtp_h = 'smtp.kinghost.net'
+    smtp_p = '587'
+    user = 'bora@bora.tec.br'
+    passw = 'Bor@dev#123'
+    print('setou parametros iniciando trycatch')
+    try:
+        print('entrou no try')
+        sm = smtplib.SMTP(smtp_h, smtp_p)
+        sm.set_debuglevel(1)
+        sm.login(user,passw)
+        sm.sendmail('bora@bora.tec.br', cli, msg1.as_string())
+        print('mandou o email')
+    except Exception as e:
+        print(f'ErrorType:{type(e).__name__}, Error:{e}')
+    else:
+        print('entrou no else')
+        tkt = TicketMonitoramento.objects.create(nome_tkt=assunto, dt_abertura=timezone.now(), responsavel=request.user,cliente=cli)
+        EmailMonitoramento.objects.create(assunto=assunto, mensagem=msg, cc=cc,dt_envio=timezone.now(),email_id=msg_id,tkt_ref_id=tkt.id)
+        print('criou os objetos no banco')
+        messages.success(request, 'Email enviado e ticket criado com sucesso')
+        return redirect('portaria:monitticket')
