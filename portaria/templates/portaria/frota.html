@@ -16,11 +16,15 @@
         <div class="col-12">
             <form action="{% url 'portaria:frota' %}" method="post" class="linha-baixo">
                 {% csrf_token %}
-                <h2 class="title-cad">Motorista:<input type="text" name="moto_src"><input type="submit" value="Buscar motorista" class="button"></h2>
+                <h2 class="title-cad">Motorista:<input type="text" name="moto_src">
+                    <button type="submit" style="height:3.4rem;"><ion-icon style="font-size:2.4rem;" name="search-sharp"></ion-icon></button>
+                </h2>
             </form>
             <form method="get" class="linha-baixo">
                 <div>
-                <h2 class="title-cad">Insira a placa:<input type="text" name="placa_"><button class="button" type="submit">Enviar</button></h2>
+                <h2 class="title-cad">Insira a placa:<input type="text" name="placa_">
+                    <button type="submit" style="height:3.4rem;"><ion-icon style="font-size:2.4rem;" name="clipboard-outline"></ion-icon></button>
+                </h2>
                 </div>
                 <table>
                 {% for q in qs %}
