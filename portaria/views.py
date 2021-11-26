@@ -2,6 +2,7 @@
 import csv
 import datetime
 import email, smtplib
+import re
 import textwrap
 import poplib
 from email import policy
@@ -13,11 +14,12 @@ from email.utils import make_msgid
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.postgres.aggregates import StringAgg
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
 from django.db import IntegrityError
 from django.db.models import Count, Sum, F, Q, Value, CharField, DateTimeField, Subquery
-from django.db.models.functions import Coalesce, TruncDate, Cast, TruncMinute
+from django.db.models.functions import Coalesce, TruncDate, Cast, TruncMinute, Concat
 from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, Http404
 from django.shortcuts import get_object_or_404, render, redirect
 from django.template.defaultfilters import upper
@@ -595,8 +597,9 @@ def fatferramentas(request):
     return render(request,'portaria/fatferramentas.html')
 
 def monitticket(request):
-    form = EmailMonitoramento.objects.all()
-    return render(request, 'portaria/monitticket.html', {'form':form})
+    tkts = TicketMonitoramento.objects.all()
+    mails = EmailMonitoramento.objects.all()
+    return render(request, 'portaria/monitticket.html', {'tkts':tkts,'mails':mails})
 
 def tktcreate(request):
     if request.method == 'POST':
@@ -605,13 +608,17 @@ def tktcreate(request):
         cliente = request.POST.get('cliente')
         assunto = request.POST.get('assunto')
         mensagem = request.POST.get('msg')
-        if responsavel and cc and cliente and assunto and mensagem:
+        if responsavel and cliente and assunto and mensagem:
             #return redirect('portaria:createtktandmail', resp=responsavel,cc=cc,cli=cliente,assunto=assunto,msg=mensagem)
             createtktandmail(request,resp=responsavel,cc=cc,cli=cliente,assunto=assunto,msg=mensagem)
         else:
             messages.error(request, 'Está faltando campos')
             return redirect('portaria:tktcreate')
     return render(request, 'portaria/tktcreate.html')
+
+def tktview(request, tktid):
+    form = get_object_or_404(EmailMonitoramento, tkt_ref_id=tktid)
+    return render(request, 'portaria/ticketview.html', {'form':form})
 
 #fim das views
 
@@ -992,6 +999,8 @@ def readmail_monitoramento(request):
                     cdispo = str(part.get('Content-Disposition'))
                     if ctype == 'text/plain' and 'attatchment' not in cdispo:
                         body = part.get_payload(decode=True)
+                    if ctype == 'text/html' and 'attatchment' not in cdispo:
+                        htbody = part.get_payload(decode=True)
             else:
                 body = parsed_email.get_payload(decode=True)
             cs = parsed_email.get_charsets()
@@ -1006,15 +1015,56 @@ def readmail_monitoramento(request):
                 e_id = parsed_email['Message-ID']
                 e_ref = parsed_email['References']
                 e_body = body.decode(cs)
+                w_body = htbody.decode(cs)
                 if e_ref is not None: e_ref = e_ref.split(' ')[0]
+                reply_parse = re.findall(r'(De:+\s+\w.*.\sEnviada em:+\s+\w.*.+[,]+\s+\d+\s+\w+\s+\w+\s+\w+\s+\d+\s+\d+:+\d.*)', e_body)
+                reply_html = re.findall('(<b><span+\s+\w.*.[>]+De:.*.Enviada em:.*.\s+\w.*.[,]+\s+\d+\s+\w+\s+\w+\s+\w+\s+\d+\s+\d+:+\d.*)',w_body)
+                e_body = e_body.split(reply_parse[0])[0].replace('\n','<br>')
+                w_body = w_body.split(reply_html[0])[0]
             except Exception as e:
-                print(f'insert data -- ErrorType: {type(e).__name__}, Error: {e}')
+                 print(f'insert data -- ErrorType: {type(e).__name__}, Error: {e}')
             else:
-                form = EmailMonitoramento.objects.all()
-                if form.filter(email_id=e_ref).exists():
-                    form.filter(email_id=e_ref).update(ult_resp=e_body,ult_rest_dt=timezone.now())
-                pp.dele(i+1)
+                form = EmailMonitoramento.objects.filter(email_id=e_ref)
+                if form.exists():
+                    if form[0].ult_resp is not None:
+                        aa = e_from + '--' + parsed_email['Date'] + '\n' + e_body + '\n------Anterior-------\n' + form[0].ult_resp
+                        bb = e_from + '--' + parsed_email['Date'] + '<br>' + w_body + '<br>------Anterior-------<br>' + form[0].ult_resp_html
+
+                    else:
+                        aa = e_from + '--' + parsed_email['Date'] + '\n' + e_body
+                        bb = e_from + '--' + parsed_email['Date'] + '<br>' + w_body
+                    form.update(ult_resp=aa,ult_resp_html=bb, ult_rest_dt=timezone.now())
+                    pp.dele(i+1)
     pp.quit()
+    return redirect('portaria:monitticket')
+
+def replymail_monitoramento(request, tktid):
+    orig = get_object_or_404(EmailMonitoramento, tkt_ref_id=tktid)
+    msg = request.POST.get('msg')
+    msg3 = msg + orig.ult_resp_html
+    msg1 = MIMEText(msg3, 'html', 'utf-8')
+    msg1['Subject'] = orig.assunto
+    msg1['In-Reply-To'] = orig.email_id
+    msg1['References'] = orig.email_id
+    msg_id = make_msgid(idstring=None, domain='bora.tec.br')
+    msg1['Message-ID'] = msg_id
+    msg1['From'] = 'bora@bora.tec.br'
+    msg1['To'] = orig.tkt_ref.cliente
+    msg1['CC'] = orig.cc
+    smtp_h = 'smtp.kinghost.net'
+    smtp_p = '587'
+    user = 'bora@bora.tec.br'
+    passw = 'Bor@dev#123'
+    try:
+        print('entrou no try')
+        sm = smtplib.SMTP(smtp_h, smtp_p)
+        sm.set_debuglevel(1)
+        sm.login(user, passw)
+        sm.sendmail('bora@bora.tec.br', orig.tkt_ref.cliente, msg1.as_string())
+        print('mandou o email')
+    except Exception as e:
+        print(f'ErrorType:{type(e).__name__}, Error:{e}')
+
     return redirect('portaria:monitticket')
 
 def createtktandmail(request,resp,cc,cli,assunto,msg):

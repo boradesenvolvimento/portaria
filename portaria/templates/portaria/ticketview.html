@@ -1,0 +1,61 @@
+    {% extends 'base.html' %}
+    {% block content %}
+    {% load groupscheck %}
+    <div class="container mt-5">
+    {% if auth_message %}
+        <p><strong>{{ auth_message }}</strong></p>
+    {% else %}
+    {% if request.user|has_group:"monitoramento" %}
+            {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+            {% endfor %}
+        <div class="container">
+            <div class="row linha-baixo">
+                <h2 class="title-cad">Ticket {{ form.tkt_ref_id }}</h2>
+            </div>
+        </div>
+        <section class="container tktcontainer">
+            <div class="row">
+            <div class="col-4 tktcontainer">
+                <ul><li>Assunto: {{ form.assunto }} </li>
+                <li>Mensagem: {{ form.mensagem }} </li>
+                <li>Cliente: {{ form.tkt_ref.cliente }} </li>
+                <li>CC: {{ form.cc|default_if_none:'' }} </li>
+                <li>Data envio: {{ form.tkt_ref.dt_abertura }} </li>
+                </ul>
+            </div>
+            <div class="container col">
+                <div class="tktcontainer">
+                    <h3>Nova mensagem</h3>
+                    <form method="post" action="{% url 'portaria:replymail_monitoramento' tktid=form.tkt_ref_id %}">
+                        {% csrf_token %}
+                    <textarea name="msg" rows="4" cols="70" style="resize:none;"></textarea>
+                    <button type="submit">Reply Email</button>
+                    </form>
+                </div>
+            </div>
+            </div>
+            <div class="container">
+                <div class="row">
+                    <div class="tktcontainer col">
+                        <h2>Resposta: </h2>
+                    {% if form.ult_resp %}
+                    <ul>
+                        <li>{{ form.ult_resp_html|safe }} </li>
+                    </ul>
+                {% endif %}
+                </div>
+                </div>
+            </div>
+
+        </section>
+
+
+    {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+    </div>
+    {% endif %}
+    {% endblock %}

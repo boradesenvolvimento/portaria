@@ -374,8 +374,9 @@ class EmailMonitoramento(models.Model):
     mensagem = models.TextField()
     cc = models.CharField(max_length=200, blank=True, null=True)
     dt_envio = models.DateField()
-    email_id = models.CharField(max_length=50, unique=True)
+    email_id = models.CharField(max_length=100, unique=True)
     ult_resp = models.TextField(blank=True, null=True)
     ult_rest_dt = models.DateField(blank=True, null=True)
+    ult_resp_html = models.TextField(blank=True, null=True)
     tkt_ref = models.ForeignKey(TicketMonitoramento, on_delete=PROTECT)
 

@@ -26,7 +26,10 @@ html{
 
 body{
     background: var(--background);
-    padding-bottom: 10rem
+    padding-bottom: 10rem;
+}
+ion-icon{
+    pointer-events: none;
 }
 /* global */
 .navbar{
