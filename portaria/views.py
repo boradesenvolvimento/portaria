@@ -2,15 +2,20 @@
 import csv
 import datetime
 import email, smtplib
+import os
 import re
 import textwrap
 import poplib
 from email import policy
+from email.mime.multipart import MIMEMultipart
+import imghdr
 import pandas as pd
 from email.mime.text import MIMEText
+from email.mime.image import MIMEImage
 from email.utils import make_msgid
 
 #imports django built-ins
+from PIL import Image
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -599,26 +604,33 @@ def fatferramentas(request):
 def monitticket(request):
     tkts = TicketMonitoramento.objects.all()
     mails = EmailMonitoramento.objects.all()
+    if request.method == 'POST':
+        tkt = request.POST.get('srctkt')
+        if tkt:
+            tkts = TicketMonitoramento.objects.filter(pk=tkt)
+            return render(request, 'portaria/monitticket.html', {'tkts': tkts, 'mails': mails})
     return render(request, 'portaria/monitticket.html', {'tkts':tkts,'mails':mails})
 
 def tktcreate(request):
+    editor = TextEditor()
     if request.method == 'POST':
         responsavel = request.user
         cc = request.POST.get('cc')
         cliente = request.POST.get('cliente')
         assunto = request.POST.get('assunto')
-        mensagem = request.POST.get('msg')
+        mensagem = request.POST.get('area')
         if responsavel and cliente and assunto and mensagem:
             #return redirect('portaria:createtktandmail', resp=responsavel,cc=cc,cli=cliente,assunto=assunto,msg=mensagem)
             createtktandmail(request,resp=responsavel,cc=cc,cli=cliente,assunto=assunto,msg=mensagem)
         else:
             messages.error(request, 'Está faltando campos')
             return redirect('portaria:tktcreate')
-    return render(request, 'portaria/tktcreate.html')
+    return render(request, 'portaria/tktcreate.html',{'editor':editor})
 
 def tktview(request, tktid):
     form = get_object_or_404(EmailMonitoramento, tkt_ref_id=tktid)
-    return render(request, 'portaria/ticketview.html', {'form':form})
+    editor = TextEditor()
+    return render(request, 'portaria/ticketview.html', {'form':form,'editor':editor})
 
 #fim das views
 
@@ -984,7 +996,7 @@ def readmail_monitoramento(request):
     pp.set_debuglevel(1)
     pp.user(e_user)
     pp.pass_(e_pass)
-
+    pattern = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp).\w+.\w+')
     num_messages = len(pp.list()[1])
     for i in range(num_messages):
         try:
@@ -1001,6 +1013,14 @@ def readmail_monitoramento(request):
                         body = part.get_payload(decode=True)
                     if ctype == 'text/html' and 'attatchment' not in cdispo:
                         htbody = part.get_payload(decode=True)
+                    filename = part.get_filename()
+                    hoje = datetime.date.today()
+                    if filename:
+                        locimg = os.path.join(settings.MEDIA_ROOT+'/django-summernote/'+str(hoje),filename)
+                        fp = open(locimg, 'wb')
+                        fp.write(part.get_payload(decode=True))
+                        fp.close()
+
             else:
                 body = parsed_email.get_payload(decode=True)
             cs = parsed_email.get_charsets()
@@ -1018,11 +1038,17 @@ def readmail_monitoramento(request):
                 w_body = htbody.decode(cs)
                 if e_ref is not None: e_ref = e_ref.split(' ')[0]
                 reply_parse = re.findall(r'(De:+\s+\w.*.\sEnviada em:+\s+\w.*.+[,]+\s+\d+\s+\w+\s+\w+\s+\w+\s+\d+\s+\d+:+\d.*)', e_body)
-                reply_html = re.findall('(<b><span+\s+\w.*.[>]+De:.*.Enviada em:.*.\s+\w.*.[,]+\s+\d+\s+\w+\s+\w+\s+\w+\s+\d+\s+\d+:+\d.*)',w_body)
+                reply_html = re.findall(r'(<b><span+\s+\w.*.[>]+De:.*.Enviada em:.*.\s+\w.*.[,]+\s+\d+\s+\w+\s+\w+\s+\w+\s+\d+\s+\d+:+\d.*)',w_body)
                 e_body = e_body.split(reply_parse[0])[0].replace('\n','<br>')
                 w_body = w_body.split(reply_html[0])[0]
+                for q in re.findall(pattern, w_body):
+                    new = re.findall(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)', q)
+                    teste = os.path.join(settings.MEDIA_URL+'django-summernote/'+str(hoje)+'/',new[0].split('cid:')[1])
+                    w_body = w_body.replace(q, teste)
+                    print(q, new[0])
             except Exception as e:
                  print(f'insert data -- ErrorType: {type(e).__name__}, Error: {e}')
+                 raise e
             else:
                 form = EmailMonitoramento.objects.filter(email_id=e_ref)
                 if form.exists():
@@ -1039,37 +1065,67 @@ def readmail_monitoramento(request):
     return redirect('portaria:monitticket')
 
 def replymail_monitoramento(request, tktid):
+    media = ''
+    pattern = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
     orig = get_object_or_404(EmailMonitoramento, tkt_ref_id=tktid)
-    msg = request.POST.get('msg')
-    msg3 = msg + orig.ult_resp_html
-    msg1 = MIMEText(msg3, 'html', 'utf-8')
-    msg1['Subject'] = orig.assunto
-    msg1['In-Reply-To'] = orig.email_id
-    msg1['References'] = orig.email_id
-    msg_id = make_msgid(idstring=None, domain='bora.tec.br')
-    msg1['Message-ID'] = msg_id
-    msg1['From'] = 'bora@bora.tec.br'
-    msg1['To'] = orig.tkt_ref.cliente
-    msg1['CC'] = orig.cc
-    smtp_h = 'smtp.kinghost.net'
-    smtp_p = '587'
-    user = 'bora@bora.tec.br'
-    passw = 'Bor@dev#123'
-    try:
-        print('entrou no try')
-        sm = smtplib.SMTP(smtp_h, smtp_p)
-        sm.set_debuglevel(1)
-        sm.login(user, passw)
-        sm.sendmail('bora@bora.tec.br', orig.tkt_ref.cliente, msg1.as_string())
-        print('mandou o email')
-    except Exception as e:
-        print(f'ErrorType:{type(e).__name__}, Error:{e}')
+    if request.method == 'POST':
+        msg1 = MIMEMultipart()
+        msg = request.POST.get('area')
+        if re.findall(pattern, msg):
+            for q in re.findall(pattern, msg):
+                print(q, 'aaa')
+                media = q
+                img_data = open(('/home/bora/www'+media),'rb').read()
+                #msgmsg = MIMEText(teste, 'html', 'utf-8')
+                msgimg = MIMEImage(img_data, name=os.path.basename(media))
+                msgimg.add_header('Content-ID', f'{media}')
+                msg = msg.replace(('<img src="' + media + '"'), f'<img src="cid:{media}" ')
+                print(msg)
+                msg1.attach(msgimg)
 
-    return redirect('portaria:monitticket')
+        msg3 = msg + orig.ult_resp_html
+
+        msg1['Subject'] = orig.assunto
+        msg1['In-Reply-To'] = orig.email_id
+        msg1['References'] = orig.email_id
+        msg_id = make_msgid(idstring=None, domain='bora.tec.br')
+        msg1['Message-ID'] = msg_id
+        msg1['From'] = 'bora@bora.tec.br'
+        msg1['To'] = orig.tkt_ref.cliente
+        msg1['CC'] = orig.cc
+
+        msg1.attach(MIMEText(msg3, 'html', 'utf-8'))
+        smtp_h = 'smtp.kinghost.net'
+        smtp_p = '587'
+        user = 'bora@bora.tec.br'
+        passw = 'Bor@dev#123'
+        try:
+            print('entrou no try')
+            sm = smtplib.SMTP(smtp_h, smtp_p)
+            sm.set_debuglevel(1)
+            sm.login(user, passw)
+            sm.sendmail('bora@bora.tec.br', orig.tkt_ref.cliente, msg1.as_string())
+            print('mandou o email')
+        except Exception as e:
+            print(f'ErrorType:{type(e).__name__}, Error:{e}')
+            raise e
+        return redirect('portaria:monitticket')
 
 def createtktandmail(request,resp,cc,cli,assunto,msg):
     print('entrou na funcao')
-    msg1 = MIMEText(msg, 'html', 'utf-8')
+    pattern = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
+    msg1 = MIMEMultipart()
+    msgmail = msg
+    if re.findall(pattern, msg):
+        for q in re.findall(pattern, msg):
+            media = q
+            img_data = open(('/home/bora/www' + media), 'rb').read()
+            # msgmsg = MIMEText(teste, 'html', 'utf-8')
+            msgimg = MIMEImage(img_data, name=os.path.basename(media))
+            msgimg.add_header('Content-ID', f'{media}')
+            msgmail = msgmail.replace(('<img src="' + media + '"'), f'<img src="cid:{media}" ')
+            msg1.attach(msgimg)
+    msg1.attach(MIMEText(msgmail, 'html', 'utf-8'))
     print('carregou mimetext')
     msg1['Subject'] = assunto
     msg1['From'] = 'bora@bora.tec.br'

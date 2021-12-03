@@ -22,8 +22,11 @@
                 </button>
                 <div class="col-6"><button type="submit"><a href="{% url 'portaria:readmail_monitoramento' %}">Carregar Emails</a></button></div>
                 <div class="col-3">
-                    <input type="text" placeholder="Buscar Ticket por ID">
+                    <form method="post">
+                        {% csrf_token %}
+                    <input type="text" name="srctkt" placeholder="Buscar Ticket por ID">
                     <button type="submit"><ion-icon size="small" name="search"></ion-icon></button>
+                    </form>
                 </div>
             </div>
             <div class="row tktcontainer">

@@ -1,6 +1,7 @@
 from django import forms
 from django.conf import settings
 from django.forms import Textarea, DateField
+from django_summernote.widgets import SummernoteWidget
 
 from .models import Cadastro, TIPO_GARAGEM, ChecklistFrota, NfServicoPj, ManutencaoFrota, ServJoinManu, feriaspj, \
     FuncPj, Motorista, Veiculos
@@ -201,3 +202,7 @@ class feriaspjForm(forms.ModelForm):
             'ultimas_ferias_ini': DateInput(),
             'ultimas_ferias_fim': DateInput(),
         }
+
+#summernote
+class TextEditor(forms.Form):
+    area = forms.CharField(widget=SummernoteWidget())

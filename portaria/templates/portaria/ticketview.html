@@ -1,6 +1,15 @@
     {% extends 'base.html' %}
     {% block content %}
     {% load groupscheck %}
+    <style type="text/css">
+        a:link, a:visited{
+             color: white !important;
+             text-decoration: none !important;
+        }
+        a:hover{
+            color: #0a58ca !important;
+        }
+    </style>
     <div class="container mt-5">
     {% if auth_message %}
         <p><strong>{{ auth_message }}</strong></p>
@@ -20,21 +29,31 @@
         </div>
         <section class="container tktcontainer">
             <div class="row">
-            <div class="col-4 tktcontainer">
+            <div class="col-lg-4 col-md">
+                <div class="tktcontainer">
                 <ul><li>Assunto: {{ form.assunto }} </li>
-                <li>Mensagem: {{ form.mensagem }} </li>
                 <li>Cliente: {{ form.tkt_ref.cliente }} </li>
                 <li>CC: {{ form.cc|default_if_none:'' }} </li>
                 <li>Data envio: {{ form.tkt_ref.dt_abertura }} </li>
                 </ul>
+                </div>
             </div>
-            <div class="container col">
+            <div class="container col-lg col-md-12">
                 <div class="tktcontainer">
-                    <h3>Nova mensagem</h3>
+                    <h3>Nova mensagem
+                        <select id="selecter">
+                            <option style="cursor:pointer;">Macros</option>
+                            <option style="cursor:pointer;">opt1</option>
+                            <option style="cursor:pointer;">opt2</option>
+                            <option style="cursor:pointer;">opt3</option>
+                        </select>
+                        <input type="submit">
+                        </h3>
                     <form method="post" action="{% url 'portaria:replymail_monitoramento' tktid=form.tkt_ref_id %}">
                         {% csrf_token %}
-                    <textarea name="msg" rows="4" cols="70" style="resize:none;"></textarea>
-                    <button type="submit">Reply Email</button>
+                        {{ editor.area|safe }}
+                          <!--<textarea class="col-10" name="msg" rows="4" cols="70" style="resize:none;"></textarea>-->
+                        <button type="submit">Reply Email</button>
                     </form>
                 </div>
             </div>
@@ -43,11 +62,14 @@
                 <div class="row">
                     <div class="tktcontainer col">
                         <h2>Resposta: </h2>
-                    {% if form.ult_resp %}
-                    <ul>
-                        <li>{{ form.ult_resp_html|safe }} </li>
-                    </ul>
-                {% endif %}
+
+                        <ul>
+                            {% if form.ult_resp %}
+                            <li>{{ form.ult_resp_html|safe }}</li>
+                            {% endif %}
+                            <li>Mensagem: {{ form.mensagem|safe }} </li>
+                        </ul>
+
                 </div>
                 </div>
             </div>
@@ -58,4 +80,26 @@
     {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
     </div>
     {% endif %}
+    <script type="text/javascript">
+
+    aa = document.getElementById('selecter')
+    aa.addEventListener('change', function(){
+            if(aa.value == 'opt1'){
+                addText();
+            } else if(aa.value == 'opt2'){
+                console.log('beguinhuuuu')
+            } else{
+                console.log('nananana')
+            }
+    });
+
+    function addText(){
+    var text = "<table style='border:double;border-color: #000000; background-color: #ffffff; width: 695px' border='3'><tbody><tr style='border:double;height: 84px'><td style='border:double;height: 84px; width: 323px; text-align: left'></td><td style='border:double;height: 84px; width: 352px; text-align: center'><span style='font-size: 14pt; background-color: #ffffff; color: #003366'><strong>&nbsp;<span style='font-family: verdana, geneva; color: #333333'>Planilha de Monitoramento.</span></strong></span></td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>FILIAL DE ORIGEM</td><td style='border:double;height: 17px; width: 352px'></td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>DATA E HORA DA OCORRÊNCIA</td><td style='border:double;height: 17px; width: 352px'></td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>CONTATO TRANSPORTADORA</td><td style='border:double;height: 17px; width: 352px'></td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>Nº NOTA FISCAL</td><td style='border:double;height: 17px; width: 352px'></td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>MOTORISTA / PLACA</td><td style='border:double;height: 17px; width: 352px'></td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>CLIENTE</td><td style='border:double;height: 17px; width: 352px'></td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>CIDADE</td><td style='border:double;height: 17px; width: 352px'></td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>UF</td><td style='border:double;height: 17px; width: 352px'></td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>MOTIVO DA OCORRÊNCIA</td><td style='border:double;height: 17px; width: 352px'></td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>Nº SENHA DA AGENDA</td><td style='border:double;height: 17px; width: 352px'></td></tr><tr style='border:double;height: 90px'><td style='border:double;height: 90px; width: 323px'>OBS:</td><td style='border:double;height: 90px; width: 352px'></td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>FINALIZAÇÃO</td><td style='border:double;height: 17px; width: 352px'></td></tr></tbody></table>";
+    var doc = document.getElementById('id_area_iframe').contentWindow.document.getElementsByClassName('note-editable')[0];
+    $(doc).append(text)
+
+    console.log(doc);
+
+};
+</script>
     {% endblock %}

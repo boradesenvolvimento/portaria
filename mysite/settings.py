@@ -57,7 +57,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'portaria',
-
+    'django_summernote',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -189,3 +189,41 @@ EMAIL_PORT = get_secret('E_PORT')
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = get_secret('E_UMAIL')
 EMAIL_HOST_PASSWORD = get_secret('E_UPASS')
+
+#summernote
+#summernote
+X_FRAME_OPTIONS = 'SAMEORIGIN'
+
+SUMMERNOTE_CONFIG = {
+'iframe': False,
+
+'summernote': {
+        # As an example, using Summernote Air-mode
+        'airMode': False,
+        'disableResizeEditor': False,
+        # Change editor size
+        'width': '100%',
+        'height': '300',
+        # Toolbar customization
+        # https://summernote.org/deep-dive/#custom-toolbar-popover
+        'toolbar': [
+            ['style', ['style']],
+            ['font', ['bold', 'underline', 'clear']],
+            ['fontname', ['fontname']],
+            ['color', ['color']],
+            ['para', ['ul', 'ol', 'paragraph']],
+            ['table', ['table']],
+            ['insert', ['link', 'picture', 'video']],
+            ['view', ['help','codeview']]
+        ],
+
+        # Or, explicitly set language/locale for editor
+        'lang': 'pt-BR',
+        'codemirror': {
+            'mode': 'htmlmixed',
+            'lineNumbers': 'true',
+            # You have to include theme file in 'css' or 'css_for_inplace' before using it.
+            'theme': 'monokai',
+        },
+    }
+}
