@@ -58,6 +58,7 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     'portaria',
     'django_summernote',
+    'notifications',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -203,7 +204,7 @@ SUMMERNOTE_CONFIG = {
         'disableResizeEditor': False,
         # Change editor size
         'width': '100%',
-        'height': '300',
+        'height': '200',
         # Toolbar customization
         # https://summernote.org/deep-dive/#custom-toolbar-popover
         'toolbar': [
@@ -214,7 +215,7 @@ SUMMERNOTE_CONFIG = {
             ['para', ['ul', 'ol', 'paragraph']],
             ['table', ['table']],
             ['insert', ['link', 'picture', 'video']],
-            ['view', ['help','codeview']]
+            ['view', ['help','codeview']],
         ],
 
         # Or, explicitly set language/locale for editor

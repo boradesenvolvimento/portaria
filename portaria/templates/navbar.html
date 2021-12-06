@@ -1,5 +1,8 @@
  {% load static %}
+ {% load notifications_tags %}
  {% load groupscheck %}
+ <script src="{% static 'notifications/notify.js' %}" type="text/javascript"></script>
+    {% register_notify_callbacks callbacks='fill_notification_list,fill_notification_badge' %}
   <nav class="navbar navbar-expand-lg navbar-light mb-2" style="background-color: #3188E8;">
       <div class="container-fluid">
       <a class="navbar-brand">
@@ -102,7 +105,25 @@
             </ul>
           </div>
           {% endif %}
+
         </ul>
+        {% if user.notifications.unread.exists %}
+          <div class="dropdown">
+            <button class="dropdown-toggle" data-bs-toggle="dropdown" aria-labelledby="dropdownMenu2" aria-expanded="false">
+              <ion-icon name="notifications"></ion-icon>
+            <span class="badge-notifications badge badge-pill badge-danger" style="position:absolute;padding:0;margin-top: -2px !important; font-size: 1rem;">
+               {% notifications_unread %}
+            </span>
+            </button>
+            <div class="dropdown-menu">
+              {% for notification in  user.notifications.unread %}
+                    Message from <b>{{ notification.actor }}</b>
+                    <div class="dropdown-item">{{ notification.description }} <a style="text-decoration:none;color:blue !important;" href="{% url 'portaria:isnotifyread' notification.id %}"><ion-icon name="checkmark-done-sharp"></ion-icon></a></div>
+                    <div class="dropdown-divider"></div>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
       </div>
     </div>
 

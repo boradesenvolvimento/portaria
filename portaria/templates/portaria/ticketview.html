@@ -35,6 +35,8 @@
                 <li>Cliente: {{ form.tkt_ref.cliente }} </li>
                 <li>CC: {{ form.cc|default_if_none:'' }} </li>
                 <li>Data envio: {{ form.tkt_ref.dt_abertura }} </li>
+                <li>Tags: {{ form.tkt_ref.tags }}</li>
+                <li>Status: {{ form.tkt_ref.status }}</li>
                 </ul>
                 </div>
             </div>
@@ -47,12 +49,17 @@
                             <option style="cursor:pointer;">opt2</option>
                             <option style="cursor:pointer;">opt3</option>
                         </select>
-                        <input type="submit">
                         </h3>
-                    <form method="post" action="{% url 'portaria:replymail_monitoramento' tktid=form.tkt_ref_id %}">
+                        <form method="post">
                         {% csrf_token %}
                         {{ editor.area|safe }}
                           <!--<textarea class="col-10" name="msg" rows="4" cols="70" style="resize:none;"></textarea>-->
+                        <select name="status">
+                            <option value="opt1">Manter status atual</option>
+                            {% for o,p in opts %}
+                                <option value="{{ o }}">{{ p }}</option>
+                            {% endfor %}
+                        </select>
                         <button type="submit">Reply Email</button>
                     </form>
                 </div>
@@ -82,14 +89,15 @@
     {% endif %}
     <script type="text/javascript">
 
+
     aa = document.getElementById('selecter')
     aa.addEventListener('change', function(){
             if(aa.value == 'opt1'){
                 addText();
             } else if(aa.value == 'opt2'){
-                console.log('beguinhuuuu')
+                console.log('opt2')
             } else{
-                console.log('nananana')
+                console.log('opt3')
             }
     });
 

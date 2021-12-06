@@ -362,11 +362,19 @@ class CardFuncionario(models.Model):
         return self.nome
 
 class TicketMonitoramento(models.Model):
+    STATUS_CHOICES = [
+        ('ABERTO', 'ABERTO'),
+        ('ANDAMENTO', 'ANDAMENTO'),
+        ('CONCLUIDO', 'CONCLUIDO'),
+        ('CANCELADO', 'CANCELADO')
+    ]
     id = models.BigAutoField(primary_key=True)
     nome_tkt = models.CharField(max_length=100)
     dt_abertura = models.DateField()
     responsavel = models.ForeignKey(User, on_delete=PROTECT)
     cliente = models.CharField(max_length=50)
+    tags = models.CharField(max_length=100)
+    status = models.CharField(max_length=9, choices=STATUS_CHOICES)
 
 class EmailMonitoramento(models.Model):
     id = models.BigAutoField(primary_key=True)

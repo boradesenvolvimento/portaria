@@ -8,12 +8,13 @@ import textwrap
 import poplib
 from email import policy
 from email.mime.multipart import MIMEMultipart
-import imghdr
 import pandas as pd
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from email.utils import make_msgid
 
+from notifications.models import Notification
+from notifications.signals import notify
 #imports django built-ins
 from PIL import Image
 from django.conf import settings
@@ -603,13 +604,12 @@ def fatferramentas(request):
 
 def monitticket(request):
     tkts = TicketMonitoramento.objects.all()
-    mails = EmailMonitoramento.objects.all()
     if request.method == 'POST':
         tkt = request.POST.get('srctkt')
         if tkt:
             tkts = TicketMonitoramento.objects.filter(pk=tkt)
-            return render(request, 'portaria/monitticket.html', {'tkts': tkts, 'mails': mails})
-    return render(request, 'portaria/monitticket.html', {'tkts':tkts,'mails':mails})
+            return render(request, 'portaria/monitticket.html', {'tkts': tkts})
+    return render(request, 'portaria/monitticket.html', {'tkts':tkts})
 
 def tktcreate(request):
     editor = TextEditor()
@@ -619,18 +619,28 @@ def tktcreate(request):
         cliente = request.POST.get('cliente')
         assunto = request.POST.get('assunto')
         mensagem = request.POST.get('area')
+        tag = request.POST.get('tags')
         if responsavel and cliente and assunto and mensagem:
             #return redirect('portaria:createtktandmail', resp=responsavel,cc=cc,cli=cliente,assunto=assunto,msg=mensagem)
-            createtktandmail(request,resp=responsavel,cc=cc,cli=cliente,assunto=assunto,msg=mensagem)
+            createtktandmail(request, cc=cc, cli=cliente, assunto=assunto, msg=mensagem, tag=tag)
         else:
             messages.error(request, 'Está faltando campos')
             return redirect('portaria:tktcreate')
     return render(request, 'portaria/tktcreate.html',{'editor':editor})
 
 def tktview(request, tktid):
+    opts = TicketMonitoramento.STATUS_CHOICES
     form = get_object_or_404(EmailMonitoramento, tkt_ref_id=tktid)
     editor = TextEditor()
-    return render(request, 'portaria/ticketview.html', {'form':form,'editor':editor})
+    if request.method == 'POST':
+        stts = request.POST.get('status')
+        if stts:
+            TicketMonitoramento.objects.filter(pk=tktid).update(status=stts)
+        area = request.POST.get('area')
+        if area:
+            replymail_monitoramento(request, tktid, area)
+        return redirect('portaria:monitticket')
+    return render(request, 'portaria/ticketview.html', {'form':form,'editor':editor,'opts':opts})
 
 #fim das views
 
@@ -1045,46 +1055,49 @@ def readmail_monitoramento(request):
                     new = re.findall(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)', q)
                     teste = os.path.join(settings.MEDIA_URL+'django-summernote/'+str(hoje)+'/',new[0].split('cid:')[1])
                     w_body = w_body.replace(q, teste)
-                    print(q, new[0])
             except Exception as e:
                  print(f'insert data -- ErrorType: {type(e).__name__}, Error: {e}')
                  raise e
             else:
                 form = EmailMonitoramento.objects.filter(email_id=e_ref)
                 if form.exists():
+                    try:
+                        tkt = TicketMonitoramento.objects.get(pk=form[0].tkt_ref_id)
+                        sender = User.objects.get(username='admin')
+                        notify.send(sender, recipient=tkt.responsavel, verb='message',
+                                description="You've got a new message!!!")
+                    except Exception as e:
+                        raise e
                     if form[0].ult_resp is not None:
-                        aa = e_from + '--' + parsed_email['Date'] + '\n' + e_body + '\n------Anterior-------\n' + form[0].ult_resp
-                        bb = e_from + '--' + parsed_email['Date'] + '<br>' + w_body + '<br>------Anterior-------<br>' + form[0].ult_resp_html
+                        aa = e_from + '-- ' + parsed_email['Date'] + '\n' + e_body + '\n------Anterior-------\n' + form[0].ult_resp
+                        bb = e_from + '-- ' + parsed_email['Date'] + '<br>' + w_body + '<hr>' + form[0].ult_resp_html
 
                     else:
-                        aa = e_from + '--' + parsed_email['Date'] + '\n' + e_body
-                        bb = e_from + '--' + parsed_email['Date'] + '<br>' + w_body
+                        aa = e_from + '-- ' + parsed_email['Date'] + '\n' + e_body
+                        bb = e_from + '-- ' + parsed_email['Date'] + '<br>' + w_body
                     form.update(ult_resp=aa,ult_resp_html=bb, ult_rest_dt=timezone.now())
                     pp.dele(i+1)
+
     pp.quit()
     return redirect('portaria:monitticket')
 
-def replymail_monitoramento(request, tktid):
+def replymail_monitoramento(request, tktid, area):
     media = ''
     pattern = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
     orig = get_object_or_404(EmailMonitoramento, tkt_ref_id=tktid)
     if request.method == 'POST':
         msg1 = MIMEMultipart()
-        msg = request.POST.get('area')
-        if re.findall(pattern, msg):
-            for q in re.findall(pattern, msg):
-                print(q, 'aaa')
+        msg = area
+        msg3 = msg + orig.ult_resp_html
+        if re.findall(pattern, msg3):
+            for q in re.findall(pattern, msg3):
                 media = q
                 img_data = open(('/home/bora/www'+media),'rb').read()
                 #msgmsg = MIMEText(teste, 'html', 'utf-8')
                 msgimg = MIMEImage(img_data, name=os.path.basename(media))
                 msgimg.add_header('Content-ID', f'{media}')
-                msg = msg.replace(('<img src="' + media + '"'), f'<img src="cid:{media}" ')
-                print(msg)
+                msg3 = msg3.replace(('src="' + media + '"'), f'src="cid:{media}" ')
                 msg1.attach(msgimg)
-
-        msg3 = msg + orig.ult_resp_html
-
         msg1['Subject'] = orig.assunto
         msg1['In-Reply-To'] = orig.email_id
         msg1['References'] = orig.email_id
@@ -1093,7 +1106,6 @@ def replymail_monitoramento(request, tktid):
         msg1['From'] = 'bora@bora.tec.br'
         msg1['To'] = orig.tkt_ref.cliente
         msg1['CC'] = orig.cc
-
         msg1.attach(MIMEText(msg3, 'html', 'utf-8'))
         smtp_h = 'smtp.kinghost.net'
         smtp_p = '587'
@@ -1111,7 +1123,7 @@ def replymail_monitoramento(request, tktid):
             raise e
         return redirect('portaria:monitticket')
 
-def createtktandmail(request,resp,cc,cli,assunto,msg):
+def createtktandmail(request,cc,cli,assunto,msg,tag):
     print('entrou na funcao')
     pattern = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
     msg1 = MIMEMultipart()
@@ -1149,8 +1161,17 @@ def createtktandmail(request,resp,cc,cli,assunto,msg):
         print(f'ErrorType:{type(e).__name__}, Error:{e}')
     else:
         print('entrou no else')
-        tkt = TicketMonitoramento.objects.create(nome_tkt=assunto, dt_abertura=timezone.now(), responsavel=request.user,cliente=cli)
+        tkt = TicketMonitoramento.objects.create(nome_tkt=assunto, dt_abertura=timezone.now(), responsavel=request.user,cliente=cli, tags=tag, status='ABERTO')
         EmailMonitoramento.objects.create(assunto=assunto, mensagem=msg, cc=cc,dt_envio=timezone.now(),email_id=msg_id,tkt_ref_id=tkt.id)
         print('criou os objetos no banco')
         messages.success(request, 'Email enviado e ticket criado com sucesso')
         return redirect('portaria:monitticket')
+
+def isnotifyread(request, notifyid):
+    nid = get_object_or_404(Notification, pk=notifyid)
+    url = request.get_full_path()
+    try:
+        Notification.objects.filter(pk=nid.id).update(unread=False)
+    except Exception as e:
+        print(f'ErrorType:{type(e).__name__}, Error:{e}')
+    return redirect('portaria:index')

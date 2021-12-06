@@ -37,8 +37,8 @@
                             <th scope="col">Nome - TKT</th>
                             <th scope="col">Aberto em</th>
                             <th scope="col">Responsável</th>
-                            <th scope="col">Cliente</th>
-                            <th></th>
+                            <th>Status</th>
+                            <th scope="col">Edit</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -48,7 +48,7 @@
                             <td>{{ q.nome_tkt|truncatechars:20 }}</td>
                             <td>{{ q.dt_abertura }}</td>
                             <td>{{ q.responsavel }}</td>
-                            <td></td>
+                            <td>{{ q.status }}</td>
                             <td><button type="submit"><a style="color:white" href="{% url 'portaria:tktview' tktid=q.id %}">
                                 <ion-icon name="eye-outline"></ion-icon></a>
                             </button></td>
