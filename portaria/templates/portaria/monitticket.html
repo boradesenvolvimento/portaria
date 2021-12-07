@@ -14,7 +14,7 @@
             </div>
             {% endfor %}
         <section class="container">
-            <div class="row linha-baixo">
+            <div class="row">
                 <h2 class="title-cad col-1">Tickets</h2>
                 <button class="col-1" style="height:3.4rem;">
                 <a href="{% url 'portaria:tktcreate' %}" style="font-size:2.4rem; color:white;" ><ion-icon style="pointer-events:none;" name="add-circle-outline">
@@ -37,7 +37,7 @@
                             <th scope="col">Nome - TKT</th>
                             <th scope="col">Aberto em</th>
                             <th scope="col">Responsável</th>
-                            <th>Status</th>
+                            <th scope="col">Status</th>
                             <th scope="col">Edit</th>
                         </tr>
                     </thead>

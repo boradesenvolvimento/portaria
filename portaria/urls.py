@@ -60,6 +60,6 @@ urlpatterns = [
     path(r'readmail/', views.readmail_monitoramento, name="readmail_monitoramento"),
     path('cardusuario/', views.cardusuario, name='cardusuario'),
     path('cardusuario/<int:id>/card', views.card, name='card'),
-    path('readnotify/<notifyid>', views.isnotifyread, name='isnotifyread')
+    path(r'readnotify/<notifyid>/', views.isnotifyread, name='isnotifyread')
 
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

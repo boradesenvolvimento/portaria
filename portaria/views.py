@@ -603,7 +603,7 @@ def fatferramentas(request):
     return render(request,'portaria/fatferramentas.html')
 
 def monitticket(request):
-    tkts = TicketMonitoramento.objects.all()
+    tkts = TicketMonitoramento.objects.filter(Q(status='ABERTO') | Q(status='ANDAMENTO'))
     if request.method == 'POST':
         tkt = request.POST.get('srctkt')
         if tkt:
@@ -612,6 +612,7 @@ def monitticket(request):
     return render(request, 'portaria/monitticket.html', {'tkts':tkts})
 
 def tktcreate(request):
+    users = User.objects.all()
     editor = TextEditor()
     if request.method == 'POST':
         responsavel = request.user
@@ -626,7 +627,7 @@ def tktcreate(request):
         else:
             messages.error(request, 'Está faltando campos')
             return redirect('portaria:tktcreate')
-    return render(request, 'portaria/tktcreate.html',{'editor':editor})
+    return render(request, 'portaria/tktcreate.html',{'editor':editor, 'users':users})
 
 def tktview(request, tktid):
     opts = TicketMonitoramento.STATUS_CHOICES
@@ -1026,10 +1027,17 @@ def readmail_monitoramento(request):
                     filename = part.get_filename()
                     hoje = datetime.date.today()
                     if filename:
-                        locimg = os.path.join(settings.MEDIA_ROOT+'/django-summernote/'+str(hoje),filename)
-                        fp = open(locimg, 'wb')
-                        fp.write(part.get_payload(decode=True))
-                        fp.close()
+                        path = settings.MEDIA_ROOT+'/django-summernote/'+str(hoje)+'/'
+                        locimg = os.path.join(settings.MEDIA_ROOT + '/django-summernote/' + str(hoje) + '/', filename)
+                        if os.path.exists(os.path.join(path)):
+                            fp = open(locimg, 'wb')
+                            fp.write(part.get_payload(decode=True))
+                            fp.close()
+                        else:
+                            os.mkdir(path=path)
+                            fp = open(locimg, 'wb')
+                            fp.write(part.get_payload(decode=True))
+                            fp.close()
 
             else:
                 body = parsed_email.get_payload(decode=True)
@@ -1047,10 +1055,13 @@ def readmail_monitoramento(request):
                 e_body = body.decode(cs)
                 w_body = htbody.decode(cs)
                 if e_ref is not None: e_ref = e_ref.split(' ')[0]
-                reply_parse = re.findall(r'(De:+\s+\w.*.\sEnviada em:+\s+\w.*.+[,]+\s+\d+\s+\w+\s+\w+\s+\w+\s+\d+\s+\d+:+\d.*)', e_body)
-                reply_html = re.findall(r'(<b><span+\s+\w.*.[>]+De:.*.Enviada em:.*.\s+\w.*.[,]+\s+\d+\s+\w+\s+\w+\s+\w+\s+\d+\s+\d+:+\d.*)',w_body)
-                e_body = e_body.split(reply_parse[0])[0].replace('\n','<br>')
-                w_body = w_body.split(reply_html[0])[0]
+                if e_body:
+                    reply_parse = re.findall(r'(De:+\s+\w.*.\sEnviada em:+\s+\w.*.+[,]+\s+\d+\s+\w+\s+\w+\s+\w+\s+\d+\s+\d+:+\d.*)', e_body)
+                    e_body = e_body.split(reply_parse[0])[0].replace('\n', '<br>')
+                if w_body:
+                    reply_html = re.findall(r'(<b><span+\s+\w.*.[>]+De:.*.Enviada em:.*.\s+\w.*.[,]+\s+\d+\s+\w+\s+\w+\s+\w+\s+\d+\s+\d+:+\d.*)',w_body)
+                    if reply_html:
+                        w_body = w_body.split(reply_html[0])[0]
                 for q in re.findall(pattern, w_body):
                     new = re.findall(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)', q)
                     teste = os.path.join(settings.MEDIA_URL+'django-summernote/'+str(hoje)+'/',new[0].split('cid:')[1])
@@ -1077,7 +1088,6 @@ def readmail_monitoramento(request):
                         bb = e_from + '-- ' + parsed_email['Date'] + '<br>' + w_body
                     form.update(ult_resp=aa,ult_resp_html=bb, ult_rest_dt=timezone.now())
                     pp.dele(i+1)
-
     pp.quit()
     return redirect('portaria:monitticket')
 
@@ -1169,9 +1179,9 @@ def createtktandmail(request,cc,cli,assunto,msg,tag):
 
 def isnotifyread(request, notifyid):
     nid = get_object_or_404(Notification, pk=notifyid)
-    url = request.get_full_path()
+    next = request.GET.get('next')
     try:
         Notification.objects.filter(pk=nid.id).update(unread=False)
     except Exception as e:
         print(f'ErrorType:{type(e).__name__}, Error:{e}')
-    return redirect('portaria:index')
+    return redirect(next)
