@@ -54,7 +54,7 @@
                         {% csrf_token %}
                         {{ editor.area|safe }}
                         <select name="status">
-                            <option value="opt1">Manter status atual</option>
+                            <option value="selected">Manter status atual</option>
                             {% for o,p in opts %}
                                 <option value="{{ o }}">{{ p }}</option>
                             {% endfor %}
@@ -99,8 +99,6 @@
         var text = "<table style='border:double;border-color: #000000; background-color: #ffffff; width: 695px' border='3'><tbody><tr style='border:double;height: 84px'><td style='border:double;height: 84px; width: 323px; text-align: left'></td><td style='border:double;height: 84px; width: 352px; text-align: center'><span style='font-size: 14pt; background-color: #ffffff; color: #003366'><strong>&nbsp;<span style='font-family: verdana, geneva; color: #333333'>Planilha de Monitoramento.</span></strong></span></td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>FILIAL DE ORIGEM</td><td style='border:double;height: 17px; width: 352px'></td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>DATA E HORA DA OCORRÊNCIA</td><td style='border:double;height: 17px; width: 352px'></td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>CONTATO TRANSPORTADORA</td><td style='border:double;height: 17px; width: 352px'></td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>Nº NOTA FISCAL</td><td style='border:double;height: 17px; width: 352px'></td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>MOTORISTA / PLACA</td><td style='border:double;height: 17px; width: 352px'></td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>CLIENTE</td><td style='border:double;height: 17px; width: 352px'></td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>CIDADE</td><td style='border:double;height: 17px; width: 352px'></td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>UF</td><td style='border:double;height: 17px; width: 352px'></td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>MOTIVO DA OCORRÊNCIA</td><td style='border:double;height: 17px; width: 352px'></td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>Nº SENHA DA AGENDA</td><td style='border:double;height: 17px; width: 352px'></td></tr><tr style='border:double;height: 90px'><td style='border:double;height: 90px; width: 323px'>OBS:</td><td style='border:double;height: 90px; width: 352px'></td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>FINALIZAÇÃO</td><td style='border:double;height: 17px; width: 352px'></td></tr></tbody></table>";
         var doc = document.getElementById('id_area_iframe').contentWindow.document.getElementsByClassName('note-editable')[0];
         $(doc).append(text)
-
-        console.log(doc);
     };
 </script>
     {% endblock %}

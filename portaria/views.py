@@ -613,21 +613,23 @@ def monitticket(request):
 
 def tktcreate(request):
     users = User.objects.all()
+    fil = TIPO_GARAGEM
     editor = TextEditor()
     if request.method == 'POST':
-        responsavel = request.user
+        responsavel = request.POST.get('responsavel')
         cc = request.POST.get('cc')
-        cliente = request.POST.get('cliente')
         assunto = request.POST.get('assunto')
         mensagem = request.POST.get('area')
-        tag = request.POST.get('tags')
-        if responsavel and cliente and assunto and mensagem:
+        rem = request.POST.get('remetente')
+        dest = request.POST.get('destinatario')
+
+        if responsavel and rem and assunto and mensagem:
             #return redirect('portaria:createtktandmail', resp=responsavel,cc=cc,cli=cliente,assunto=assunto,msg=mensagem)
-            createtktandmail(request, cc=cc, cli=cliente, assunto=assunto, msg=mensagem, tag=tag)
+            createtktandmail(request, resp=responsavel, cc=cc, rem=rem, dest=dest, assunto=assunto, msg=mensagem, cte='12345')
         else:
             messages.error(request, 'Está faltando campos')
             return redirect('portaria:tktcreate')
-    return render(request, 'portaria/tktcreate.html',{'editor':editor, 'users':users})
+    return render(request, 'portaria/tktcreate.html',{'editor':editor, 'users':users, 'fil':fil})
 
 def tktview(request, tktid):
     opts = TicketMonitoramento.STATUS_CHOICES
@@ -635,7 +637,7 @@ def tktview(request, tktid):
     editor = TextEditor()
     if request.method == 'POST':
         stts = request.POST.get('status')
-        if stts:
+        if stts != 'selected':
             TicketMonitoramento.objects.filter(pk=tktid).update(status=stts)
         area = request.POST.get('area')
         if area:
@@ -999,17 +1001,20 @@ def exedicorreios(request):
     return response
 
 def readmail_monitoramento(request):
+    #config poplib
     host = 'pop.kinghost.net'
     e_user = 'bora@bora.tec.br'
     e_pass = 'Bor@dev#123'
-
+    print('iniciando readmail')
     pp = poplib.POP3(host)
     pp.set_debuglevel(1)
     pp.user(e_user)
     pp.pass_(e_pass)
-    pattern = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp).\w+.\w+')
+    pattern1 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
+    pattern2 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp).\w+.\w+')
     num_messages = len(pp.list()[1])
     for i in range(num_messages):
+        #acessa o poplib e pega os emails
         try:
             raw_email = b'\n'.join(pp.retr(i+1)[1])
             parsed_email = email.message_from_bytes(raw_email, policy=policy.compat32)
@@ -1019,13 +1024,16 @@ def readmail_monitoramento(request):
             if parsed_email.is_multipart():
                 for part in parsed_email.walk():
                     ctype = part.get_content_type()
-                    cdispo = str(part.get('Content-Disposition'))
+                    cdispo = str(part.get('Content-Type'))
                     if ctype == 'text/plain' and 'attatchment' not in cdispo:
+                        body = part.get_payload(decode=True)
+                    elif ctype == 'text/html' and 'attatchment' not in cdispo:
                         body = part.get_payload(decode=True)
                     if ctype == 'text/html' and 'attatchment' not in cdispo:
                         htbody = part.get_payload(decode=True)
                     filename = part.get_filename()
                     hoje = datetime.date.today()
+                    #verifica se existem arquivos no email
                     if filename:
                         path = settings.MEDIA_ROOT+'/django-summernote/'+str(hoje)+'/'
                         locimg = os.path.join(settings.MEDIA_ROOT + '/django-summernote/' + str(hoje) + '/', filename)
@@ -1038,13 +1046,13 @@ def readmail_monitoramento(request):
                             fp = open(locimg, 'wb')
                             fp.write(part.get_payload(decode=True))
                             fp.close()
-
             else:
                 body = parsed_email.get_payload(decode=True)
             cs = parsed_email.get_charsets()
             for q in cs:
                 if q is None: continue
                 else: cs = q
+            #pega parametros do email
             try:
                 e_title = parsed_email['Subject']
                 e_from = parsed_email['From']
@@ -1052,42 +1060,67 @@ def readmail_monitoramento(request):
                 e_cc = parsed_email['CC']
                 e_id = parsed_email['Message-ID']
                 e_ref = parsed_email['References']
+                if e_ref is None: e_ref = e_id
                 e_body = body.decode(cs)
                 w_body = htbody.decode(cs)
+                #converte o corpo do email
                 if e_ref is not None: e_ref = e_ref.split(' ')[0]
                 if e_body:
                     reply_parse = re.findall(r'(De:+\s+\w.*.\sEnviada em:+\s+\w.*.+[,]+\s+\d+\s+\w+\s+\w+\s+\w+\s+\d+\s+\d+:+\d.*)', e_body)
-                    e_body = e_body.split(reply_parse[0])[0].replace('\n', '<br>')
+                    if reply_parse:
+                        e_body = e_body.split(reply_parse[0])[0].replace('\n', '<br>')
                 if w_body:
                     reply_html = re.findall(r'(<b><span+\s+\w.*.[>]+De:.*.Enviada em:.*.\s+\w.*.[,]+\s+\d+\s+\w+\s+\w+\s+\w+\s+\d+\s+\d+:+\d.*)',w_body)
                     if reply_html:
                         w_body = w_body.split(reply_html[0])[0]
-                for q in re.findall(pattern, w_body):
-                    new = re.findall(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)', q)
-                    teste = os.path.join(settings.MEDIA_URL+'django-summernote/'+str(hoje)+'/',new[0].split('cid:')[1])
-                    w_body = w_body.replace(q, teste)
+                if re.findall(pattern1, w_body):
+                    if re.findall(pattern2,w_body):
+                        for q in re.findall(pattern2, w_body):
+                            new = re.findall(pattern1, q)
+                            teste = os.path.join(settings.MEDIA_URL + 'django-summernote/' + str(hoje) + '/',new[0].split('cid:')[1])
+                            w_body = w_body.replace(q, teste)
+                    elif re.findall(pattern1,w_body):
+                        for q in re.findall(pattern1, w_body):
+                            new = re.findall(pattern1, q)
+                            teste = os.path.join(settings.MEDIA_URL + 'django-summernote/' + str(hoje) + '/',new[0].split('cid:')[1])
+                            w_body = w_body.replace(q, teste)
+
             except Exception as e:
                  print(f'insert data -- ErrorType: {type(e).__name__}, Error: {e}')
                  raise e
             else:
+                #salva no banco de dados
                 form = EmailMonitoramento.objects.filter(email_id=e_ref)
+                sender = User.objects.get(username='admin')
                 if form.exists():
+                    xxx = form[0].ult_resp_html
+                    if xxx: zzz = w_body.split(xxx[:50])
                     try:
                         tkt = TicketMonitoramento.objects.get(pk=form[0].tkt_ref_id)
-                        sender = User.objects.get(username='admin')
                         notify.send(sender, recipient=tkt.responsavel, verb='message',
                                 description="You've got a new message!!!")
                     except Exception as e:
                         raise e
                     if form[0].ult_resp is not None:
-                        aa = e_from + '-- ' + parsed_email['Date'] + '\n' + e_body + '\n------Anterior-------\n' + form[0].ult_resp
-                        bb = e_from + '-- ' + parsed_email['Date'] + '<br>' + w_body + '<hr>' + form[0].ult_resp_html
-
+                        aa = '<hr>' + e_from + ' -- ' + parsed_email['Date'] + '\n' + e_body + '\n------Anterior-------\n' + form[0].ult_resp
+                        bb = '<hr>' + e_from + '-- ' + parsed_email['Date'] + '<br>' + zzz[0] + '<hr>' + form[0].ult_resp_html
                     else:
-                        aa = e_from + '-- ' + parsed_email['Date'] + '\n' + e_body
-                        bb = e_from + '-- ' + parsed_email['Date'] + '<br>' + w_body
+                        aa = '<hr>' + e_from + ' -- ' + parsed_email['Date'] + '\n' + e_body
+                        bb = '<hr>' + e_from + ' -- ' + parsed_email['Date'] + '<hr>' + w_body
                     form.update(ult_resp=aa,ult_resp_html=bb, ult_rest_dt=timezone.now())
                     pp.dele(i+1)
+                else:
+                    try:
+                        tkt = TicketMonitoramento.objects.get(msg_id=e_ref)
+                    except Exception as e:
+                        print(e)
+                    else:
+                        bb = e_from + '-- ' + parsed_email['Date'] + '<hr>' + w_body
+                        data = datetime.datetime.strptime(parsed_email['Date'], '%a, %d %b %Y %H:%M:%S %z (-03)').strftime('%Y-%m-%d')
+                        EmailMonitoramento.objects.create(assunto=e_title, mensagem=bb, cc=e_cc, dt_envio=data,email_id=tkt.msg_id, tkt_ref_id=tkt.id)
+                        notify.send(sender, recipient=tkt.responsavel, verb='message',
+                                    description="Your email was sent and ticket created!!!")
+                    pp.dele(i + 1)
     pp.quit()
     return redirect('portaria:monitticket')
 
@@ -1098,7 +1131,10 @@ def replymail_monitoramento(request, tktid, area):
     if request.method == 'POST':
         msg1 = MIMEMultipart()
         msg = area
-        msg3 = msg + orig.ult_resp_html
+        if orig.ult_resp_html:
+            msg3 = msg + orig.ult_resp_html
+        else:
+            msg3 = msg
         if re.findall(pattern, msg3):
             for q in re.findall(pattern, msg3):
                 media = q
@@ -1114,28 +1150,30 @@ def replymail_monitoramento(request, tktid, area):
         msg_id = make_msgid(idstring=None, domain='bora.tec.br')
         msg1['Message-ID'] = msg_id
         msg1['From'] = 'bora@bora.tec.br'
-        msg1['To'] = orig.tkt_ref.cliente
+        msg1['To'] = 'bora@bora.tec.br'
         msg1['CC'] = orig.cc
         msg1.attach(MIMEText(msg3, 'html', 'utf-8'))
         smtp_h = 'smtp.kinghost.net'
         smtp_p = '587'
         user = 'bora@bora.tec.br'
         passw = 'Bor@dev#123'
+        print(msg3)
         try:
             print('entrou no try')
             sm = smtplib.SMTP(smtp_h, smtp_p)
             sm.set_debuglevel(1)
             sm.login(user, passw)
-            sm.sendmail('bora@bora.tec.br', orig.tkt_ref.cliente, msg1.as_string())
+            sm.sendmail('bora@bora.tec.br', ['bora@bora.tec.br']+orig.cc.split(';'), msg1.as_string())
             print('mandou o email')
         except Exception as e:
             print(f'ErrorType:{type(e).__name__}, Error:{e}')
             raise e
         return redirect('portaria:monitticket')
 
-def createtktandmail(request,cc,cli,assunto,msg,tag):
+def createtktandmail(request,resp,cc,rem,dest,assunto,msg,cte):
     print('entrou na funcao')
     pattern = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
+
     msg1 = MIMEMultipart()
     msgmail = msg
     if re.findall(pattern, msg):
@@ -1151,7 +1189,7 @@ def createtktandmail(request,cc,cli,assunto,msg,tag):
     print('carregou mimetext')
     msg1['Subject'] = assunto
     msg1['From'] = 'bora@bora.tec.br'
-    msg1['To'] = cli
+    msg1['To'] = 'bora@bora.tec.br'
     msg1['CC'] = cc
     msg_id = make_msgid(idstring=None, domain='bora.tec.br')
     msg1['Message-ID'] = msg_id
@@ -1165,14 +1203,14 @@ def createtktandmail(request,cc,cli,assunto,msg,tag):
         sm = smtplib.SMTP(smtp_h, smtp_p)
         sm.set_debuglevel(1)
         sm.login(user,passw)
-        sm.sendmail('bora@bora.tec.br', cli, msg1.as_string())
+        sm.sendmail('bora@bora.tec.br', (['bora@bora.tec.br']+cc.split(';')), msg1.as_string())
         print('mandou o email')
     except Exception as e:
         print(f'ErrorType:{type(e).__name__}, Error:{e}')
     else:
         print('entrou no else')
-        tkt = TicketMonitoramento.objects.create(nome_tkt=assunto, dt_abertura=timezone.now(), responsavel=request.user,cliente=cli, tags=tag, status='ABERTO')
-        EmailMonitoramento.objects.create(assunto=assunto, mensagem=msg, cc=cc,dt_envio=timezone.now(),email_id=msg_id,tkt_ref_id=tkt.id)
+        tkt = TicketMonitoramento.objects.create(nome_tkt=assunto, dt_abertura=timezone.now(), responsavel=User.objects.get(username=resp), solicitante=request.user, remetente=rem, destinatario=dest, cte=cte, status='ABERTO', msg_id=msg_id)
+        #EmailMonitoramento.objects.create(assunto=assunto, mensagem=msg, cc=cc,dt_envio=timezone.now(),email_id=msg_id,tkt_ref_id=tkt.id)
         print('criou os objetos no banco')
         messages.success(request, 'Email enviado e ticket criado com sucesso')
         return redirect('portaria:monitticket')
@@ -1184,4 +1222,13 @@ def isnotifyread(request, notifyid):
         Notification.objects.filter(pk=nid.id).update(unread=False)
     except Exception as e:
         print(f'ErrorType:{type(e).__name__}, Error:{e}')
+    return redirect(next)
+
+def setallread(request, user):
+    next = request.GET.get('next')
+    if user:
+        cases = Notification.objects.filter(recipient=user)
+        for n in cases:
+            Notification.objects.filter(pk=n.id).update(unread=False)
+
     return redirect(next)

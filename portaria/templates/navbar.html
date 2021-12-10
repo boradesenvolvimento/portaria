@@ -116,6 +116,7 @@
             </span>
             </button>
             <div class="dropdown-menu">
+              <button style="width:30px;height:15px;"><a href="{% url 'portaria:setallread' user.id %}?next={{ request.path }}">aaa</a></button>
               {% for notification in  user.notifications.unread %}
               <div class="container">
                     Message from <b>{{ notification.actor }}</b>

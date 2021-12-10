@@ -371,10 +371,14 @@ class TicketMonitoramento(models.Model):
     id = models.BigAutoField(primary_key=True)
     nome_tkt = models.CharField(max_length=100)
     dt_abertura = models.DateField()
-    responsavel = models.ForeignKey(User, on_delete=PROTECT)
-    cliente = models.CharField(max_length=50)
-    tags = models.CharField(max_length=100)
+    responsavel = models.ForeignKey(User, on_delete=PROTECT, related_name='responsavel')
+    solicitante = models.ForeignKey(User, on_delete=PROTECT, related_name='solicitante')
+    remetente = models.CharField(max_length=50)
+    destinatario = models.CharField(max_length=50)
+    cte = models.CharField(max_length=100)
+    categoria = models.CharField(max_length=100)
     status = models.CharField(max_length=9, choices=STATUS_CHOICES)
+    msg_id = models.CharField(max_length=100, unique=True)
 
 class EmailMonitoramento(models.Model):
     id = models.BigAutoField(primary_key=True)
