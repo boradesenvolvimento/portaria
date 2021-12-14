@@ -615,6 +615,11 @@ def tktcreate(request):
     users = User.objects.all()
     fil = TIPO_GARAGEM
     editor = TextEditor()
+    abcde = ''
+    if request.method == 'GET':
+        nfs = request.GET.get('cte')
+        if nfs:
+            abcde = nfs
     if request.method == 'POST':
         responsavel = request.POST.get('responsavel')
         cc = request.POST.get('cc')
@@ -629,7 +634,7 @@ def tktcreate(request):
         else:
             messages.error(request, 'Está faltando campos')
             return redirect('portaria:tktcreate')
-    return render(request, 'portaria/tktcreate.html',{'editor':editor, 'users':users, 'fil':fil})
+    return render(request, 'portaria/tktcreate.html',{'editor':editor, 'users':users, 'fil':fil,'abcde':abcde})
 
 def tktview(request, tktid):
     opts = TicketMonitoramento.STATUS_CHOICES
@@ -637,8 +642,16 @@ def tktview(request, tktid):
     editor = TextEditor()
     if request.method == 'POST':
         stts = request.POST.get('status')
+        addcc = request.POST.get('addcc')
         if stts != 'selected':
             TicketMonitoramento.objects.filter(pk=tktid).update(status=stts)
+        if addcc:
+            oldcc = form.cc
+            newcc = addcc + ';' + oldcc + ';'
+            try:
+                EmailMonitoramento.objects.filter(tkt_ref_id=tktid).update(cc=newcc)
+            except Exception as e:
+                print(e)
         area = request.POST.get('area')
         if area:
             replymail_monitoramento(request, tktid, area)
@@ -955,7 +968,6 @@ def ediexceltosd1(request):
         get_xlsx = request.FILES['edi_excel']
         response = HttpResponse(content_type='text/plain',
                                 headers={'Content-Disposition': 'attatchment; filename="teste.sd1"'})
-
         if get_xlsx:
             edi = pd.read_excel(get_xlsx)
             for i,row in edi.iterrows():
@@ -988,7 +1000,6 @@ def ediexceltosd1(request):
                 response.write(str(array[q]['num_seq_arq2']))
                 response.write(str(array[q]['num_seq_reg2']))
                 response.write('\n')
-
         return response
 
 def exedicorreios(request):
@@ -1064,6 +1075,7 @@ def readmail_monitoramento(request):
                 e_body = body.decode(cs)
                 w_body = htbody.decode(cs)
                 #converte o corpo do email
+
                 if e_ref is not None: e_ref = e_ref.split(' ')[0]
                 if e_body:
                     reply_parse = re.findall(r'(De:+\s+\w.*.\sEnviada em:+\s+\w.*.+[,]+\s+\d+\s+\w+\s+\w+\s+\w+\s+\d+\s+\d+:+\d.*)', e_body)
@@ -1073,16 +1085,20 @@ def readmail_monitoramento(request):
                     reply_html = re.findall(r'(<b><span+\s+\w.*.[>]+De:.*.Enviada em:.*.\s+\w.*.[,]+\s+\d+\s+\w+\s+\w+\s+\w+\s+\d+\s+\d+:+\d.*)',w_body)
                     if reply_html:
                         w_body = w_body.split(reply_html[0])[0]
-                if re.findall(pattern1, w_body):
-                    if re.findall(pattern2,w_body):
-                        for q in re.findall(pattern2, w_body):
-                            new = re.findall(pattern1, q)
+
+                if re.findall(pattern2,w_body):
+                    for q in re.findall(pattern2, w_body):
+                        new = re.findall(pattern1, q)
+                        teste = os.path.join(settings.MEDIA_URL + 'django-summernote/' + str(hoje) + '/',new[0].split('cid:')[1])
+                        w_body = w_body.replace(q, teste)
+                elif re.findall(pattern1,w_body):
+                    for q in re.findall(pattern1, w_body):
+                        new = re.findall(pattern1, q)
+                        try:
                             teste = os.path.join(settings.MEDIA_URL + 'django-summernote/' + str(hoje) + '/',new[0].split('cid:')[1])
-                            w_body = w_body.replace(q, teste)
-                    elif re.findall(pattern1,w_body):
-                        for q in re.findall(pattern1, w_body):
-                            new = re.findall(pattern1, q)
-                            teste = os.path.join(settings.MEDIA_URL + 'django-summernote/' + str(hoje) + '/',new[0].split('cid:')[1])
+                        except Exception as e:
+                            print(e)
+                        else:
                             w_body = w_body.replace(q, teste)
 
             except Exception as e:
@@ -1115,8 +1131,8 @@ def readmail_monitoramento(request):
                     except Exception as e:
                         print(e)
                     else:
-                        bb = e_from + '-- ' + parsed_email['Date'] + '<hr>' + w_body
-                        data = datetime.datetime.strptime(parsed_email['Date'], '%a, %d %b %Y %H:%M:%S %z (-03)').strftime('%Y-%m-%d')
+                        bb = e_from + ' -- ' + parsed_email['Date'] + '<hr>' + w_body
+                        data = datetime.datetime.strptime(parsed_email['Date'], '%a, %d %b %Y %H:%M:%S %z').strftime('%Y-%m-%d')
                         EmailMonitoramento.objects.create(assunto=e_title, mensagem=bb, cc=e_cc, dt_envio=data,email_id=tkt.msg_id, tkt_ref_id=tkt.id)
                         notify.send(sender, recipient=tkt.responsavel, verb='message',
                                     description="Your email was sent and ticket created!!!")
@@ -1135,35 +1151,36 @@ def replymail_monitoramento(request, tktid, area):
             msg3 = msg + orig.ult_resp_html
         else:
             msg3 = msg
-        if re.findall(pattern, msg3):
-            for q in re.findall(pattern, msg3):
+        if re.findall(pattern, msg):
+            for q in re.findall(pattern, msg):
                 media = q
                 img_data = open(('/home/bora/www'+media),'rb').read()
                 #msgmsg = MIMEText(teste, 'html', 'utf-8')
                 msgimg = MIMEImage(img_data, name=os.path.basename(media))
                 msgimg.add_header('Content-ID', f'{media}')
-                msg3 = msg3.replace(('src="' + media + '"'), f'src="cid:{media}" ')
+                msg = msg.replace(('src="' + media + '"'), f'src="cid:{media}" ')
+                print(msg3)
                 msg1.attach(msgimg)
         msg1['Subject'] = orig.assunto
         msg1['In-Reply-To'] = orig.email_id
         msg1['References'] = orig.email_id
-        msg_id = make_msgid(idstring=None, domain='bora.tec.br')
+        msg_id = make_msgid(idstring=None, domain='bora.com.br')
         msg1['Message-ID'] = msg_id
-        msg1['From'] = 'bora@bora.tec.br'
+        msg1['From'] = 'teste@bora.com.br'
         msg1['To'] = 'bora@bora.tec.br'
         msg1['CC'] = orig.cc
-        msg1.attach(MIMEText(msg3, 'html', 'utf-8'))
+        msg1.attach(MIMEText(msg, 'html', 'utf-8'))
         smtp_h = 'smtp.kinghost.net'
         smtp_p = '587'
         user = 'bora@bora.tec.br'
         passw = 'Bor@dev#123'
-        print(msg3)
+
         try:
             print('entrou no try')
-            sm = smtplib.SMTP(smtp_h, smtp_p)
+            sm = smtplib.SMTP('smtp.bora.com.br', smtp_p)
             sm.set_debuglevel(1)
-            sm.login(user, passw)
-            sm.sendmail('bora@bora.tec.br', ['bora@bora.tec.br']+orig.cc.split(';'), msg1.as_string())
+            sm.login('teste@bora.com.br', 'Bor@413247')
+            sm.sendmail('teste@bora.com.br', ['bora@bora.tec.br']+orig.cc.split(';'), msg1.as_string())
             print('mandou o email')
         except Exception as e:
             print(f'ErrorType:{type(e).__name__}, Error:{e}')
@@ -1188,10 +1205,10 @@ def createtktandmail(request,resp,cc,rem,dest,assunto,msg,cte):
     msg1.attach(MIMEText(msgmail, 'html', 'utf-8'))
     print('carregou mimetext')
     msg1['Subject'] = assunto
-    msg1['From'] = 'bora@bora.tec.br'
+    msg1['From'] = 'teste@bora.com.br'
     msg1['To'] = 'bora@bora.tec.br'
     msg1['CC'] = cc
-    msg_id = make_msgid(idstring=None, domain='bora.tec.br')
+    msg_id = make_msgid(idstring=None, domain='bora.com.br')
     msg1['Message-ID'] = msg_id
     smtp_h = 'smtp.kinghost.net'
     smtp_p = '587'
@@ -1200,12 +1217,13 @@ def createtktandmail(request,resp,cc,rem,dest,assunto,msg,cte):
     print('setou parametros iniciando trycatch')
     try:
         print('entrou no try')
-        sm = smtplib.SMTP(smtp_h, smtp_p)
+        sm = smtplib.SMTP('smtp.bora.com.br', smtp_p, timeout=120)
         sm.set_debuglevel(1)
-        sm.login(user,passw)
-        sm.sendmail('bora@bora.tec.br', (['bora@bora.tec.br']+cc.split(';')), msg1.as_string())
+        sm.login('teste@bora.com.br','Bor@413247')
+        sm.sendmail('teste@bora.com.br', (['bora@bora.tec.br']+cc.split(';')), msg1.as_string())
         print('mandou o email')
     except Exception as e:
+        messages.error(request, f'ErrorType:{type(e).__name__}, Error:{e}')
         print(f'ErrorType:{type(e).__name__}, Error:{e}')
     else:
         print('entrou no else')

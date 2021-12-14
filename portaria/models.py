@@ -384,7 +384,7 @@ class EmailMonitoramento(models.Model):
     id = models.BigAutoField(primary_key=True)
     assunto = models.CharField(max_length=100)
     mensagem = models.TextField()
-    cc = models.CharField(max_length=200, blank=True, null=True)
+    cc = models.CharField(max_length=1000, blank=True, null=True)
     dt_envio = models.DateField()
     email_id = models.CharField(max_length=100, unique=True)
     ult_resp = models.TextField(blank=True, null=True)
