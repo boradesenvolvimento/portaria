@@ -196,7 +196,7 @@ EMAIL_HOST_PASSWORD = get_secret('E_UPASS')
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 
 SUMMERNOTE_CONFIG = {
-'iframe': False,
+'iframe': True,
 
 'summernote': {
         # As an example, using Summernote Air-mode
@@ -204,18 +204,12 @@ SUMMERNOTE_CONFIG = {
         'disableResizeEditor': False,
         # Change editor size
         'width': '100%',
-        'height': '200',
+        'height': '300',
         # Toolbar customization
         # https://summernote.org/deep-dive/#custom-toolbar-popover
         'toolbar': [
             ['style', ['style']],
-            ['font', ['bold', 'underline', 'clear']],
             ['fontname', ['fontname']],
-            ['color', ['color']],
-            ['para', ['ul', 'ol', 'paragraph']],
-            ['table', ['table']],
-            ['insert', ['link', 'picture', 'video']],
-            ['view', ['help','codeview']],
         ],
 
         # Or, explicitly set language/locale for editor

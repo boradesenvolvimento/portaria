@@ -28,71 +28,86 @@
                 <h2 class="title-cad">Ticket {{ form.tkt_ref_id }}</h2>
             </div>
         </div>
-        <section class="container tktcontainer">
+        <section class="container viewmonit">
+            <div class="tktcontainer">
             <div class="row">
             <div class="col-lg-4 col-md">
-                <div class="tktcontainer">
-                <ul><li>Assunto: {{ form.assunto }} </li>
-                <li>Cliente: {{ form.tkt_ref.remetente }} </li>
-                <li>CC: {{ form.cc|default_if_none:'' }} </li>
-                <li>Data envio: {{ form.tkt_ref.dt_abertura }} </li>
-                <li>responsavel: {{ form.tkt_ref.responsavel }}</li>
-                <li>Status: {{ form.tkt_ref.status }}</li>
-                </ul>
+                <div>
+                    <ul>
+                        <li><strong>Assunto:</strong> {{ form.assunto }} </li>
+                        <li><strong>Remetente:</strong> {{ form.tkt_ref.remetente }} </li>
+                        <li><strong>Destinatario:</strong> {{ form.tkt_ref.destinatario }} </li>
+                        <li><strong>Data envio:</strong> {{ form.tkt_ref.dt_abertura }} </li>
+                        <li><strong>Responsável:</strong> {{ form.tkt_ref.responsavel }}</li>
+                        <li><strong>Categoria:</strong> {{ form.tkt_ref.categoria }}</li>
+                        <li><strong>Status:</strong> {{ form.tkt_ref.status }}</li>
+                        <li><strong>CC:</strong> {{ form.cc|default_if_none:'' }} </li>
+                    </ul>
                 </div>
             </div>
             <div class="container col-lg col-md-12">
-                <div class="tktcontainer">
-                    <h3>Nova mensagem</h3>
+                <div>
                         <form method="post">
                         {% csrf_token %}
+                        <div>
                         {{ editor.area|safe }}
-                        <select id="selecter">
-                            <option style="cursor:pointer;">Macros</option>
-                            <option style="cursor:pointer;">Bora</option>
-                            <option style="cursor:pointer;">Bela Vista</option>
-                            <option style="cursor:pointer;">Buritis</option>
-                            <option style="cursor:pointer;">Cacau Show</option>
-                            <option style="cursor:pointer;">Hersheys2</option>
-                            <option style="cursor:pointer;">Lactalis</option>
-                            <option style="cursor:pointer;">Lactalis AJU</option>
-                            <option style="cursor:pointer;">Macro REC</option>
-                            <option style="cursor:pointer;">Macro SSA</option>
-                            <option style="cursor:pointer;">Mars</option>
-                            <option style="cursor:pointer;">Mavalerio</option>
-                            <option style="cursor:pointer;">Negeubauer</option>
-                        </select>
-                        <select name="status">
-                            <option value="selected">Manter status atual</option>
-                            {% for o,p in opts %}
-                                <option value="{{ o }}">{{ p }}</option>
-                            {% endfor %}
-                        </select>
-                        <input type="text" name="addcc" placeholder="Inserir novas cópias...">
-                        <button type="submit">Reply Email</button>
+                        </div>
+                        <div class="row">
+                            <div class="col-3">
+                                <label for="selecter">Macros:</label>
+                                <select style="width:15rem;" id="selecter">
+                                    <option hidden>Selecione...</option>
+                                    <option style="cursor:pointer;">Bora</option>
+                                    <option style="cursor:pointer;">Bela Vista</option>
+                                    <option style="cursor:pointer;">Buritis</option>
+                                    <option style="cursor:pointer;">Cacau Show</option>
+                                    <option style="cursor:pointer;">Hersheys2</option>
+                                    <option style="cursor:pointer;">Lactalis</option>
+                                    <option style="cursor:pointer;">Lactalis AJU</option>
+                                    <option style="cursor:pointer;">Macro REC</option>
+                                    <option style="cursor:pointer;">Macro SSA</option>
+                                    <option style="cursor:pointer;">Mars</option>
+                                    <option style="cursor:pointer;">Mavalerio</option>
+                                    <option style="cursor:pointer;">Negeubauer</option>
+                                </select>
+                            </div>
+                            <div class="col-3">
+                                <label for="categs">Categoria:</label>
+                                <select style="width:15rem;" name="categs" id="categs">
+                                    <option hidden value="selected">Selecione...</option>
+                                    {% for q,v in opts %}
+                                        <option value="{{ q }}">{{ v }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-4">
+                                <label for="addcc">CC:</label>
+                                <input type="text" id="addcc" name="addcc" placeholder="Inserir novas cópias...">
+                            </div>
+                            <div class="col-1">
+                                <button type="submit" style="height:55px;">Enviar</button>
+                            </div>
+                        </div>
                     </form>
                 </div>
             </div>
             </div>
-            <div class="container">
+        </div>
+            <div class="container tktcontainer">
+                <h2>Resposta: </h2>
                 <div class="row">
-                    <div class="tktcontainer col">
-                        <h2>Resposta: </h2>
-
-                        <ul>
+                    <div class="col">
+                        <ul style="list-style-type:none;">
                             {% if form.ult_resp %}
                             <li>{{ form.ult_resp_html|safe }}</li>
                             {% endif %}
-                            <li>Mensagem: {{ form.mensagem|safe }} </li>
+                            <li><hr style="border-top:solid 5px;"></li>
+                            <li><strong>Mensagem:</strong> {{ form.mensagem|safe }}</li>
                         </ul>
-
-                </div>
+                    </div>
                 </div>
             </div>
         </section>
-        <div>
-
-        </div>
         {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
     </div>
     {% endif %}

@@ -41,6 +41,7 @@ urlpatterns = [
     path('fatferramentas/', views.fatferramentas, name='fatferramentas'),
     path('tickets/', views.monitticket, name='monitticket'),
     path('tickets/new/', views.tktcreate, name='tktcreate'),
+    path('tickets/<tktid>/', views.closetkt, name='closetkt'),
     path('tickets/<tktid>/view/', views.tktview, name='tktview'),
     path('replymail_monitoramento/<tktid>', views.replymail_monitoramento, name="replymail_monitoramento"),
     #path(r'createtktandmail/<resp>&<cc>&<cli>&<assunto>&<msg>', views.createtktandmail, name='createtktandmail'),

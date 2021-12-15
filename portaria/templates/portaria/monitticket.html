@@ -29,7 +29,7 @@
                     </form>
                 </div>
             </div>
-            <div class="row tktcontainer">
+            <div class="row">
                 <table class="table1 table">
                     <thead>
                         <tr>
@@ -39,11 +39,12 @@
                             <th scope="col">Responsável</th>
                             <th scope="col">Status</th>
                             <th scope="col">Edit</th>
+                            <th scope="col">Close</th>
                         </tr>
                     </thead>
                     <tbody>
                     {% for q in tkts %}
-                        <tr>
+                        <tr class="tabletkt">
                             <td>{{ q.id }}</td>
                             <td>{{ q.nome_tkt|truncatechars:20 }}</td>
                             <td>{{ q.dt_abertura }}</td>
@@ -52,6 +53,9 @@
                             <td><button type="submit"><a style="color:white" href="{% url 'portaria:tktview' tktid=q.id %}">
                                 <ion-icon name="eye-outline"></ion-icon></a>
                             </button></td>
+                            <td><button type="submit"><a style="color:white" href="{% url 'portaria:closetkt' tktid=q.id %}">
+                                <ion-icon name="close-circle-outline"></ion-icon>
+                            </a></button></td>
                         </tr>
                     {% endfor %}
                     </tbody>
@@ -59,8 +63,6 @@
 
             </div>
         </section>
-
-
     {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
     </div>
     {% endif %}

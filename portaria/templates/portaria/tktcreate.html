@@ -18,17 +18,18 @@
         <div class="container">
             <div class="row">
                 <form method="get">
-                <h2>Buscar CTE:<input name="cte" type="text"><input type="submit"></h2>
+                <h2 class="title-cad">Buscar CTE:<input name="cte" type="text"><input type="submit" class="button"></h2>
                 </form>
             </div>
         </div>
 
         {% else %}
+        <div class="createtkt">
         <form method="post">
             {% csrf_token %}
         <div class="row">
-            <h2>CTE: {{ abcde }}</h2>
-        <div class="container col-4" style="float:left; border:2px ridge;">
+            <h2 class="title-cad">CTE: {{ abcde }}</h2>
+        <div class="container col-4 createboxes">
             <div class="row">
             <label for="remetente">Remetente:</label>
             <select style="width: 30rem;" id="remetente" name="remetente">
@@ -53,8 +54,11 @@
             <div class="row">
                 <div class="col-6">
                     <label for="categoria">Categoria:</label>
-                        <select id="categoria" name="categoria">
-                            <option value="-Selecione-">-Selecione-</option>
+                        <select id="categoria" style="width:15rem;" name="categoria">
+                            <option hidden>Selecione ...</option>
+                            {% for q,v in opts %}
+                            <option value="{{ q }}">{{ v }}</option>
+                            {% endfor %}
                         </select>
                 </div>
                 <div class="col-6">
@@ -80,7 +84,7 @@
         </div>
 
 
-        <div class="container col-8" style="border:2px ridge;">
+        <div class="container col-8 createboxes">
             <div class="row">
                 <label for="assunto">Assunto:</label>
                 <div class="col-9">
@@ -111,9 +115,10 @@
                 </div>
             </div>
         </div>
-            <input type="submit" class="button">
+            <button type="submit">Criar</button>
         </div>
         </form>
+        </div>
         {% endif %}
     </div>
     {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}

@@ -368,6 +368,28 @@ class TicketMonitoramento(models.Model):
         ('CONCLUIDO', 'CONCLUIDO'),
         ('CANCELADO', 'CANCELADO')
     ]
+    CATEGORIA_CHOICES = [
+        ('Aguardando Recebimento','Aguardando Recebimento'),
+        ('Dae','Dae'),
+        ('Descarga','Descarga'),
+        ('Devolução Parcial','Devolução Parcial'),
+        ('Devolução Total','Devolução Total'),
+        ('Diaria autorizada','Diaria autorizada'),
+        ('Dif. Peso','Dif. Peso'),
+        ('Entrega Realizada','Entrega Realizada'),
+        ('Fora de Horário','Fora de Horário'),
+        ('Fora de Rota','Fora de Rota'),
+        ('Imprópria','Imprópria'),
+        ('Merc. nao embar.','Merc. nao embar.'),
+        ('Prorrogação de Boleto','Prorrogação de Boleto'),
+        ('Reentrega','Reentrega'),
+        ('Refaturamento','Refaturamento'),
+        ('Reversa','Reversa'),
+        ('Sem Agendamento','Sem Agendamento'),
+        ('Sem Pedido','Sem Pedido'),
+        ('Veículo em rota','Veículo em rota'),
+        ('Veículo Quebrado','Veículo Quebrado')
+    ]
     id = models.BigAutoField(primary_key=True)
     nome_tkt = models.CharField(max_length=100)
     dt_abertura = models.DateField()
@@ -376,7 +398,7 @@ class TicketMonitoramento(models.Model):
     remetente = models.CharField(max_length=50)
     destinatario = models.CharField(max_length=50)
     cte = models.CharField(max_length=100)
-    categoria = models.CharField(max_length=100)
+    categoria = models.CharField(max_length=100, choices=CATEGORIA_CHOICES)
     status = models.CharField(max_length=9, choices=STATUS_CHOICES)
     msg_id = models.CharField(max_length=100, unique=True)
 

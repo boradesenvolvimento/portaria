@@ -101,12 +101,6 @@ body, button, input, select, background{
     padding: 0.7rem 0rem 0.7rem 0rem;
 }
 
-.tktcontainer{
-    border: 1px solid black;
-    padding: 0.5rem;
-    margin-bottom: 0.2rem;
-}
-
 a{
     text-decoration:none;
 }
@@ -215,4 +209,56 @@ button:hover, .button:hover{
     justify-content: space-evenly;
     margin-top: 10px;
     margin-bottom: 20px;
+}
+
+.viewmonit{
+    background: #e8eef5;
+    border: ridge 5px var(--grey-dark);
+    padding: 0.5rem;
+}
+
+.viewmonit ul{
+    list-style-position: outside;
+    list-style-type: "☻ ";
+}
+
+.viewmonit h2{
+    font-family: 'Poppins', sans-serif;
+    font-weight: 900;
+}
+
+.viewmonit hr{
+    border-top:solid 3px #3485FF;
+}
+
+.createtkt{
+    background: #e8eef5;
+    border: ridge 5px var(--grey-dark);
+    padding: 1rem;
+}
+
+.createtkt button{
+    width: 20rem;
+    margin: 1rem auto;
+}
+.createboxes{
+    float:left;
+    border:3px ridge;
+    padding: 0.5rem;
+}
+.createboxes label,h4{
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+}
+
+.tktcontainer{
+    border: 3px double;
+    margin-bottom: 0.2rem;
+    padding:1rem;
+}
+
+.tabletkt{
+    border: 2px solid var(--grey-blue);
+    padding: 0.5rem;
+    background: #e8eef5;
 }
