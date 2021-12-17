@@ -14,7 +14,7 @@
                 </div>
             </div>
             {% endfor %}
-        {% if not abcde %}
+        {% if not srccte %}
         <div class="container">
             <div class="row">
                 <form method="get">
@@ -28,7 +28,7 @@
         <form method="post">
             {% csrf_token %}
         <div class="row">
-            <h2 class="title-cad">CTE: {{ abcde }}</h2>
+            <h2 class="title-cad">CTE: {{ srccte }}</h2>
         <div class="container col-4 createboxes">
             <div class="row">
             <label for="remetente">Remetente:</label>

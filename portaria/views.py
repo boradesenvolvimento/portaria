@@ -607,7 +607,7 @@ def monitticket(request):
     if request.method == 'POST':
         tkt = request.POST.get('srctkt')
         if tkt:
-            tkts = TicketMonitoramento.objects.filter(pk=tkt)
+            tkts = TicketMonitoramento.objects.filter(pk=tkt).exclude(Q(status='CONCLUIDO')|Q(status='CANCELADO'))
             return render(request, 'portaria/monitticket.html', {'tkts': tkts})
     return render(request, 'portaria/monitticket.html', {'tkts':tkts})
 
@@ -616,11 +616,11 @@ def tktcreate(request):
     fil = TIPO_GARAGEM
     editor = TextEditor()
     opts = TicketMonitoramento.CATEGORIA_CHOICES
-    abcde = ''
+    srccte = ''
     if request.method == 'GET':
         nfs = request.GET.get('cte')
         if nfs:
-            abcde = nfs
+            srccte = nfs
     if request.method == 'POST':
         responsavel = request.POST.get('responsavel')
         cc = request.POST.get('cc')
@@ -628,24 +628,27 @@ def tktcreate(request):
         mensagem = request.POST.get('area')
         rem = request.POST.get('remetente')
         dest = request.POST.get('destinatario')
-
-        if responsavel and rem and assunto and mensagem: 
-            #return redirect('portaria:createtktandmail', resp=responsavel,cc=cc,cli=cliente,assunto=assunto,msg=mensagem)
+        if responsavel and rem and assunto and mensagem and cc and dest:
             createtktandmail(request, resp=responsavel, cc=cc, rem=rem, dest=dest, assunto=assunto, msg=mensagem, cte='12345')
         else:
             messages.error(request, 'Está faltando campos')
             return redirect('portaria:tktcreate')
-    return render(request, 'portaria/tktcreate.html',{'editor':editor, 'users':users, 'fil':fil,'abcde':abcde, 'opts':opts})
+    return render(request, 'portaria/tktcreate.html',{'editor': editor, 'users': users, 'fil': fil, 'srccte': srccte, 'opts': opts})
 
 def tktview(request, tktid):
     opts = TicketMonitoramento.CATEGORIA_CHOICES
+    stts = TicketMonitoramento.STATUS_CHOICES
     form = get_object_or_404(EmailMonitoramento, tkt_ref_id=tktid)
     editor = TextEditor()
     if request.method == 'POST':
         ctg = request.POST.get('categs')
         addcc = request.POST.get('addcc')
+        nstts = request.POST.get('stts')
         if ctg != 'selected':
             TicketMonitoramento.objects.filter(pk=tktid).update(categoria=ctg)
+
+        if nstts != 'selected':
+            TicketMonitoramento.objects.filter(pk=tktid).update(status=nstts)
 
         if addcc:
             oldcc = form.cc
@@ -659,7 +662,7 @@ def tktview(request, tktid):
             replymail_monitoramento(request, tktid, area)
             print(area)
         return redirect('portaria:monitticket')
-    return render(request, 'portaria/ticketview.html', {'form':form,'editor':editor,'opts':opts})
+    return render(request, 'portaria/ticketview.html', {'form':form,'editor':editor,'opts':opts,'stts':stts})
 
 #fim das views
 
@@ -1062,32 +1065,35 @@ def readmail_monitoramento(request):
                             fp.close()
             else:
                 body = parsed_email.get_payload(decode=True)
-
             cs = parsed_email.get_charsets()
             for q in cs:
                 if q is None: continue
                 else: cs = q
             #pega parametros do email
             try:
+                e_date = datetime.datetime.strptime(parsed_email['Date'], '%d/%b/%Y') #.strftime('%Y-%m-%d')
+                print(e_date)
                 e_title = parsed_email['Subject']
                 e_from = parsed_email['From']
+                if re.findall(r'<(.*?)>', e_from): e_from = re.findall(r'<(.*?)>', e_from)[0]
+
                 e_to = parsed_email['To']
+                if re.findall(r'<(.*?)>', e_to): e_to = re.findall(r'<(.*?)>', e_to)[0]
                 e_cc = parsed_email['CC']
+                if e_cc:
+                    if re.findall(r'<(.*?)>', e_cc): e_cc = re.findall(r'<(.*?)>', e_cc)[0]
+
                 e_id = parsed_email['Message-ID']
                 e_ref = parsed_email['References']
                 if e_ref is None: e_ref = e_id
-                e_body = body.decode(cs)
-                w_body = htbody.decode(cs)
-                #converte o corpo do email
-                if re.findall(r'<(.*?)>',e_from): e_from = re.findall(r'<(.*?)>',e_from)[0]
-                if re.findall(r'<(.*?)>',e_to): e_to = re.findall(r'<(.*?)>',e_to)[0]
-                if e_cc:
-                    if re.findall(r'<(.*?)>', e_cc): e_cc = re.findall(r'<(.*?)>', e_cc)[0]
                 if e_ref is not None: e_ref = e_ref.split(' ')[0]
+                #converte o corpo do email
+                e_body = body.decode(cs)
                 if e_body:
                     reply_parse = re.findall(r'(De:+\s+\w.*.\sEnviada em:+\s+\w.*.+[,]+\s+\d+\s+\w+\s+\w+\s+\w+\s+\d+\s+\d+:+\d.*)', e_body)
                     if reply_parse:
                         e_body = e_body.split(reply_parse[0])[0].replace('\n', '<br>')
+                w_body = htbody.decode(cs)
                 if w_body:
                     reply_html = re.findall(r'(<b><span+\s+\w.*.[>]+De:.*.Enviada em:.*.\s+\w.*.[,]+\s+\d+\s+\w+\s+\w+\s+\w+\s+\d+\s+\d+:+\d.*)',w_body)
                     if reply_html:
@@ -1107,13 +1113,13 @@ def readmail_monitoramento(request):
                             print(f'ErrorType: {type(e).__name__}, Error: {e}')
                         else:
                             w_body = w_body.replace(q, teste)
+
             except Exception as e:
                  print(f'insert data -- ErrorType: {type(e).__name__}, Error: {e}')
             else:
                 #salva no banco de dados
                 form = EmailMonitoramento.objects.filter(email_id=e_ref)
                 sender = User.objects.get(username='admin')
-                print(form)
                 if form.exists() and form[0].tkt_ref.status != ('CONCLUIDO' or 'CANCELADO'):
                     xxx = form[0].ult_resp_html
                     if xxx: zzz = w_body.split(xxx[:50])
@@ -1124,14 +1130,14 @@ def readmail_monitoramento(request):
                     except Exception as e:
                         print(f'ErrorType: {type(e).__name__}, Error: {e}')
                     if form[0].ult_resp is not None:
-                        aa = '<hr>' + e_from + ' -- ' + parsed_email['Date'] + '\n' + e_body + '\n------Anterior-------\n' + form[0].ult_resp
-                        bb = '<hr>' + e_from + ' -- ' + parsed_email['Date'] + '<br>' + zzz[0] + '<hr>' + form[0].ult_resp_html
-                        if tkt.status == 'ABERTO':
-                            TicketMonitoramento.objects.filter(pk=form[0].tkt_ref_id).update(status='ANDAMENTO')
+                        aa = '<hr>' + e_from + ' -- ' + e_date + '\n' + e_body + '\n------Anterior-------\n' + form[0].ult_resp
+                        bb = '<hr>' + e_from + ' -- ' + e_date + '<br>' + zzz[0] + '<hr>' + form[0].ult_resp_html
                     else:
-                        aa = '<hr>' + e_from + ' -- ' + parsed_email['Date'] + '\n' + e_body
-                        bb = '<hr>' + e_from + ' -- ' + parsed_email['Date'] + '<br>' + w_body
-                    form.update(ult_resp=aa,ult_resp_html=bb, ult_rest_dt=timezone.now())
+                        aa = '<hr>' + e_from + ' -- ' + e_date + '\n' + e_body
+                        bb = '<hr>' + e_from + ' -- ' + e_date + '<br>' + w_body
+                    if tkt.status == 'ABERTO':
+                        TicketMonitoramento.objects.filter(pk=form[0].tkt_ref_id).update(status='ANDAMENTO')
+                    form.update(ult_resp=aa,ult_resp_html=bb, ult_rest_dt=e_date)
                     pp.dele(i+1)
                 elif form.exists() and form[0].tkt_ref.status == ('CONCLUIDO' or 'CANCELADO'):
                     messages.warning(request, 'Ticket já encerrado')
@@ -1144,9 +1150,8 @@ def readmail_monitoramento(request):
                     except Exception as e:
                         print(f'ErrorType: {type(e).__name__}, Error: {e}')
                     else:
-                        bb = '<hr>' + e_from + ' -- ' + parsed_email['Date'] + w_body
-                        data = datetime.datetime.strptime(parsed_email['Date'], '%a, %d %b %Y %H:%M:%S %z').strftime('%Y-%m-%d')
-                        EmailMonitoramento.objects.create(assunto=e_title, mensagem=bb, cc=e_cc, dt_envio=data,email_id=tkt.msg_id, tkt_ref_id=tkt.id)
+                        bb = '<hr>' + e_from + ' -- ' + e_date + w_body
+                        EmailMonitoramento.objects.create(assunto=e_title, mensagem=bb, cc=e_cc, dt_envio=e_date,email_id=tkt.msg_id, tkt_ref_id=tkt.id)
                         notify.send(sender, recipient=tkt.responsavel, verb='message',
                                     description="Your email was sent and ticket created!!!")
                     pp.dele(i + 1)
@@ -1164,7 +1169,6 @@ def replymail_monitoramento(request, tktid, area):
             for q in re.findall(pattern, msg):
                 media = q
                 img_data = open(('/home/bora/www'+media),'rb').read()
-                #msgmsg = MIMEText(teste, 'html', 'utf-8')
                 msgimg = MIMEImage(img_data, name=os.path.basename(media))
                 msgimg.add_header('Content-ID', f'{media}')
                 msg = msg.replace(('src="' + media + '"'), f'src="cid:{media}" ')
@@ -1235,6 +1239,7 @@ def createtktandmail(request,resp,cc,rem,dest,assunto,msg,cte):
         print('criou os objetos no banco')
         messages.success(request, 'Email enviado e ticket criado com sucesso')
         return redirect('portaria:monitticket')
+
 def closetkt(request, tktid):
     tkt = get_object_or_404(TicketMonitoramento, pk=tktid)
     if tkt and tkt.categoria != 'Aguardando Recebimento':
@@ -1243,6 +1248,7 @@ def closetkt(request, tktid):
     else:
         messages.error(request, 'Não autorizado encerramento do monitoramento.')
     return redirect('portaria:monitticket')
+
 def isnotifyread(request, notifyid):
     nid = get_object_or_404(Notification, pk=notifyid)
     next = request.GET.get('next')

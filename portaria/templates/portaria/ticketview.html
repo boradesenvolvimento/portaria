@@ -53,9 +53,9 @@
                         {{ editor.area|safe }}
                         </div>
                         <div class="row">
-                            <div class="col-3">
+                            <div class="col-2">
                                 <label for="selecter">Macros:</label>
-                                <select style="width:15rem;" id="selecter">
+                                <select style="width:10rem;" id="selecter">
                                     <option hidden>Selecione...</option>
                                     <option style="cursor:pointer;">Bora</option>
                                     <option style="cursor:pointer;">Bela Vista</option>
@@ -71,21 +71,30 @@
                                     <option style="cursor:pointer;">Negeubauer</option>
                                 </select>
                             </div>
-                            <div class="col-3">
+                            <div class="col-2">
                                 <label for="categs">Categoria:</label>
-                                <select style="width:15rem;" name="categs" id="categs">
+                                <select style="width:10rem;" name="categs" id="categs">
                                     <option hidden value="selected">Selecione...</option>
                                     {% for q,v in opts %}
                                         <option value="{{ q }}">{{ v }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
+                            <div class="col-2">
+                                <label for="stts">Status:</label>
+                                <select name="stts" id="stts" style="width:10rem;">
+                                    <option hidden value="selected">Selecione...</option>
+                                    {% for q,v in stts %}
+                                        <option value="{{ q }}">{{ v }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
                             <div class="col-4">
                                 <label for="addcc">CC:</label>
-                                <input type="text" id="addcc" name="addcc" placeholder="Inserir novas cópias...">
+                                <input type="text" id="addcc" name="addcc" style="width:20rem;" placeholder="Inserir novas cópias...">
                             </div>
-                            <div class="col-1">
-                                <button type="submit" style="height:55px;">Enviar</button>
+                            <div class="col-2">
+                                <button type="submit" style="height:5rem;">Enviar</button>
                             </div>
                         </div>
                     </form>
