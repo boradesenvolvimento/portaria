@@ -1071,7 +1071,7 @@ def readmail_monitoramento(request):
                 else: cs = q
             #pega parametros do email
             try:
-                e_date = datetime.datetime.strptime(parsed_email['Date'], '%d/%b/%Y') #.strftime('%Y-%m-%d')
+                e_date = datetime.datetime.strptime(parsed_email['Date'], '%a, %d %b %Y %H:%M:%S %z').strftime('%Y-%m-%d')
                 print(e_date)
                 e_title = parsed_email['Subject']
                 e_from = parsed_email['From']
@@ -1126,7 +1126,7 @@ def readmail_monitoramento(request):
                     try:
                         tkt = TicketMonitoramento.objects.get(pk=form[0].tkt_ref_id)
                         notify.send(sender, recipient=tkt.responsavel, verb='message',
-                                description="You've got a new message!!!")
+                                description=f"Você recebeu uma nova mensagem do ticket {tkt.id}")
                     except Exception as e:
                         print(f'ErrorType: {type(e).__name__}, Error: {e}')
                     if form[0].ult_resp is not None:
@@ -1153,7 +1153,7 @@ def readmail_monitoramento(request):
                         bb = '<hr>' + e_from + ' -- ' + e_date + w_body
                         EmailMonitoramento.objects.create(assunto=e_title, mensagem=bb, cc=e_cc, dt_envio=e_date,email_id=tkt.msg_id, tkt_ref_id=tkt.id)
                         notify.send(sender, recipient=tkt.responsavel, verb='message',
-                                    description="Your email was sent and ticket created!!!")
+                                    description="Seu ticket foi criado.")
                     pp.dele(i + 1)
     pp.quit()
     return redirect('portaria:monitticket')

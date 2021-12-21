@@ -116,14 +116,14 @@
             </span>
             </button>
             <div class="dropdown-menu">
-              <button style="width:50px;height:20px;"><a style="color:white;font-size:12px;" href="{% url 'portaria:setallread' user.id %}?next={{ request.path }}">Limpar</a></button>
               {% for notification in  user.notifications.unread %}
-              <div class="container">
-                    Message from <b>{{ notification.actor }}</b>
-                    <div class="dropdown-item">{{ notification.description }} <a style="text-decoration:none;color:blue !important;" href="{% url 'portaria:isnotifyread' notification.id %}?next={{request.path}}"><ion-icon name="checkmark-done-sharp"></ion-icon></a></div>
+              <div class="container" style="font-size:12px;">
+                    Mensagem de <b>{{ notification.actor }}</b>.
+                <div class="dropdown-item">{{ notification.description }} <a style="text-decoration:none;color:blue !important;" href="{% url 'portaria:isnotifyread' notification.id %}?next={{request.path}}"><ion-icon name="checkmark-done-sharp"></ion-icon></a></div>
                     <div class="dropdown-divider"></div>
               </div>
               {% endfor %}
+              <button style="width:50px;height:20px;"><a style="color:white;font-size:12px;" href="{% url 'portaria:setallread' user.id %}?next={{ request.path }}">Limpar</a></button>
             </div>
           </div>
           {% endif %}
