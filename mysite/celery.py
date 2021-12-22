@@ -19,6 +19,7 @@ def readmailasync():
     from email import policy
     from portaria.models import EmailMonitoramento, TicketMonitoramento
     from django.contrib.auth.models import User
+    attatch = ''
     host = 'pop.kinghost.net'
     e_user = 'bora@bora.tec.br'
     e_pass = 'Bor@dev#123'
@@ -63,6 +64,9 @@ def readmailasync():
                             fp = open(locimg, 'wb')
                             fp.write(part.get_payload(decode=True))
                             fp.close()
+                        item = os.path.join('/media/django-summernote/' + str(hoje) + '/', filename)
+                        aa = '<div class="mailattatch"><a href="' + item + '" download><img src="/static/images/downicon.png" width="40"><p>' + filename + '</p></a></div>'
+                        attatch += aa
             else:
                 body = parsed_email.get_payload(decode=True)
             cs = parsed_email.get_charsets()
@@ -140,10 +144,10 @@ def readmailasync():
                     if form[0].ult_resp is not None:
                         aa = '<hr>' + e_from + ' -- ' + e_date + '\n' + e_body + '\n------Anterior-------\n' + form[
                             0].ult_resp
-                        bb = '<hr>' + e_from + ' -- ' + e_date + '<br>' + zzz[0] + '<hr>' + form[0].ult_resp_html
+                        bb = '<hr>' + e_from + ' -- ' + e_date + '<br>' + zzz[0] + attatch + '<hr>' + form[0].ult_resp_html
                     else:
                         aa = '<hr>' + e_from + ' -- ' + e_date + '\n' + e_body
-                        bb = '<hr>' + e_from + ' -- ' + e_date + '<br>' + w_body
+                        bb = '<hr>' + e_from + ' -- ' + e_date + '<br>' + w_body + attatch
                     if tkt.status == 'ABERTO':
                         TicketMonitoramento.objects.filter(pk=form[0].tkt_ref_id).update(status='ANDAMENTO')
                     form.update(ult_resp=aa, ult_resp_html=bb, ult_rest_dt=e_date)

@@ -262,3 +262,21 @@ button:hover, .button:hover{
     padding: 0.5rem;
     background: #e8eef5;
 }
+
+.mailattatch{
+    background: var(--grey-dark);
+    border: solid 1px var(--black);
+    border-radius: 5px;
+    display:inline-block;
+}
+.mailattatch p{
+    color:black !important;
+    font-size:12px;
+    font-family:'Poppins', sans-serif;
+    padding:0 2px 0 2px;;
+}
+.mailattatch img{
+    padding:5px;
+    display:block;
+    margin:auto;
+}

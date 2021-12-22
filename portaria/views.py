@@ -648,7 +648,13 @@ def tktview(request, tktid):
             TicketMonitoramento.objects.filter(pk=tktid).update(categoria=ctg)
 
         if nstts != 'selected':
-            TicketMonitoramento.objects.filter(pk=tktid).update(status=nstts)
+            tkt = get_object_or_404(TicketMonitoramento, pk=tktid)
+            if tkt and tkt.categoria != 'Aguardando Recebimento':
+                TicketMonitoramento.objects.filter(pk=tkt.id).update(status=nstts)
+                messages.info(request, f'Ticket {tkt.id} alterado para {nstts} com sucesso.')
+            else:
+                messages.error(request, 'Não autorizado encerramento do monitoramento.')
+            return redirect('portaria:monitticket')
 
         if addcc:
             oldcc = form.cc
@@ -657,13 +663,12 @@ def tktview(request, tktid):
                 EmailMonitoramento.objects.filter(tkt_ref_id=tktid).update(cc=newcc)
             except Exception as e:
                 print(e)
+
         area = request.POST.get('area')
         if area and area != '<p><br></p>':
             replymail_monitoramento(request, tktid, area)
-            print(area)
         return redirect('portaria:monitticket')
     return render(request, 'portaria/ticketview.html', {'form':form,'editor':editor,'opts':opts,'stts':stts})
-
 #fim das views
 
 
@@ -1019,6 +1024,7 @@ def exedicorreios(request):
 
 def readmail_monitoramento(request):
     #config poplib
+    attatch=''
     host = 'pop.kinghost.net'
     e_user = 'bora@bora.tec.br'
     e_pass = 'Bor@dev#123'
@@ -1049,6 +1055,7 @@ def readmail_monitoramento(request):
                     if ctype == 'text/html' and 'attatchment' not in cdispo:
                         htbody = part.get_payload(decode=True)
                     filename = part.get_filename()
+
                     hoje = datetime.date.today()
                     #verifica se existem arquivos no email
                     if filename:
@@ -1063,6 +1070,10 @@ def readmail_monitoramento(request):
                             fp = open(locimg, 'wb')
                             fp.write(part.get_payload(decode=True))
                             fp.close()
+                        #if filename not in re.findall(pattern1, filename):
+                        item = os.path.join('/media/django-summernote/'+str(hoje)+'/', filename)
+                        aa = '<div class="mailattatch"><a href="'+item+'" download><img src="/static/images/downicon.png" width="40"><p>'+filename+'</p></a></div>'
+                        attatch += aa
             else:
                 body = parsed_email.get_payload(decode=True)
             cs = parsed_email.get_charsets()
@@ -1072,7 +1083,6 @@ def readmail_monitoramento(request):
             #pega parametros do email
             try:
                 e_date = datetime.datetime.strptime(parsed_email['Date'], '%a, %d %b %Y %H:%M:%S %z').strftime('%Y-%m-%d')
-                print(e_date)
                 e_title = parsed_email['Subject']
                 e_from = parsed_email['From']
                 if re.findall(r'<(.*?)>', e_from): e_from = re.findall(r'<(.*?)>', e_from)[0]
@@ -1113,7 +1123,7 @@ def readmail_monitoramento(request):
                             print(f'ErrorType: {type(e).__name__}, Error: {e}')
                         else:
                             w_body = w_body.replace(q, teste)
-
+                #continue
             except Exception as e:
                  print(f'insert data -- ErrorType: {type(e).__name__}, Error: {e}')
             else:
@@ -1131,10 +1141,10 @@ def readmail_monitoramento(request):
                         print(f'ErrorType: {type(e).__name__}, Error: {e}')
                     if form[0].ult_resp is not None:
                         aa = '<hr>' + e_from + ' -- ' + e_date + '\n' + e_body + '\n------Anterior-------\n' + form[0].ult_resp
-                        bb = '<hr>' + e_from + ' -- ' + e_date + '<br>' + zzz[0] + '<hr>' + form[0].ult_resp_html
+                        bb = '<hr>' + e_from + ' -- ' + e_date + '<br>' + zzz[0] + attatch + '<hr>' + form[0].ult_resp_html
                     else:
                         aa = '<hr>' + e_from + ' -- ' + e_date + '\n' + e_body
-                        bb = '<hr>' + e_from + ' -- ' + e_date + '<br>' + w_body
+                        bb = '<hr>' + e_from + ' -- ' + e_date + '<br>' + w_body + attatch
                     if tkt.status == 'ABERTO':
                         TicketMonitoramento.objects.filter(pk=form[0].tkt_ref_id).update(status='ANDAMENTO')
                     form.update(ult_resp=aa,ult_resp_html=bb, ult_rest_dt=e_date)
