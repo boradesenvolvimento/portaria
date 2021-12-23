@@ -614,13 +614,79 @@ def monitticket(request):
 def tktcreate(request):
     users = User.objects.all()
     fil = TIPO_GARAGEM
+    tp_doc_choices = TIPO_DOCTO_CHOICES
     editor = TextEditor()
     opts = TicketMonitoramento.CATEGORIA_CHOICES
-    srccte = ''
     if request.method == 'GET':
-        nfs = request.GET.get('cte')
-        if nfs:
-            srccte = nfs
+        cte = request.GET.get('cte')
+        gar = request.GET.get('garagem')
+        tp_docto = request.GET.get('tp_docto')
+        if cte and gar and tp_docto:
+            try:
+                conn = settings.CONNECTION
+                cur = conn.cursor()
+                cur.execute(f'''
+                                SELECT 
+                                      F1.EMPRESA,
+                                      CASE
+                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '1'  THEN 'SPO'
+                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '2'  THEN 'REC'
+                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '3'  THEN 'SSA'
+                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '4'  THEN 'FOR'
+                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '5'  THEN 'MCZ'
+                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '6'  THEN 'NAT'
+                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '7'  THEN 'JPA'
+                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '8'  THEN 'AJU'
+                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '9'  THEN 'VDC'
+                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '10' THEN 'MG'
+                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '50' THEN 'SPO'
+                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '20' THEN 'SPO'
+                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '21' THEN 'SPO'
+                                          WHEN F1.EMPRESA = '2' AND F1.GARAGEM = '20' THEN 'CTG'
+                                          WHEN F1.EMPRESA = '2' AND F1.GARAGEM = '21' THEN 'TCO'
+                                          WHEN F1.EMPRESA = '2' AND F1.GARAGEM = '22' THEN 'UDI'
+                                          WHEN F1.EMPRESA = '2' AND F1.GARAGEM = '23' THEN 'TMA'
+                                          WHEN F1.EMPRESA = '2' AND F1.GARAGEM = '24' THEN 'VIX'  
+                                          WHEN F1.EMPRESA = '2' AND F1.GARAGEM = '50' THEN 'TMA'  
+                                      END GARAGEM,
+                                      F1.TIPO_DOCTO,
+                                      F1.CONHECIMENTO CTE,
+                                      F1.REM_RZ_SOCIAL,
+                                      F1.DEST_RZ_SOCIAL,
+                                      LISTAGG ((LTRIM (F4.NOTA_FISCAL,0)), ' / ') WITHIN GROUP (ORDER BY F1.CONHECIMENTO) NOTA_FISCAL 
+                                FROM
+                                    FTA001 F1,
+                                    FTA004 F4
+                                WHERE
+                                     F1.EMPRESA = F4.EMPRESA AND
+                                     F1.FILIAL = F4.FILIAL   AND
+                                     F1.GARAGEM = F4.GARAGEM AND
+                                     F1.CONHECIMENTO = F4.CONHECIMENTO AND
+                                     F1.SERIE = F4.SERIE               AND
+                                     F1.TIPO_DOCTO = F4.TIPO_DOCTO     AND
+                                     F1.CONHECIMENTO = {cte}           AND
+                                     F1.GARAGEM = {gar}                AND
+                                     F1.TIPO_DOCTO = {tp_docto}            
+                                GROUP BY
+                                     F1.EMPRESA,
+                                      F1.GARAGEM,
+                                      F1.TIPO_DOCTO,
+                                      F1.CONHECIMENTO,
+                                      F1.REM_RZ_SOCIAL,
+                                      F1.DEST_RZ_SOCIAL''')
+                res = dictfetchall(cur)
+            except Exception as e:
+                messages.error(request, f'{e}')
+                return redirect('portaria:monitticket')
+            else:
+                if len(res)>1:
+                    messages.error(request, f'Something went wrong!!!!')
+                    return redirect('portaria:monitticket')
+                elif res:
+                    return render(request, 'portaria/tktcreate.html', {'editor': editor, 'users': users,'res': res,'opts': opts,})
+                else:
+                    messages.error(request, f'Não encontrado')
+                    return redirect('portaria:monitticket')
     if request.method == 'POST':
         responsavel = request.POST.get('responsavel')
         cc = request.POST.get('cc')
@@ -633,7 +699,7 @@ def tktcreate(request):
         else:
             messages.error(request, 'Está faltando campos')
             return redirect('portaria:tktcreate')
-    return render(request, 'portaria/tktcreate.html',{'editor': editor, 'users': users, 'fil': fil, 'srccte': srccte, 'opts': opts})
+    return render(request, 'portaria/tktcreate.html',{'editor': editor, 'users': users, 'opts': opts, 'tp_doc_choices':tp_doc_choices})
 
 def tktview(request, tktid):
     opts = TicketMonitoramento.CATEGORIA_CHOICES
@@ -1275,3 +1341,11 @@ def setallread(request, user):
         for n in cases:
             Notification.objects.filter(pk=n.id).update(unread=False)
     return redirect(next)
+
+def dictfetchall(cursor):
+    "Return all rows from a cursor as a dict"
+    columns = [col[0] for col in cursor.description]
+    return [
+        dict(zip(columns, row))
+        for row in cursor.fetchall()
+    ]

@@ -46,6 +46,10 @@ TIPO_GARAGEM = (
     ('TNA','TNA'),
     ('VIX','VIX'),
 )
+TIPO_DOCTO_CHOICES = (
+    ('8', 'NFS'),
+    ('57', 'CTE')
+)
 # Create your models here.
 
 

@@ -13,6 +13,7 @@ import json
 import os.path
 from pathlib import Path
 #import MySQLdb
+import cx_Oracle
 from django.urls import reverse_lazy
 from django.core.management.utils import get_random_secret_key
 from django.contrib.messages import constants as messages
@@ -108,7 +109,7 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
+CONNECTION = cx_Oracle.connect('CONSULTA142','BORA241','BORA')
 #production
 #DATABASES = {
 #    'default': {
