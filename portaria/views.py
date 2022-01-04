@@ -1,16 +1,31 @@
+#imports geral
 import csv
 import datetime
+import email, smtplib
+import os
+import re
 import textwrap
-
+import poplib
+from email import policy
+from email.mime.multipart import MIMEMultipart
 import pandas as pd
+from email.mime.text import MIMEText
+from email.mime.image import MIMEImage
+from email.utils import make_msgid
+
+from notifications.models import Notification
+from notifications.signals import notify
+#imports django built-ins
+from PIL import Image
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.postgres.aggregates import StringAgg
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
 from django.db import IntegrityError
-from django.db.models import Count, Sum, F, Q, Value, CharField, DateTimeField
-from django.db.models.functions import Coalesce, TruncDate, Cast, TruncMinute
+from django.db.models import Count, Sum, F, Q, Value, CharField, DateTimeField, Subquery
+from django.db.models.functions import Coalesce, TruncDate, Cast, TruncMinute, Concat
 from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, Http404
 from django.shortcuts import get_object_or_404, render, redirect
 from django.template.defaultfilters import upper
@@ -19,7 +34,7 @@ from django.utils import timezone
 from django.views import generic
 
 
-
+#imports django projeto
 from .models import * #Cadastro, PaletControl, ChecklistFrota, Veiculos, NfServicoPj
 from .forms import * #CadastroForm, isPlacaForm, DateForm, FilterForm, TPaletsForm, TIPO_GARAGEM, ChecklistForm
 
@@ -587,6 +602,146 @@ def manutencaoprint(request, osid):
 def fatferramentas(request):
     return render(request,'portaria/fatferramentas.html')
 
+def monitticket(request):
+    if request.user.is_staff:
+        tkts = TicketMonitoramento.objects.filter(Q(status='ABERTO') | Q(status='ANDAMENTO'))
+    else:
+        tkts = TicketMonitoramento.objects.filter(Q(status='ABERTO') | Q(status='ANDAMENTO'), responsavel=request.user)
+    if request.method == 'POST':
+        tkt = request.POST.get('srctkt')
+        if tkt:
+            if request.user.is_staff:
+                tkts = TicketMonitoramento.objects.filter(pk=tkt).exclude(Q(status='CONCLUIDO') | Q(status='CANCELADO'))
+            else:
+                tkts = TicketMonitoramento.objects.filter(pk=tkt, responsavel=request.user).exclude(Q(status='CONCLUIDO')|Q(status='CANCELADO'))
+
+            return render(request, 'portaria/monitticket.html', {'tkts': tkts})
+    return render(request, 'portaria/monitticket.html', {'tkts':tkts})
+
+def tktcreate(request):
+    users = User.objects.filter(groups__name='monitoramento')
+    fil = TIPO_GARAGEM
+    tp_doc_choices = TIPO_DOCTO_CHOICES
+    editor = TextEditor()
+    opts = TicketMonitoramento.CATEGORIA_CHOICES
+    if request.method == 'GET':
+        cte = request.GET.get('cte')
+        gar = request.GET.get('garagem')
+        tp_docto = request.GET.get('tp_docto')
+        if cte and gar and tp_docto:
+            try:
+                conn = settings.CONNECTION
+                cur = conn.cursor()
+                cur.execute(f'''
+                                SELECT 
+                                      F1.EMPRESA,
+                                      CASE
+                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '1'  THEN 'SPO'
+                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '2'  THEN 'REC'
+                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '3'  THEN 'SSA'
+                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '4'  THEN 'FOR'
+                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '5'  THEN 'MCZ'
+                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '6'  THEN 'NAT'
+                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '7'  THEN 'JPA'
+                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '8'  THEN 'AJU'
+                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '9'  THEN 'VDC'
+                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '10' THEN 'MG'
+                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '50' THEN 'SPO'
+                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '20' THEN 'SPO'
+                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '21' THEN 'SPO'
+                                          WHEN F1.EMPRESA = '2' AND F1.GARAGEM = '20' THEN 'CTG'
+                                          WHEN F1.EMPRESA = '2' AND F1.GARAGEM = '21' THEN 'TCO'
+                                          WHEN F1.EMPRESA = '2' AND F1.GARAGEM = '22' THEN 'UDI'
+                                          WHEN F1.EMPRESA = '2' AND F1.GARAGEM = '23' THEN 'TMA'
+                                          WHEN F1.EMPRESA = '2' AND F1.GARAGEM = '24' THEN 'VIX'  
+                                          WHEN F1.EMPRESA = '2' AND F1.GARAGEM = '50' THEN 'TMA'  
+                                      END GARAGEM,
+                                      F1.TIPO_DOCTO,
+                                      F1.CONHECIMENTO CTE,
+                                      F1.REM_RZ_SOCIAL,
+                                      F1.DEST_RZ_SOCIAL,
+                                      LISTAGG ((LTRIM (F4.NOTA_FISCAL,0)), ' / ') WITHIN GROUP (ORDER BY F1.CONHECIMENTO) NOTA_FISCAL 
+                                FROM
+                                    FTA001 F1,
+                                    FTA004 F4
+                                WHERE
+                                     F1.EMPRESA = F4.EMPRESA AND
+                                     F1.FILIAL = F4.FILIAL   AND
+                                     F1.GARAGEM = F4.GARAGEM AND
+                                     F1.CONHECIMENTO = F4.CONHECIMENTO AND
+                                     F1.SERIE = F4.SERIE               AND
+                                     F1.TIPO_DOCTO = F4.TIPO_DOCTO     AND
+                                     F1.CONHECIMENTO = {cte}           AND
+                                     F1.GARAGEM = {gar}                AND
+                                     F1.TIPO_DOCTO = {tp_docto}            
+                                GROUP BY
+                                     F1.EMPRESA,
+                                      F1.GARAGEM,
+                                      F1.TIPO_DOCTO,
+                                      F1.CONHECIMENTO,
+                                      F1.REM_RZ_SOCIAL,
+                                      F1.DEST_RZ_SOCIAL''')
+                res = dictfetchall(cur)
+            except Exception as e:
+                messages.error(request, f'{e}')
+                return redirect('portaria:monitticket')
+            else:
+                if len(res)>1:
+                    messages.error(request, f'Mais de 1 registro encontrado')
+                    return redirect('portaria:monitticket')
+                elif res:
+                    return render(request, 'portaria/tktcreate.html', {'editor': editor, 'users': users,'res': res,'opts': opts,})
+                else:
+                    messages.error(request, f'Nenhum registro encontrado')
+                    return redirect('portaria:monitticket')
+    if request.method == 'POST':
+        responsavel = request.POST.get('responsavel')
+        cc = request.POST.get('cc')
+        assunto = request.POST.get('assunto')
+        mensagem = request.POST.get('area')
+        rem = request.POST.get('remetente')
+        dest = request.POST.get('destinatario')
+        if responsavel and rem and assunto and mensagem and cc and dest:
+            createtktandmail(request, resp=responsavel, cc=cc, rem=rem, dest=dest, assunto=assunto, msg=mensagem, cte='12345')
+        else:
+            messages.error(request, 'Está faltando campos')
+            return redirect('portaria:tktcreate')
+    return render(request, 'portaria/tktcreate.html',{'editor': editor, 'users': users, 'opts': opts, 'tp_doc_choices':tp_doc_choices})
+
+def tktview(request, tktid):
+    opts = TicketMonitoramento.CATEGORIA_CHOICES
+    stts = TicketMonitoramento.STATUS_CHOICES
+    form = get_object_or_404(EmailMonitoramento, tkt_ref_id=tktid)
+    editor = TextEditor()
+    if request.method == 'POST':
+        ctg = request.POST.get('categs')
+        addcc = request.POST.get('addcc')
+        nstts = request.POST.get('stts')
+        if ctg != 'selected':
+            TicketMonitoramento.objects.filter(pk=tktid).update(categoria=ctg)
+
+        if nstts != 'selected':
+            tkt = get_object_or_404(TicketMonitoramento, pk=tktid)
+            if tkt and tkt.categoria != 'Aguardando Recebimento':
+                TicketMonitoramento.objects.filter(pk=tkt.id).update(status=nstts)
+                messages.info(request, f'Ticket {tkt.id} alterado para {nstts} com sucesso.')
+            else:
+                messages.error(request, 'Não autorizado encerramento do monitoramento.')
+            return redirect('portaria:monitticket')
+
+        if addcc:
+            oldcc = form.cc
+            newcc = addcc + ';' + oldcc + ';'
+            try:
+                EmailMonitoramento.objects.filter(tkt_ref_id=tktid).update(cc=newcc)
+            except Exception as e:
+                print(e)
+
+        area = request.POST.get('area')
+        if area and area != '<p><br></p>':
+            replymail_monitoramento(request, tktid, area)
+        return redirect('portaria:monitticket')
+    return render(request, 'portaria/ticketview.html', {'form':form,'editor':editor,'opts':opts,'stts':stts})
 #fim das views
 
 
@@ -897,7 +1052,6 @@ def ediexceltosd1(request):
         get_xlsx = request.FILES['edi_excel']
         response = HttpResponse(content_type='text/plain',
                                 headers={'Content-Disposition': 'attatchment; filename="teste.sd1"'})
-
         if get_xlsx:
             edi = pd.read_excel(get_xlsx)
             for i,row in edi.iterrows():
@@ -930,7 +1084,6 @@ def ediexceltosd1(request):
                 response.write(str(array[q]['num_seq_arq2']))
                 response.write(str(array[q]['num_seq_reg2']))
                 response.write('\n')
-
         return response
 
 def exedicorreios(request):
@@ -941,3 +1094,265 @@ def exedicorreios(request):
     writer.writerow(['tipo_de_registro','nome_do_cliente', 'data_geracao', 'qtde_de_registro', 'numero_sec_arq', 'numero_sec_reg','tipo_de_registro2','pais_de_origem','codigo_da_operacao','conteudo','nome_dest','end_dest','cidade','uf','cep','num_seq_arq2','num_seq_reg2'])
     writer.writerow(['8','exemplo da silva', 'aaaa/mm/dd','qnt registro do arquivo','numero sec arq','numero sec reg','9','BR','1234','conteudo','destinatario','endereco','cidade','uf','cep','num_seq_arq2','num_seq_reg2'])
     return response
+
+def readmail_monitoramento(request):
+    #config poplib
+    attatch = ''
+    host = 'pop.kinghost.net'
+    e_user = 'bora@bora.tec.br'
+    e_pass = 'Bor@dev#123'
+    print('iniciando readmail')
+    pp = poplib.POP3(host)
+    pp.set_debuglevel(1)
+    pp.user(e_user)
+    pp.pass_(e_pass)
+    pattern1 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
+    pattern2 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp).\w+.\w+')
+    num_messages = len(pp.list()[1])
+    for i in range(num_messages):
+        #acessa o poplib e pega os emails
+        try:
+            raw_email = b'\n'.join(pp.retr(i+1)[1])
+            parsed_email = email.message_from_bytes(raw_email, policy=policy.compat32)
+        except Exception as e:
+            print(f'parsed -- ErrorType: {type(e).__name__}, Error: {e}')
+        else:
+            if parsed_email.is_multipart():
+                for part in parsed_email.walk():
+                    ctype = part.get_content_type()
+                    cdispo = str(part.get('Content-Type'))
+                    if ctype == 'text/plain' and 'attatchment' not in cdispo:
+                        body = part.get_payload(decode=True)
+                    elif ctype == 'text/html' and 'attatchment' not in cdispo:
+                        body = part.get_payload(decode=True)
+                    if ctype == 'text/html' and 'attatchment' not in cdispo:
+                        htbody = part.get_payload(decode=True)
+                    filename = part.get_filename()
+
+                    hoje = datetime.date.today()
+                    #verifica se existem arquivos no email
+                    if filename:
+                        path = settings.MEDIA_ROOT+'/django-summernote/'+str(hoje)+'/'
+                        locimg = os.path.join(settings.MEDIA_ROOT + '/django-summernote/' + str(hoje) + '/', filename)
+                        if os.path.exists(os.path.join(path)):
+                            fp = open(locimg, 'wb')
+                            fp.write(part.get_payload(decode=True))
+                            fp.close()
+                        else:
+                            os.mkdir(path=path)
+                            fp = open(locimg, 'wb')
+                            fp.write(part.get_payload(decode=True))
+                            fp.close()
+                        #if filename not in re.findall(pattern1, filename):
+                        item = os.path.join('/media/django-summernote/'+str(hoje)+'/', filename)
+                        aa = '<div class="mailattatch"><a href="'+item+'" download><img src="/static/images/downicon.png" width="40"><p>'+filename+'</p></a></div>'
+                        attatch += aa
+            else:
+                body = parsed_email.get_payload(decode=True)
+            cs = parsed_email.get_charsets()
+            for q in cs:
+                if q is None: continue
+                else: cs = q
+            #pega parametros do email
+            try:
+                e_date = datetime.datetime.strptime(parsed_email['Date'], '%a, %d %b %Y %H:%M:%S %z').strftime('%Y-%m-%d')
+                e_title = parsed_email['Subject']
+                e_from = parsed_email['From']
+                if re.findall(r'<(.*?)>', e_from): e_from = re.findall(r'<(.*?)>', e_from)[0]
+
+                e_to = parsed_email['To']
+                if re.findall(r'<(.*?)>', e_to): e_to = re.findall(r'<(.*?)>', e_to)[0]
+                e_cc = parsed_email['CC']
+                if e_cc:
+                    if re.findall(r'<(.*?)>', e_cc): e_cc = re.findall(r'<(.*?)>', e_cc)[0]
+
+                e_id = parsed_email['Message-ID']
+                e_ref = parsed_email['References']
+                if e_ref is None: e_ref = e_id
+                if e_ref is not None: e_ref = e_ref.split(' ')[0]
+                #converte o corpo do email
+                e_body = body.decode(cs)
+                if e_body:
+                    reply_parse = re.findall(r'(De:+\s+\w.*.\sEnviada em:+\s+\w.*.+[,]+\s+\d+\s+\w+\s+\w+\s+\w+\s+\d+\s+\d+:+\d.*)', e_body)
+                    if reply_parse:
+                        e_body = e_body.split(reply_parse[0])[0].replace('\n', '<br>')
+                w_body = htbody.decode(cs)
+                if w_body:
+                    reply_html = re.findall(r'(<b><span+\s+\w.*.[>]+De:.*.Enviada em:.*.\s+\w.*.[,]+\s+\d+\s+\w+\s+\w+\s+\w+\s+\d+\s+\d+:+\d.*)',w_body)
+                    if reply_html:
+                        w_body = w_body.split(reply_html[0])[0]
+
+                if re.findall(pattern2,w_body):
+                    for q in re.findall(pattern2, w_body):
+                        new = re.findall(pattern1, q)
+                        teste = os.path.join(settings.MEDIA_URL + 'django-summernote/' + str(hoje) + '/',new[0].split('cid:')[1])
+                        w_body = w_body.replace(q, teste)
+                elif re.findall(pattern1,w_body):
+                    for q in re.findall(pattern1, w_body):
+                        new = re.findall(pattern1, q)
+                        try:
+                            teste = os.path.join(settings.MEDIA_URL + 'django-summernote/' + str(hoje) + '/',new[0].split('cid:')[1])
+                        except Exception as e:
+                            print(f'ErrorType: {type(e).__name__}, Error: {e}')
+                        else:
+                            w_body = w_body.replace(q, teste)
+                #continue
+            except Exception as e:
+                 print(f'insert data -- ErrorType: {type(e).__name__}, Error: {e}')
+            else:
+                #salva no banco de dados
+                form = EmailMonitoramento.objects.filter(email_id=e_ref)
+                sender = User.objects.get(username='admin')
+                if form.exists() and form[0].tkt_ref.status != ('CONCLUIDO' or 'CANCELADO'):
+                    xxx = form[0].ult_resp_html
+                    if xxx: zzz = w_body.split(xxx[:50])
+                    try:
+                        tkt = TicketMonitoramento.objects.get(pk=form[0].tkt_ref_id)
+                        notify.send(sender, recipient=tkt.responsavel, verb='message',
+                                description=f"Você recebeu uma nova mensagem do ticket {tkt.id}")
+                    except Exception as e:
+                        print(f'ErrorType: {type(e).__name__}, Error: {e}')
+                    if form[0].ult_resp is not None:
+                        aa = '<hr>' + e_from + ' -- ' + e_date + '\n' + e_body + '\n------Anterior-------\n' + form[0].ult_resp
+                        bb = '<hr>' + e_from + ' -- ' + e_date + '<br>' + zzz[0] + attatch + '<hr>' + form[0].ult_resp_html
+                    else:
+                        aa = '<hr>' + e_from + ' -- ' + e_date + '\n' + e_body
+                        bb = '<hr>' + e_from + ' -- ' + e_date + '<br>' + w_body + attatch
+                    if tkt.status == 'ABERTO':
+                        TicketMonitoramento.objects.filter(pk=form[0].tkt_ref_id).update(status='ANDAMENTO')
+                    form.update(ult_resp=aa,ult_resp_html=bb, ult_rest_dt=e_date)
+                    pp.dele(i+1)
+                elif form.exists() and form[0].tkt_ref.status == ('CONCLUIDO' or 'CANCELADO'):
+                    messages.warning(request, 'Ticket já encerrado')
+                    pp.dele(i + 1)
+                    pp.quit()
+                    return redirect('portaria:monitticket')
+                else:
+                    try:
+                        tkt = TicketMonitoramento.objects.get(msg_id=e_ref)
+                    except Exception as e:
+                        print(f'ErrorType: {type(e).__name__}, Error: {e}')
+                    else:
+                        bb = '<hr>' + e_from + ' -- ' + e_date + w_body
+                        EmailMonitoramento.objects.create(assunto=e_title, mensagem=bb, cc=e_cc, dt_envio=e_date,email_id=tkt.msg_id, tkt_ref_id=tkt.id)
+                        notify.send(sender, recipient=tkt.responsavel, verb='message',
+                                    description="Seu ticket foi criado.")
+                    pp.dele(i + 1)
+    pp.quit()
+    return redirect('portaria:monitticket')
+
+def replymail_monitoramento(request, tktid, area):
+    media = ''
+    pattern = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
+    orig = get_object_or_404(EmailMonitoramento, tkt_ref_id=tktid)
+    if request.method == 'POST':
+        msg1 = MIMEMultipart()
+        msg = area
+        if re.findall(pattern, msg):
+            for q in re.findall(pattern, msg):
+                media = q
+                img_data = open(('/home/bora/www'+media),'rb').read()
+                msgimg = MIMEImage(img_data, name=os.path.basename(media))
+                msgimg.add_header('Content-ID', f'{media}')
+                msg = msg.replace(('src="' + media + '"'), f'src="cid:{media}" ')
+                msg1.attach(msgimg)
+        msg1['Subject'] = orig.assunto
+        msg1['In-Reply-To'] = orig.email_id
+        msg1['References'] = orig.email_id
+        msg_id = make_msgid(idstring=None, domain='bora.com.br')
+        msg1['Message-ID'] = msg_id
+        msg1['From'] = 'teste@bora.com.br'
+        msg1['To'] = 'bora@bora.tec.br'
+        msg1['CC'] = orig.cc
+        msg1.attach(MIMEText(msg, 'html', 'utf-8'))
+        smtp_h = 'smtp.kinghost.net'
+        smtp_p = '587'
+        user = 'bora@bora.tec.br'
+        passw = 'Bor@dev#123'
+        try:
+            print('entrou no try')
+            sm = smtplib.SMTP('smtp.bora.com.br', smtp_p)
+            sm.set_debuglevel(1)
+            sm.login('teste@bora.com.br', 'Bor@413247')
+            sm.sendmail('teste@bora.com.br', ['bora@bora.tec.br']+orig.cc.split(';'), msg1.as_string())
+            print('mandou o email')
+        except Exception as e:
+            print(f'ErrorType:{type(e).__name__}, Error:{e}')
+        return redirect('portaria:monitticket')
+
+def createtktandmail(request,resp,cc,rem,dest,assunto,msg,cte):
+    print('entrou na funcao')
+    pattern = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
+    msg1 = MIMEMultipart()
+    msgmail = msg
+    if re.findall(pattern, msg):
+        for q in re.findall(pattern, msg):
+            media = q
+            img_data = open(('/home/bora/www' + media), 'rb').read()
+            msgimg = MIMEImage(img_data, name=os.path.basename(media))
+            msgimg.add_header('Content-ID', f'{media}')
+            msgmail = msgmail.replace(('<img src="' + media + '"'), f'<img src="cid:{media}" ')
+            msg1.attach(msgimg)
+    msg1.attach(MIMEText(msgmail, 'html', 'utf-8'))
+    print('carregou mimetext')
+    msg1['Subject'] = assunto
+    msg1['From'] = 'teste@bora.com.br'
+    msg1['To'] = 'bora@bora.tec.br'
+    msg1['CC'] = cc
+    msg_id = make_msgid(idstring=None, domain='bora.com.br')
+    msg1['Message-ID'] = msg_id
+    smtp_h = 'smtp.kinghost.net'
+    smtp_p = '587'
+    user = 'bora@bora.tec.br'
+    passw = 'Bor@dev#123'
+    print('setou parametros iniciando trycatch')
+    try:
+        print('entrou no try')
+        sm = smtplib.SMTP('smtp.bora.com.br', smtp_p, timeout=120)
+        sm.set_debuglevel(1)
+        sm.login('teste@bora.com.br','Bor@413247')
+        sm.sendmail('teste@bora.com.br', (['bora@bora.tec.br']+cc.split(';')), msg1.as_string())
+        print('mandou o email')
+    except Exception as e:
+        messages.error(request, f'ErrorType:{type(e).__name__}, Error:{e}')
+        print(f'ErrorType:{type(e).__name__}, Error:{e}')
+    else:
+        print('entrou no else')
+        tkt = TicketMonitoramento.objects.create(nome_tkt=assunto, dt_abertura=timezone.now(), responsavel=User.objects.get(username=resp), solicitante=request.user, remetente=rem, destinatario=dest, cte=cte, status='ABERTO', categoria='Aguardando Recebimento',msg_id=msg_id)
+        print('criou os objetos no banco')
+        messages.success(request, 'Email enviado e ticket criado com sucesso')
+        return redirect('portaria:monitticket')
+
+def closetkt(request, tktid):
+    tkt = get_object_or_404(TicketMonitoramento, pk=tktid)
+    if tkt and tkt.categoria != 'Aguardando Recebimento':
+        TicketMonitoramento.objects.filter(pk=tkt.id).update(status='CONCLUIDO')
+        messages.info(request, f'Ticket {tkt.id} alterado para CONCLUIDO com sucesso.')
+    else:
+        messages.error(request, 'Não autorizado encerramento do monitoramento.')
+    return redirect('portaria:monitticket')
+
+def isnotifyread(request, notifyid):
+    nid = get_object_or_404(Notification, pk=notifyid)
+    next = request.GET.get('next')
+    try:
+        Notification.objects.filter(pk=nid.id).update(unread=False)
+    except Exception as e:
+        print(f'ErrorType:{type(e).__name__}, Error:{e}')
+    return redirect(next)
+
+def setallread(request, user):
+    next = request.GET.get('next')
+    if user:
+        cases = Notification.objects.filter(recipient=user)
+        for n in cases:
+            Notification.objects.filter(pk=n.id).update(unread=False)
+    return redirect(next)
+
+def dictfetchall(cursor):
+    "Return all rows from a cursor as a dict"
+    columns = [col[0] for col in cursor.description]
+    return [
+        dict(zip(columns, row))
+        for row in cursor.fetchall()
+    ]

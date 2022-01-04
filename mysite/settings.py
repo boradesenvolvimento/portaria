@@ -13,6 +13,7 @@ import json
 import os.path
 from pathlib import Path
 import MySQLdb
+import cx_Oracle
 from django.urls import reverse_lazy
 from django.core.management.utils import get_random_secret_key
 from django.contrib.messages import constants as messages
@@ -57,7 +58,8 @@ ALLOWED_HOSTS = ["www.bora.tec.br","www.bora.tec.br/portaria", "bora.tec.br", "b
 
 INSTALLED_APPS = [
     'portaria',
-
+    'django_summernote',
+    'notifications',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -101,13 +103,13 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
 #develop
-#DATABASES = {
-#    'default': {
-#        'ENGINE': 'django.db.backends.sqlite3',
-#        'NAME': BASE_DIR / 'db.sqlite3',
-#    }
-#}
-
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
+CONNECTION = cx_Oracle.connect('CONSULTA142','BORA241','BORA')
 #production
 DATABASES = {
     'default': {
@@ -189,3 +191,36 @@ EMAIL_PORT = get_secret('E_PORT')
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = get_secret('E_UMAIL')
 EMAIL_HOST_PASSWORD = get_secret('E_UPASS')
+
+#summernote
+#summernote
+X_FRAME_OPTIONS = 'SAMEORIGIN'
+
+SUMMERNOTE_CONFIG = {
+'iframe': True,
+
+'summernote': {
+        # As an example, using Summernote Air-mode
+        'airMode': False,
+        'disableResizeEditor': False,
+        # Change editor size
+        'width': '100%',
+        'height': '300',
+        # Toolbar customization
+        # https://summernote.org/deep-dive/#custom-toolbar-popover
+        'toolbar': [
+            ['style', ['style']],
+            ['fontname', ['fontname']],
+        ],
+
+        # Or, explicitly set language/locale for editor
+        'lang': 'pt-BR',
+        'codemirror': {
+            'mode': 'htmlmixed',
+            'lineNumbers': 'true',
+            # You have to include theme file in 'css' or 'css_for_inplace' before using it.
+            'theme': 'monokai',
+        },
+    }
+}
+

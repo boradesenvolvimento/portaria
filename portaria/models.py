@@ -46,6 +46,10 @@ TIPO_GARAGEM = (
     ('TNA','TNA'),
     ('VIX','VIX'),
 )
+TIPO_DOCTO_CHOICES = (
+    ('8', 'NFS'),
+    ('57', 'CTE')
+)
 # Create your models here.
 
 
@@ -360,4 +364,57 @@ class CardFuncionario(models.Model):
 
     def __str__(self):
         return self.nome
+
+class TicketMonitoramento(models.Model):
+    STATUS_CHOICES = [
+        ('ABERTO', 'ABERTO'),
+        ('ANDAMENTO', 'ANDAMENTO'),
+        ('CONCLUIDO', 'CONCLUIDO'),
+        ('CANCELADO', 'CANCELADO')
+    ]
+    CATEGORIA_CHOICES = [
+        ('Aguardando Recebimento','Aguardando Recebimento'),
+        ('Dae','Dae'),
+        ('Descarga','Descarga'),
+        ('Devolução Parcial','Devolução Parcial'),
+        ('Devolução Total','Devolução Total'),
+        ('Diaria autorizada','Diaria autorizada'),
+        ('Dif. Peso','Dif. Peso'),
+        ('Entrega Realizada','Entrega Realizada'),
+        ('Fora de Horário','Fora de Horário'),
+        ('Fora de Rota','Fora de Rota'),
+        ('Imprópria','Imprópria'),
+        ('Merc. nao embar.','Merc. nao embar.'),
+        ('Prorrogação de Boleto','Prorrogação de Boleto'),
+        ('Reentrega','Reentrega'),
+        ('Refaturamento','Refaturamento'),
+        ('Reversa','Reversa'),
+        ('Sem Agendamento','Sem Agendamento'),
+        ('Sem Pedido','Sem Pedido'),
+        ('Veículo em rota','Veículo em rota'),
+        ('Veículo Quebrado','Veículo Quebrado')
+    ]
+    id = models.BigAutoField(primary_key=True)
+    nome_tkt = models.CharField(max_length=100)
+    dt_abertura = models.DateField()
+    responsavel = models.ForeignKey(User, on_delete=PROTECT, related_name='responsavel')
+    solicitante = models.ForeignKey(User, on_delete=PROTECT, related_name='solicitante')
+    remetente = models.CharField(max_length=50)
+    destinatario = models.CharField(max_length=50)
+    cte = models.CharField(max_length=100)
+    categoria = models.CharField(max_length=100, choices=CATEGORIA_CHOICES)
+    status = models.CharField(max_length=9, choices=STATUS_CHOICES)
+    msg_id = models.CharField(max_length=100, unique=True)
+
+class EmailMonitoramento(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    assunto = models.CharField(max_length=100)
+    mensagem = models.TextField()
+    cc = models.CharField(max_length=1000, blank=True, null=True)
+    dt_envio = models.DateField()
+    email_id = models.CharField(max_length=100, unique=True)
+    ult_resp = models.TextField(blank=True, null=True)
+    ult_rest_dt = models.DateField(blank=True, null=True)
+    ult_resp_html = models.TextField(blank=True, null=True)
+    tkt_ref = models.ForeignKey(TicketMonitoramento, on_delete=PROTECT)
 

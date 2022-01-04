@@ -38,7 +38,13 @@ urlpatterns = [
     path('feriaspj/<int:idfpj>/agendamento', views.feriasagen, name='feriasagen'),
     path('feriaspj/<int:idfpj>/feriasquit', views.feriasquit, name='feriasquit'),
     path('cadastro-funcionariopj/', views.cadfuncionariopj, name='cadfuncionariopj'),
-    path('fatferramentas/', views.fatferramentas, name="fatferramentas"),
+    path('fatferramentas/', views.fatferramentas, name='fatferramentas'),
+    path('tickets/', views.monitticket, name='monitticket'),
+    path('tickets/new/', views.tktcreate, name='tktcreate'),
+    path('tickets/<tktid>/', views.closetkt, name='closetkt'),
+    path('tickets/<tktid>/view/', views.tktview, name='tktview'),
+    path('replymail_monitoramento/<tktid>', views.replymail_monitoramento, name="replymail_monitoramento"),
+    #path(r'createtktandmail/<resp>&<cc>&<cli>&<assunto>&<msg>', views.createtktandmail, name='createtktandmail'),
     path(r'mailferias/<int:idfpj>', views.mailferias, name='mailferias'),
     path('outputs/', views.outputs, name='outputs'),
     path(r'edibuilder/', views.ediexceltosd1, name="ediexceltosd1"),
@@ -52,7 +58,10 @@ urlpatterns = [
     path(r'export-13-pj-csv/', views.get_pj13_csv, name='get_pj13_csv'),
     path(r'export-checklist-csv/', views.get_checklist_csv, name='get_checklist_csv'),
     path(r'export-ferias-csv/', views.get_ferias_csv, name='get_ferias_csv'),
+    path(r'readmail/', views.readmail_monitoramento, name="readmail_monitoramento"),
     path('cardusuario/', views.cardusuario, name='cardusuario'),
-    path('cardusuario/<int:id>/card', views.card, name='card')
+    path('cardusuario/<int:id>/card', views.card, name='card'),
+    path(r'readnotify/<notifyid>/', views.isnotifyread, name='isnotifyread'),
+    path(r'allreadnotify/<user>', views.setallread, name='setallread'),
 
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
