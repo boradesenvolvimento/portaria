@@ -603,16 +603,23 @@ def fatferramentas(request):
     return render(request,'portaria/fatferramentas.html')
 
 def monitticket(request):
-    tkts = TicketMonitoramento.objects.filter(Q(status='ABERTO') | Q(status='ANDAMENTO'))
+    if request.user.is_staff:
+        tkts = TicketMonitoramento.objects.filter(Q(status='ABERTO') | Q(status='ANDAMENTO'))
+    else:
+        tkts = TicketMonitoramento.objects.filter(Q(status='ABERTO') | Q(status='ANDAMENTO'), responsavel=request.user)
     if request.method == 'POST':
         tkt = request.POST.get('srctkt')
         if tkt:
-            tkts = TicketMonitoramento.objects.filter(pk=tkt).exclude(Q(status='CONCLUIDO')|Q(status='CANCELADO'))
+            if request.user.is_staff:
+                tkts = TicketMonitoramento.objects.filter(pk=tkt).exclude(Q(status='CONCLUIDO') | Q(status='CANCELADO'))
+            else:
+                tkts = TicketMonitoramento.objects.filter(pk=tkt, responsavel=request.user).exclude(Q(status='CONCLUIDO')|Q(status='CANCELADO'))
+
             return render(request, 'portaria/monitticket.html', {'tkts': tkts})
     return render(request, 'portaria/monitticket.html', {'tkts':tkts})
 
 def tktcreate(request):
-    users = User.objects.all()
+    users = User.objects.filter(groups__name='monitoramento')
     fil = TIPO_GARAGEM
     tp_doc_choices = TIPO_DOCTO_CHOICES
     editor = TextEditor()
@@ -680,12 +687,12 @@ def tktcreate(request):
                 return redirect('portaria:monitticket')
             else:
                 if len(res)>1:
-                    messages.error(request, f'Something went wrong!!!!')
+                    messages.error(request, f'Mais de 1 registro encontrado')
                     return redirect('portaria:monitticket')
                 elif res:
                     return render(request, 'portaria/tktcreate.html', {'editor': editor, 'users': users,'res': res,'opts': opts,})
                 else:
-                    messages.error(request, f'Não encontrado')
+                    messages.error(request, f'Nenhum registro encontrado')
                     return redirect('portaria:monitticket')
     if request.method == 'POST':
         responsavel = request.POST.get('responsavel')
@@ -1090,7 +1097,7 @@ def exedicorreios(request):
 
 def readmail_monitoramento(request):
     #config poplib
-    attatch=''
+    attatch = ''
     host = 'pop.kinghost.net'
     e_user = 'bora@bora.tec.br'
     e_pass = 'Bor@dev#123'
