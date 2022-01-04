@@ -16,13 +16,17 @@
             <div class="container">
                 <div class="row linha-baixo">
                     <h2 class="title-cad col-3">Cadastrar Férias</h2>
-                    <button class="button col-1"><a href="{% url 'portaria:feriascad' %}" style="text-decoration:none;color:white;">Entrar</a></button>
+                    <button class="button col-1" style="height:3.4rem;"><a href="{% url 'portaria:feriascad' %}" style="color:white;font-size:2.4rem;">
+                        <ion-icon name="add-circle-sharp"></ion-icon>
+                    </a></button>
                 </div>
             </div>
             <div class="container">
                 <div class="row linha-baixo">
                     <h2 class="title-cad col-3">Painel férias a vencer</h2>
-                    <button class="button col-1"><a href="{% url 'portaria:feriasview' %}" style="text-decoration:none;color:white;">Entrar</a></button>
+                    <button class="button col-1"><a href="{% url 'portaria:feriasview' %}" style="text-decoration:none;color:white;">
+                        Acessar
+                    </a></button>
                 </div>
             </div>
             <div class="container">
@@ -32,7 +36,7 @@
                         {% csrf_token %}
                         <input class="col-2" type="date" name="dataini" placeholder="Data inicio">
                         <input class="col-2" type="date" name="datafim" placeholder="Data fim">
-                        <button class="col-1">Exportar</button>
+                        <button type="submit" style="height:3.4rem;"><ion-icon style="font-size:2.4rem;" name="download-outline"></ion-icon></button>
                     </form>
                 </div>
             </div>

@@ -24,7 +24,7 @@
                 <option>Férias Vencidas</option>
                 <option>Próximas do vencimento</option>
             </select>
-            <input type="submit" class="button col-1">
+            <button type="submit" style="height:3.4rem;"><ion-icon style="font-size:24px;" name="filter"></ion-icon></button>
             </form>
         </div>
         <div class="container">
@@ -37,8 +37,8 @@
                         <th>Quitado</th>
                         <th>Vencimento</th>
                         <th>Agendamento</th>
-                        <th></th>
-                        <th></th>
+                        <th>Prazo</th>
+                        <th>Opções/Quitar</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -50,7 +50,10 @@
                     <th>{{ q.vencimento|date:'d/m/Y' }}</th>
                     <th>{% if q.agendamento_ini is None %}---{% else %}{{ q.agendamento_ini|date:'d/m/Y' }} - {{ q.agendamento_fim|date:'d/m/Y' }}{% endif %}</th>
                     <th>{% if hoje > q.vencimento %}Ferias vencidas{% else %}{{ q.vencimento|timeuntil:hoje }} {% endif %}</th>
-                    <th><a href="{% url 'portaria:feriasagen' idfpj=q.id %}">Opções</a> | <a href="{% url 'portaria:feriasquit' idfpj=q.id %}">Quitar</a></th></tr>
+                    <th><button type="submit" style="height:3.4rem;"><a style="color:white;font-size:2.4rem;" href="{% url 'portaria:feriasagen' idfpj=q.id %}">
+                        <ion-icon name="settings-outline"></ion-icon>
+                    </a></button> | <button type="submit" style="height:3.4rem;"><a style="color:white;font-size:2.4rem;" href="{% url 'portaria:feriasquit' idfpj=q.id %}">
+                        <ion-icon name="checkmark-outline"></ion-icon></a></button></th></tr>
                 {% endfor %}
                 </tbody>
             </table>

@@ -17,8 +17,10 @@
         {% for q in form %}
         <table class="table1 table">
             <tr><th><h3 class="title-cad">{{ q }}</h3></th>
-                <th><button class="button" style="margin-top:0px;">
-                    <a style="color:white; text-decoration:none;" href="{% url 'portaria:card' q.id %}">card</a>
+                <th><button class="button" style="margin-top:0px;height:3.4rem;">
+                    <a style="color:white; font-size:2.4rem;" href="{% url 'portaria:card' q.id %}">
+                        <ion-icon name="id-card"></ion-icon>
+                    </a>
                 </button></th></tr>
         </table>
         {% endfor %}
