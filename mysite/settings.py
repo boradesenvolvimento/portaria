@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 import json
 import os.path
 from pathlib import Path
-#import MySQLdb
+import MySQLdb
 import cx_Oracle
 from django.urls import reverse_lazy
 from django.core.management.utils import get_random_secret_key
@@ -47,12 +47,12 @@ SECRET_KEY = get_secret('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 
 #develop
-DEBUG = True
-ALLOWED_HOSTS = []
+#DEBUG = True
+#ALLOWED_HOSTS = []
 
 #production
-#DEBUG = False
-#ALLOWED_HOSTS = ["www.bora.tec.br","www.bora.tec.br/portaria", "bora.tec.br", "bora.tec.br/portaria"]
+DEBUG = False
+ALLOWED_HOSTS = ["www.bora.tec.br","www.bora.tec.br/portaria", "bora.tec.br", "bora.tec.br/portaria"]
 
 # Application definition
 
@@ -111,16 +111,16 @@ DATABASES = {
 }
 CONNECTION = cx_Oracle.connect('CONSULTA142','BORA241','BORA')
 #production
-#DATABASES = {
-#    'default': {
-#        'ENGINE': 'django.db.backends.mysql',
-#        'NAME': 'bora',
-#        'USER': get_secret('DB_USER'),
-#        'PASSWORD': get_secret('DB_PASS'),
-#        'HOST': get_secret('DB_HOST'),
-#        'PORT': '3306',
-#    }
-#}
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'bora',
+        'USER': get_secret('DB_USER'),
+        'PASSWORD': get_secret('DB_PASS'),
+        'HOST': get_secret('DB_HOST'),
+        'PORT': '3306',
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
@@ -224,10 +224,3 @@ SUMMERNOTE_CONFIG = {
     }
 }
 
-#CELERY CONF
-CELERY_BROKER_URL = 'redis://localhost:6379'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379'
-CELERY_ACCEPT_CONTENT = ['application/json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = 'America/Sao_Paulo'
