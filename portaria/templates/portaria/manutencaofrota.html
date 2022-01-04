@@ -15,7 +15,7 @@
                 <form method="get">
                     <h3 class="title-cad">Cadastro entrada manutenção</h3>
                         <input type="text" placeholder="Insira a placa" name="placa">
-                    <input type="submit" class="button">
+                    <button type="submit" style="height:3.4rem;"><ion-icon style="font-size:2.4rem;" name="search-sharp"></ion-icon></button>
                 </form>
         </div>
 
@@ -24,12 +24,12 @@
                 {% csrf_token %}
                 <h3 class="title-cad">Cadastro saida manutenção</h3>
                 <input type="text" placeholder="Insira o OS" name="idmanu">
-                <input type="submit" class="button">
+                <button type="submit" style="height:3.4rem;"><ion-icon style="font-size:2.4rem;" name="search-sharp"></ion-icon></button>
             </form>
         </div>
 
         <div class="row mb-3 linha-baixo">
-            <h2 class="title-cad">Painel veículos em manutenção<a href="{% url 'portaria:manutencaoview' %}" class="button">Edit</a></h2>
+            <h2 class="title-cad">Painel veículos em manutenção<button type="submit"><a href="{% url 'portaria:manutencaoview' %}" style="color:white;">Acessar</a></button></h2>
         </div>
 
         <div class="row mb-3 linha-baixo">
@@ -38,7 +38,7 @@
                 {% csrf_token %}
                 <input type="date" placeholder="Data início" name="dataIni">
                 <input type="date" placeholder="Data final" name="dataFin">
-                <input type="submit" class="button">
+                <button type="submit" style="height:3.4rem;"><ion-icon style="font-size:2.4rem;" name="download-outline"></ion-icon></button>
             </form>
         </div>
 

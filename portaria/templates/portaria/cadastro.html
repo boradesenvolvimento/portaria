@@ -13,19 +13,25 @@
                 </div>
             </div>
             {% endfor %}
-            <div class="row mb-3 linha-baixo">
-                <div class="col col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                <h3 class="title-cad">Cadastro entrada veículo <button class="button button-right">
-                        <a href="{% url 'portaria:cadastroentrada' %}" style="color:white;">Entrada</a>
-                    </button></h3>
+            <div class="row linha-baixo">
+                <div class="col">
+                <h3 class="title-cad">Cadastro entrada veículo
+                <button type="submit" style="height:3.8rem;">
+                <a href="{% url 'portaria:cadastroentrada' %}" style="color:white;font-size:28px">
+                    <ion-icon name="enter-outline"></ion-icon></a>
+                </button>
+                </h3>
                 </div>
             </div>
 
-            <div class="row linha-baixo mb-3">
-                <div class="col col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                    <h3 class="title-cad">Cadastro saída veículo <button class="button button-right">
-                        <a href="{% url 'portaria:cadastrosaida' %}" style="color:white;">Saída</a>
-                    </button></h3>
+            <div class="row linha-baixo">
+                <div class="col">
+                    <h3 class="title-cad">Cadastro saída veículo
+                        <button type="submit" style="height:3.8rem;">
+                        <a href="{% url 'portaria:cadastrosaida' %}" style="color:white;font-size:2.8rem;">
+                            <ion-icon name="exit-outline"></ion-icon></a>
+                        </button>
+                    </h3>
                 </div>
             </div>
 
@@ -44,7 +50,7 @@
                         Ou período:
                         <input type="date" placeholder="Data inicio" name="dataIni" id="id_date">
                         <input type="date" placeholder="Data final" name="dataFim" id="id_date1">
-                        <input type="submit" class="button">
+                        <button type="submit" style="height:3.8rem;"><ion-icon style="font-size:28px;" name="download-outline"></ion-icon></button>
                         <h6>Exporte por filial, periodo ou ambos</h6>
                     </form>
                 </div>

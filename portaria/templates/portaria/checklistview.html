@@ -18,7 +18,7 @@
                 <h3 class="title-cad">Exportar CSV:
                     <input type="date" class="col-2" placeholder="Data Início" name="dataini">
                     <input type="date" class="col-2" placeholder="Data Fim" name="datafim">
-                    <button class="col-1" type="submit">Exportar</button>
+                    <button type="submit" style="height:3.4rem;" ><ion-icon style="font-size:2.4rem;" name="download-outline"></ion-icon></button>
                 </h3>
             </form>
         </div>
@@ -41,7 +41,9 @@
                 <th>{{ q.datachecklist }}</th>
                 <th>{{ q.placaveic }}</th>
                 <th>{{ q.motoristaveic }}</th>
-                <th><a href="{% url 'portaria:checklistdetail' idckl=q.idchecklist %}">detalhes</a></th>
+                <th><a href="{% url 'portaria:checklistdetail' idckl=q.idchecklist %}" style="font-size:2.4rem;">
+                    <ion-icon name="settings-outline"></ion-icon>
+                </a></th>
             </tr>
         {% endfor %}
         </table>

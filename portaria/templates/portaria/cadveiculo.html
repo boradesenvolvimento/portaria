@@ -14,12 +14,14 @@
     <div class="row linha-baixo">
         <h2 class="title-cad">Cadastrar novo Veiculo</h2>
     </div>
-    <div class="container">
-        <form method="post">
-            {% csrf_token %}
-        <table>{{ form }}</table>
-        <button type="submit">Criar</button>
-        </form>
+    <div class="container linha-baixo">
+        <div class="row" style="margin-left:6rem;">
+            <form method="post">
+                {% csrf_token %}
+            <table>{{ form }}</table>
+            <button type="submit" style="height:3.8rem;"><ion-icon style="font-size:2.8rem;" name="save-outline"></ion-icon></button>
+            </form>
+        </div>
     </div>
 </div>
 {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}

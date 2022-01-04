@@ -12,11 +12,11 @@
         <img src="/media/{{ form.foto }}" class="fotocard" width="120px" height="120px">
     <h2>{{ form.nome }}</h2>
     <h3>{{ form.cargo }}</h3>
-    <div class="item-social"><button onclick="makeQR()" name="submit">QR-Code</button></div>
+    <div><button onclick="makeQR()" style="height:4.2rem;"><ion-icon style="font-size:3.2rem;" name="qr-code"></ion-icon></button></div>
 <table class="profile-icons-row">
-    <th><div class="item-social" onclick="call()"><img src="{% static 'images/call-icon.png' %}" width="50"></div></th>
-    <th><div class="item-social" onclick="mail()"><img src="{% static 'images/mail-icon.png' %}" width="50"></div></th>
-    <th><div class="item-social false" onclick="whatsapp()"><img src="{% static 'images/whatsapp-icon.png' %}" width="50"></div></th>
+    <th><div class="item-social" onclick="call()"><button style="height:4.2rem;"><ion-icon size="large" name="call-outline"></ion-icon></button></div></th>
+    <th><div class="item-social" onclick="mail()"><button style="height:4.2rem;"><ion-icon size="large" name="mail-outline"></ion-icon></button></div></th>
+    <th><div class="item-social false" onclick="whatsapp()"><button style="height:4.2rem;"><ion-icon size="large" name="logo-whatsapp"></ion-icon></button></div></th>
 </table>
 
 <div class="qrcode-cont" style="display:none;"><img id="qrcode"></div>
