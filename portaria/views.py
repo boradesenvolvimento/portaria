@@ -515,7 +515,9 @@ def manuentrada(request, placa_id):
     gp_servs = TipoServicosManut.objects.values_list('grupo_servico', flat=True).distinct()
     for q in gp_servs:
         tp_servs = TipoServicosManut.objects.filter(grupo_servico=str(q))
-        array.append({q,tp_servs})
+        concat = [str(q), tp_servs]
+        print(concat)
+        array.append(concat)
     placa = get_object_or_404(Veiculos, prefixoveic=placa_id)
     form = ManutencaoForm
     autor = request.user
@@ -549,7 +551,7 @@ def manuentrada(request, placa_id):
                             continue
             messages.success(request, f'Cadastro de manutenção do veículo {placa} feito com sucesso!')
             return redirect('portaria:manutencaoprint', osid= manu.id)
-    return render(request, 'portaria/manuentrada.html', {'placa':placa,'form':form,'gp_servs':gp_servs,'array':array})
+    return render(request, 'portaria/manuentrada.html', {'placa':placa,'form':form,'array':array})
 
 
 @login_required

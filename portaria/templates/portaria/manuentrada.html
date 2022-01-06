@@ -23,8 +23,8 @@
                             <select name="tp_servico">
                                 <option hidden>Selecione...</option>
                                 {% for q,v in array %}
-                                    <optgroup label="{{ v }}">
-                                        {% for i in q %}<option>{{ i.tipo_servico }}</option>{% endfor %}
+                                    <optgroup label="{{ q }}">
+                                        {% for i in v %}<option>{{ i.tipo_servico }}</option>{% endfor %}
                                     </optgroup>
                                 {% endfor %}
                             </select>
@@ -65,7 +65,7 @@
 			var html = "";
 			html += "<tr id="+idNum+"><th>Tipo servico "+idContador+"</th>"
 			html += "<th><select name='"+tp_sv_input+"' id='id_tp_servico'>"
-			html += "{% for q in tp_servs %}<option hidden>Selecione...</option><optgroup label='{{ q.grupo_servico }}'><option value='{{ q.tipo_servico }}'>{{ q.tipo_servico }}</option></optgroup></select></th>{% endfor %}"
+			html += "{% for q,v in array %}<option hidden>Selecione...</option><optgroup label='{{ q }}'>{% for i in v %}<option>{{ i.tipo_servico }}</option>{% endfor %}</optgroup></select></th>{% endfor %}"
 			html += "<th><button class='btn' onclick='exclui("+idNum+")' type='button'>Excluir</button></th></tr>";
 
 
