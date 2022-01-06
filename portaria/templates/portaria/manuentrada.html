@@ -19,7 +19,16 @@
                     <tr><th>Filial:</th><th>{{ form.filial }}</th></tr>
                     <tr><th>Previsão de entrega:</th><th>{{ form.prev_entrega }}</th></tr>
                     <tr><th>Observacao:</th><th>{{ form.observacao }}</th></tr>
-                    <tr><th>Tipo serviço:</th><th>{{ form.tp_servico }}</th><th><a href="#" id="btnAdiciona" class="button">Add+</a></th></tr>
+                    <tr><th>Tipo serviço:</th><th>
+                            <select name="tp_servico">
+                                <option hidden>Selecione...</option>
+                                {% for q,v in array %}
+                                    <optgroup label="{{ v }}">
+                                        {% for i in q %}<option>{{ i.tipo_servico }}</option>{% endfor %}
+                                    </optgroup>
+                                {% endfor %}
+                            </select>
+                    </th><th><a href="#" id="btnAdiciona" class="button">Add+</a></th></tr>
                 </table>
                     <input type="submit" class="button">
                     <input type="hidden" id="setCount" name="setcount">
@@ -56,7 +65,7 @@
 			var html = "";
 			html += "<tr id="+idNum+"><th>Tipo servico "+idContador+"</th>"
 			html += "<th><select name='"+tp_sv_input+"' id='id_tp_servico'>"
-			html += "<option selected=''></option><optgroup label='TROCA_OLEO'><option value='troca'>troca</option></optgroup><option value='PNEUS'>PNEUS</option><option value='FREIOS'>FREIOS</option></select></th>"
+			html += "{% for q in tp_servs %}<option hidden>Selecione...</option><optgroup label='{{ q.grupo_servico }}'><option value='{{ q.tipo_servico }}'>{{ q.tipo_servico }}</option></optgroup></select></th>{% endfor %}"
 			html += "<th><button class='btn' onclick='exclui("+idNum+")' type='button'>Excluir</button></th></tr>";
 
 

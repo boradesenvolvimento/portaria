@@ -191,6 +191,7 @@ class ChecklistFrota(models.Model):
     p3_6 = models.BooleanField('Foi verificado a luz de ré?')
     p3_7 = models.BooleanField('Foi verificado se as luzes da lanterna traseira direita funciona?')
     p3_8 = models.BooleanField('Foi verificado se as luzes da lanterna traseira esquerda funciona?')
+    obs = models.TextField('Observação', blank=True)
     autor = models.ForeignKey(User, on_delete=models.PROTECT)
 
     class Meta:
@@ -199,6 +200,11 @@ class ChecklistFrota(models.Model):
 
     def __str__(self):
        return str(self.idchecklist)
+
+class TipoServicosManut(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    grupo_servico = models.CharField('Grupo', max_length=50)
+    tipo_servico = models.CharField('Tipo Servico', max_length=50)
 
 class FuncPj(models.Model):
     PESSOA_FISICA = 'PF'
@@ -296,17 +302,6 @@ class ManutencaoFrota(models.Model):
         ('I','INTERNO'),
         ('E','EXTERNO')
     ]
-    SERVICO_CHOICES = [
-        ('TROCA_OLEO',(
-            ('troca','troca'),
-            ('oleo','oleo'),
-         )),
-        ('PNEUS','PNEUS'),
-        ('FREIOS', 'FREIOS'),
-        ('aaaa', 'aaaaa'),
-        ('dasdasd', 'dasdasd'),
-
-    ]
     STATUS_CHOICES = [
         ('ANDAMENTO', 'ANDAMENTO'),
         ('PENDENTE', 'PENDENTE'),
@@ -322,7 +317,7 @@ class ManutencaoFrota(models.Model):
     dt_saida = models.DateField(blank=True, null=True)
     dias_veic_parado = models.CharField(max_length=20, blank=True, null=True)
     km_ult_troca_oleo = models.IntegerField('Kilometragem da última troca de óleo')
-    tp_servico = models.CharField('Tipo serviço', max_length=10, choices=SERVICO_CHOICES)
+    tp_servico = models.CharField('Tipo serviço', max_length=10)
     valor_maodeobra = models.FloatField('Valor mão de obra', blank=True, null=True)
     valor_peca = models.FloatField('Valor peça', blank=True, null=True)
     filial = models.CharField(max_length=3, choices=FILIAL_CHOICES)

@@ -20,7 +20,6 @@ from PIL import Image
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.contrib.postgres.aggregates import StringAgg
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
 from django.db import IntegrityError
@@ -176,16 +175,11 @@ class PaleteView(generic.ListView):
 @login_required
 def frota(request):
     form = ChecklistFrota.objects.all()
-    if request.method == 'POST':
-        mot = request.POST.get('moto_src')
-        if mot:
-            qs = Motorista.objects.filter(nome__icontains=mot)
-            return render(request, 'portaria/frota.html', {'qs':qs})
-
+    motos = Motorista.objects.all()
     if request.method == "GET":
         pla = request.GET.get('placa_')
         mot = request.GET.get('moto_')
-        if pla and mot:
+        if pla and mot != 'Selecione...':
             try:
                 pla1 = Veiculos.objects.get(prefixoveic=pla)
                 mot1 = Motorista.objects.get(pk=mot)
@@ -194,13 +188,13 @@ def frota(request):
                 return render(request, 'portaria/frota.html')
             else:
                 return redirect('portaria:checklistfrota', placa_id=pla1, moto_id=mot1.codigomot)
-        elif pla and not mot:
-            messages.error(request, 'Insira o motorista e selecione')
-            return render(request, 'portaria/frota.html')
+        elif pla and mot == 'Selecione...':
+            messages.error(request, 'Insira o motorista')
+            return render(request, 'portaria/frota.html',{'form':form, 'motos':motos})
         elif mot and not pla:
             messages.error(request, 'Insira a placa')
-            return render(request, 'portaria/frota.html')
-    return render(request, 'portaria/frota.html',{'form':form})
+            return render(request, 'portaria/frota.html',{'form':form, 'motos':motos})
+    return render(request, 'portaria/frota.html',{'form':form, 'motos':motos})
 
 @login_required
 def checklistfrota(request, placa_id, moto_id):
@@ -459,6 +453,16 @@ def cadveiculo(request):
             return redirect('portaria:frotacadastros')
     return render(request, 'portaria/cadveiculo.html', {'form': form})
 
+def cadtpservico(request):
+    form = TipoServicosManutForm
+    if request.method == 'POST':
+        form = TipoServicosManutForm(request.POST or None)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Cadastrado com sucesso')
+            return redirect('portaria:frotacadastros')
+    return render(request, 'portaria/cadtpservico.html', {'form':form})
+
 @login_required
 def manutencaofrota(request):
     if request.method == 'GET':
@@ -486,43 +490,6 @@ def manutencaofrota(request):
             return redirect('portaria:manusaida', osid=idmanu)
     return render(request, 'portaria/manutencaofrota.html')
 
-@login_required
-def manuentrada(request, placa_id):
-    placa = get_object_or_404(Veiculos, prefixoveic=placa_id)
-    form = ManutencaoForm
-    autor = request.user
-    ult_manu = Veiculos.objects.filter(pk=placa.codigoveic).values_list('manutencaofrota__dt_saida', flat=True)\
-        .order_by('-manutencaofrota__dt_saida').first()
-    if ult_manu == None: ult_manu = timezone.now()
-    if request.method == 'POST':
-        count = request.POST.get('setcount')
-        tp_sv = request.POST.get('tp_servico')
-        form = ManutencaoForm(request.POST or None)
-        if form.is_valid():
-
-            manu = form.save(commit=False)
-            manu.veiculo_id = placa.codigoveic
-            manu.dt_ult_manutencao = ult_manu
-            manu.dt_entrada = timezone.now()
-            manu.status = 'ANDAMENTO'
-            manu.autor = autor
-            manu.save()
-            ServJoinManu.objects.create(id_svs=tp_sv,autor=autor,id_os_id=manu.id)
-            if count:
-                ncount = int(count)
-                if ncount > 0:
-                    for c in range(0, ncount):
-                        d = c + 1
-                        variable = 'tp_servico' + str(d)
-                        tp_sv = request.POST.get(variable)
-                        if tp_sv:
-                            ServJoinManu.objects.create(id_svs=tp_sv,autor=autor,id_os_id=manu.id)
-                        else:
-                            continue
-            messages.success(request, f'Cadastro de manutenção do veículo {placa} feito com sucesso!')
-            return redirect('portaria:manutencaoprint', osid= manu.id)
-    return render(request, 'portaria/manuentrada.html', {'placa':placa,'form':form})
-
 def manupendentes(request):
     qs = ManutencaoFrota.objects.filter(status='PENDENTE').order_by('dt_entrada')
     qs2 = ServJoinManu.objects.all()
@@ -541,6 +508,48 @@ def manupendentes(request):
             messages.success(request, f'Confirmado conclusão da os {isos}')
             return redirect('portaria:manupendentes')
     return render(request,'portaria/manutencaopendencia.html', {'qs':qs,'qs2':qs2})
+
+@login_required
+def manuentrada(request, placa_id):
+    array = []
+    gp_servs = TipoServicosManut.objects.values_list('grupo_servico', flat=True).distinct()
+    for q in gp_servs:
+        tp_servs = TipoServicosManut.objects.filter(grupo_servico=str(q))
+        array.append({q,tp_servs})
+    placa = get_object_or_404(Veiculos, prefixoveic=placa_id)
+    form = ManutencaoForm
+    autor = request.user
+    ult_manu = Veiculos.objects.filter(pk=placa.codigoveic).values_list('manutencaofrota__dt_saida', flat=True)\
+        .order_by('-manutencaofrota__dt_saida').first()
+    if ult_manu == None: ult_manu = timezone.now()
+    if request.method == 'POST':
+        count = request.POST.get('setcount')
+        tp_sv = request.POST.get('tp_servico')
+        form = ManutencaoForm(request.POST or None)
+        if form.is_valid():
+            manu = form.save(commit=False)
+            manu.veiculo_id = placa.codigoveic
+            manu.dt_ult_manutencao = ult_manu
+            manu.dt_entrada = timezone.now()
+            manu.status = 'ANDAMENTO'
+            manu.autor = autor
+            manu.tp_servico = tp_sv
+            manu.save()
+            ServJoinManu.objects.create(id_svs=tp_sv,autor=autor,id_os_id=manu.id)
+            if count:
+                ncount = int(count)
+                if ncount > 0:
+                    for c in range(0, ncount):
+                        d = c + 1
+                        variable = 'tp_servico' + str(d)
+                        tp_sv = request.POST.get(variable)
+                        if tp_sv:
+                            ServJoinManu.objects.create(id_svs=tp_sv,autor=autor,id_os_id=manu.id)
+                        else:
+                            continue
+            messages.success(request, f'Cadastro de manutenção do veículo {placa} feito com sucesso!')
+            return redirect('portaria:manutencaoprint', osid= manu.id)
+    return render(request, 'portaria/manuentrada.html', {'placa':placa,'form':form,'gp_servs':gp_servs,'array':array})
 
 
 @login_required

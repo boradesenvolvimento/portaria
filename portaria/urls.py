@@ -19,6 +19,7 @@ urlpatterns = [
     path('frota/cadastros', views.frotacadastros, name='frotacadastros'),
     path('cadastros/motorista', views.cadmotorista, name='cadmotorista'),
     path('cadastros/veiculo', views.cadveiculo, name='cadveiculo'),
+    path('cadastros/tipo_servico', views.cadtpservico, name='cadtpservico'),
     path('manutencaofrota/', views.manutencaofrota, name='manutencaofrota'),
     path('manutencaofrota/<str:placa_id>/manuentrada/', views.manuentrada, name='manuentrada'),
     path('manutencaofrota/<int:osid>/manusaida/', views.manusaida, name='manusaida'),

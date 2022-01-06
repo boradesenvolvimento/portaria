@@ -4,7 +4,7 @@ from django.forms import Textarea, DateField
 from django_summernote.widgets import SummernoteWidget
 
 from .models import Cadastro, TIPO_GARAGEM, ChecklistFrota, NfServicoPj, ManutencaoFrota, ServJoinManu, feriaspj, \
-    FuncPj, Motorista, Veiculos
+    FuncPj, Motorista, Veiculos, TipoServicosManut
 
 
 #forms
@@ -139,9 +139,17 @@ class ChecklistForm(forms.ModelForm):
             'p3_5',
             'p3_6',
             'p3_7',
-            'p3_8'
+            'p3_8',
+            'obs'
         ]
+        widgets = {
+            'obs': Textarea(attrs={'cols': 30, 'rows': 3}),
+        }
 
+class TipoServicosManutForm(forms.ModelForm):
+    class Meta:
+        model = TipoServicosManut
+        fields = '__all__'
 
 class ServicoPjForm(forms.ModelForm):
     class Meta:

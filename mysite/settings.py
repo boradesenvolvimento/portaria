@@ -103,13 +103,13 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
 #develop
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
-CONNECTION = cx_Oracle.connect('CONSULTA142','BORA241','BORA')
+#DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.sqlite3',
+#        'NAME': BASE_DIR / 'db.sqlite3',
+#    }
+#}
+#CONNECTION = cx_Oracle.connect(get_secret('ORA_UID'),get_secret('ORA_PWD'), cx_Oracle.makedsn(get_secret('ORA_HOST'), '1521', None, get_secret('ORA_XE')))
 #production
 DATABASES = {
     'default': {
