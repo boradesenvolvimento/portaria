@@ -516,7 +516,6 @@ def manuentrada(request, placa_id):
     for q in gp_servs:
         tp_servs = TipoServicosManut.objects.filter(grupo_servico=str(q))
         concat = [str(q), tp_servs]
-        print(concat)
         array.append(concat)
     placa = get_object_or_404(Veiculos, prefixoveic=placa_id)
     form = ManutencaoForm
