@@ -36,7 +36,8 @@
                     {% csrf_token %}
                 <th>{{ c.id }}</th>
                 <th>{{ c.veiculo }}</th>
-                <th>{% for i in qs2 %}{% if i.id_os_id == c.id %}{{ i.id_svs }}, {% endif %}{% endfor %}</th>
+                <th>{% for i in qs2 %}{% if i.id_os_id == c.id %}
+                    {{ i.id_svs.grupo_servico }} - {{ i.id_svs.tipo_servico }} || {% endif %}{% endfor %}</th>
                 <th>{{ c.observacao }}</th>
                 <th>{{ c.status }}</th>
                 <th><input type="hidden" id="idos" name="os" value="{{ c.id }}">

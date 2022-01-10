@@ -41,7 +41,9 @@
                 <th>{{ c.id }}</th>
                 <th>{{ c.veiculo }}</th>
                 <th>{{ c.tp_manutencao }}</th>
-                <th>{% for i in form %}{% if i.id_os_id == c.id %}{{ i.id_svs }}, {% endif %}{% endfor %}</th>
+                <th>{% for i in form %}{% if i.id_os_id == c.id %}
+                    {{ i.id_svs.grupo_servico }} - {{ i.id_svs.tipo_servico }} ||
+                    {% endif %}{% endfor %}</th>
                 <th>{{ c.dt_entrada|date:'d/m/Y' }}</th>
                 <th>{{ c.prev_entrega|date:'d/m/Y' }}</th>
                 {% now 'd/m/Y' as hoje %}

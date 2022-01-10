@@ -511,6 +511,7 @@ def manupendentes(request):
 
 @login_required
 def manuentrada(request, placa_id):
+    print('inicio')
     array = []
     gp_servs = TipoServicosManut.objects.values_list('grupo_servico', flat=True).distinct()
     for q in gp_servs:
@@ -535,19 +536,23 @@ def manuentrada(request, placa_id):
             manu.status = 'ANDAMENTO'
             manu.autor = autor
             manu.tp_servico = tp_sv
-            manu.save()
-            ServJoinManu.objects.create(id_svs=tp_sv,autor=autor,id_os_id=manu.id)
-            if count:
-                ncount = int(count)
-                if ncount > 0:
-                    for c in range(0, ncount):
-                        d = c + 1
-                        variable = 'tp_servico' + str(d)
-                        tp_sv = request.POST.get(variable)
-                        if tp_sv:
-                            ServJoinManu.objects.create(id_svs=tp_sv,autor=autor,id_os_id=manu.id)
-                        else:
-                            continue
+            try:
+                manu.save()
+                ServJoinManu.objects.create(id_svs_id=tp_sv,autor=autor,id_os_id=manu.id)
+                if count:
+                    ncount = int(count)
+                    if ncount > 0:
+                        for c in range(0, ncount):
+                            d = c + 1
+                            variable = 'tp_servico' + str(d)
+                            tp_sv = request.POST.get(variable)
+                            print(tp_sv)
+                            if tp_sv:
+                                ServJoinManu.objects.create(id_svs_id=tp_sv,autor=autor,id_os_id=manu.id)
+                            else:
+                                continue
+            except Exception as e:
+                raise e
             messages.success(request, f'Cadastro de manutenção do veículo {placa} feito com sucesso!')
             return redirect('portaria:manutencaoprint', osid= manu.id)
     return render(request, 'portaria/manuentrada.html', {'placa':placa,'form':form,'array':array})
@@ -606,7 +611,7 @@ class ManutencaoListView(generic.ListView):
 @login_required
 def manutencaoprint(request, osid):
     os = get_object_or_404(ManutencaoFrota, pk=osid)
-    aa = ServJoinManu.objects.filter(id_os=os.id).values_list('id_svs', flat=True)
+    aa = ServJoinManu.objects.filter(id_os=os.id).annotate(grp=F('id_svs__grupo_servico'), svs=F('id_svs__tipo_servico'))
     return render(request, 'portaria/manutencaoprint.html', {'os':os,'aa':aa})
 
 def fatferramentas(request):
@@ -1291,7 +1296,6 @@ def replymail_monitoramento(request, tktid, area):
         return redirect('portaria:monitticket')
 
 def createtktandmail(request,resp,cc,rem,dest,assunto,msg,cte):
-    print('entrou na funcao')
     pattern = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
     msg1 = MIMEMultipart()
     msgmail = msg
@@ -1304,7 +1308,6 @@ def createtktandmail(request,resp,cc,rem,dest,assunto,msg,cte):
             msgmail = msgmail.replace(('<img src="' + media + '"'), f'<img src="cid:{media}" ')
             msg1.attach(msgimg)
     msg1.attach(MIMEText(msgmail, 'html', 'utf-8'))
-    print('carregou mimetext')
     msg1['Subject'] = assunto
     msg1['From'] = 'teste@bora.com.br'
     msg1['To'] = 'bora@bora.tec.br'
@@ -1315,21 +1318,20 @@ def createtktandmail(request,resp,cc,rem,dest,assunto,msg,cte):
     smtp_p = '587'
     user = 'bora@bora.tec.br'
     passw = 'Bor@dev#123'
-    print('setou parametros iniciando trycatch')
     try:
-        print('entrou no try')
         sm = smtplib.SMTP('smtp.bora.com.br', smtp_p, timeout=120)
         sm.set_debuglevel(1)
         sm.login('teste@bora.com.br','Bor@413247')
-        sm.sendmail('teste@bora.com.br', (['bora@bora.tec.br']+cc.split(';')), msg1.as_string())
-        print('mandou o email')
     except Exception as e:
         messages.error(request, f'ErrorType:{type(e).__name__}, Error:{e}')
         print(f'ErrorType:{type(e).__name__}, Error:{e}')
     else:
-        print('entrou no else')
-        tkt = TicketMonitoramento.objects.create(nome_tkt=assunto, dt_abertura=timezone.now(), responsavel=User.objects.get(username=resp), solicitante=request.user, remetente=rem, destinatario=dest, cte=cte, status='ABERTO', categoria='Aguardando Recebimento',msg_id=msg_id)
-        print('criou os objetos no banco')
+        try:
+            tkt = TicketMonitoramento.objects.create(nome_tkt=assunto, dt_abertura=timezone.now(), responsavel=User.objects.get(username=resp), solicitante=request.user, remetente=rem, destinatario=dest, cte=cte, status='ABERTO', categoria='Aguardando Recebimento',msg_id=msg_id)
+        except IntegrityError:
+            messages.error(request, 'Já existe um ticket com esta CTE')
+            return redirect('portaria:monitticket')
+        sm.sendmail('teste@bora.com.br', (['bora@bora.tec.br'] + cc.split(';')), msg1.as_string())
         messages.success(request, 'Email enviado e ticket criado com sucesso')
         return redirect('portaria:monitticket')
 

@@ -337,7 +337,7 @@ class ManutencaoFrota(models.Model):
 class ServJoinManu(models.Model):
     id = models.BigAutoField(primary_key=True)
     id_os = models.ForeignKey(ManutencaoFrota, on_delete=PROTECT)
-    id_svs = models.CharField(max_length=20)
+    id_svs = models.ForeignKey(TipoServicosManut, on_delete=PROTECT) #models.CharField(max_length=20)
     pub_date = models.DateField(auto_now=True)
     autor = models.ForeignKey(User, on_delete=PROTECT)
 
@@ -346,7 +346,7 @@ class ServJoinManu(models.Model):
         verbose_name_plural = 'ServJoinManu'
 
     def __str__(self):
-        return (self.id_os,self.id_svs)
+        return (str(self.id_os) + ' ' + str(self.id_svs))
 
 class CardFuncionario(models.Model):
     id = models.BigAutoField(primary_key=True)
@@ -390,7 +390,7 @@ class TicketMonitoramento(models.Model):
         ('Veículo Quebrado','Veículo Quebrado')
     ]
     id = models.BigAutoField(primary_key=True)
-    nome_tkt = models.CharField(max_length=100)
+    nome_tkt = models.CharField(max_length=100, unique=True, error_messages={'unique':'Já existe ticket criado para este CTE'})
     dt_abertura = models.DateField()
     responsavel = models.ForeignKey(User, on_delete=PROTECT, related_name='responsavel')
     solicitante = models.ForeignKey(User, on_delete=PROTECT, related_name='solicitante')
