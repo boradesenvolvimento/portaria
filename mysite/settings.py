@@ -103,24 +103,24 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
 #develop
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
-#CONNECTION = cx_Oracle.connect(get_secret('ORA_UID'),get_secret('ORA_PWD'), cx_Oracle.makedsn(get_secret('ORA_HOST'), '1521', None, get_secret('ORA_XE')))
-#production
 #DATABASES = {
 #    'default': {
-#        'ENGINE': 'django.db.backends.mysql',
-#        'NAME': 'bora',
-#        'USER': get_secret('DB_USER'),
-#        'PASSWORD': get_secret('DB_PASS'),
-#        'HOST': get_secret('DB_HOST'),
-#        'PORT': '3306',
+#        'ENGINE': 'django.db.backends.sqlite3',
+#        'NAME': BASE_DIR / 'db.sqlite3',
 #    }
 #}
+#CONNECTION = cx_Oracle.connect(get_secret('ORA_UID'),get_secret('ORA_PWD'), cx_Oracle.makedsn(get_secret('ORA_HOST'), '1521', None, get_secret('ORA_XE')))
+#production
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'bora',
+        'USER': get_secret('DB_USER'),
+        'PASSWORD': get_secret('DB_PASS'),
+        'HOST': get_secret('DB_HOST'),
+        'PORT': '3306',
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
