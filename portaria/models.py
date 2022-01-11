@@ -154,6 +154,7 @@ class ChecklistFrota(models.Model):
     placaveic = models.ForeignKey(Veiculos, on_delete=models.CASCADE)
     motoristaveic = models.ForeignKey(Motorista, on_delete=models.CASCADE)
     placacarreta = models.CharField(max_length=7, blank=True, null=True)
+    placacarreta2 = models.CharField(max_length=7, blank=True, null=True)
     kmanterior = models.IntegerField()
     kmatual = models.IntegerField()
     horimetro = models.CharField(max_length=10)
@@ -337,7 +338,7 @@ class ManutencaoFrota(models.Model):
 class ServJoinManu(models.Model):
     id = models.BigAutoField(primary_key=True)
     id_os = models.ForeignKey(ManutencaoFrota, on_delete=PROTECT)
-    id_svs = models.ForeignKey(TipoServicosManut, on_delete=PROTECT) #models.CharField(max_length=20)
+    id_svs = models.ForeignKey(TipoServicosManut, on_delete=PROTECT)
     pub_date = models.DateField(auto_now=True)
     autor = models.ForeignKey(User, on_delete=PROTECT)
 

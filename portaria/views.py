@@ -23,7 +23,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
 from django.db import IntegrityError
-from django.db.models import Count, Sum, F, Q, Value, CharField, DateTimeField, Subquery
+from django.db.models import Count, Sum, F, Q, Value, CharField, DateTimeField, Subquery, BigAutoField
 from django.db.models.functions import Coalesce, TruncDate, Cast, TruncMinute, Concat
 from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, Http404
 from django.shortcuts import get_object_or_404, render, redirect
@@ -46,32 +46,30 @@ def telausuariorodrigo(request):
 def cardusuario(request):
     form = CardFuncionario.objects.all()
     src = request.GET.get('srcfunc')
-
     if src:
         try:
             src1 = CardFuncionario.objects.filter(nome__contains=src)
         except ObjectDoesNotExist:
             messages.error(request, 'Não encontrado')
-            return render(request, 'portaria/cardusuario.html', {'form':form})
+            return render(request, 'portaria/card/cardusuario.html', {'form':form})
         else:
             form = src1
             return render(request, 'portaria/cardusuario.html',{'form':form})
-    return render(request, 'portaria/cardusuario.html', {'form':form})
+    return render(request, 'portaria/card/cardusuario.html', {'form':form})
 
 def card(request, id):
     idcard = get_object_or_404(CardFuncionario, pk=id)
     form = CardFuncionario.objects.get(pk=idcard.id)
-    return render(request, 'portaria/card.html', {'form':form})
+    return render(request, 'portaria/card/card.html', {'form':form})
 
 #views
 @login_required
 def index(request):
-    return render(request, "portaria/index.html")
-
+    return render(request, "portaria/etc/index.html")
 
 class Visualizacao(generic.ListView):
     paginate_by = 10
-    template_name = 'portaria/visualizacao.html'
+    template_name = 'portaria/portaria/visualizacao.html'
     context_object_name = 'lista'
     form = DateForm()
 
@@ -117,10 +115,10 @@ def cadastroentrada(request):
                 order.save()
                 messages.success(request,'Entrada cadastrada com sucesso.')
                 return redirect('portaria:cadastro')
-        return render(request, 'portaria/cadastroentrada.html', {'cadastro': cadastro, 'form': form})
+        return render(request, 'portaria/portaria/cadastroentrada.html', {'cadastro': cadastro, 'form': form})
     else:
         auth_message = 'Usuário não autenticado, por favor logue novamente'
-        return render(request, 'portaria/cadastroentrada.html', {'auth_message': auth_message})
+        return render(request, 'portaria/portaria/cadastroentrada.html', {'auth_message': auth_message})
 
 @login_required
 def cadastrosaida(request):
@@ -139,33 +137,33 @@ def cadastrosaida(request):
                     Cadastro.objects.get(pk=loc_placa.id)
                 except AttributeError:
                     messages.error(request, 'Não encontrado')
-                    return render(request, 'portaria/cadastrosaida.html', {'form':form})
+                    return render(request, 'portaria/portaria/cadastrosaida.html', {'form':form})
                 else:
                     Cadastro.objects.filter(pk=loc_placa.id).update(hr_saida=timezone.now(), destino=q_query, autor=request.user)
                     messages.success(request, 'Saida cadastrada com sucesso.')
                     return HttpResponseRedirect(reverse('portaria:cadastro'))
-        return render(request, 'portaria/cadastrosaida.html', {'form':form})
+        return render(request, 'portaria/portaria/cadastrosaida.html', {'form':form})
     else:
         auth_message = 'Usuário não autenticado, por favor logue novamente'
-        return render(request, 'portaria/cadastrosaida.html', {'auth_message': auth_message})
+        return render(request, 'portaria/portaria/cadastrosaida.html', {'auth_message': auth_message})
 
 @login_required
 def cadastro(request):
     if request.user.is_authenticated:
         filiais = TIPO_GARAGEM
-        return render(request, 'portaria/cadastro.html', {'filiais':filiais})
+        return render(request, 'portaria/portaria/cadastro.html', {'filiais':filiais})
     else:
         auth_message = 'Usuário não autenticado, por favor logue novamente'
-        return render(request, 'portaria/cadastro.html', {'auth_message': auth_message})
+        return render(request, 'portaria/portaria/cadastro.html', {'auth_message': auth_message})
 
 @login_required
 def outputs(request):
-    return render(request, 'portaria/outputs.html')
+    return render(request, 'portaria/etc/outputs.html')
 
 
 class PaleteView(generic.ListView):
     paginate_by = 10
-    template_name = 'portaria/paletes.html'
+    template_name = 'portaria/palete/paletes.html'
     context_object_name = 'lista'
 
     def get_queryset(self):
@@ -185,16 +183,16 @@ def frota(request):
                 mot1 = Motorista.objects.get(pk=mot)
             except ObjectDoesNotExist:
                 messages.error(request,'Cadastro não encontrado')
-                return render(request, 'portaria/frota.html')
+                return render(request, 'portaria/frota/frota.html')
             else:
                 return redirect('portaria:checklistfrota', placa_id=pla1, moto_id=mot1.codigomot)
         elif pla and mot == 'Selecione...':
             messages.error(request, 'Insira o motorista')
-            return render(request, 'portaria/frota.html',{'form':form, 'motos':motos})
+            return render(request, 'portaria/frota/frota.html',{'form':form, 'motos':motos})
         elif mot and not pla:
             messages.error(request, 'Insira a placa')
-            return render(request, 'portaria/frota.html',{'form':form, 'motos':motos})
-    return render(request, 'portaria/frota.html',{'form':form, 'motos':motos})
+            return render(request, 'portaria/frota/frota.html',{'form':form, 'motos':motos})
+    return render(request, 'portaria/frota/frota.html',{'form':form, 'motos':motos})
 
 @login_required
 def checklistfrota(request, placa_id, moto_id):
@@ -216,15 +214,15 @@ def checklistfrota(request, placa_id, moto_id):
             pla.save()
             messages.success(request, f'Checklist para placa {pla} e motorista {mot} concluído!')
             return HttpResponseRedirect(reverse('portaria:frota'))
-    return render(request,'portaria/checklistfrota.html', {'form':form,'pla':pla, 'mot':mot})
+    return render(request,'portaria/frota/checklistfrota.html', {'form':form,'pla':pla, 'mot':mot})
 
 def checklistview(request):
     form = ChecklistFrota.objects.all().order_by('-datachecklist')
-    return render(request, 'portaria/checklistview.html', {'form':form})
+    return render(request, 'portaria/frota/checklistview.html', {'form':form})
 
 def checklistdetail(request, idckl):
     form = get_object_or_404(ChecklistFrota, pk=idckl)
-    return render(request, 'portaria/checklistdetail.html', {'form':form})
+    return render(request, 'portaria/frota/checklistdetail.html', {'form':form})
 
 
 def cadfuncionariopj(request):
@@ -239,7 +237,7 @@ def cadfuncionariopj(request):
             else:
                 messages.success(request, 'Cadastrado com sucesso')
                 return redirect('portaria:index')
-    return render(request, 'portaria/cadfuncionariopj.html', {'form':form})
+    return render(request, 'portaria/pj/cadfuncionariopj.html', {'form':form})
 
 @login_required
 def servicospj(request):
@@ -256,7 +254,7 @@ def servicospj(request):
             for c in cad:
                 query = FuncPj.objects.filter(pk=c.id)
                 array.extend(query)
-    return render(request, 'portaria/servicospj.html', {'array': array})
+    return render(request, 'portaria/pj/servicospj.html', {'array': array})
 
 @login_required
 def consultanfpj(request):
@@ -272,7 +270,7 @@ def consultanfpj(request):
             ) \
             .annotate(total=((F('salario') + F('ajuda_custo') + F('faculdade') + F('cred_convenio') + F('outros_cred')) - (F('adiantamento') + F('desc_convenio') + F('outros_desc'))))
         arrya.extend(query)
-    return render(request, 'portaria/consultanfpj.html', {'arrya': arrya})
+    return render(request, 'portaria/pj/consultanfpj.html', {'arrya': arrya})
 
 @login_required
 def cadservicospj(request, args):
@@ -287,15 +285,15 @@ def cadservicospj(request, args):
             calc.save()
             messages.success(request, f'Valores cadastrados com sucesso para {calc.funcionario}')
             return HttpResponseRedirect(reverse('portaria:servicospj'))
-    return render(request, 'portaria/cadservicospj.html', {'form':form,'func':func})
+    return render(request, 'portaria/pj/cadservicospj.html', {'form':form,'func':func})
 
 def decimopj(request):
     allfunc = FuncPj.objects.filter(ativo=True).annotate(parc1=F('pj13__pgto_parc_1'),parc2=F('pj13__pgto_parc_2')).order_by('nome')
     func = request.GET.get('srcfunc')
     if func:
         allfunc = FuncPj.objects.filter(nome__icontains=func, ativo=True).annotate(parc1=F('pj13__pgto_parc_1'),parc2=F('pj13__pgto_parc_2')).order_by('nome')
-        return render(request, 'portaria/decimopj.html', {'allfunc': allfunc})
-    return render(request,'portaria/decimopj.html', {'allfunc':allfunc})
+        return render(request, 'portaria/pj/decimopj.html', {'allfunc': allfunc})
+    return render(request,'portaria/pj/decimopj.html', {'allfunc':allfunc})
 
 def caddecimo1(request, idfunc):
     func = get_object_or_404(FuncPj, pk=idfunc)
@@ -308,7 +306,7 @@ def caddecimo1(request, idfunc):
         pj13.objects.create(valor=val,pgto_parc_1=timezone.now(),periodo_meses=meses,funcionario=func, autor=autor)
         messages.success(request, 'Cadastro primeira parcela feito com sucesso')
         return redirect('portaria:decimopj')
-    return render(request, 'portaria/caddecimo1.html', {'func': func})
+    return render(request, 'portaria/pj/caddecimo1.html', {'func': func})
 
 def caddecimo2(request, idfunc):
     func = get_object_or_404(FuncPj, pk=idfunc)
@@ -320,7 +318,7 @@ def caddecimo2(request, idfunc):
             pj13.objects.filter(funcionario=func).update(pgto_parc_2=timezone.now(), autor=autor)
             messages.success(request, 'Cadastro segunda parcela feito com sucesso')
             return redirect('portaria:decimopj')
-        return render(request, 'portaria/caddecimo2.html', {'func': func, 'form': form})
+        return render(request, 'portaria/pj/caddecimo2.html', {'func': func, 'form': form})
 
 def decimoview(request):
     period = request.GET.get('filter')
@@ -334,7 +332,7 @@ def decimoview(request):
                                                                 parc_2=F('pj13__pgto_parc_2'),
                                                                 periodo=F('pj13__periodo_meses'))
                 array.extend(query)
-            return render(request, 'portaria/decimoview.html', {'allfuncs': allfuncs, 'array': array})
+            return render(request, 'portaria/pj/decimoview.html', {'allfuncs': allfuncs, 'array': array})
         elif period == 'pgto_parcela_2':
             array = []
             allfuncs = FuncPj.objects.filter(ativo=True, pj13__pgto_parc_2__isnull=False)
@@ -344,11 +342,11 @@ def decimoview(request):
                                                                 parc_2=F('pj13__pgto_parc_2'),
                                                                 periodo=F('pj13__periodo_meses'))
                 array.extend(query)
-            return render(request, 'portaria/decimoview.html', {'allfuncs': allfuncs, 'array': array})
-    return render(request, 'portaria/decimoview.html')
+            return render(request, 'portaria/pj/decimoview.html', {'allfuncs': allfuncs, 'array': array})
+    return render(request, 'portaria/pj/decimoview.html')
 
 def feriaspjv(request):
-    return render(request,'portaria/feriaspj.html')
+    return render(request,'portaria/pj/feriaspj.html')
 
 def feriascad(request):
     form = feriaspjForm
@@ -367,7 +365,7 @@ def feriascad(request):
             messages.success(request, 'Cadastrado com sucesso!')
             return redirect('portaria:feriaspjv')
 
-    return render(request,'portaria/feriascad.html', {'form':form})
+    return render(request,'portaria/pj/feriascad.html', {'form':form})
 
 def feriasview(request):
     hoje = datetime.date.today()
@@ -380,26 +378,26 @@ def feriasview(request):
         if name == '' and opt:
             if opt == 'Férias Vencidas':
                 qs = feriaspj.objects.filter(quitado=False, funcionario_id__in=aa, vencimento__lte=hoje).order_by('vencimento')
-                return render(request, 'portaria/feriasview.html', {'qs': qs, 'dias': dias, 'hoje': hoje})
+                return render(request, 'portaria/pj/feriasview.html', {'qs': qs, 'dias': dias, 'hoje': hoje})
             elif opt == 'Próximas do vencimento':
                 qs = feriaspj.objects.filter(quitado=False, funcionario_id__in=aa, vencimento__gte= hoje,vencimento__lte=dias).order_by('vencimento')
-                return render(request, 'portaria/feriasview.html', {'qs': qs, 'dias': dias, 'hoje': hoje})
+                return render(request, 'portaria/pj/feriasview.html', {'qs': qs, 'dias': dias, 'hoje': hoje})
             else:
                 pass
         elif opt == '' and name:
             qs = feriaspj.objects.filter(quitado=False, funcionario_id__in=aa, funcionario__nome__contains=name).order_by('vencimento')
-            return render(request, 'portaria/feriasview.html', {'qs': qs, 'dias': dias, 'hoje': hoje})
+            return render(request, 'portaria/pj/feriasview.html', {'qs': qs, 'dias': dias, 'hoje': hoje})
         elif name and opt:
             if opt == 'Férias Vencidas':
                 qs = feriaspj.objects.filter(quitado=False, funcionario_id__in=aa, vencimento__lte = hoje, funcionario__nome__contains=name).order_by('vencimento')
-                return render(request, 'portaria/feriasview.html', {'qs': qs,'dias':dias,'hoje':hoje})
+                return render(request, 'portaria/pj/feriasview.html', {'qs': qs,'dias':dias,'hoje':hoje})
             elif opt == 'Próximas do vencimento':
                 qs = feriaspj.objects.filter(quitado=False, funcionario_id__in=aa, vencimento__gte= hoje,vencimento__lte=dias, funcionario__nome__contains=name).order_by('vencimento')
-                return render(request, 'portaria/feriasview.html', {'qs': qs,'dias':dias,'hoje':hoje})
-            return render(request, 'portaria/feriasview.html', {'qs': qs, 'dias': dias, 'hoje': hoje})
+                return render(request, 'portaria/pj/feriasview.html', {'qs': qs,'dias':dias,'hoje':hoje})
+            return render(request, 'portaria/pj/feriasview.html', {'qs': qs, 'dias': dias, 'hoje': hoje})
 
 
-    return render(request, 'portaria/feriasview.html', {'qs': qs,'dias':dias,'hoje':hoje})
+    return render(request, 'portaria/pj/feriasview.html', {'qs': qs,'dias':dias,'hoje':hoje})
 
 def feriasagen(request, idfpj):
     form = feriaspjForm
@@ -413,11 +411,11 @@ def feriasagen(request, idfpj):
             feriaspj.objects.filter(pk=fer.id).update(agendamento_ini=agenparse1, agendamento_fim=agenparse2)
         except ValueError:
             messages.error(request, 'Por favor digite uma data válida')
-            return render(request, 'portaria/agendamento.html', {'fer':fer})
+            return render(request, 'portaria/pj/agendamento.html', {'fer':fer})
         else:
             messages.success(request, 'Agendamento feito com sucesso')
             return redirect('portaria:feriasview')
-    return render(request, 'portaria/agendamento.html', {'fer':fer,'form':form})
+    return render(request, 'portaria/pj/agendamento.html', {'fer':fer,'form':form})
 
 def feriasquit(request, idfpj):
     fer = get_object_or_404(feriaspj, pk=idfpj)
@@ -431,7 +429,7 @@ def feriasquit(request, idfpj):
         return redirect('portaria:feriasview')
 
 def frotacadastros(request):
-    return render(request, 'portaria/frotacadastros.html')
+    return render(request, 'portaria/frota/frotacadastros.html')
 
 def cadmotorista(request):
     form = MotoristaForm
@@ -441,7 +439,7 @@ def cadmotorista(request):
             form.save()
             messages.success(request, 'Cadastrado com sucesso')
             return redirect('portaria:frotacadastros')
-    return render(request, 'portaria/cadmotorista.html', {'form':form})
+    return render(request, 'portaria/frota/cadmotorista.html', {'form':form})
 
 def cadveiculo(request):
     form = VeiculosForm
@@ -451,7 +449,7 @@ def cadveiculo(request):
             form.save()
             messages.success(request, 'Cadastrado com sucesso')
             return redirect('portaria:frotacadastros')
-    return render(request, 'portaria/cadveiculo.html', {'form': form})
+    return render(request, 'portaria/frota/cadveiculo.html', {'form': form})
 
 def cadtpservico(request):
     form = TipoServicosManutForm
@@ -461,7 +459,7 @@ def cadtpservico(request):
             form.save()
             messages.success(request, 'Cadastrado com sucesso')
             return redirect('portaria:frotacadastros')
-    return render(request, 'portaria/cadtpservico.html', {'form':form})
+    return render(request, 'portaria/frota/cadtpservico.html', {'form':form})
 
 @login_required
 def manutencaofrota(request):
@@ -485,10 +483,10 @@ def manutencaofrota(request):
             return render(request, 'portaria/manutencaofrota.html')
         except ValueError:
             messages.error(request, 'Por gentileza digite o OS corretamente')
-            return render(request, 'portaria/manutencaofrota.html')
+            return render(request, 'portaria/frota/manutencaofrota.html')
         else:
             return redirect('portaria:manusaida', osid=idmanu)
-    return render(request, 'portaria/manutencaofrota.html')
+    return render(request, 'portaria/frota/manutencaofrota.html')
 
 def manupendentes(request):
     qs = ManutencaoFrota.objects.filter(status='PENDENTE').order_by('dt_entrada')
@@ -507,7 +505,7 @@ def manupendentes(request):
         else:
             messages.success(request, f'Confirmado conclusão da os {isos}')
             return redirect('portaria:manupendentes')
-    return render(request,'portaria/manutencaopendencia.html', {'qs':qs,'qs2':qs2})
+    return render(request,'portaria/frota/manutencaopendencia.html', {'qs':qs,'qs2':qs2})
 
 @login_required
 def manuentrada(request, placa_id):
@@ -527,6 +525,7 @@ def manuentrada(request, placa_id):
     if request.method == 'POST':
         count = request.POST.get('setcount')
         tp_sv = request.POST.get('tp_servico')
+
         form = ManutencaoForm(request.POST or None)
         if form.is_valid():
             manu = form.save(commit=False)
@@ -538,7 +537,7 @@ def manuentrada(request, placa_id):
             manu.tp_servico = tp_sv
             try:
                 manu.save()
-                ServJoinManu.objects.create(id_svs_id=tp_sv,autor=autor,id_os_id=manu.id)
+                ServJoinManu.objects.create(id_svs_id=tp_sv, autor=autor, id_os_id=manu.id)
                 if count:
                     ncount = int(count)
                     if ncount > 0:
@@ -555,7 +554,7 @@ def manuentrada(request, placa_id):
                 raise e
             messages.success(request, f'Cadastro de manutenção do veículo {placa} feito com sucesso!')
             return redirect('portaria:manutencaoprint', osid= manu.id)
-    return render(request, 'portaria/manuentrada.html', {'placa':placa,'form':form,'array':array})
+    return render(request, 'portaria/frota/manuentrada.html', {'placa':placa,'form':form,'array':array})
 
 
 @login_required
@@ -570,7 +569,7 @@ def manusaida(request, osid):
                 date_dtsaida = datetime.datetime.strptime(dtsaida, '%d/%m/%Y').date()
             except ValueError:
                 messages.error(request, 'Por favor digite uma data válida')
-                return render(request, 'portaria/manusaida.html',{'get_os':get_os})
+                return render(request, 'portaria/frota/manusaida.html',{'get_os':get_os})
             else:
                 between_days = (date_dtsaida - get_os.dt_entrada).days
                 ManutencaoFrota.objects.filter(pk=get_os.id).update(valor_peca=vlpeca,valor_maodeobra=vlmao,
@@ -581,13 +580,13 @@ def manusaida(request, osid):
 
                 messages.success(request, f'Saída cadastrada para OS {get_os.id}, placa {get_os.veiculo}')
                 return redirect('portaria:manutencaoview')
-        return render(request, 'portaria/manusaida.html',{'get_os':get_os})
+        return render(request, 'portaria/frota/manusaida.html',{'get_os':get_os})
     else:
         messages.error(request, 'Saída já cadastrada para OS')
         return redirect('portaria:manutencaofrota')
 
 class ManutencaoListView(generic.ListView):
-    template_name = 'portaria/manutencaoview.html'
+    template_name = 'portaria/frota/manutencaoview.html'
     context_object_name = 'lista'
 
     def get_queryset(self):
@@ -612,10 +611,10 @@ class ManutencaoListView(generic.ListView):
 def manutencaoprint(request, osid):
     os = get_object_or_404(ManutencaoFrota, pk=osid)
     aa = ServJoinManu.objects.filter(id_os=os.id).annotate(grp=F('id_svs__grupo_servico'), svs=F('id_svs__tipo_servico'))
-    return render(request, 'portaria/manutencaoprint.html', {'os':os,'aa':aa})
+    return render(request, 'portaria/frota/manutencaoprint.html', {'os':os,'aa':aa})
 
 def fatferramentas(request):
-    return render(request,'portaria/fatferramentas.html')
+    return render(request,'portaria/etc/fatferramentas.html')
 
 def monitticket(request):
     if request.user.is_staff:
@@ -630,8 +629,8 @@ def monitticket(request):
             else:
                 tkts = TicketMonitoramento.objects.filter(pk=tkt, responsavel=request.user).exclude(Q(status='CONCLUIDO')|Q(status='CANCELADO'))
 
-            return render(request, 'portaria/monitticket.html', {'tkts': tkts})
-    return render(request, 'portaria/monitticket.html', {'tkts':tkts})
+            return render(request, 'portaria/monitoramento/monitticket.html', {'tkts': tkts})
+    return render(request, 'portaria/monitoramento/monitticket.html', {'tkts':tkts})
 
 def tktcreate(request):
     users = User.objects.filter(groups__name='monitoramento')
@@ -705,7 +704,7 @@ def tktcreate(request):
                     messages.error(request, f'Mais de 1 registro encontrado')
                     return redirect('portaria:monitticket')
                 elif res:
-                    return render(request, 'portaria/tktcreate.html', {'editor': editor, 'users': users,'res': res,'opts': opts,})
+                    return render(request, 'portaria/monitoramento/tktcreate.html', {'editor': editor, 'users': users,'res': res,'opts': opts,})
                 else:
                     messages.error(request, f'Nenhum registro encontrado')
                     return redirect('portaria:monitticket')
@@ -721,7 +720,7 @@ def tktcreate(request):
         else:
             messages.error(request, 'Está faltando campos')
             return redirect('portaria:tktcreate')
-    return render(request, 'portaria/tktcreate.html',{'editor': editor, 'users': users, 'opts': opts, 'tp_doc_choices':tp_doc_choices})
+    return render(request, 'portaria/monitoramento/tktcreate.html',{'editor': editor, 'users': users, 'opts': opts, 'tp_doc_choices':tp_doc_choices})
 
 def tktview(request, tktid):
     opts = TicketMonitoramento.CATEGORIA_CHOICES
@@ -756,7 +755,7 @@ def tktview(request, tktid):
         if area and area != '<p><br></p>':
             replymail_monitoramento(request, tktid, area)
         return redirect('portaria:monitticket')
-    return render(request, 'portaria/ticketview.html', {'form':form,'editor':editor,'opts':opts,'stts':stts})
+    return render(request, 'portaria/monitoramento/ticketview.html', {'form':form,'editor':editor,'opts':opts,'stts':stts})
 #fim das views
 
 
@@ -778,12 +777,12 @@ def transfpalete(request):
                                                              placa_veic=plc,ultima_viagem=timezone.now(), autor=request.user)
 
             messages.success(request, f'{qnt} palete transferido de {ori} para {des}')
-            return render(request,'portaria/transfpaletes.html', {'form':form})
+            return render(request,'portaria/palete/transfpaletes.html', {'form':form})
         else:
             messages.error(request,'Quantidade solicitada maior que a disponível')
-            return render(request,'portaria/transfpaletes.html', {'form':form})
+            return render(request,'portaria/palete/transfpaletes.html', {'form':form})
 
-    return render(request,'portaria/transfpaletes.html', context)
+    return render(request,'portaria/palete/transfpaletes.html', context)
 
 @login_required
 def get_nfpj_mail(request):
@@ -879,7 +878,6 @@ def get_portaria_csv(request):
     data1 = request.POST.get('dataIni')
     data2 = request.POST.get('dataFim')
     fil = request.POST.get('filial')
-    print(fil, data1, data2)
     if fil and not data1 and not data2:
         cadastro = Cadastro.objects.all().annotate(
             hr_chegada_fmt=Cast(TruncMinute('hr_chegada', DateTimeField()), CharField()),hr_saida_fmt=Cast(TruncMinute('hr_chegada', DateTimeField()), CharField())) \
@@ -946,8 +944,8 @@ def get_manu_csv(request):
         writer.writerow(['id','veiculo','tp_manutencao','local_manu','dt_ult_manutencao','dt_entrada','dt_saida',
                             'dias_veic_parado','km_ult_troca_oleo','tp_servico','valor_maodeobra','valor_peca',
                                 'filial','socorro','prev_entrega','observacao','status','autor'])
-        manutencao = ManutencaoFrota.objects.all().values_list('id','veiculo','tp_manutencao','local_manu','dt_ult_manutencao','dt_entrada','dt_saida',
-                            'dias_veic_parado','km_ult_troca_oleo','tp_servico','valor_maodeobra','valor_peca',
+        manutencao = ManutencaoFrota.objects.all().values_list('id','veiculo__prefixoveic','tp_manutencao','local_manu','dt_ult_manutencao','dt_entrada','dt_saida',
+                            'dias_veic_parado','km_ult_troca_oleo','servjoinmanu__id_svs','valor_maodeobra','valor_peca',
                                 'filial','socorro','prev_entrega','observacao','status','autor__username').filter(dt_entrada__gte=dateparse, dt_entrada__lte=dateparse1)
         for id in manutencao:
             writer.writerow(id)
@@ -1035,7 +1033,7 @@ def get_checklist_csv(request):
                          'foi verificado se as luzes da lanterna traseira esquerda funciona','autor'])
         checklist = ChecklistFrota.objects.all().values_list('datachecklist','placaveic','motoristaveic','placacarreta','kmanterior','kmatual','horimetro','p1_1','p1_2','p2_1','p2_2','p2_3','p2_4','p2_5','p2_6','p2_7',
                                                             'p2_8','p2_9','p2_10','p2_11','p2_12','p2_13','p2_14','p2_15','p2_16','p2_17','p2_18','p2_19','p2_20','p2_21','p2_22','p2_23','p2_24','p3_1',
-                                                            'p3_2','p3_3','p3_4','p3_5','p3_6','p3_7','p3_8','autor__username').filter(datachecklist__gte=ini,datachecklist__lte=fim)
+                                                            'p3_2','p3_3','p3_4','p3_5','p3_6','p3_7','p3_8','obs','autor__username').filter(datachecklist__gte=ini,datachecklist__lte=fim)
         for c in checklist:
             writer.writerow(c)
         return response
@@ -1102,7 +1100,6 @@ def ediexceltosd1(request):
         return response
 
 def exedicorreios(request):
-
     response = HttpResponse(content_type='application/vnd.ms-excel',
                             headers={'Content-Disposition':'attatchment; filename="exemplo.xls"'})
     writer = csv.writer(response)

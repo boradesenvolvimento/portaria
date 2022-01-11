@@ -104,6 +104,7 @@ class ChecklistForm(forms.ModelForm):
         model = ChecklistFrota
         fields = [
             'placacarreta',
+            'placacarreta2',
             'kmatual',
             'horimetro',
             'p1_1',
@@ -177,7 +178,6 @@ class ManutencaoForm(forms.ModelForm):
             'filial',
             'prev_entrega',
             'observacao',
-            'tp_servico'
         ]
         widgets = {
             'observacao': Textarea(attrs={'cols': 30, 'rows': 3}),

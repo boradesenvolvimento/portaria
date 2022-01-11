@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 import json
 import os.path
 from pathlib import Path
-#import MySQLdb
+import MySQLdb
 import cx_Oracle
 from django.urls import reverse_lazy
 from django.core.management.utils import get_random_secret_key

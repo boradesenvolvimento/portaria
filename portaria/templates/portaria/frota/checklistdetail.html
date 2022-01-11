@@ -52,6 +52,7 @@
             <tr><th>Foi verificado a luz de ré?</th><th>{{ form.p3_6|yesno:'SIM,NÃO' }}</th></tr>
             <tr><th>Foi verificado se as luzes da lanterna traseira direita funciona?</th><th>{{ form.p3_7|yesno:'SIM,NÃO' }}</th></tr>
             <tr><th>Foi verificado se as luzes da lanterna traseira esquerda funciona?</th><th>{{ form.p3_8|yesno:'SIM,NÃO' }}</th></tr>
+            <tr><th>Observação</th><th>{{ form.obs }}</th></tr>
         </table>
         <button><a style="color:white;" href="{% url 'portaria:checklistview' %}">Voltar</a></button>
     </div>
