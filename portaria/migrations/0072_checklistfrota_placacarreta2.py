@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('portaria', '0070_alter_manutencaofrota_tp_servico'),
+        ('portaria', '0071_alter_manutencaofrota_tp_servico'),
     ]
 
     operations = [
