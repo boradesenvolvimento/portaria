@@ -106,10 +106,14 @@ a{
 }
 
 .table1 {
-  margin: 0 auto;
+  margin: auto;
   max-width: 100%;
   table-layout: fixed;
   overflow:auto;
+}
+.tablecli {
+    font-size: 20px;
+    text-align:center;
 }
 td,th {
   font-size: 13px;

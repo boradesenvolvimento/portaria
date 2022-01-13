@@ -23,8 +23,9 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
 from django.db import IntegrityError
-from django.db.models import Count, Sum, F, Q, Value, CharField, DateTimeField, Subquery, BigAutoField
-from django.db.models.functions import Coalesce, TruncDate, Cast, TruncMinute, Concat
+from django.db.models import Count, Sum, F, Q, Value, Subquery, CharField, ExpressionWrapper, IntegerField, \
+    DateTimeField
+from django.db.models.functions import Coalesce, TruncDate, Cast, TruncMinute
 from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, Http404
 from django.shortcuts import get_object_or_404, render, redirect
 from django.template.defaultfilters import upper
@@ -161,14 +162,75 @@ def outputs(request):
     return render(request, 'portaria/etc/outputs.html')
 
 
-class PaleteView(generic.ListView):
-    paginate_by = 10
-    template_name = 'portaria/palete/paletes.html'
-    context_object_name = 'lista'
+def paleteview(request):
+    tp_fil = TIPO_GARAGEM
+    tp_emp = Cliente.objects.values_list('razao_social', flat=True)
+    form = PaleteControl.objects.values('loc_atual').annotate(pbr=Count('id', filter=Q(tp_palete='PBR')),chep=Count('id', filter=Q(tp_palete='CHEP'))).annotate(total=ExpressionWrapper(Count('id'), output_field=IntegerField()))
+    ttcount = form.aggregate(total_amount=Sum('total'))
+    fil = request.GET.get('filial')
+    tp_p = request.GET.get('tp_palete')
+    #switch case moral
+    if fil and tp_p:
+        #busca todos os campos
+        form = PaleteControl.objects.filter(loc_atual=fil, tp_palete=tp_p).values('loc_atual').annotate(pbr=Count('id', filter=Q(tp_palete='PBR')),chep=Count('id', filter=Q(tp_palete='CHEP'))).annotate(total=ExpressionWrapper(Count('id'), output_field=IntegerField()))
+        ttcount = form.aggregate(total_amount=Sum('total'))
+    elif fil and not tp_p:
+        #busca somente filial
+        form = PaleteControl.objects.filter(loc_atual=fil).values('loc_atual').annotate(pbr=Count('id', filter=Q(tp_palete='PBR')),chep=Count('id', filter=Q(tp_palete='CHEP'))).annotate(total=ExpressionWrapper(Count('id'), output_field=IntegerField()))
+        ttcount = form.aggregate(total_amount=Sum('total'))
+    elif tp_p and not fil:
+        #busca somente tipo do palete
+        form = PaleteControl.objects.filter(tp_palete=tp_p).values('loc_atual').annotate(pbr=Count('id', filter=Q(tp_palete='PBR')),chep=Count('id', filter=Q(tp_palete='CHEP'))).annotate(total=ExpressionWrapper(Count('id'), output_field=IntegerField()))
+        ttcount = form.aggregate(total_amount=Sum('total'))
+    return render(request, 'portaria/paletes.html', {'form':form,'tp_fil':tp_fil,'tp_emp':tp_emp,'ttcount':ttcount})
 
-    def get_queryset(self):
-        qs = PaleteControl.objects.values("loc_atual").annotate(num_ratings=Count("id"))
-        return qs
+def cadpaletes(request):
+    tp_fil = TIPO_GARAGEM
+    tp_emp = Cliente.objects.all()
+    if request.method == 'POST':
+        qnt = request.POST.get('qnt')
+        fil = request.POST.get('fil')
+        emp = request.POST.get('emp')
+        tp_p = request.POST.get('tp_p')
+        if qnt and fil and emp and tp_p:
+            try:
+                int(qnt)
+            except ValueError:
+                messages.error(request,'Por favor digite um valor numérico para quantidade')
+                return redirect('portaria:cadpaletes')
+            else:
+                nsal = Cliente.objects.filter(pk=emp).annotate(saldonew=Sum(F('saldo')+int(qnt)))
+
+                Cliente.objects.filter(pk=emp).update(saldo=nsal[0].saldonew)
+                for x in range(0,int(qnt)):
+                    PaleteControl.objects.create(loc_atual=fil, tp_palete=tp_p, autor=request.user)
+                    if x == 2000: break
+                messages.success(request, f'{qnt} Paletes foram cadastrados com sucesso')
+
+    return render(request, 'portaria/cadpaletes.html', {'tp_fil':tp_fil, 'tp_emp':tp_emp})
+
+def paletecliente(request):
+    form = Cliente.objects.filter(intex='CLIENTE')
+    tcount = form.aggregate(total=Sum('saldo'))
+    return render(request, 'portaria/paletecliente.html', {'form':form,'tcount':tcount})
+
+def saidapalete(request):
+    tp_fil = TIPO_GARAGEM
+    tp_emp = Cliente.objects.all()
+    if request.method == 'POST':
+        qnt = int(request.POST.get('qnt'))
+        fil = request.POST.get('fil')
+        emp = request.POST.get('emp')
+        tp_p = request.POST.get('tp_p')
+        if qnt and fil and emp and tp_p:
+            chk = Cliente.objects.get(pk=emp)
+            Cliente.objects.filter(pk=emp).update(saldo=(chk.saldo - qnt))
+            for q in range(1,qnt):
+                PaleteControl.objects.filter(loc_atual=fil, tp_palete=tp_p).delete()
+            messages.success(request, 'Saidas cadastradas com sucesso')
+            return redirect('portaria:paletecliente')
+
+    return render(request, 'portaria/saidapalete.html', {'tp_fil':tp_fil,'tp_emp':tp_emp})
 
 @login_required
 def frota(request):
@@ -812,27 +874,28 @@ def chamadodetail(request, tktid):
 #funcoes variadas
 @login_required
 def transfpalete(request):
-    context = {}
     form = TPaletesForm()
-    context['form'] = form
     if request.method == 'POST':
         ori = request.POST.get('origem_')
         des = request.POST.get('destino_')
         qnt = int(request.POST.get('quantidade_'))
         plc = request.POST.get('placa_veic')
-        if qnt <= PaleteControl.objects.filter(loc_atual=ori).count():
-            for x in range(qnt):
-                q = PaleteControl.objects.filter(loc_atual=ori).first()
-                PaleteControl.objects.filter(pk=q.id).update(origem=ori,destino=des, loc_atual=des,
-                                                             placa_veic=plc,ultima_viagem=timezone.now(), autor=request.user)
-
+        tp_p = request.POST.get('tp_palete')
+        if qnt <= PaleteControl.objects.filter(loc_atual=ori,tp_palete=tp_p).count():
+            print(ori,des,qnt,plc,tp_p)
+            for q in range(0,qnt):
+                x = PaleteControl.objects.filter(loc_atual=ori, tp_palete=tp_p).first()
+                MovPalete.objects.create(palete=x,data_ult_mov=timezone.now(),origem=ori,destino=des, placa_veic=plc,
+                                         autor=request.user)
+                PaleteControl.objects.filter(pk=x.id).update(loc_atual=des)
             messages.success(request, f'{qnt} palete transferido de {ori} para {des}')
             return render(request,'portaria/palete/transfpaletes.html', {'form':form})
         else:
             messages.error(request,'Quantidade solicitada maior que a disponível')
             return render(request,'portaria/palete/transfpaletes.html', {'form':form})
 
-    return render(request,'portaria/palete/transfpaletes.html', context)
+    return render(request,'portaria/transfpaletes.html', {'form':form})
+
 
 @login_required
 def get_nfpj_mail(request):
@@ -913,7 +976,7 @@ def get_pj13_mail(request):
 
 def get_pj13_csv(request):
     response = HttpResponse(content_type='text/csv',
-                            headers={'Content-Disposition': 'attachment; filename="paletes.csv"'})
+                            headers={'Content-Disposition': 'attachment; filename="pjdecimo.csv"'})
     writer = csv.writer(response)
     writer.writerow(['id', 'periodo_meses', 'valor', 'pgto_parc_1', 'pgto_parc_2', 'funcionario', 'autor'])
     pj = pj13.objects.all().values_list(
@@ -967,10 +1030,11 @@ def get_portaria_csv(request):
 def get_palete_csv(request):
     response = HttpResponse(content_type='text/csv',
                             headers={'Content-Disposition':'attachment; filename="paletes.csv"'})
+    response.write(u'\ufeff'.encode('utf8'))
     writer = csv.writer(response)
-    writer.writerow(['id','loc_atual','ultima_viagem','origem','destino','placa_veic','autor'])
+    writer.writerow(['id','loc_atual','empresa','ultima_viagem','origem','destino','placa_veic','autor'])
     palete = PaleteControl.objects.all().values_list(
-        'id', 'loc_atual', 'ultima_viagem', 'origem', 'destino', 'placa_veic','autor_username'
+        'id', 'loc_atual', 'empresa__razao_social','movpalete__data_ult_mov', 'movpalete__origem', 'movpalete__destino', 'movpalete__placa_veic','movpalete__autor__username'
     )
     for id in palete:
         writer.writerow(id)

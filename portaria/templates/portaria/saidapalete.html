@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load groupscheck %}
+{% if request.user|has_group:"paletes" %}
+        <div class="container mt-5">
+            {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+            {% endfor %}
+            <div class="row linha-baixo">
+                <h2 class="title-cad">
+                    Cadastrar Saida Paletes Cliente
+                </h2>
+            </div>
+            <div class="container mt-4">
+                <form method="post">
+                    {% csrf_token %}
+                <table class="table1 col-11">
+                    <tbody>
+                    <tr><th>Quantidade:<input name="qnt" type="text"></th></tr>
+                    <tr><th>Filial:<select name="fil">
+                        {% for t,v in tp_fil %}
+                        <option value="{{ t }}">{{ v }}</option>
+                        {% endfor %}
+                    </select></th></tr>
+                    <tr><th>Empresa:<select name="emp">
+                        {% for x in tp_emp %}
+                        <option value="{{ x.id }}">{{ x }}</option>
+                        {% endfor %}
+                    </select></th></tr>
+                    <tr><th>Tipo:<select name="tp_p">
+                        <option value="PBR">PBR</option>
+                        <option value="CHEP">CHEP</option>
+                    </select></th></tr>
+                    <th><button type="submit">Enviar</button></th>
+                    </tbody>
+                </table>
+                </form>
+            </div>
+        </div>
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+
+{% endblock %}

@@ -6,12 +6,24 @@ from . import views
 app_name = 'portaria'
 urlpatterns = [
     path('', views.index, name='index'),
+<<<<<<< HEAD
+    path('portariaview/', views.Visualizacao.as_view(), name='visualizacao'),
+    path('portaria/', views.cadastro, name='cadastro'),
+    path('cadastro/cadastroentrada/', views.cadastroentrada, name='cadastroentrada'),
+    path('cadastro/cadastrosaida/', views.cadastrosaida, name='cadastrosaida'),
+    path('paletes/', views.paleteview, name='paleteview'),
+    path('paletes/transfpaletes/', views.transfpalete, name='transfpaletes'),
+    path('paletes/cadastro', views.cadpaletes, name='cadpaletes'),
+    path('paletes/painelcliente', views.paletecliente, name='paletecliente'),
+    path('paletes/saidapaletes', views.saidapalete, name='saidapalete'),
+=======
     path('visualizacao/', views.Visualizacao.as_view(), name='visualizacao'),
     path('cadastro/', views.cadastro, name='cadastro'),
     path('cadastro/entrada/', views.cadastroentrada, name='cadastroentrada'),
     path('cadastro/saida/', views.cadastrosaida, name='cadastrosaida'),
     path('paletes/', views.PaleteView.as_view(), name='paleteview'),
     path('paletes/transferir/', views.transfpalete, name='transfpaletes'),
+>>>>>>> 720bd82e24e441c704b369b5e08adf203823ab34
     path('frota/', views.frota, name='frota'),
     path('frota/<str:placa_id>&<moto_id>/checklist/', views.checklistfrota, name='checklistfrota'),
     path('frota/checklistview/', views.checklistview, name='checklistview'),

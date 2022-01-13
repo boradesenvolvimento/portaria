@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load groupscheck %}
+{% load static %}
+{% if request.user|has_group:"paletes" %}
+        <div class="container mt-5">
+            {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+            {% endfor %}
+            <div class="row linha-baixo">
+                <h2 class="title-cad col-9">
+                    Paletes Clientes
+                </h2>
+                <button class="col-2" type="submit"><a style="color:white;" href="{% url 'portaria:saidapalete' %}">Cadastrar Saidas</a></button>
+            </div>
+            <div class="container linha-baixo">
+                <table class="table tablecli">
+                    <thead>
+                        <tr>
+                            <th>Saldo</th>
+                            <th>Cliente</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                            {% for q in form %}
+                            <tr>
+                            <td>{{ q.saldo }}</td>
+                            <td>{{ q.razao_social }}</td>
+                                {% if q.saldo > 0 %}
+                                <td class="table-danger">A bora deve</td>
+                                {% elif q.saldo == 0 %}
+                                <td class="table-info">Ok</td>
+                                {% else %}
+                                <td class="table-success">O cliente deve</td>
+                                {% endif %}
+                            </tr>
+                            {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="container linha-baixo">
+                <h2 class="title-cad">Total saldo: {{ tcount.total }}</h2>
+            </div>
+        </div>
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+
+{% endblock %}

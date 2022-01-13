@@ -11,6 +11,8 @@ from django.utils import timezone
 
 
 #validators
+
+
 def only_int(value):
     try:
         int(value)
@@ -75,20 +77,47 @@ class Cadastro(models.Model):
        return self.placa
 
 class PaleteControl(models.Model):
+    TIPO_PALETE_CHOICES = [
+        ('CHEP', 'CHEP'),
+        ('PBR','PBR')
+    ]
     id = models.BigAutoField(primary_key=True)
     loc_atual = models.CharField(max_length=3, choices=TIPO_GARAGEM)
-    ultima_viagem = models.DateField()
-    origem = models.CharField(max_length=3,choices=TIPO_GARAGEM)
-    destino = models.CharField(max_length=3, choices=TIPO_GARAGEM)
-    placa_veic = models.CharField(max_length=7)
+    tp_palete = models.CharField(max_length=4, choices=TIPO_PALETE_CHOICES)
     autor = models.ForeignKey(User, on_delete=models.PROTECT)
 
     class Meta:
         verbose_name = 'PaleteControl'
         verbose_name_plural = 'PaleteControl'
 
-    def __int__(self):
+    def __str__(self):
         return str(self.id)
+
+class MovPalete(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    palete = models.ForeignKey(PaleteControl, on_delete=PROTECT)
+    data_ult_mov = models.DateField(default=timezone.now)
+    origem = models.CharField(max_length=3, choices=TIPO_GARAGEM)
+    destino = models.CharField(max_length=3, choices=TIPO_GARAGEM)
+    placa_veic = models.CharField(max_length=7)
+    autor = models.ForeignKey(User, on_delete=PROTECT)
+
+    def __str__(self):
+        return str(self.id)
+
+class Cliente(models.Model):
+    TP_VINCULO = [
+        ('INTERNO','INTERNO'),
+        ('CLIENTE','CLIENTE')
+    ]
+    id = models.BigAutoField(primary_key=True)
+    razao_social = models.CharField(max_length=100)
+    cnpj = models.CharField(max_length=14, validators=[only_int])
+    intex = models.CharField(max_length=7, choices=TP_VINCULO)
+    saldo = models.IntegerField()
+
+    def __str__(self):
+        return self.razao_social
 
 class Motorista(models.Model):
     codigomot = models.BigAutoField(primary_key=True)
