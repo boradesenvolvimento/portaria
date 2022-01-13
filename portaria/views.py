@@ -182,7 +182,7 @@ def paleteview(request):
         #busca somente tipo do palete
         form = PaleteControl.objects.filter(tp_palete=tp_p).values('loc_atual').annotate(pbr=Count('id', filter=Q(tp_palete='PBR')),chep=Count('id', filter=Q(tp_palete='CHEP'))).annotate(total=ExpressionWrapper(Count('id'), output_field=IntegerField()))
         ttcount = form.aggregate(total_amount=Sum('total'))
-    return render(request, 'portaria/paletes.html', {'form':form,'tp_fil':tp_fil,'tp_emp':tp_emp,'ttcount':ttcount})
+    return render(request, 'portaria/palete/paletes.html', {'form':form,'tp_fil':tp_fil,'tp_emp':tp_emp,'ttcount':ttcount})
 
 def cadpaletes(request):
     tp_fil = TIPO_GARAGEM
@@ -207,12 +207,12 @@ def cadpaletes(request):
                     if x == 2000: break
                 messages.success(request, f'{qnt} Paletes foram cadastrados com sucesso')
 
-    return render(request, 'portaria/cadpaletes.html', {'tp_fil':tp_fil, 'tp_emp':tp_emp})
+    return render(request, 'portaria/palete/cadpaletes.html', {'tp_fil':tp_fil, 'tp_emp':tp_emp})
 
 def paletecliente(request):
     form = Cliente.objects.filter(intex='CLIENTE')
     tcount = form.aggregate(total=Sum('saldo'))
-    return render(request, 'portaria/paletecliente.html', {'form':form,'tcount':tcount})
+    return render(request, 'portaria/palete/paletecliente.html', {'form':form,'tcount':tcount})
 
 def saidapalete(request):
     tp_fil = TIPO_GARAGEM
@@ -230,7 +230,7 @@ def saidapalete(request):
             messages.success(request, 'Saidas cadastradas com sucesso')
             return redirect('portaria:paletecliente')
 
-    return render(request, 'portaria/saidapalete.html', {'tp_fil':tp_fil,'tp_emp':tp_emp})
+    return render(request, 'portaria/palete/saidapalete.html', {'tp_fil':tp_fil,'tp_emp':tp_emp})
 
 @login_required
 def frota(request):
@@ -894,7 +894,7 @@ def transfpalete(request):
             messages.error(request,'Quantidade solicitada maior que a disponível')
             return render(request,'portaria/palete/transfpaletes.html', {'form':form})
 
-    return render(request,'portaria/transfpaletes.html', {'form':form})
+    return render(request,'portaria/palete/transfpaletes.html', {'form':form})
 
 
 @login_required
