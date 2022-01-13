@@ -410,7 +410,59 @@ class EmailMonitoramento(models.Model):
     dt_envio = models.DateField()
     email_id = models.CharField(max_length=100, unique=True)
     ult_resp = models.TextField(blank=True, null=True)
-    ult_rest_dt = models.DateField(blank=True, null=True)
+    ult_resp_dt = models.DateField(blank=True, null=True)
     ult_resp_html = models.TextField(blank=True, null=True)
     tkt_ref = models.ForeignKey(TicketMonitoramento, on_delete=PROTECT)
+
+class TicketChamado(models.Model):
+    SERVICO_CHOICES = [
+        ('DESENVOLVIMENTO', 'DESENVOLVIMENTO'),
+        ('TI','TI'),
+        ('PRAXIO','PRAXIO'),
+        ('MANUTENCAO','MANUTENCAO')
+    ]
+    STATUS_CHOICES = [
+        ('ABERTO', 'ABERTO'),
+        ('ANDAMENTO', 'ANDAMENTO'),
+        ('CONCLUIDO', 'CONCLUIDO'),
+        ('CANCELADO', 'CANCELADO')
+    ]
+    DEPARTAMENTO_CHOICES = [
+        ('DIRETORIA', 'DIRETORIA'),
+        ('FATURAMENTO', 'FATURAMENTO'),
+        ('FINANCEIRO', 'FINANCEIRO'),
+        ('RH', 'RH'),
+        ('FISCAL', 'FISCAL'),
+        ('MONITORAMENTO', 'MONITORAMENTO'),
+        ('OPERACIONAL', 'OPERACIONAL'),
+        ('FROTA', 'FROTA'),
+        ('EXPEDICAO', 'EXPEDICAO'),
+        ('COMERCIAL', 'COMERCIAL'),
+        ('JURIDICO', 'JURIDICO'),
+        ('DESENVOLVIMENTO', 'DESENVOLVIMENTO'),
+        ('TI', 'TI'),
+        ('FILIAIS', 'FILIAIS')
+    ]
+    id = models.BigAutoField(primary_key=True)
+    solicitante = models.CharField(max_length=100)
+    responsavel = models.ForeignKey(User, on_delete=PROTECT, blank=True, null=True)
+    servico = models.CharField(max_length=15,choices=SERVICO_CHOICES)
+    nome_tkt = models.CharField(max_length=150)
+    dt_abertura = models.DateTimeField()
+    filial = models.CharField(max_length=3, choices=TIPO_GARAGEM, blank=True, null=True)
+    departamento = models.CharField(max_length=15, choices=DEPARTAMENTO_CHOICES, blank=True, null=True)
+    status = models.CharField(max_length=9, choices=STATUS_CHOICES)
+    msg_id = models.CharField(max_length=100, unique=True)
+
+class EmailChamado(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    assunto = models.CharField(max_length=100)
+    mensagem = models.TextField()
+    cc = models.CharField(max_length=1000, blank=True, null=True)
+    dt_envio = models.DateField()
+    email_id = models.CharField(max_length=100, unique=True)
+    ult_resp = models.TextField(blank=True, null=True)
+    ult_resp_dt = models.DateField(blank=True, null=True)
+    ult_resp_html = models.TextField(blank=True, null=True)
+    tkt_ref = models.ForeignKey(TicketChamado, on_delete=PROTECT)
 

@@ -1,0 +1,64 @@
+    {% extends 'base.html' %}
+    {% block content %}
+    {% load groupscheck %}
+    <div class="container mt-5">
+    {% if auth_message %}
+        <p><strong>{{ auth_message }}</strong></p>
+    {% else %}
+    {% if request.user|has_group:"monitoramento" %}
+            {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+            {% endfor %}
+        <div class="row">
+                <h2 class="title-cad col-3">Suporte - HelpDesk</h2>
+        </div><hr>
+        <section class="container createtkt">
+            <div class="row">
+                <h2 class="title-cad col-3">Novo Chamado</h2>
+            </div>
+            <div class="row">
+                <div class="container col-4 createboxes">
+                    <div class="row">
+                        <label for="assunto">Assunto</label>
+                        <input style="width: 30rem;" type="text" id="assunto">
+                    </div>
+                    <div class="row">
+                        <label for="solicitante">Solicitante</label>
+                        <input style="width: 30rem;" type="text" id="solicitante">
+                    </div>
+                    <div class="row">
+                    <label for="responsavel">Responsável</label>
+                    <input style="width: 30rem;" type="text" id="responsavel">
+                    </div>
+                    <div class="row">
+                    <label for="servico">Serviços</label>
+                    <select style="width: 30rem;" id="servico">
+                        <option>Dev</option>
+                        <option>Infra</option>
+                        <option>Praxio</option>
+                    </select>
+                    </div>
+                    <div class="row">
+                    <label for="urgencia">Urgência</label>
+                    <select style="width: 30rem;" id="urgencia">
+                        <option>Baixa</option>
+                        <option>Media</option>
+                        <option>Alta</option>
+                        <option>Critica</option>
+                    </select>
+                    </div>
+                </div>
+                <div class="container col-8 createboxes">
+                    {{ editor.area|safe }}
+                </div>
+            </div>
+
+        </section>
+    {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+    </div>
+    {% endif %}
+    {% endblock %}

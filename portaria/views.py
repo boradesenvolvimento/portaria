@@ -741,7 +741,7 @@ def tktview(request, tktid):
                 messages.info(request, f'Ticket {tkt.id} alterado para {nstts} com sucesso.')
             else:
                 messages.error(request, 'Não autorizado encerramento do monitoramento.')
-            return redirect('portaria:monitticket')
+                return redirect('portaria:monitticket')
 
         if addcc:
             oldcc = form.cc
@@ -756,6 +756,56 @@ def tktview(request, tktid):
             replymail_monitoramento(request, tktid, area)
         return redirect('portaria:monitticket')
     return render(request, 'portaria/monitoramento/ticketview.html', {'form':form,'editor':editor,'opts':opts,'stts':stts})
+
+def chamado(request):
+    metrics = TicketChamado.objects.exclude(Q(status='CANCELADO') | Q(status='CONCLUIDO')).annotate(
+        total=Count('id'),executando=Count('id', filter=Q(status='ANDAMENTO'))
+    ).aggregate(total1=Sum('total'),exec=(Sum('executando')))
+    return render(request, 'portaria/chamado/chamado.html', {'metrics':metrics})
+
+def chamadonovo(request):
+    editor = TextEditor()
+    return render(request, 'portaria/chamado/chamadonovo.html', {'editor':editor})
+
+def chamadopainel(request):
+    form = TicketChamado.objects.exclude(Q(status='CANCELADO') | Q(status='CONCLUIDO'))
+    return render(request, 'portaria/chamado/chamadopainel.html',{'form':form})
+
+def chamadodetail(request, tktid):
+    stts = TicketChamado.STATUS_CHOICES
+    dp = TicketChamado.DEPARTAMENTO_CHOICES
+    fil = TIPO_GARAGEM
+    resp = User.objects.filter(groups__name='monitoramento')
+    form = get_object_or_404(EmailChamado, tkt_ref=tktid)
+    editor = TextEditor()
+    if request.method == 'POST':
+        ndptm = request.POST.get('ndptm')
+        nstts = request.POST.get('nstts')
+        nresp = request.POST.get('nresp')
+        nfil = request.POST.get('nfil')
+        area = request.POST.get('area')
+
+        try:
+            if ndptm != 'selected':
+                TicketChamado.objects.filter(pk=form.tkt_ref_id).update(departamento=ndptm)
+            if nresp != 'selected':
+                TicketChamado.objects.filter(pk=form.tkt_ref_id).update(responsavel=nresp)
+            if nfil != 'selected':
+                TicketChamado.objects.filter(pk=form.tkt_ref_id).update(filial=nfil)
+            if nstts != 'selected':
+                if nstts == 'CONCLUIDO' or nstts == 'CANCELADO':
+                    if form.tkt_ref.status == 'ABERTO':
+                        messages.error(request, 'Não autorizado encerramento do monitoramento.')
+                        return redirect('portaria:chamado')
+                    else:
+                        TicketChamado.objects.filter(pk=form.tkt_ref_id).update(status=nstts)
+                else:
+                    TicketChamado.objects.filter(pk=form.tkt_ref_id).update(status=nstts)
+            if area and area != '<p><br></p>':
+                chamadoupdate(request, tktid, area)
+        except Exception as e:
+            print(e)
+    return render(request, 'portaria/chamado/chamadodetail.html', {'form':form,'editor':editor,'stts':stts,'dp':dp,'resp':resp,'fil':fil})
 #fim das views
 
 
@@ -828,7 +878,6 @@ def get_nfpj_mail(request):
 def get_pj13_mail(request):
     getperiod = request.POST.get('period')
     array = []
-    print(getperiod)
     if getperiod == 'pgto_parcela_1':
         allfuncs = FuncPj.objects.filter(ativo=True, pj13__pgto_parc_1__isnull=False, pj13__pgto_parc_2__isnull=True)
         for q in allfuncs:
@@ -1340,6 +1389,172 @@ def closetkt(request, tktid):
     else:
         messages.error(request, 'Não autorizado encerramento do monitoramento.')
     return redirect('portaria:monitticket')
+
+def chamadoupdate(request,tktid,area):
+    media = ''
+    pattern = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
+    orig = get_object_or_404(EmailChamado, tkt_ref_id=tktid)
+    if request.method == 'POST':
+        msg1 = MIMEMultipart()
+        msg = area
+        if re.findall(pattern, msg):
+            for q in re.findall(pattern,msg):
+                media = q
+                img_data = open(('/home/bora/www' + media), 'rb').read()
+                msgimg = MIMEImage(img_data, name=os.path.basename(media))
+                msgimg.add_header('Content-ID', f'{media}')
+                msg = msg.replace(('src="' + media + '"'), f'src="cid:{media}" ')
+                msg1.attach(msgimg)
+        msg1['Subject'] = orig.assunto
+        msg1['In-Reply-To'] = orig.email_id
+        msg1['References'] = orig.email_id
+        msg_id = make_msgid(idstring=None, domain='bora.com.br')
+        msg1['Message-ID'] = msg_id
+        msg1['From'] = 'teste@bora.com.br'
+        msg1['To'] = orig.tkt_ref.solicitante
+        msg1.attach(MIMEText(msg, 'html', 'utf-8'))
+        smtp_h = 'smtp.kinghost.net'
+        smtp_p = '587'
+        user = 'bora@bora.tec.br'
+        passw = 'Bor@dev#123'
+        try:
+            sm = smtplib.SMTP('smtp.bora.com.br', smtp_p)
+            sm.set_debuglevel(1)
+            sm.login('teste@bora.com.br', 'Bor@413247')
+            sm.sendmail('teste@bora.com.br', ['bora@bora.tec.br']+orig.tkt_ref.solicitante.split(';'), msg1.as_string())
+        except Exception as e:
+            print(f'ErrorType:{type(e).__name__}, Error:{e}')
+
+def chamadoreadmail(request):
+    #params
+    hoje = datetime.date.today()
+    attatch = ''
+    host = 'pop.kinghost.net'
+    e_user = 'bora@bora.tec.br'
+    e_pass = 'Bor@dev#123'
+    pattern1 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
+    pattern2 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp).\w+.\w+')
+
+    #logando no email
+    pp = poplib.POP3(host)
+    pp.set_debuglevel(1)
+    pp.user(e_user)
+    pp.pass_(e_pass)
+
+    num_messages = len(pp.list()[1]) #conta quantos emails existem na caixa
+    for i in range(num_messages):
+        raw_email = b'\n'.join(pp.retr(i+1)[1]) #pega email
+        parsed_email = email.message_from_bytes(raw_email, policy=policy.compat32)
+        if parsed_email.is_multipart():
+            #caminha pelas partes do email e armazena dados e arquivos
+            for part in parsed_email.walk():
+                ctype = part.get_content_type()
+                cdispo = str(part.get('Content-Type'))
+                if ctype == 'text/plain' and 'attatchment' not in cdispo:
+                    body = part.get_payload(decode=True)
+                elif ctype == 'text/html' and 'attatchment' not in cdispo:
+                    body = part.get_payload(decode=True)
+                if ctype == 'text/html' and 'attatchment' not in cdispo:
+                    htbody = part.get_payload(decode=True)
+                filename = part.get_filename()
+                if filename:
+                    path = settings.MEDIA_ROOT + '/django-summernote/' + str(hoje) + '/'
+                    locimg = os.path.join(settings.MEDIA_ROOT + '/django-summernote/' + str(hoje) + '/', filename)
+                    if os.path.exists(os.path.join(path)):
+                        fp = open(locimg, 'wb')
+                        fp.write(part.get_payload(decode=True))
+                        fp.close()
+                    else:
+                        os.mkdir(path=path)
+                        fp = open(locimg, 'wb')
+                        fp.write(part.get_payload(decode=True))
+                        fp.close()
+                    item = os.path.join('/media/django-summernote/' + str(hoje) + '/', filename)
+                    aa = '<div class="mailattatch"><a href="'+item+'" download><img src="/static/images/downicon.png" width="40"><p>'+filename+'</p></a></div>'
+                    attatch += aa
+        else:
+            body = parsed_email.get_payload(decode=True)
+        #funcao para pegar codificacao
+        cs = parsed_email.get_charsets()
+        for q in cs:
+            if q is None: continue
+            else: cs = q
+
+        #pega parametros do email
+        e_date = datetime.datetime.strptime(parsed_email['Date'], '%a, %d %b %Y %H:%M:%S %z').strftime('%Y-%m-%d')
+        e_title = parsed_email['Subject']
+        e_from = parsed_email['From']
+        if re.findall(r'<(.*?)>', e_from): e_from = re.findall(r'<(.*?)>', e_from)[0]
+        e_to = parsed_email['To']
+        if re.findall(r'<(.*?)>', e_to): e_to = re.findall(r'<(.*?)>', e_to)[0]
+        e_cc = parsed_email['CC']
+        if e_cc:
+            if re.findall(r'<(.*?)>', e_cc): e_cc = re.findall(r'<(.*?)>', e_cc)[0]
+        e_id = parsed_email['Message-ID']
+        e_ref = parsed_email['References']
+        if e_ref is None: e_ref = e_id
+        else: e_ref = e_ref.split(' ')[0]
+
+        #separa conteudo email, e pega attatchments
+        e_body = body.decode(cs)
+        if e_body:
+            reply_parse = re.findall(r'(De:*\a*\w.*.\sEnviada em:+\s+\w.*.+[,]+\s+\d+\s+\w+\s+\w+\s+\w+\s+\d+\s+\d+:+\d.*)', e_body)
+            if reply_parse:
+                e_body = e_body.split(reply_parse[0])[0].replace('\n', '<br>')
+        w_body = htbody.decode(cs)
+        if w_body:
+            reply_html = re.findall(r'(<b><span+\s+\w.*.[>]+De:.*.Enviada em:.*.\s+\w.*.[,]+\s+\d+\s+\w+\s+\w+\s+\w+\s+\d+\s+\d+:+\d.*)',w_body)
+            if reply_html:
+                w_body = w_body.split(reply_html[0])[0]
+        if re.findall(pattern2, w_body):
+            for q in re.findall(pattern2, w_body):
+                new = re.findall(pattern1, q)
+                new_cid = os.path.join(settings.MEDIA_URL + 'django-summernote/' + str(hoje) + '/', new[0].split('cid:')[1])
+                w_body = w_body.replace(q, new_cid)
+        elif re.findall(pattern1, w_body):
+            for q in re.findall(pattern1, w_body):
+                new = re.findall(pattern1, w_body)
+                try:
+                    new_cid = os.path.join(settings.MEDIA_URL + 'django-summernote/' + str(hoje) + '/', new[0].split('cid:')[1])
+                except Exception as e:
+                    print(f'ErrorType: {type(e).__name__}, Error: {e}')
+                else:
+                    w_body = w_body.replace(q, new_cid)
+        if e_to == 'bora@bora.tec.br':
+            servico = 'DESENVOLVIMENTO'
+        try:
+            form = EmailChamado.objects.filter(email_id=e_ref)
+            tkt = TicketChamado.objects.get(pk=form[0].tkt_ref_id)
+        except Exception as e:
+            print(e)
+        print(form)
+        if form.exists() and form[0].tkt_ref.status != ('CONCLUIDO' or 'CANCELADO'):
+            oldreply = form[0].ult_resp_html
+            if oldreply: newreply = w_body.split(oldreply[:50])
+            if form[0].ult_resp:
+                aa = '<hr>' + e_from + ' -- ' + e_date + '\n' + e_body + '\n------Anterior-------\n' + form[0].ult_resp
+                bb = '<hr>' + e_from + ' -- ' + e_date + '<br>' + newreply[0] + attatch + '<hr>' + form[0].ult_resp_html
+            else:
+                aa = '<hr>' + e_from + ' -- ' + e_date + '\n' + e_body
+                bb = '<hr>' + e_from + ' -- ' + e_date + '<br>' + w_body + attatch
+            form.update(ult_resp=aa, ult_resp_html=bb, ult_resp_dt=e_date)
+            pp.dele(i + 1)
+        elif form.exists() and form[0].status == ('CANCELADO' or 'CONCLUIDO'):
+            messages.warning(request, 'Ticket já encerrado')
+            pp.dele(i + 1)
+            pp.quit()
+            return redirect('portaria:chamado')
+        else:
+            newtkt = TicketChamado.objects.create(solicitante=e_from, servico=servico, nome_tkt=e_title,
+                                                  dt_abertura=e_date, status='ABERTO', msg_id=e_id)
+            mensagem = '<hr>' + e_from + ' -- ' + e_date + w_body + attatch
+            newmail = EmailChamado.objects.create(assunto=e_title, mensagem=mensagem, cc=e_cc, dt_envio=e_date,
+                                                  email_id=e_id, tkt_ref=newtkt)
+            pp.dele(i + 1)
+    pp.quit()
+    return redirect('portaria:chamado')
+
+
 
 def isnotifyread(request, notifyid):
     nid = get_object_or_404(Notification, pk=notifyid)

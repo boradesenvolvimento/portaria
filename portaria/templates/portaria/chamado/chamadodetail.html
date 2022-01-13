@@ -1,0 +1,123 @@
+    {% extends 'base.html' %}
+    {% block content %}
+    {% load groupscheck %}
+    {% load static %}
+    <style type="text/css">
+        a:link, a:visited{
+             color: white !important;
+             text-decoration: none !important;
+        }
+        a:hover{
+            color: #0a58ca !important;
+        }
+    </style>
+    <div class="container mt-5">
+    {% if auth_message %}
+        <p><strong>{{ auth_message }}</strong></p>
+    {% else %}
+    {% if request.user|has_group:"monitoramento" %}
+            {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+            {% endfor %}
+
+            <div class="row">
+                <h2 class="title-cad col-3">Suporte - HelpDesk</h2>
+            </div><hr>
+        <section class="container viewmonit">
+            <div class="container">
+                <div class="row">
+                    <h2 class="title-cad">Ticket {{ form.tkt_ref.id }}</h2>
+                </div>
+            </div>
+            <div class="tktcontainer">
+            <div class="row">
+            <div class="col-lg-4 col-md">
+                <div>
+                    <ul>
+                        <li><strong>Assunto:</strong> {{ form.assunto }} </li>
+                        <li><strong>Solicitante:</strong> {{ form.tkt_ref.solicitante }} </li>
+                        <li><strong>Serviço:</strong> {{ form.tkt_ref.servico }} </li>
+                        <li><strong>dt_abertura:</strong> {{ form.tkt_ref.dt_abertura }}</li>
+                        <li><strong>Status:</strong> {{ form.tkt_ref.status }}</li>
+                        <li><strong>Responsável:</strong> {{ form.tkt_ref.responsavel|default_if_none:'Não cadastrado' }}</li>
+                        <li><strong>filial:</strong> {{ form.tkt_ref.filial }} </li>
+                        <li><strong>departamento:</strong> {{ form.tkt_ref.departamento|default_if_none:'Não cadastrado' }} </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="container col-lg col-md-12">
+                <div>
+                    <form method="post">
+                        {% csrf_token %}
+                        <div>
+                        {{ editor.area|safe }}
+                        </div>
+                        <div class="row">
+                            <div class="col-2">
+                                <label for="ndptm">Departamento:</label>
+                                <select style="width:10rem;" name="ndptm" id="ndptm">
+                                    <option hidden value="selected">Selecione...</option>
+                                    {% for q,v in dp %}
+                                        <option value="{{ q }}">{{ v }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-2">
+                                <label for="nstts">Status:</label>
+                                <select style="width:10rem;" name="nstts" id="nstts">
+                                    <option hidden value="selected">Selecione...</option>
+                                    {% for q,v in stts %}
+                                        <option value="{{ q }}">{{ v }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-2">
+                                <label for="nresp">Responsável:</label>
+                                <select name="nresp" id="nresp" style="width:10rem;">
+                                    <option hidden value="selected">Selecione...</option>
+                                    {% for q in resp %}
+                                        <option value="{{ q.id }}">{{ q }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-2">
+                                <label for="nresp">Filial:</label>
+                                <select name="nfil" id="nfil" style="width:10rem;">
+                                    <option hidden value="selected">Selecione...</option>
+                                    {% for q,v in fil %}
+                                        <option value="{{ q }}">{{ v }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-1">
+                                <button type="submit" style="height:5rem;">Enviar</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            </div>
+        </div>
+            <div class="container tktcontainer">
+                <h2>Resposta: </h2>
+                <div class="row">
+                    <div class="col">
+                        <ul style="list-style-type:none;">
+                            {% if form.ult_resp %}
+                            <li>{{ form.ult_resp_html|safe }}</li>
+                            {% endif %}
+                            <li><hr style="border-top:solid 5px;"></li>
+                            <li><strong>Mensagem:</strong> {{ form.mensagem|safe }}</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+    {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+    </div>
+    {% endif %}
+    {% endblock %}
