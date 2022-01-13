@@ -1,0 +1,69 @@
+    {% extends 'base.html' %}
+    {% block content %}
+    {% load groupscheck %}
+    <div class="container mt-5">
+    {% if auth_message %}
+        <p><strong>{{ auth_message }}</strong></p>
+    {% else %}
+    {% if request.user|has_group:"monitoramento" %}
+            {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+            {% endfor %}
+        <section class="container">
+            <div class="row">
+                <h2 class="title-cad col-1">Tickets</h2>
+                <button class="col-1" style="height:3.4rem;">
+                <a href="{% url 'portaria:tktcreate' %}" style="font-size:2.4rem; color:white;" ><ion-icon style="pointer-events:none;" name="add-circle-outline">
+                </ion-icon></a>
+                </button>
+                <div class="col-6"><a href="{% url 'portaria:readmail_monitoramento' %}">aaaaaaa</a></div>
+                <div class="col-3">
+                    <form method="post">
+                        {% csrf_token %}
+                    <input type="text" name="srctkt" placeholder="Buscar Ticket por ID">
+                    <button type="submit"><ion-icon size="small" name="search"></ion-icon></button>
+                    </form>
+                </div>
+            </div>
+            <div class="row">
+                <table class="table1 table">
+                    <thead>
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">Nome - TKT</th>
+                            <th scope="col">Aberto em</th>
+                            <th scope="col">Responsável</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Visualizar</th>
+                            <th scope="col">Concluir</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for q in tkts %}
+                        <tr class="tabletkt">
+                            <td>{{ q.id }}</td>
+                            <td>{{ q.nome_tkt|truncatechars:20 }}</td>
+                            <td>{{ q.dt_abertura }}</td>
+                            <td>{{ q.responsavel }}</td>
+                            <td>{{ q.status }}</td>
+                            <td><button type="submit"><a style="color:white" href="{% url 'portaria:tktview' tktid=q.id %}">
+                                <ion-icon name="eye-outline"></ion-icon></a>
+                            </button></td>
+                            <td><button type="submit"><a style="color:white" href="{% url 'portaria:closetkt' tktid=q.id %}">
+                                <ion-icon name="close-circle-outline"></ion-icon>
+                            </a></button></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+            </div>
+        </section>
+    {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+    </div>
+    {% endif %}
+    {% endblock %}

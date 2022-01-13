@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load groupscheck %}
+{% if request.user|has_group:"servicopj" %}
+<div class="container mt-4">
+    {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+            {% endfor %}
+    <div class="row linha-baixo">
+        <div class="col-6">
+        <form method="get">
+        <h2 class="title-cad">Buscar funcionário
+            <input name="nomefunc" placeholder="Digite o nome completo" type="text">
+            <button type="submit" style="height:3.4rem;"><ion-icon style="font-size:2.4rem;" name="search-sharp"></ion-icon></button>
+        </h2>
+        </form>
+        </div>
+        {% if request.user|has_group:'adm_rh' %}
+        <div class="col-6" style="margin-top:5px; text-align:right;">
+            <a class="button" href="{% url 'portaria:consultanfpj' %}">Consultar Valores</a>
+        </div>
+        {% endif %}
+    </div>
+    <div class="row linha-baixo">
+        <table class="table1">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Filial</th>
+                    <th>CPF/CNPJ</th>
+                    <th>Inserir Valores</th>
+                </tr>
+            </thead>
+        {% for q in array %}
+                <tr>
+                    <th>{{ q.nome|upper }}</th>
+                    <th>{{ q.filial }}</th>
+                    <th>{{ q.cpf_cnpj }}</th>
+                    <th><button type="submit" style="height:3.4rem;"><a href="{% url 'portaria:cadservicospj' q.id %}" style="color:white;font-size:2.4rem;"><ion-icon name="create-outline"></ion-icon></a></button></th>
+                </tr>
+        {% endfor %}
+        </table>
+
+    </div>
+</div>
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+{% endblock %}

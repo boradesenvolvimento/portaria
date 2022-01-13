@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load groupscheck %}
+{% if request.user|has_group:"paletes" %}
+        <div class="container mt-5">
+            <div class="row linha-baixo">
+                <h2 class="title-cad col-9">Quantidade de Paletes por garagem</h2>
+
+                <div class="col-3">
+                    <form class="form-box" action="{% url 'portaria:get_palete_csv' %}" method="post">
+                        {% csrf_token %}
+                        <h3 class="title-cad">Exportar CSV
+                            <button type="submit" style="height:3.4rem;"><ion-icon style="font-size:2.4rem;" name="download-outline"></ion-icon></button>
+                        </h3>
+                    </form>
+                </div>
+                <div class="col-9">
+                    <h2 class="title-cad">Total: {{ ttcount.total_amount }}</h2>
+                </div>
+                <div class="col-3">
+                    <form method="get">
+                    Filial:
+                    <select name="filial">
+                        <option></option>
+                        {% for t,p in tp_fil %}
+                            <option value="{{ t }}">{{ p }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit">Filtrar</button>
+                    </form>
+                </div>
+            </div>
+            <div class="row" style="margin-left: 6rem;">
+<<<<<<< HEAD:portaria/templates/portaria/paletes.html
+            {% for palete in form %}
+            <div class="card border-dark text-center" style="width: 13rem; margin-top: 3rem;">
+                <div class="card-header">
+                    <h3 class="card-title">{{ palete.loc_atual}}</h3>
+                </div>
+                <div class="card-body text-dark">
+                    <p>PBR:<strong>{{ palete.pbr }}</strong></p>
+                    <p>CHEP:<strong>{{ palete.chep }}</strong></p>
+                    <h5>Total:{{ palete.total }}</h5>
+=======
+            {% for palete in lista %}
+            <div class="card" style="width: 10rem; margin-top: 5rem;">
+                <div class="card-body" style="text-align:center;">
+                    <h5 class="card-title">{{ palete.loc_atual}}</h5>
+                    <p class="card-text">{{ palete.num_ratings }}</p>
+>>>>>>> 720bd82e24e441c704b369b5e08adf203823ab34:portaria/templates/portaria/palete/paletes.html
+                </div>
+            </div>
+            {% endfor %}
+            </div>
+        </div>
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+
+{% endblock %}

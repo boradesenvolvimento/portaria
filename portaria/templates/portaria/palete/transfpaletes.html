@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load groupscheck %}
+{% if request.user|has_group:"paletes" %}
+    <div class="container mt-5">
+        {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+            {% endfor %}
+    <div class="row linha-baixo mb-3">
+            <h3 class="title-cad">Transferir paletes entre filiais</h3>
+
+        </div>
+
+    <div class="row">
+        <div class="container">
+        <form class="form-box" action="" method="post">
+                {% csrf_token %}
+<<<<<<< HEAD:portaria/templates/portaria/transfpaletes.html
+                <table class="table1 col-11">
+                    <tr><th>Origem:{{ form.origem_ }}</th></tr>
+                    <tr><th>Destino:{{ form.destino_ }}</th></tr>
+                    <tr><th>Quantidade:{{ form.quantidade_ }}</th></tr>
+                    <tr><th>Placa Veic:{{ form.placa_veic }}</th></tr>
+                    <tr><th>Tipo:{{ form.tp_palete }}</th></tr>
+                    <tr><th><input type="submit" class="button"></th></tr>
+=======
+                <table>
+                    <tbody>
+                        <th>
+                            <td>Origem:{{ form.origem_ }}</td>
+                            <td>Destino:{{ form.destino_ }}</td>
+                            <td>Quantidade:{{ form.quantidade_ }}</td>
+                            <td>Placa Veic:{{ form.placa_veic }}</td>
+                            <td><button type="submit" style="height:3.8rem;"><ion-icon style="font-size:2.8rem;" name="swap-vertical-outline"></ion-icon></button></td>
+                        </th>
+                    </tbody>
+>>>>>>> 720bd82e24e441c704b369b5e08adf203823ab34:portaria/templates/portaria/palete/transfpaletes.html
+                </table>
+            </form>
+        </div>
+    </div>
+</div>
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+
+{% endblock %}

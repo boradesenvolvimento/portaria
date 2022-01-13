@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load groupscheck %}
+{% if request.user|has_group:"adm_rh" %}
+
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col col-lg-9 col-md-9 col-sm-9 sr-only" id="sendmail">
+                <form class="form-box" action="{% url 'portaria:get_nfpj_mail' %}" method="post">
+                    {% csrf_token %}
+                    <h3 class="title-cad">Selecione o período:
+                    <input type="date" placeholder="Data inicio" name="dataIni">
+                    <input type="date" placeholder="Data final" name="dataFim">
+                    <input type="submit" class="button">
+                    </h3>
+                </form>
+            </div>
+            <div class="col-10">
+                    <button onclick="isactive()" class="button">Enviar emails</button>
+            </div>
+            <div class="col-2">
+                <button class="button"><a href="{% url 'portaria:get_nfpj_csv' %}" style="text-decoration:none;color:white;">Exportar CSV</a></button>
+            </div>
+        </div>
+        <div class="row">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th class="title-cad"><strong>Total de Registros: {{ arrya|length }}</strong></th>
+                </tr>
+                <tr>
+                    <th class="title-cad">Nome</th>
+                    <th class="title-cad">Salario</th>
+                    <th class="title-cad">Faculdade</th>
+                    <th class="title-cad">Ajuda de Custo</th>
+                    <th class="title-cad">Adiantamento</th>
+                    <th class="title-cad">Cred Convenio</th>
+                    <th class="title-cad">Outros Cred</th>
+                    <th class="title-cad">Desc Convenio</th>
+                    <th class="title-cad">Outros Desc</th>
+                    <th class="title-cad">Total a Pagar</th>
+                </tr>
+            </thead>
+        {% for q in arrya|dictsort:"nome" %}
+            <tbody>
+                <tr>
+                    <th>{{ q.nome|upper }}</th>
+                    <th>R$ {{ q.salario|floatformat:2 }}</th>
+                    <th>R$ {{ q.faculdade|floatformat:2 }}</th>
+                    <th>R$ {{ q.ajuda_custo|floatformat:2 }}</th>
+                    <th>R$ {{ q.adiantamento|floatformat:2 }}</th>
+                    <th>R$ {{ q.cred_convenio|floatformat:2 }}</th>
+                    <th>R$ {{ q.outros_cred|floatformat:2 }}</th>
+                    <th>R$ {{ q.desc_convenio|floatformat:2 }}</th>
+                    <th>R$ {{ q.outros_desc|floatformat:2 }}</th>
+                    <th>R$ {{ q.total|floatformat:2 }}</th>
+                </tr>
+            </tbody>
+        {% endfor %}
+        </table>
+    </div>
+</div>
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+<script type="text/javascript">
+    function isactive(){
+    if(document.getElementById("sendmail").classList.contains('sr-only')){
+        document.getElementById("sendmail").classList.remove('sr-only')
+    } else {
+        document.getElementById("sendmail").classList.add('sr-only')
+    }
+  }
+
+
+</script>
+{% endblock %}

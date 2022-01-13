@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load groupscheck %}
+<div class="container mt-5">
+{% if request.user|has_group:"servicopj" %}
+        {% for message in messages %}
+        <div class="container-fluid p-0">
+            <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                {{ message }}
+            </div>
+        </div>
+        {% endfor %}
+    <div class="row linha-baixo">
+        <h2 class="title-cad col-6">Cadastro primeira parcela 13º</h2>
+    </div>
+    <div class="container linha-baixo">
+
+        <form method="post">
+            {% csrf_token %}
+        <table class="table table1">
+            <tr>
+                <th><h3 class="title-cad">{{ func }}</h3></th>
+                <th><input type="text" name="meses" placeholder="Período Trabalhado"></th>
+                <th><select name="pgto_parc">
+                        <option value='pgto_parcela_1'>1 parcela</option>
+                </select></th>
+                <th><button type="submit" style="height:3.4rem;"><ion-icon style="font-size:2.4rem;" name="save-outline"></ion-icon></button></th>
+            </tr>
+        </table>
+
+        </form>
+    </div>
+</div>
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+{% endblock %}

@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+{% load groupscheck %}
+<input id="text" class="sr-only" value="{{ request.build_absolute_uri }}" type="text"/>
+{% if request.user|has_group:'adm_rh' %}
+<button onclick="download()">Download</button>
+{% endif %}
+
+<div class="profile-main-body">
+    <center>
+        <img src="/media/{{ form.foto }}" class="fotocard" width="120px" height="120px">
+    <h2>{{ form.nome }}</h2>
+    <h3>{{ form.cargo }}</h3>
+    <div><button onclick="makeQR()" style="height:4.2rem;"><ion-icon style="font-size:3.2rem;" name="qr-code"></ion-icon></button></div>
+<table class="profile-icons-row">
+    <th><div class="item-social" onclick="call()"><button style="height:4.2rem;"><ion-icon size="large" name="call-outline"></ion-icon></button></div></th>
+    <th><div class="item-social" onclick="mail()"><button style="height:4.2rem;"><ion-icon size="large" name="mail-outline"></ion-icon></button></div></th>
+    <th><div class="item-social false" onclick="whatsapp()"><button style="height:4.2rem;"><ion-icon size="large" name="logo-whatsapp"></ion-icon></button></div></th>
+</table>
+
+<div class="qrcode-cont" style="display:none;"><img id="qrcode"></div>
+        </center>
+</div>
+
+<div class="sr-only" id="urlqrcode">
+</div>
+<script type="text/javascript">
+
+function download(){
+    var getsrc = document.getElementById('urlqrcode').getElementsByTagName('img')[0].src
+    var downloadLink = document.createElement("a");
+    var fileName = "qrcode.png";
+
+    downloadLink.href = getsrc;
+    downloadLink.download = fileName;
+    downloadLink.click();
+}
+var urlqrcode = new QRCode("urlqrcode");
+function urlQR(){
+    var elText = document.getElementById("text");
+    urlqrcode.makeCode(elText.value)
+}
+urlQR();
+
+function makeQR(){
+    $('.qrcode-cont').toggle();
+    if($('#qrcode').html() == ""){
+    goog_chart='https://chart.googleapis.com/chart?cht=qr&chs=200x200&chl=',
+
+    str_vcard= 'BEGIN:VCARD\n'+
+'VERSION:3.0\n'+
+'N:{{ form.nome }};'+
+'\nFN:{{ form.nome }}'+
+'\nORG:BORA TRANSPORTES'+
+'\nTITLE:{{ form.cargo }}'+
+'\nTEL;TYPE=CELL:{{ form.celular }}'+
+'\nEMAIL:{{ form.email }}'+
+'\nURL:{{ request.build_absolute_uri }}'+
+'\nEND:VCARD'
+        const enc_vcard = encodeURI(str_vcard);
+	    $('#qrcode').attr('src',goog_chart+enc_vcard);
+
+	}
+}
+function whatsapp() {
+    if(false) {
+      location.href = 'whatsapp://send?phone=55{{ form.celular }}';
+    } else {
+      location.href = 'https://api.whatsapp.com/send?phone=55{{ form.celular }}';
+    }
+  }
+
+function mail(){
+    location.href = 'mailto:{{ form.email }}';
+  }
+function call(){
+    location.href = 'tel:+55{{ form.celular }}';
+}
+</script>
+
+{% endblock %}

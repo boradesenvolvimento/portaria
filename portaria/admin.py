@@ -83,3 +83,19 @@ admin.site.register(pj13, pj13Admin)
 class feriaspjAdmin(admin.ModelAdmin):
     pass
 admin.site.register(feriaspj, feriaspjAdmin)
+
+class EmailMonitoramentoAdmin(admin.ModelAdmin):
+    pass
+admin.site.register(EmailMonitoramento, EmailMonitoramentoAdmin)
+
+class TicketMonitoramentoAdmin(admin.ModelAdmin):
+    pass
+admin.site.register(TicketMonitoramento, TicketMonitoramentoAdmin)
+
+class TicketChamadoAdmin(admin.ModelAdmin):
+    pass
+admin.site.register(TicketChamado,TicketChamadoAdmin)
+
+class EmailChamadoAdmin(admin.ModelAdmin):
+    pass
+admin.site.register(EmailChamado,EmailChamadoAdmin)

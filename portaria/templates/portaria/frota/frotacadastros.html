@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+{% load groupscheck %}
+{% if request.user|has_group:"frota" %}
+<div class="container mt-5">
+    {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+            {% endfor %}
+    <div class="container">
+        <div class="row linha-baixo">
+            <h2 class="title-cad">Cadastros de Motoristas <button style="height:3.4rem;" type="submit"><a style="color:white;font-size:2.4rem;" href="{% url 'portaria:cadmotorista' %}"><ion-icon name="add-circle-sharp"></ion-icon></a></button></h2>
+        </div>
+        <div class="row linha-baixo">
+            <h2 class="title-cad">Cadastros de Veículos <button style="height:3.4rem;" type="submit"><a style="color:white;font-size:2.4rem;" href="{% url 'portaria:cadveiculo' %}"><ion-icon name="add-circle-sharp"></ion-icon></a></button></h2>
+        </div>
+        <div class="row linha-baixo">
+            <h2 class="title-cad">Cadastros de Tipos de Serviço - Manutenção <button style="height:3.4rem;" type="submit"><a style="color:white;font-size:2.4rem;" href="{% url 'portaria:cadtpservico' %}"><ion-icon name="add-circle-sharp"></ion-icon></a></button></h2>
+        </div>
+    </div>
+</div>
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+{% endblock %}

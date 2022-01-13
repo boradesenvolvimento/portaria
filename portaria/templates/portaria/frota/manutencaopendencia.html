@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+{% load groupscheck %}
+{% if request.user|has_group:"frota" %}
+    <div class="container mt-4">
+        {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+        {% endfor %}
+        <div class="row">
+            <div class="col-6">
+                <form method="get">
+                <h2 class="title-cad">Filtrar placa:<input type="text" name="isplaca"><input type="submit" class="button"></h2>
+                </form>
+            </div>
+        </div>
+        <div class="row">
+        <table class="table table1">
+            <thead>
+            <tr>
+                <td>ID</td>
+                <td>PLACA</td>
+                <td>SERVICO</td>
+                <td>OBSERVACAO</td>
+                <td>STATUS</td>
+            </tr>
+            </thead>
+            <tbody>
+            {% for c in qs %}
+            <tr>
+                <form method="post" action="{% url 'portaria:manupendentes'%}">
+                    {% csrf_token %}
+                <th>{{ c.id }}</th>
+                <th>{{ c.veiculo }}</th>
+                <th>{% for i in qs2 %}{% if i.id_os_id == c.id %}
+                    {{ i.id_svs.grupo_servico }} - {{ i.id_svs.tipo_servico }} || {% endif %}{% endfor %}</th>
+                <th>{{ c.observacao }}</th>
+                <th>{{ c.status }}</th>
+                <th><input type="hidden" id="idos" name="os" value="{{ c.id }}">
+                    <input type="submit" value="Confirmar" class="button">
+                </form>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+{% endblock %}

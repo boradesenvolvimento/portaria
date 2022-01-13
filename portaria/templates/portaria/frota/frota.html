@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+{% load groupscheck %}
+{% if request.user|has_group:"frota" %}
+<div class="container mt-5">
+    {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+            {% endfor %}
+    <div class="row">
+        <h1 class="title-cad linha-baixo">Cadastro Checklist</h1>
+        <div class="col-12">
+            <form method="get" class="linha-baixo">
+                <div>
+                <h2 class="title-cad">Motorista:
+                    <select name="moto_">
+                        <option hidden>Selecione...</option>
+                        {% for q in motos %}
+                        <option value="{{ q.codigomot }}">{{ q.nome }}</option>
+                        {% endfor %}
+                    </select>
+                    Placa:
+                    <input type="text" name="placa_">
+                    <button type="submit" style="height:3.4rem;"><ion-icon style="font-size:2.4rem;" name="clipboard-outline"></ion-icon></button>
+                </h2>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="container linha-baixo">
+        <div class="row">
+            <h2 class="title-cad">Painel de checklists<button type="submit"><a style="color:white;" href="{% url 'portaria:checklistview' %}">Acessar</a></button></h2>
+        </div>
+    </div>
+</div>
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+{% endblock %}

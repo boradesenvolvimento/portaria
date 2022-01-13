@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+{% load groupscheck %}
+{% if request.user|has_group:"frota" %}
+<div class="container">
+            <form method="post">
+                {% csrf_token %}
+                <h2 class="title-cad">Placa: {{ pla }}</h2>
+                <h2 class="title-cad">Motorista: {{ mot }}</h2>
+                <table>
+                    <tbody>
+                        {{ form }}
+                    </tbody>
+                </table>
+            <input type="submit" class="button">
+            </form>
+        </div>
+
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+{% endblock %}

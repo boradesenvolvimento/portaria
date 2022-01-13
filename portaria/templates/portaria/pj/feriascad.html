@@ -1,0 +1,37 @@
+    {% extends 'base.html' %}
+    {% block content %}
+    {% load groupscheck %}
+    <div class="container mt-5">
+    {% if auth_message %}
+        <p><strong>{{ auth_message }}</strong></p>
+    {% else %}
+    {% if request.user|has_group:"servicopj" %}
+            {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+            {% endfor %}
+            <div class="container">
+                <div class="row">
+                    <h2 class="title-cad">Cadastro</h2>
+                </div>
+                    <form method="post">
+                        {% csrf_token %}
+                        <table>
+                            <tr><th>Funcionário:</th><th>{{ form.funcionario }}</th></tr>
+                            <tr><th>Tipo pgto:</th><th>{{ form.tp_pgto }}</th></tr>
+                            <tr><th>Últimas Férias Início:</th><th>{{ form.ultimas_ferias_ini }}</th></tr>
+                            <tr><th>Últimas Férias Fim:</th><th>{{ form.ultimas_ferias_fim }}</th></tr>
+                            <tr><th>Valor integral:</th><th>{{ form.valor_integral }}</th></tr>
+                            <tr><th>Parcial1:</th><th>{{ form.valor_parcial1 }}</th></tr>
+                            <tr><th>Parcial2:</th><th>{{ form.valor_parcial2 }}</th></tr>
+                        </table>
+                        <button type="submit" style="height:3.4rem;"><ion-icon style="font-size:2.4rem;" name="save-outline"></ion-icon></button>
+                    </form>
+            </div>
+    </div>
+    {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+    {% endif %}
+    {% endblock %}

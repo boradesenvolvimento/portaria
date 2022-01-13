@@ -1,0 +1,60 @@
+    {% extends 'base.html' %}
+    {% block content %}
+    {% load groupscheck %}
+    <div class="container mt-5">
+    {% if auth_message %}
+        <p><strong>{{ auth_message }}</strong></p>
+    {% else %}
+    {% if request.user|has_group:"monitoramento" %}
+            {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+            {% endfor %}
+        <section class="container">
+            <div class="row">
+                <h2 class="title-cad col-3">Suporte - HelpDesk</h2>
+                <div class="col-6"></div>
+                <div class="col-3">
+                    <form method="post">
+                        {% csrf_token %}
+                    <input type="text" name="srctkt" placeholder="Buscar Ticket por ID">
+                    <button type="submit"><ion-icon size="small" name="search"></ion-icon></button>
+                    </form>
+                </div>
+            </div><hr>
+            <div class="row">
+                <table class="table1 table">
+                    <thead>
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">Nome - TKT</th>
+                            <th scope="col">Aberto em</th>
+                            <th scope="col">Responsável</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Visualizar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for q in form %}
+                        <tr class="tabletkt">
+                            <th>{{ q.id }}</th>
+                            <th>{{ q.nome_tkt }}</th>
+                            <th>{{ q.dt_abertura }}</th>
+                            <th>{{ q.responsavel }}</th>
+                            <th>{{ q.status }}</th>
+                            <th><a href="{% url 'portaria:chamadodetail' tktid=q.id %}">
+                                <button><ion-icon name="eye-outline"></ion-icon></button>
+                            </a></th>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+    </div>
+    {% endif %}
+    {% endblock %}

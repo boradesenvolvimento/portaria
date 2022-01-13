@@ -1,0 +1,50 @@
+    {% extends 'base.html' %}
+    {% block content %}
+    {% load groupscheck %}
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col col-lg-12 col-md-12 col-sm-12 col-xs-12">
+    {% if auth_message %}
+        <p><strong>{{ auth_message }}</strong></p>
+    {% else %}
+    {% if request.user|has_group:"portaria" %}
+    <h2 class="title-cad">Cadastro Entrada veículo</h2>
+    <form role="form" method="POST">
+        {% csrf_token %}
+        <table>
+            <tbody>
+            <tr>
+                <th>Placa</th><th>{{ form.placa }}</th>
+            </tr>
+            <tr>
+                <th>Motorista</th><th>{{ form.motorista }}</th>
+            </tr>
+            <tr>
+                <th>Empresa</th><th>{{ form.empresa }}</th>
+            </tr>
+            <tr>
+                <th>Tipo Motorista</th><th>{{ form.tipo_mot }}</th>
+            </tr>
+            <tr>
+                <th>Tipo Viagem</th><th>{{ form.tipo_viagem }}</th>
+            </tr>
+            <tr>
+                <th>Garagem</th><th>{{ form.origem }}</th>
+            </tr>
+
+
+            </tbody>
+        </table>
+        <button type="submit" style="height:3.8rem;"><ion-icon style="font-size:2.8rem;" name="save-outline"></ion-icon></button>
+    </form>
+    {% else %}
+                <p>Usuário não tem permissão para acessar</p>
+
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+
+    {% endif %}
+    {% endblock %}

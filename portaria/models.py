@@ -48,6 +48,10 @@ TIPO_GARAGEM = (
     ('TNA','TNA'),
     ('VIX','VIX'),
 )
+TIPO_DOCTO_CHOICES = (
+    ('8', 'NFS'),
+    ('57', 'CTE')
+)
 # Create your models here.
 
 
@@ -179,6 +183,7 @@ class ChecklistFrota(models.Model):
     placaveic = models.ForeignKey(Veiculos, on_delete=models.CASCADE)
     motoristaveic = models.ForeignKey(Motorista, on_delete=models.CASCADE)
     placacarreta = models.CharField(max_length=7, blank=True, null=True)
+    placacarreta2 = models.CharField(max_length=7, blank=True, null=True)
     kmanterior = models.IntegerField()
     kmatual = models.IntegerField()
     horimetro = models.CharField(max_length=10)
@@ -216,6 +221,7 @@ class ChecklistFrota(models.Model):
     p3_6 = models.BooleanField('Foi verificado a luz de ré?')
     p3_7 = models.BooleanField('Foi verificado se as luzes da lanterna traseira direita funciona?')
     p3_8 = models.BooleanField('Foi verificado se as luzes da lanterna traseira esquerda funciona?')
+    obs = models.TextField('Observação', blank=True)
     autor = models.ForeignKey(User, on_delete=models.PROTECT)
 
     class Meta:
@@ -224,6 +230,11 @@ class ChecklistFrota(models.Model):
 
     def __str__(self):
        return str(self.idchecklist)
+
+class TipoServicosManut(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    grupo_servico = models.CharField('Grupo', max_length=50)
+    tipo_servico = models.CharField('Tipo Servico', max_length=50)
 
 class FuncPj(models.Model):
     PESSOA_FISICA = 'PF'
@@ -321,17 +332,6 @@ class ManutencaoFrota(models.Model):
         ('I','INTERNO'),
         ('E','EXTERNO')
     ]
-    SERVICO_CHOICES = [
-        ('TROCA_OLEO',(
-            ('troca','troca'),
-            ('oleo','oleo'),
-         )),
-        ('PNEUS','PNEUS'),
-        ('FREIOS', 'FREIOS'),
-        ('aaaa', 'aaaaa'),
-        ('dasdasd', 'dasdasd'),
-
-    ]
     STATUS_CHOICES = [
         ('ANDAMENTO', 'ANDAMENTO'),
         ('PENDENTE', 'PENDENTE'),
@@ -347,7 +347,7 @@ class ManutencaoFrota(models.Model):
     dt_saida = models.DateField(blank=True, null=True)
     dias_veic_parado = models.CharField(max_length=20, blank=True, null=True)
     km_ult_troca_oleo = models.IntegerField('Kilometragem da última troca de óleo')
-    tp_servico = models.CharField('Tipo serviço', max_length=10, choices=SERVICO_CHOICES)
+    tp_servico = models.CharField('Tipo serviço', max_length=10)
     valor_maodeobra = models.FloatField('Valor mão de obra', blank=True, null=True)
     valor_peca = models.FloatField('Valor peça', blank=True, null=True)
     filial = models.CharField(max_length=3, choices=FILIAL_CHOICES)
@@ -367,7 +367,7 @@ class ManutencaoFrota(models.Model):
 class ServJoinManu(models.Model):
     id = models.BigAutoField(primary_key=True)
     id_os = models.ForeignKey(ManutencaoFrota, on_delete=PROTECT)
-    id_svs = models.CharField(max_length=20)
+    id_svs = models.ForeignKey(TipoServicosManut, on_delete=PROTECT)
     pub_date = models.DateField(auto_now=True)
     autor = models.ForeignKey(User, on_delete=PROTECT)
 
@@ -376,7 +376,7 @@ class ServJoinManu(models.Model):
         verbose_name_plural = 'ServJoinManu'
 
     def __str__(self):
-        return (self.id_os,self.id_svs)
+        return (str(self.id_os) + ' ' + str(self.id_svs))
 
 class CardFuncionario(models.Model):
     id = models.BigAutoField(primary_key=True)
@@ -385,7 +385,113 @@ class CardFuncionario(models.Model):
     cargo = models.CharField(max_length=20)
     email = models.EmailField(max_length=255)
     celular = models.CharField(max_length=11,validators=[only_int])
+    foto = models.ImageField(upload_to='images/', null=True)
 
     def __str__(self):
         return self.nome
+
+class TicketMonitoramento(models.Model):
+    STATUS_CHOICES = [
+        ('ABERTO', 'ABERTO'),
+        ('ANDAMENTO', 'ANDAMENTO'),
+        ('CONCLUIDO', 'CONCLUIDO'),
+        ('CANCELADO', 'CANCELADO')
+    ]
+    CATEGORIA_CHOICES = [
+        ('Aguardando Recebimento','Aguardando Recebimento'),
+        ('Dae','Dae'),
+        ('Descarga','Descarga'),
+        ('Devolução Parcial','Devolução Parcial'),
+        ('Devolução Total','Devolução Total'),
+        ('Diaria autorizada','Diaria autorizada'),
+        ('Dif. Peso','Dif. Peso'),
+        ('Entrega Realizada','Entrega Realizada'),
+        ('Fora de Horário','Fora de Horário'),
+        ('Fora de Rota','Fora de Rota'),
+        ('Imprópria','Imprópria'),
+        ('Merc. nao embar.','Merc. nao embar.'),
+        ('Prorrogação de Boleto','Prorrogação de Boleto'),
+        ('Reentrega','Reentrega'),
+        ('Refaturamento','Refaturamento'),
+        ('Reversa','Reversa'),
+        ('Sem Agendamento','Sem Agendamento'),
+        ('Sem Pedido','Sem Pedido'),
+        ('Veículo em rota','Veículo em rota'),
+        ('Veículo Quebrado','Veículo Quebrado')
+    ]
+    id = models.BigAutoField(primary_key=True)
+    nome_tkt = models.CharField(max_length=100, unique=True, error_messages={'unique':'Já existe ticket criado para este CTE'})
+    dt_abertura = models.DateField()
+    responsavel = models.ForeignKey(User, on_delete=PROTECT, related_name='responsavel')
+    solicitante = models.ForeignKey(User, on_delete=PROTECT, related_name='solicitante')
+    remetente = models.CharField(max_length=50)
+    destinatario = models.CharField(max_length=50)
+    cte = models.CharField(max_length=100)
+    categoria = models.CharField(max_length=100, choices=CATEGORIA_CHOICES)
+    status = models.CharField(max_length=9, choices=STATUS_CHOICES)
+    msg_id = models.CharField(max_length=100, unique=True)
+
+class EmailMonitoramento(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    assunto = models.CharField(max_length=100)
+    mensagem = models.TextField()
+    cc = models.CharField(max_length=1000, blank=True, null=True)
+    dt_envio = models.DateField()
+    email_id = models.CharField(max_length=100, unique=True)
+    ult_resp = models.TextField(blank=True, null=True)
+    ult_resp_dt = models.DateField(blank=True, null=True)
+    ult_resp_html = models.TextField(blank=True, null=True)
+    tkt_ref = models.ForeignKey(TicketMonitoramento, on_delete=PROTECT)
+
+class TicketChamado(models.Model):
+    SERVICO_CHOICES = [
+        ('DESENVOLVIMENTO', 'DESENVOLVIMENTO'),
+        ('TI','TI'),
+        ('PRAXIO','PRAXIO'),
+        ('MANUTENCAO','MANUTENCAO')
+    ]
+    STATUS_CHOICES = [
+        ('ABERTO', 'ABERTO'),
+        ('ANDAMENTO', 'ANDAMENTO'),
+        ('CONCLUIDO', 'CONCLUIDO'),
+        ('CANCELADO', 'CANCELADO')
+    ]
+    DEPARTAMENTO_CHOICES = [
+        ('DIRETORIA', 'DIRETORIA'),
+        ('FATURAMENTO', 'FATURAMENTO'),
+        ('FINANCEIRO', 'FINANCEIRO'),
+        ('RH', 'RH'),
+        ('FISCAL', 'FISCAL'),
+        ('MONITORAMENTO', 'MONITORAMENTO'),
+        ('OPERACIONAL', 'OPERACIONAL'),
+        ('FROTA', 'FROTA'),
+        ('EXPEDICAO', 'EXPEDICAO'),
+        ('COMERCIAL', 'COMERCIAL'),
+        ('JURIDICO', 'JURIDICO'),
+        ('DESENVOLVIMENTO', 'DESENVOLVIMENTO'),
+        ('TI', 'TI'),
+        ('FILIAIS', 'FILIAIS')
+    ]
+    id = models.BigAutoField(primary_key=True)
+    solicitante = models.CharField(max_length=100)
+    responsavel = models.ForeignKey(User, on_delete=PROTECT, blank=True, null=True)
+    servico = models.CharField(max_length=15,choices=SERVICO_CHOICES)
+    nome_tkt = models.CharField(max_length=150)
+    dt_abertura = models.DateTimeField()
+    filial = models.CharField(max_length=3, choices=TIPO_GARAGEM, blank=True, null=True)
+    departamento = models.CharField(max_length=15, choices=DEPARTAMENTO_CHOICES, blank=True, null=True)
+    status = models.CharField(max_length=9, choices=STATUS_CHOICES)
+    msg_id = models.CharField(max_length=100, unique=True)
+
+class EmailChamado(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    assunto = models.CharField(max_length=100)
+    mensagem = models.TextField()
+    cc = models.CharField(max_length=1000, blank=True, null=True)
+    dt_envio = models.DateField()
+    email_id = models.CharField(max_length=100, unique=True)
+    ult_resp = models.TextField(blank=True, null=True)
+    ult_resp_dt = models.DateField(blank=True, null=True)
+    ult_resp_html = models.TextField(blank=True, null=True)
+    tkt_ref = models.ForeignKey(TicketChamado, on_delete=PROTECT)
 

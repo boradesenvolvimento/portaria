@@ -1,22 +1,25 @@
 from django import forms
 from django.conf import settings
 from django.forms import Textarea, DateField
+from django_summernote.widgets import SummernoteWidget
 
 from .models import Cadastro, TIPO_GARAGEM, ChecklistFrota, NfServicoPj, ManutencaoFrota, ServJoinManu, feriaspj, \
-    FuncPj, Motorista, Veiculos, Cliente, PaleteControl
+    FuncPj, Motorista, Veiculos, Cliente, PaleteControl, TipoServicosManut
 
 
 #forms
 class DateInput(forms.DateInput):
     input_type = 'date'
 
+
 class isPlacaForm(forms.Form):
     search_placa = forms.CharField(max_length=20, label='Placa')
     search_dest = forms.ChoiceField(choices=TIPO_GARAGEM, label='Destino')
 
 class DateForm(forms.Form):
-    date = forms.DateField()
-    date1 = forms.DateField()
+    date = forms.DateField(widget=DateInput(format=settings.DATE_FORMAT))
+    date1 = forms.DateField(widget=DateInput(format=settings.DATE_FORMAT))
+
 
 class FilterForm(forms.Form):
     filter_ = forms.CharField(max_length=30, label='')
@@ -38,10 +41,6 @@ class CadastroForm(forms.ModelForm):
             'hr_saida',
             'autor'
         ]
-        widgets = {
-            'hr_chegada': forms.DateInput(format='%d/%m/%Y %H:%m'),
-            'hr_saida': forms.DateInput(format='%d/%m/%Y %H:%m')
-        }
 
 class TPaletesForm(forms.Form):
     origem_ = forms.ChoiceField(choices=TIPO_GARAGEM)
@@ -84,6 +83,9 @@ class MotoristaForm(forms.ModelForm):
             'cep',
             'data_nasc'
         ]
+        widgets = {
+            'data_nasc': DateInput(),
+        }
 
 class VeiculosForm(forms.ModelForm):
     class Meta:
@@ -103,6 +105,7 @@ class ChecklistForm(forms.ModelForm):
         model = ChecklistFrota
         fields = [
             'placacarreta',
+            'placacarreta2',
             'kmatual',
             'horimetro',
             'p1_1',
@@ -138,9 +141,17 @@ class ChecklistForm(forms.ModelForm):
             'p3_5',
             'p3_6',
             'p3_7',
-            'p3_8'
+            'p3_8',
+            'obs'
         ]
+        widgets = {
+            'obs': Textarea(attrs={'cols': 30, 'rows': 3}),
+        }
 
+class TipoServicosManutForm(forms.ModelForm):
+    class Meta:
+        model = TipoServicosManut
+        fields = '__all__'
 
 class ServicoPjForm(forms.ModelForm):
     class Meta:
@@ -153,6 +164,9 @@ class ServicoPjForm(forms.ModelForm):
             'outros_desc',
             'data_emissao'
         ]
+        widgets = {
+            'data_emissao': DateInput(),
+        }
 
 class ManutencaoForm(forms.ModelForm):
     class Meta:
@@ -165,13 +179,10 @@ class ManutencaoForm(forms.ModelForm):
             'filial',
             'prev_entrega',
             'observacao',
-            'tp_servico'
         ]
         widgets = {
             'observacao': Textarea(attrs={'cols': 30, 'rows': 3}),
-            'dt_entrada': DateInput(format='%d/%m/%Y'),
-            'dt_saida': forms.DateInput(format='%d/%m/%Y'),
-            'prev_entrega': forms.DateInput(format='%d/%m/%Y'),
+            'prev_entrega': DateInput(),
         }
 
 class ServJoinManuForm(forms.ModelForm):
@@ -197,6 +208,10 @@ class feriaspjForm(forms.ModelForm):
             'valor_parcial2',
         ]
         widgets = {
-            'ultimas_ferias_ini': forms.DateInput(format='%d/%m/%Y'),
-            'ultimas_ferias_fim': forms.DateInput(format='%d/%m/%Y'),
+            'ultimas_ferias_ini': DateInput(),
+            'ultimas_ferias_fim': DateInput(),
         }
+
+#summernote
+class TextEditor(forms.Form):
+    area = forms.CharField(widget=SummernoteWidget())

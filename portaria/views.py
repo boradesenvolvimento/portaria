@@ -1,14 +1,31 @@
+#imports geral
 import csv
 import datetime
+import email, smtplib
+import os
+import re
+import textwrap
+import poplib
+from email import policy
+from email.mime.multipart import MIMEMultipart
+import pandas as pd
+from email.mime.text import MIMEText
+from email.mime.image import MIMEImage
+from email.utils import make_msgid
 
+from notifications.models import Notification
+from notifications.signals import notify
+#imports django built-ins
+from PIL import Image
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
 from django.db import IntegrityError
-from django.db.models import Count, Sum, F, Q, Value, Subquery, CharField, ExpressionWrapper, IntegerField
-from django.db.models.functions import Coalesce, TruncDate, Cast
+from django.db.models import Count, Sum, F, Q, Value, Subquery, CharField, ExpressionWrapper, IntegerField, \
+    DateTimeField
+from django.db.models.functions import Coalesce, TruncDate, Cast, TruncMinute
 from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, Http404
 from django.shortcuts import get_object_or_404, render, redirect
 from django.template.defaultfilters import upper
@@ -17,7 +34,7 @@ from django.utils import timezone
 from django.views import generic
 
 
-
+#imports django projeto
 from .models import * #Cadastro, PaletControl, ChecklistFrota, Veiculos, NfServicoPj
 from .forms import * #CadastroForm, isPlacaForm, DateForm, FilterForm, TPaletsForm, TIPO_GARAGEM, ChecklistForm
 
@@ -30,45 +47,51 @@ def telausuariorodrigo(request):
 def cardusuario(request):
     form = CardFuncionario.objects.all()
     src = request.GET.get('srcfunc')
-
     if src:
         try:
             src1 = CardFuncionario.objects.filter(nome__contains=src)
         except ObjectDoesNotExist:
             messages.error(request, 'Não encontrado')
-            return render(request, 'portaria/cardusuario.html', {'form':form})
+            return render(request, 'portaria/card/cardusuario.html', {'form':form})
         else:
             form = src1
             return render(request, 'portaria/cardusuario.html',{'form':form})
-    return render(request, 'portaria/cardusuario.html', {'form':form})
+    return render(request, 'portaria/card/cardusuario.html', {'form':form})
 
 def card(request, id):
     idcard = get_object_or_404(CardFuncionario, pk=id)
     form = CardFuncionario.objects.get(pk=idcard.id)
-    return render(request, 'portaria/card.html', {'form':form})
+    return render(request, 'portaria/card/card.html', {'form':form})
 
 #views
 @login_required
 def index(request):
-    return render(request, "portaria/index.html")
-
+    return render(request, "portaria/etc/index.html")
 
 class Visualizacao(generic.ListView):
     paginate_by = 10
-    template_name = 'portaria/visualizacao.html'
+    template_name = 'portaria/portaria/visualizacao.html'
     context_object_name = 'lista'
     form = DateForm()
 
     def get_queryset(self):
-        qs = Cadastro.objects.all().filter(hr_chegada__month=datetime.datetime.now().month).order_by('-hr_chegada')
+        autor = self.request.user
+        if autor.is_staff:
+            qs = Cadastro.objects.all().filter(hr_chegada__month=datetime.datetime.now().month).order_by('-hr_chegada')
+        else:
+            qs = Cadastro.objects.all().filter(hr_chegada__month=datetime.datetime.now().month, autor=autor).order_by('-hr_chegada')
         try:
             form_input1 = self.request.GET.get('date')
             form_input2 = self.request.GET.get('date1')
             if form_input1 and form_input2:
-                self.dateparse1 = datetime.datetime.strptime(form_input1, '%d/%m/%Y').replace(hour=00, minute=00)
-                self.dateparse2 = datetime.datetime.strptime(form_input2, '%d/%m/%Y').replace(hour=23, minute=59)
-                qs = Cadastro.objects.all().filter(hr_chegada__gte=self.dateparse1,
-                                                   hr_chegada__lte=self.dateparse2).order_by('-hr_chegada')
+                self.dateparse1 = datetime.datetime.strptime(form_input1, '%Y-%m-%d').replace(hour=00, minute=00)
+                self.dateparse2 = datetime.datetime.strptime(form_input2, '%Y-%m-%d').replace(hour=23, minute=59)
+                if autor.is_staff:
+                    qs = Cadastro.objects.all().filter(hr_chegada__gte=self.dateparse1,
+                                                       hr_chegada__lte=self.dateparse2).order_by('-hr_chegada')
+                else:
+                    qs = Cadastro.objects.all().filter(hr_chegada__gte=self.dateparse1,
+                                                       hr_chegada__lte=self.dateparse2, autor=autor).order_by('-hr_chegada')
         except ValueError:
             raise Exception('Valor digitado inválido')
         return qs
@@ -89,14 +112,14 @@ def cadastroentrada(request):
                 order = form.save(commit=False)
                 order.placa = uplaca
                 order.autor = autor
-                order.hr_chegada = timezone.now()
+                order.hr_chegada = datetime.datetime.now()
                 order.save()
                 messages.success(request,'Entrada cadastrada com sucesso.')
                 return redirect('portaria:cadastro')
-        return render(request, 'portaria/cadastroentrada.html', {'cadastro': cadastro, 'form': form})
+        return render(request, 'portaria/portaria/cadastroentrada.html', {'cadastro': cadastro, 'form': form})
     else:
         auth_message = 'Usuário não autenticado, por favor logue novamente'
-        return render(request, 'portaria/cadastroentrada.html', {'auth_message': auth_message})
+        return render(request, 'portaria/portaria/cadastroentrada.html', {'auth_message': auth_message})
 
 @login_required
 def cadastrosaida(request):
@@ -115,27 +138,28 @@ def cadastrosaida(request):
                     Cadastro.objects.get(pk=loc_placa.id)
                 except AttributeError:
                     messages.error(request, 'Não encontrado')
-                    return render(request, 'portaria/cadastrosaida.html', {'form':form})
+                    return render(request, 'portaria/portaria/cadastrosaida.html', {'form':form})
                 else:
                     Cadastro.objects.filter(pk=loc_placa.id).update(hr_saida=timezone.now(), destino=q_query, autor=request.user)
                     messages.success(request, 'Saida cadastrada com sucesso.')
                     return HttpResponseRedirect(reverse('portaria:cadastro'))
-        return render(request, 'portaria/cadastrosaida.html', {'form':form})
+        return render(request, 'portaria/portaria/cadastrosaida.html', {'form':form})
     else:
         auth_message = 'Usuário não autenticado, por favor logue novamente'
-        return render(request, 'portaria/cadastrosaida.html', {'auth_message': auth_message})
+        return render(request, 'portaria/portaria/cadastrosaida.html', {'auth_message': auth_message})
 
 @login_required
 def cadastro(request):
     if request.user.is_authenticated:
-        return render(request, 'portaria/cadastro.html')
+        filiais = TIPO_GARAGEM
+        return render(request, 'portaria/portaria/cadastro.html', {'filiais':filiais})
     else:
         auth_message = 'Usuário não autenticado, por favor logue novamente'
-        return render(request, 'portaria/cadastro.html', {'auth_message': auth_message})
+        return render(request, 'portaria/portaria/cadastro.html', {'auth_message': auth_message})
 
 @login_required
 def outputs(request):
-    return render(request, 'portaria/outputs.html')
+    return render(request, 'portaria/etc/outputs.html')
 
 
 def paleteview(request):
@@ -211,31 +235,26 @@ def saidapalete(request):
 @login_required
 def frota(request):
     form = ChecklistFrota.objects.all()
-    if request.method == 'POST':
-        mot = request.POST.get('moto_src')
-        if mot:
-            qs = Motorista.objects.filter(nome__icontains=mot)
-            return render(request, 'portaria/frota.html', {'qs':qs})
-
+    motos = Motorista.objects.all()
     if request.method == "GET":
         pla = request.GET.get('placa_')
         mot = request.GET.get('moto_')
-        if pla and mot:
+        if pla and mot != 'Selecione...':
             try:
                 pla1 = Veiculos.objects.get(prefixoveic=pla)
                 mot1 = Motorista.objects.get(pk=mot)
             except ObjectDoesNotExist:
                 messages.error(request,'Cadastro não encontrado')
-                return render(request, 'portaria/frota.html')
+                return render(request, 'portaria/frota/frota.html')
             else:
                 return redirect('portaria:checklistfrota', placa_id=pla1, moto_id=mot1.codigomot)
-        elif pla and not mot:
-            messages.error(request, 'Insira o motorista e selecione')
-            return render(request, 'portaria/frota.html')
+        elif pla and mot == 'Selecione...':
+            messages.error(request, 'Insira o motorista')
+            return render(request, 'portaria/frota/frota.html',{'form':form, 'motos':motos})
         elif mot and not pla:
             messages.error(request, 'Insira a placa')
-            return render(request, 'portaria/frota.html')
-    return render(request, 'portaria/frota.html',{'form':form})
+            return render(request, 'portaria/frota/frota.html',{'form':form, 'motos':motos})
+    return render(request, 'portaria/frota/frota.html',{'form':form, 'motos':motos})
 
 @login_required
 def checklistfrota(request, placa_id, moto_id):
@@ -257,15 +276,15 @@ def checklistfrota(request, placa_id, moto_id):
             pla.save()
             messages.success(request, f'Checklist para placa {pla} e motorista {mot} concluído!')
             return HttpResponseRedirect(reverse('portaria:frota'))
-    return render(request,'portaria/checklistfrota.html', {'form':form,'pla':pla, 'mot':mot})
+    return render(request,'portaria/frota/checklistfrota.html', {'form':form,'pla':pla, 'mot':mot})
 
 def checklistview(request):
     form = ChecklistFrota.objects.all().order_by('-datachecklist')
-    return render(request, 'portaria/checklistview.html', {'form':form})
+    return render(request, 'portaria/frota/checklistview.html', {'form':form})
 
 def checklistdetail(request, idckl):
     form = get_object_or_404(ChecklistFrota, pk=idckl)
-    return render(request, 'portaria/checklistdetail.html', {'form':form})
+    return render(request, 'portaria/frota/checklistdetail.html', {'form':form})
 
 
 def cadfuncionariopj(request):
@@ -280,7 +299,7 @@ def cadfuncionariopj(request):
             else:
                 messages.success(request, 'Cadastrado com sucesso')
                 return redirect('portaria:index')
-    return render(request, 'portaria/cadfuncionariopj.html', {'form':form})
+    return render(request, 'portaria/pj/cadfuncionariopj.html', {'form':form})
 
 @login_required
 def servicospj(request):
@@ -297,7 +316,7 @@ def servicospj(request):
             for c in cad:
                 query = FuncPj.objects.filter(pk=c.id)
                 array.extend(query)
-    return render(request, 'portaria/servicospj.html', {'array': array})
+    return render(request, 'portaria/pj/servicospj.html', {'array': array})
 
 @login_required
 def consultanfpj(request):
@@ -313,7 +332,7 @@ def consultanfpj(request):
             ) \
             .annotate(total=((F('salario') + F('ajuda_custo') + F('faculdade') + F('cred_convenio') + F('outros_cred')) - (F('adiantamento') + F('desc_convenio') + F('outros_desc'))))
         arrya.extend(query)
-    return render(request, 'portaria/consultanfpj.html', {'arrya': arrya})
+    return render(request, 'portaria/pj/consultanfpj.html', {'arrya': arrya})
 
 @login_required
 def cadservicospj(request, args):
@@ -328,15 +347,15 @@ def cadservicospj(request, args):
             calc.save()
             messages.success(request, f'Valores cadastrados com sucesso para {calc.funcionario}')
             return HttpResponseRedirect(reverse('portaria:servicospj'))
-    return render(request, 'portaria/cadservicospj.html', {'form':form,'func':func})
+    return render(request, 'portaria/pj/cadservicospj.html', {'form':form,'func':func})
 
 def decimopj(request):
     allfunc = FuncPj.objects.filter(ativo=True).annotate(parc1=F('pj13__pgto_parc_1'),parc2=F('pj13__pgto_parc_2')).order_by('nome')
     func = request.GET.get('srcfunc')
     if func:
         allfunc = FuncPj.objects.filter(nome__icontains=func, ativo=True).annotate(parc1=F('pj13__pgto_parc_1'),parc2=F('pj13__pgto_parc_2')).order_by('nome')
-        return render(request, 'portaria/decimopj.html', {'allfunc': allfunc})
-    return render(request,'portaria/decimopj.html', {'allfunc':allfunc})
+        return render(request, 'portaria/pj/decimopj.html', {'allfunc': allfunc})
+    return render(request,'portaria/pj/decimopj.html', {'allfunc':allfunc})
 
 def caddecimo1(request, idfunc):
     func = get_object_or_404(FuncPj, pk=idfunc)
@@ -349,7 +368,7 @@ def caddecimo1(request, idfunc):
         pj13.objects.create(valor=val,pgto_parc_1=timezone.now(),periodo_meses=meses,funcionario=func, autor=autor)
         messages.success(request, 'Cadastro primeira parcela feito com sucesso')
         return redirect('portaria:decimopj')
-    return render(request, 'portaria/caddecimo1.html', {'func': func})
+    return render(request, 'portaria/pj/caddecimo1.html', {'func': func})
 
 def caddecimo2(request, idfunc):
     func = get_object_or_404(FuncPj, pk=idfunc)
@@ -361,7 +380,7 @@ def caddecimo2(request, idfunc):
             pj13.objects.filter(funcionario=func).update(pgto_parc_2=timezone.now(), autor=autor)
             messages.success(request, 'Cadastro segunda parcela feito com sucesso')
             return redirect('portaria:decimopj')
-        return render(request, 'portaria/caddecimo2.html', {'func': func, 'form': form})
+        return render(request, 'portaria/pj/caddecimo2.html', {'func': func, 'form': form})
 
 def decimoview(request):
     period = request.GET.get('filter')
@@ -375,7 +394,7 @@ def decimoview(request):
                                                                 parc_2=F('pj13__pgto_parc_2'),
                                                                 periodo=F('pj13__periodo_meses'))
                 array.extend(query)
-            return render(request, 'portaria/decimoview.html', {'allfuncs': allfuncs, 'array': array})
+            return render(request, 'portaria/pj/decimoview.html', {'allfuncs': allfuncs, 'array': array})
         elif period == 'pgto_parcela_2':
             array = []
             allfuncs = FuncPj.objects.filter(ativo=True, pj13__pgto_parc_2__isnull=False)
@@ -385,11 +404,11 @@ def decimoview(request):
                                                                 parc_2=F('pj13__pgto_parc_2'),
                                                                 periodo=F('pj13__periodo_meses'))
                 array.extend(query)
-            return render(request, 'portaria/decimoview.html', {'allfuncs': allfuncs, 'array': array})
-    return render(request, 'portaria/decimoview.html')
+            return render(request, 'portaria/pj/decimoview.html', {'allfuncs': allfuncs, 'array': array})
+    return render(request, 'portaria/pj/decimoview.html')
 
 def feriaspjv(request):
-    return render(request,'portaria/feriaspj.html')
+    return render(request,'portaria/pj/feriaspj.html')
 
 def feriascad(request):
     form = feriaspjForm
@@ -408,7 +427,7 @@ def feriascad(request):
             messages.success(request, 'Cadastrado com sucesso!')
             return redirect('portaria:feriaspjv')
 
-    return render(request,'portaria/feriascad.html', {'form':form})
+    return render(request,'portaria/pj/feriascad.html', {'form':form})
 
 def feriasview(request):
     hoje = datetime.date.today()
@@ -421,26 +440,26 @@ def feriasview(request):
         if name == '' and opt:
             if opt == 'Férias Vencidas':
                 qs = feriaspj.objects.filter(quitado=False, funcionario_id__in=aa, vencimento__lte=hoje).order_by('vencimento')
-                return render(request, 'portaria/feriasview.html', {'qs': qs, 'dias': dias, 'hoje': hoje})
+                return render(request, 'portaria/pj/feriasview.html', {'qs': qs, 'dias': dias, 'hoje': hoje})
             elif opt == 'Próximas do vencimento':
                 qs = feriaspj.objects.filter(quitado=False, funcionario_id__in=aa, vencimento__gte= hoje,vencimento__lte=dias).order_by('vencimento')
-                return render(request, 'portaria/feriasview.html', {'qs': qs, 'dias': dias, 'hoje': hoje})
+                return render(request, 'portaria/pj/feriasview.html', {'qs': qs, 'dias': dias, 'hoje': hoje})
             else:
                 pass
         elif opt == '' and name:
             qs = feriaspj.objects.filter(quitado=False, funcionario_id__in=aa, funcionario__nome__contains=name).order_by('vencimento')
-            return render(request, 'portaria/feriasview.html', {'qs': qs, 'dias': dias, 'hoje': hoje})
+            return render(request, 'portaria/pj/feriasview.html', {'qs': qs, 'dias': dias, 'hoje': hoje})
         elif name and opt:
             if opt == 'Férias Vencidas':
                 qs = feriaspj.objects.filter(quitado=False, funcionario_id__in=aa, vencimento__lte = hoje, funcionario__nome__contains=name).order_by('vencimento')
-                return render(request, 'portaria/feriasview.html', {'qs': qs,'dias':dias,'hoje':hoje})
+                return render(request, 'portaria/pj/feriasview.html', {'qs': qs,'dias':dias,'hoje':hoje})
             elif opt == 'Próximas do vencimento':
                 qs = feriaspj.objects.filter(quitado=False, funcionario_id__in=aa, vencimento__gte= hoje,vencimento__lte=dias, funcionario__nome__contains=name).order_by('vencimento')
-                return render(request, 'portaria/feriasview.html', {'qs': qs,'dias':dias,'hoje':hoje})
-            return render(request, 'portaria/feriasview.html', {'qs': qs, 'dias': dias, 'hoje': hoje})
+                return render(request, 'portaria/pj/feriasview.html', {'qs': qs,'dias':dias,'hoje':hoje})
+            return render(request, 'portaria/pj/feriasview.html', {'qs': qs, 'dias': dias, 'hoje': hoje})
 
 
-    return render(request, 'portaria/feriasview.html', {'qs': qs,'dias':dias,'hoje':hoje})
+    return render(request, 'portaria/pj/feriasview.html', {'qs': qs,'dias':dias,'hoje':hoje})
 
 def feriasagen(request, idfpj):
     form = feriaspjForm
@@ -449,16 +468,16 @@ def feriasagen(request, idfpj):
     agen2 = request.GET.get('agendamento2')
     if agen1 and agen2:
         try:
-            agenparse1 = datetime.datetime.strptime(agen1, '%d/%m/%Y').date()
-            agenparse2 = datetime.datetime.strptime(agen2, '%d/%m/%Y').date()
+            agenparse1 = datetime.datetime.strptime(agen1, '%Y-%m-%d').date()
+            agenparse2 = datetime.datetime.strptime(agen2, '%Y-%m-%d').date()
             feriaspj.objects.filter(pk=fer.id).update(agendamento_ini=agenparse1, agendamento_fim=agenparse2)
         except ValueError:
             messages.error(request, 'Por favor digite uma data válida')
-            return render(request, 'portaria/agendamento.html', {'fer':fer})
+            return render(request, 'portaria/pj/agendamento.html', {'fer':fer})
         else:
             messages.success(request, 'Agendamento feito com sucesso')
             return redirect('portaria:feriasview')
-    return render(request, 'portaria/agendamento.html', {'fer':fer,'form':form})
+    return render(request, 'portaria/pj/agendamento.html', {'fer':fer,'form':form})
 
 def feriasquit(request, idfpj):
     fer = get_object_or_404(feriaspj, pk=idfpj)
@@ -472,7 +491,7 @@ def feriasquit(request, idfpj):
         return redirect('portaria:feriasview')
 
 def frotacadastros(request):
-    return render(request, 'portaria/frotacadastros.html')
+    return render(request, 'portaria/frota/frotacadastros.html')
 
 def cadmotorista(request):
     form = MotoristaForm
@@ -482,7 +501,7 @@ def cadmotorista(request):
             form.save()
             messages.success(request, 'Cadastrado com sucesso')
             return redirect('portaria:frotacadastros')
-    return render(request, 'portaria/cadmotorista.html', {'form':form})
+    return render(request, 'portaria/frota/cadmotorista.html', {'form':form})
 
 def cadveiculo(request):
     form = VeiculosForm
@@ -492,7 +511,17 @@ def cadveiculo(request):
             form.save()
             messages.success(request, 'Cadastrado com sucesso')
             return redirect('portaria:frotacadastros')
-    return render(request, 'portaria/cadveiculo.html', {'form': form})
+    return render(request, 'portaria/frota/cadveiculo.html', {'form': form})
+
+def cadtpservico(request):
+    form = TipoServicosManutForm
+    if request.method == 'POST':
+        form = TipoServicosManutForm(request.POST or None)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Cadastrado com sucesso')
+            return redirect('portaria:frotacadastros')
+    return render(request, 'portaria/frota/cadtpservico.html', {'form':form})
 
 @login_required
 def manutencaofrota(request):
@@ -516,46 +545,10 @@ def manutencaofrota(request):
             return render(request, 'portaria/manutencaofrota.html')
         except ValueError:
             messages.error(request, 'Por gentileza digite o OS corretamente')
-            return render(request, 'portaria/manutencaofrota.html')
+            return render(request, 'portaria/frota/manutencaofrota.html')
         else:
             return redirect('portaria:manusaida', osid=idmanu)
-    return render(request, 'portaria/manutencaofrota.html')
-
-@login_required
-def manuentrada(request, placa_id):
-    placa = get_object_or_404(Veiculos, prefixoveic=placa_id)
-    form = ManutencaoForm
-    autor = request.user
-    ult_manu = Veiculos.objects.filter(pk=placa.codigoveic).values_list('manutencaofrota__dt_saida', flat=True)\
-        .order_by('-manutencaofrota__dt_saida').first()
-    if ult_manu == None: ult_manu = timezone.now()
-    if request.method == 'POST':
-        count = request.POST.get('setcount')
-        tp_sv = request.POST.get('tp_servico')
-        form = ManutencaoForm(request.POST or None)
-        if form.is_valid():
-            manu = form.save(commit=False)
-            manu.veiculo_id = placa.codigoveic
-            manu.dt_ult_manutencao = ult_manu
-            manu.dt_entrada = timezone.now()
-            manu.status = 'ANDAMENTO'
-            manu.autor = autor
-            manu.save()
-            ServJoinManu.objects.create(id_svs=tp_sv,autor=autor,id_os_id=manu.id)
-            if count:
-                ncount = int(count)
-                if ncount > 0:
-                    for c in range(0, ncount):
-                        d = c + 1
-                        variable = 'tp_servico' + str(d)
-                        tp_sv = request.POST.get(variable)
-                        if tp_sv:
-                            ServJoinManu.objects.create(id_svs=tp_sv,autor=autor,id_os_id=manu.id)
-                        else:
-                            continue
-            messages.success(request, f'Cadastro de manutenção do veículo {placa} feito com sucesso!')
-            return redirect('portaria:manutencaoprint', osid= manu.id)
-    return render(request, 'portaria/manuentrada.html', {'placa':placa,'form':form})
+    return render(request, 'portaria/frota/manutencaofrota.html')
 
 def manupendentes(request):
     qs = ManutencaoFrota.objects.filter(status='PENDENTE').order_by('dt_entrada')
@@ -574,7 +567,56 @@ def manupendentes(request):
         else:
             messages.success(request, f'Confirmado conclusão da os {isos}')
             return redirect('portaria:manupendentes')
-    return render(request,'portaria/manutencaopendencia.html', {'qs':qs,'qs2':qs2})
+    return render(request,'portaria/frota/manutencaopendencia.html', {'qs':qs,'qs2':qs2})
+
+@login_required
+def manuentrada(request, placa_id):
+    print('inicio')
+    array = []
+    gp_servs = TipoServicosManut.objects.values_list('grupo_servico', flat=True).distinct()
+    for q in gp_servs:
+        tp_servs = TipoServicosManut.objects.filter(grupo_servico=str(q))
+        concat = [str(q), tp_servs]
+        array.append(concat)
+    placa = get_object_or_404(Veiculos, prefixoveic=placa_id)
+    form = ManutencaoForm
+    autor = request.user
+    ult_manu = Veiculos.objects.filter(pk=placa.codigoveic).values_list('manutencaofrota__dt_saida', flat=True)\
+        .order_by('-manutencaofrota__dt_saida').first()
+    if ult_manu == None: ult_manu = timezone.now()
+    if request.method == 'POST':
+        count = request.POST.get('setcount')
+        tp_sv = request.POST.get('tp_servico')
+
+        form = ManutencaoForm(request.POST or None)
+        if form.is_valid():
+            manu = form.save(commit=False)
+            manu.veiculo_id = placa.codigoveic
+            manu.dt_ult_manutencao = ult_manu
+            manu.dt_entrada = timezone.now()
+            manu.status = 'ANDAMENTO'
+            manu.autor = autor
+            manu.tp_servico = tp_sv
+            try:
+                manu.save()
+                ServJoinManu.objects.create(id_svs_id=tp_sv, autor=autor, id_os_id=manu.id)
+                if count:
+                    ncount = int(count)
+                    if ncount > 0:
+                        for c in range(0, ncount):
+                            d = c + 1
+                            variable = 'tp_servico' + str(d)
+                            tp_sv = request.POST.get(variable)
+                            print(tp_sv)
+                            if tp_sv:
+                                ServJoinManu.objects.create(id_svs_id=tp_sv,autor=autor,id_os_id=manu.id)
+                            else:
+                                continue
+            except Exception as e:
+                raise e
+            messages.success(request, f'Cadastro de manutenção do veículo {placa} feito com sucesso!')
+            return redirect('portaria:manutencaoprint', osid= manu.id)
+    return render(request, 'portaria/frota/manuentrada.html', {'placa':placa,'form':form,'array':array})
 
 
 @login_required
@@ -589,7 +631,7 @@ def manusaida(request, osid):
                 date_dtsaida = datetime.datetime.strptime(dtsaida, '%d/%m/%Y').date()
             except ValueError:
                 messages.error(request, 'Por favor digite uma data válida')
-                return render(request, 'portaria/manusaida.html',{'get_os':get_os})
+                return render(request, 'portaria/frota/manusaida.html',{'get_os':get_os})
             else:
                 between_days = (date_dtsaida - get_os.dt_entrada).days
                 ManutencaoFrota.objects.filter(pk=get_os.id).update(valor_peca=vlpeca,valor_maodeobra=vlmao,
@@ -600,13 +642,13 @@ def manusaida(request, osid):
 
                 messages.success(request, f'Saída cadastrada para OS {get_os.id}, placa {get_os.veiculo}')
                 return redirect('portaria:manutencaoview')
-        return render(request, 'portaria/manusaida.html',{'get_os':get_os})
+        return render(request, 'portaria/frota/manusaida.html',{'get_os':get_os})
     else:
         messages.error(request, 'Saída já cadastrada para OS')
         return redirect('portaria:manutencaofrota')
 
 class ManutencaoListView(generic.ListView):
-    template_name = 'portaria/manutencaoview.html'
+    template_name = 'portaria/frota/manutencaoview.html'
     context_object_name = 'lista'
 
     def get_queryset(self):
@@ -630,9 +672,202 @@ class ManutencaoListView(generic.ListView):
 @login_required
 def manutencaoprint(request, osid):
     os = get_object_or_404(ManutencaoFrota, pk=osid)
-    aa = ServJoinManu.objects.filter(id_os=os.id).values_list('id_svs', flat=True)
-    return render(request, 'portaria/manutencaoprint.html', {'os':os,'aa':aa})
+    aa = ServJoinManu.objects.filter(id_os=os.id).annotate(grp=F('id_svs__grupo_servico'), svs=F('id_svs__tipo_servico'))
+    return render(request, 'portaria/frota/manutencaoprint.html', {'os':os,'aa':aa})
 
+def fatferramentas(request):
+    return render(request,'portaria/etc/fatferramentas.html')
+
+def monitticket(request):
+    if request.user.is_staff:
+        tkts = TicketMonitoramento.objects.filter(Q(status='ABERTO') | Q(status='ANDAMENTO'))
+    else:
+        tkts = TicketMonitoramento.objects.filter(Q(status='ABERTO') | Q(status='ANDAMENTO'), responsavel=request.user)
+    if request.method == 'POST':
+        tkt = request.POST.get('srctkt')
+        if tkt:
+            if request.user.is_staff:
+                tkts = TicketMonitoramento.objects.filter(pk=tkt).exclude(Q(status='CONCLUIDO') | Q(status='CANCELADO'))
+            else:
+                tkts = TicketMonitoramento.objects.filter(pk=tkt, responsavel=request.user).exclude(Q(status='CONCLUIDO')|Q(status='CANCELADO'))
+
+            return render(request, 'portaria/monitoramento/monitticket.html', {'tkts': tkts})
+    return render(request, 'portaria/monitoramento/monitticket.html', {'tkts':tkts})
+
+def tktcreate(request):
+    users = User.objects.filter(groups__name='monitoramento')
+    fil = TIPO_GARAGEM
+    tp_doc_choices = TIPO_DOCTO_CHOICES
+    editor = TextEditor()
+    opts = TicketMonitoramento.CATEGORIA_CHOICES
+    if request.method == 'GET':
+        cte = request.GET.get('cte')
+        gar = request.GET.get('garagem')
+        tp_docto = request.GET.get('tp_docto')
+        if cte and gar and tp_docto:
+            try:
+                conn = settings.CONNECTION
+                cur = conn.cursor()
+                cur.execute(f'''
+                                SELECT 
+                                      F1.EMPRESA,
+                                      CASE
+                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '1'  THEN 'SPO'
+                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '2'  THEN 'REC'
+                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '3'  THEN 'SSA'
+                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '4'  THEN 'FOR'
+                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '5'  THEN 'MCZ'
+                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '6'  THEN 'NAT'
+                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '7'  THEN 'JPA'
+                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '8'  THEN 'AJU'
+                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '9'  THEN 'VDC'
+                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '10' THEN 'MG'
+                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '50' THEN 'SPO'
+                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '20' THEN 'SPO'
+                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '21' THEN 'SPO'
+                                          WHEN F1.EMPRESA = '2' AND F1.GARAGEM = '20' THEN 'CTG'
+                                          WHEN F1.EMPRESA = '2' AND F1.GARAGEM = '21' THEN 'TCO'
+                                          WHEN F1.EMPRESA = '2' AND F1.GARAGEM = '22' THEN 'UDI'
+                                          WHEN F1.EMPRESA = '2' AND F1.GARAGEM = '23' THEN 'TMA'
+                                          WHEN F1.EMPRESA = '2' AND F1.GARAGEM = '24' THEN 'VIX'  
+                                          WHEN F1.EMPRESA = '2' AND F1.GARAGEM = '50' THEN 'TMA'  
+                                      END GARAGEM,
+                                      F1.TIPO_DOCTO,
+                                      F1.CONHECIMENTO CTE,
+                                      F1.REM_RZ_SOCIAL,
+                                      F1.DEST_RZ_SOCIAL,
+                                      LISTAGG ((LTRIM (F4.NOTA_FISCAL,0)), ' / ') WITHIN GROUP (ORDER BY F1.CONHECIMENTO) NOTA_FISCAL 
+                                FROM
+                                    FTA001 F1,
+                                    FTA004 F4
+                                WHERE
+                                     F1.EMPRESA = F4.EMPRESA AND
+                                     F1.FILIAL = F4.FILIAL   AND
+                                     F1.GARAGEM = F4.GARAGEM AND
+                                     F1.CONHECIMENTO = F4.CONHECIMENTO AND
+                                     F1.SERIE = F4.SERIE               AND
+                                     F1.TIPO_DOCTO = F4.TIPO_DOCTO     AND
+                                     F1.CONHECIMENTO = {cte}           AND
+                                     F1.GARAGEM = {gar}                AND
+                                     F1.TIPO_DOCTO = {tp_docto}            
+                                GROUP BY
+                                     F1.EMPRESA,
+                                      F1.GARAGEM,
+                                      F1.TIPO_DOCTO,
+                                      F1.CONHECIMENTO,
+                                      F1.REM_RZ_SOCIAL,
+                                      F1.DEST_RZ_SOCIAL''')
+                res = dictfetchall(cur)
+            except Exception as e:
+                messages.error(request, f'{e}')
+                return redirect('portaria:monitticket')
+            else:
+                if len(res)>1:
+                    messages.error(request, f'Mais de 1 registro encontrado')
+                    return redirect('portaria:monitticket')
+                elif res:
+                    return render(request, 'portaria/monitoramento/tktcreate.html', {'editor': editor, 'users': users,'res': res,'opts': opts,})
+                else:
+                    messages.error(request, f'Nenhum registro encontrado')
+                    return redirect('portaria:monitticket')
+    if request.method == 'POST':
+        responsavel = request.POST.get('responsavel')
+        cc = request.POST.get('cc')
+        assunto = request.POST.get('assunto')
+        mensagem = request.POST.get('area')
+        rem = request.POST.get('remetente')
+        dest = request.POST.get('destinatario')
+        if responsavel and rem and assunto and mensagem and cc and dest:
+            createtktandmail(request, resp=responsavel, cc=cc, rem=rem, dest=dest, assunto=assunto, msg=mensagem, cte='12345')
+        else:
+            messages.error(request, 'Está faltando campos')
+            return redirect('portaria:tktcreate')
+    return render(request, 'portaria/monitoramento/tktcreate.html',{'editor': editor, 'users': users, 'opts': opts, 'tp_doc_choices':tp_doc_choices})
+
+def tktview(request, tktid):
+    opts = TicketMonitoramento.CATEGORIA_CHOICES
+    stts = TicketMonitoramento.STATUS_CHOICES
+    form = get_object_or_404(EmailMonitoramento, tkt_ref_id=tktid)
+    editor = TextEditor()
+    if request.method == 'POST':
+        ctg = request.POST.get('categs')
+        addcc = request.POST.get('addcc')
+        nstts = request.POST.get('stts')
+        if ctg != 'selected':
+            TicketMonitoramento.objects.filter(pk=tktid).update(categoria=ctg)
+
+        if nstts != 'selected':
+            tkt = get_object_or_404(TicketMonitoramento, pk=tktid)
+            if tkt and tkt.categoria != 'Aguardando Recebimento':
+                TicketMonitoramento.objects.filter(pk=tkt.id).update(status=nstts)
+                messages.info(request, f'Ticket {tkt.id} alterado para {nstts} com sucesso.')
+            else:
+                messages.error(request, 'Não autorizado encerramento do monitoramento.')
+                return redirect('portaria:monitticket')
+
+        if addcc:
+            oldcc = form.cc
+            newcc = addcc + ';' + oldcc + ';'
+            try:
+                EmailMonitoramento.objects.filter(tkt_ref_id=tktid).update(cc=newcc)
+            except Exception as e:
+                print(e)
+
+        area = request.POST.get('area')
+        if area and area != '<p><br></p>':
+            replymail_monitoramento(request, tktid, area)
+        return redirect('portaria:monitticket')
+    return render(request, 'portaria/monitoramento/ticketview.html', {'form':form,'editor':editor,'opts':opts,'stts':stts})
+
+def chamado(request):
+    metrics = TicketChamado.objects.exclude(Q(status='CANCELADO') | Q(status='CONCLUIDO')).annotate(
+        total=Count('id'),executando=Count('id', filter=Q(status='ANDAMENTO'))
+    ).aggregate(total1=Sum('total'),exec=(Sum('executando')))
+    return render(request, 'portaria/chamado/chamado.html', {'metrics':metrics})
+
+def chamadonovo(request):
+    editor = TextEditor()
+    return render(request, 'portaria/chamado/chamadonovo.html', {'editor':editor})
+
+def chamadopainel(request):
+    form = TicketChamado.objects.exclude(Q(status='CANCELADO') | Q(status='CONCLUIDO'))
+    return render(request, 'portaria/chamado/chamadopainel.html',{'form':form})
+
+def chamadodetail(request, tktid):
+    stts = TicketChamado.STATUS_CHOICES
+    dp = TicketChamado.DEPARTAMENTO_CHOICES
+    fil = TIPO_GARAGEM
+    resp = User.objects.filter(groups__name='monitoramento')
+    form = get_object_or_404(EmailChamado, tkt_ref=tktid)
+    editor = TextEditor()
+    if request.method == 'POST':
+        ndptm = request.POST.get('ndptm')
+        nstts = request.POST.get('nstts')
+        nresp = request.POST.get('nresp')
+        nfil = request.POST.get('nfil')
+        area = request.POST.get('area')
+
+        try:
+            if ndptm != 'selected':
+                TicketChamado.objects.filter(pk=form.tkt_ref_id).update(departamento=ndptm)
+            if nresp != 'selected':
+                TicketChamado.objects.filter(pk=form.tkt_ref_id).update(responsavel=nresp)
+            if nfil != 'selected':
+                TicketChamado.objects.filter(pk=form.tkt_ref_id).update(filial=nfil)
+            if nstts != 'selected':
+                if nstts == 'CONCLUIDO' or nstts == 'CANCELADO':
+                    if form.tkt_ref.status == 'ABERTO':
+                        messages.error(request, 'Não autorizado encerramento do monitoramento.')
+                        return redirect('portaria:chamado')
+                    else:
+                        TicketChamado.objects.filter(pk=form.tkt_ref_id).update(status=nstts)
+                else:
+                    TicketChamado.objects.filter(pk=form.tkt_ref_id).update(status=nstts)
+            if area and area != '<p><br></p>':
+                chamadoupdate(request, tktid, area)
+        except Exception as e:
+            print(e)
+    return render(request, 'portaria/chamado/chamadodetail.html', {'form':form,'editor':editor,'stts':stts,'dp':dp,'resp':resp,'fil':fil})
 #fim das views
 
 
@@ -654,19 +889,20 @@ def transfpalete(request):
                                          autor=request.user)
                 PaleteControl.objects.filter(pk=x.id).update(loc_atual=des)
             messages.success(request, f'{qnt} palete transferido de {ori} para {des}')
-            return render(request,'portaria/transfpaletes.html', {'form':form})
+            return render(request,'portaria/palete/transfpaletes.html', {'form':form})
         else:
             messages.error(request,'Quantidade solicitada maior que a disponível')
-            return render(request,'portaria/transfpaletes.html', {'form':form})
+            return render(request,'portaria/palete/transfpaletes.html', {'form':form})
 
     return render(request,'portaria/transfpaletes.html', {'form':form})
+
 
 @login_required
 def get_nfpj_mail(request):
     data1 = request.POST.get('dataIni')
     data2 = request.POST.get('dataFim')
-    dateparse = datetime.datetime.strptime(data1, '%d/%m/%Y').replace(hour=00, minute=00)
-    dateparse1 = datetime.datetime.strptime(data2, '%d/%m/%Y').replace(hour=23, minute=59)
+    dateparse = datetime.datetime.strptime(data1, '%Y-%m-%d').replace(hour=00, minute=00)
+    dateparse1 = datetime.datetime.strptime(data2, '%Y-%m-%d').replace(hour=23, minute=59)
     arrya = []
     qs = FuncPj.objects.filter(ativo=True)
     for q in qs:
@@ -705,7 +941,6 @@ def get_nfpj_mail(request):
 def get_pj13_mail(request):
     getperiod = request.POST.get('period')
     array = []
-    print(getperiod)
     if getperiod == 'pgto_parcela_1':
         allfuncs = FuncPj.objects.filter(ativo=True, pj13__pgto_parc_1__isnull=False, pj13__pgto_parc_2__isnull=True)
         for q in allfuncs:
@@ -752,30 +987,45 @@ def get_pj13_csv(request):
     return response
 
 def get_portaria_csv(request):
-    try:
-        data1 = request.POST.get('dataIni')
-        data2 = request.POST.get('dataFim')
-        dateparse = datetime.datetime.strptime(data1, '%d/%m/%Y').replace(hour=00, minute=00)
-        dateparse1 = datetime.datetime.strptime(data2, '%d/%m/%Y').replace(hour=23, minute=59)
-    except ValueError:
-        messages.error(request,'Por favor digite uma data válida')
-        return redirect('portaria:cadastro')
+    data1 = request.POST.get('dataIni')
+    data2 = request.POST.get('dataFim')
+    fil = request.POST.get('filial')
+    if fil and not data1 and not data2:
+        cadastro = Cadastro.objects.all().annotate(
+            hr_chegada_fmt=Cast(TruncMinute('hr_chegada', DateTimeField()), CharField()),hr_saida_fmt=Cast(TruncMinute('hr_chegada', DateTimeField()), CharField())) \
+            .values_list('placa', 'placa2', 'motorista', 'empresa', 'origem', 'destino','tipo_mot', 'tipo_viagem', 'hr_chegada_fmt', 'hr_saida_fmt', 'autor__username')\
+            .filter(origem=fil)
+    elif data1 and data2 and not fil:
+        dateparse = datetime.datetime.strptime(data1, '%Y-%m-%d').replace(hour=00, minute=00)
+        dateparse1 = datetime.datetime.strptime(data2, '%Y-%m-%d').replace(hour=23, minute=59)
+        cadastro = Cadastro.objects.all().annotate(
+            hr_chegada_fmt=Cast(TruncMinute('hr_chegada', DateTimeField()), CharField()),
+            hr_saida_fmt=Cast(TruncMinute('hr_chegada', DateTimeField()), CharField())) \
+            .values_list('placa', 'placa2', 'motorista', 'empresa', 'origem', 'destino', 'tipo_mot', 'tipo_viagem',
+                         'hr_chegada_fmt', 'hr_saida_fmt', 'autor__username') \
+            .filter(hr_chegada__gte=dateparse, hr_chegada__lte=dateparse1)
     else:
-        response = HttpResponse(content_type='text/csv',
-                                headers={'Content-Disposition': 'attachment; filename="portaria.csv"'},
-                                )
+        dateparse = datetime.datetime.strptime(data1, '%Y-%m-%d').replace(hour=00, minute=00)
+        dateparse1 = datetime.datetime.strptime(data2, '%Y-%m-%d').replace(hour=23, minute=59)
+        cadastro = Cadastro.objects.all().annotate(
+            hr_chegada_fmt=Cast(TruncMinute('hr_chegada', DateTimeField()), CharField()),
+            hr_saida_fmt=Cast(TruncMinute('hr_chegada', DateTimeField()), CharField())) \
+            .values_list('placa', 'placa2', 'motorista', 'empresa', 'origem', 'destino', 'tipo_mot', 'tipo_viagem',
+                         'hr_chegada_fmt', 'hr_saida_fmt', 'autor__username') \
+            .filter(hr_chegada__gte=dateparse, hr_chegada__lte=dateparse1, origem=fil)
 
-        response.write(u'\ufeff'.encode('utf8'))
-        writer = csv.writer(response)
-        writer.writerow(['Placa','Placa2','Motorista','Empresa','Origem','Destino','Tipo_mot','Tipo_viagem',
-                         'Hr_entrada','Hr_Saida','autor'])
-        cadastro = Cadastro.objects.all().values_list(
-                            'placa', 'placa2', 'motorista', 'empresa', 'origem','destino',
-                                'tipo_mot', 'tipo_viagem', 'hr_chegada', 'hr_saida', 'autor__username')\
-            .filter(hr_chegada__gte=dateparse,hr_chegada__lte=dateparse1)
-        for placa in cadastro:
-            writer.writerow(placa)
-        return response
+    response = HttpResponse(content_type='text/csv',
+                            headers={'Content-Disposition': 'attachment; filename="portaria.csv"'},
+                            )
+
+    response.write(u'\ufeff'.encode('utf8'))
+    writer = csv.writer(response)
+    writer.writerow(['Placa','Placa2','Motorista','Empresa','Origem','Destino','Tipo_mot','Tipo_viagem',
+                     'Hr_entrada','Hr_Saida','autor'])
+
+    for placa in cadastro:
+        writer.writerow(placa)
+    return response
 
 def get_palete_csv(request):
     response = HttpResponse(content_type='text/csv',
@@ -794,8 +1044,8 @@ def get_manu_csv(request):
     try:
         data1 = request.POST.get('dataIni')
         data2 = request.POST.get('dataFin')
-        dateparse = datetime.datetime.strptime(data1, '%d/%m/%Y')
-        dateparse1 = datetime.datetime.strptime(data2, '%d/%m/%Y')
+        dateparse = datetime.datetime.strptime(data1, '%Y-%m-%d')
+        dateparse1 = datetime.datetime.strptime(data2, '%Y-%m-%d')
     except ValueError:
         messages.error(request,'Por favor digite uma data válida')
         return redirect('portaria:manutencaofrota')
@@ -807,8 +1057,8 @@ def get_manu_csv(request):
         writer.writerow(['id','veiculo','tp_manutencao','local_manu','dt_ult_manutencao','dt_entrada','dt_saida',
                             'dias_veic_parado','km_ult_troca_oleo','tp_servico','valor_maodeobra','valor_peca',
                                 'filial','socorro','prev_entrega','observacao','status','autor'])
-        manutencao = ManutencaoFrota.objects.all().values_list('id','veiculo','tp_manutencao','local_manu','dt_ult_manutencao','dt_entrada','dt_saida',
-                            'dias_veic_parado','km_ult_troca_oleo','tp_servico','valor_maodeobra','valor_peca',
+        manutencao = ManutencaoFrota.objects.all().values_list('id','veiculo__prefixoveic','tp_manutencao','local_manu','dt_ult_manutencao','dt_entrada','dt_saida',
+                            'dias_veic_parado','km_ult_troca_oleo','servjoinmanu__id_svs','valor_maodeobra','valor_peca',
                                 'filial','socorro','prev_entrega','observacao','status','autor__username').filter(dt_entrada__gte=dateparse, dt_entrada__lte=dateparse1)
         for id in manutencao:
             writer.writerow(id)
@@ -872,8 +1122,8 @@ def get_nfpj_csv(request):
 
 def get_checklist_csv(request):
     try:
-        ini = datetime.datetime.strptime(request.POST.get('dataini'), '%d/%m/%Y').date()
-        fim = datetime.datetime.strptime(request.POST.get('datafim'), '%d/%m/%Y').date()
+        ini = datetime.datetime.strptime(request.POST.get('dataini'), '%Y-%m-%d').date()
+        fim = datetime.datetime.strptime(request.POST.get('datafim'), '%Y-%m-%d').date()
     except ValueError:
         messages.error(request, 'Por favor digite uma data válida')
         return redirect('portaria:frota')
@@ -896,15 +1146,15 @@ def get_checklist_csv(request):
                          'foi verificado se as luzes da lanterna traseira esquerda funciona','autor'])
         checklist = ChecklistFrota.objects.all().values_list('datachecklist','placaveic','motoristaveic','placacarreta','kmanterior','kmatual','horimetro','p1_1','p1_2','p2_1','p2_2','p2_3','p2_4','p2_5','p2_6','p2_7',
                                                             'p2_8','p2_9','p2_10','p2_11','p2_12','p2_13','p2_14','p2_15','p2_16','p2_17','p2_18','p2_19','p2_20','p2_21','p2_22','p2_23','p2_24','p3_1',
-                                                            'p3_2','p3_3','p3_4','p3_5','p3_6','p3_7','p3_8','autor__username').filter(datachecklist__gte=ini,datachecklist__lte=fim)
+                                                            'p3_2','p3_3','p3_4','p3_5','p3_6','p3_7','p3_8','obs','autor__username').filter(datachecklist__gte=ini,datachecklist__lte=fim)
         for c in checklist:
             writer.writerow(c)
         return response
 
 def get_ferias_csv(request):
     try:
-        ini = datetime.datetime.strptime(request.POST.get('dataini'), '%d/%m/%Y').date()
-        fim = datetime.datetime.strptime(request.POST.get('datafim'), '%d/%m/%Y').date()
+        ini = datetime.datetime.strptime(request.POST.get('dataini'), '%Y-%m-%d').date()
+        fim = datetime.datetime.strptime(request.POST.get('datafim'), '%Y-%m-%d').date()
     except ValueError:
         messages.error(request, 'Por favor digite uma data válida')
         return redirect('portaria:feriaspjv')
@@ -915,9 +1165,482 @@ def get_ferias_csv(request):
         writer = csv.writer(response)
         writer.writerow(['ultimas ferias inicio','ultimas ferias fim','periodo','quitado','funcionario','vencimento','tipo pagamento',
                          'agendamento inicio','agendamento fim','valor integral','valor parcial 1', 'valor parcial 2','data quitacao','alerta vencimento'])
-        ferias = feriaspj.objects.all().values_list('ultimas_ferias_ini','ultimas_ferias_fim','periodo','quitado','funcionario','vencimento',
+        ferias = feriaspj.objects.all().values_list('ultimas_ferias_ini','ultimas_ferias_fim','periodo','quitado','funcionario__nome','vencimento',
                                                     'tp_pgto','agendamento_ini','agendamento_fim','valor_integral','valor_parcial1','valor_parcial2',
                                                     'dt_quitacao','alerta_venc_enviado').filter(ultimas_ferias_ini__gte=ini,ultimas_ferias_fim__lte=fim)
         for q in ferias:
             writer.writerow(q)
         return response
+
+def ediexceltosd1(request):
+    array = []
+    if request.method == 'POST':
+        get_xlsx = request.FILES['edi_excel']
+        response = HttpResponse(content_type='text/plain',
+                                headers={'Content-Disposition': 'attatchment; filename="teste.sd1"'})
+        if get_xlsx:
+            edi = pd.read_excel(get_xlsx)
+            for i,row in edi.iterrows():
+                array.append(row)
+            for q in range(len(array)):
+                response.write(str(array[q]['tipo_de_registro']))
+                response.write('    ')
+                response.write('000000000000000')
+                response.write(textwrap.wrap(array[q]['nome_do_cliente'], 40)[0].ljust(40,' '))
+                response.write(str(array[q]['data_geracao']))
+                response.write(str(array[q]['qtde_de_registro']))
+                response.write('000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000')
+                response.write(str(array[q]['numero_sec_arq']))
+                response.write(str(array[q]['numero_sec_reg']))
+                response.write('\n')
+                response.write(str(array[q]['tipo_de_registro2']))
+                response.write('    ')
+                response.write('        ')
+                response.write('  ')
+                response.write('         ')
+                response.write(str(array[q]['pais_de_origem']))
+                response.write(str(array[q]['codigo_da_operacao']))
+                response.write(str(array[q]['conteudo']))
+                response.write(textwrap.wrap(str(array[q]['nome_dest']), 40)[0].ljust(40,' '))
+                response.write(textwrap.wrap(str(array[q]['end_dest']), 40)[0].ljust(40,' '))
+                response.write(textwrap.wrap(str(array[q]['cidade']), 30)[0].ljust(30,' '))
+                response.write(str(array[q]['uf']))
+                response.write(str(array[q]['cep']))
+                response.write('00000000')
+                response.write(str(array[q]['num_seq_arq2']))
+                response.write(str(array[q]['num_seq_reg2']))
+                response.write('\n')
+        return response
+
+def exedicorreios(request):
+    response = HttpResponse(content_type='application/vnd.ms-excel',
+                            headers={'Content-Disposition':'attatchment; filename="exemplo.xls"'})
+    writer = csv.writer(response)
+    writer.writerow(['tipo_de_registro','nome_do_cliente', 'data_geracao', 'qtde_de_registro', 'numero_sec_arq', 'numero_sec_reg','tipo_de_registro2','pais_de_origem','codigo_da_operacao','conteudo','nome_dest','end_dest','cidade','uf','cep','num_seq_arq2','num_seq_reg2'])
+    writer.writerow(['8','exemplo da silva', 'aaaa/mm/dd','qnt registro do arquivo','numero sec arq','numero sec reg','9','BR','1234','conteudo','destinatario','endereco','cidade','uf','cep','num_seq_arq2','num_seq_reg2'])
+    return response
+
+def readmail_monitoramento(request):
+    #config poplib
+    attatch = ''
+    host = 'pop.kinghost.net'
+    e_user = 'bora@bora.tec.br'
+    e_pass = 'Bor@dev#123'
+    print('iniciando readmail')
+    pp = poplib.POP3(host)
+    pp.set_debuglevel(1)
+    pp.user(e_user)
+    pp.pass_(e_pass)
+    pattern1 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
+    pattern2 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp).\w+.\w+')
+    num_messages = len(pp.list()[1])
+    for i in range(num_messages):
+        #acessa o poplib e pega os emails
+        try:
+            raw_email = b'\n'.join(pp.retr(i+1)[1])
+            parsed_email = email.message_from_bytes(raw_email, policy=policy.compat32)
+        except Exception as e:
+            print(f'parsed -- ErrorType: {type(e).__name__}, Error: {e}')
+        else:
+            if parsed_email.is_multipart():
+                for part in parsed_email.walk():
+                    ctype = part.get_content_type()
+                    cdispo = str(part.get('Content-Type'))
+                    if ctype == 'text/plain' and 'attatchment' not in cdispo:
+                        body = part.get_payload(decode=True)
+                    elif ctype == 'text/html' and 'attatchment' not in cdispo:
+                        body = part.get_payload(decode=True)
+                    if ctype == 'text/html' and 'attatchment' not in cdispo:
+                        htbody = part.get_payload(decode=True)
+                    filename = part.get_filename()
+
+                    hoje = datetime.date.today()
+                    #verifica se existem arquivos no email
+                    if filename:
+                        path = settings.MEDIA_ROOT+'/django-summernote/'+str(hoje)+'/'
+                        locimg = os.path.join(settings.MEDIA_ROOT + '/django-summernote/' + str(hoje) + '/', filename)
+                        if os.path.exists(os.path.join(path)):
+                            fp = open(locimg, 'wb')
+                            fp.write(part.get_payload(decode=True))
+                            fp.close()
+                        else:
+                            os.mkdir(path=path)
+                            fp = open(locimg, 'wb')
+                            fp.write(part.get_payload(decode=True))
+                            fp.close()
+                        #if filename not in re.findall(pattern1, filename):
+                        item = os.path.join('/media/django-summernote/'+str(hoje)+'/', filename)
+                        aa = '<div class="mailattatch"><a href="'+item+'" download><img src="/static/images/downicon.png" width="40"><p>'+filename+'</p></a></div>'
+                        attatch += aa
+            else:
+                body = parsed_email.get_payload(decode=True)
+            cs = parsed_email.get_charsets()
+            for q in cs:
+                if q is None: continue
+                else: cs = q
+            #pega parametros do email
+            try:
+                e_date = datetime.datetime.strptime(parsed_email['Date'], '%a, %d %b %Y %H:%M:%S %z').strftime('%Y-%m-%d')
+                e_title = parsed_email['Subject']
+                e_from = parsed_email['From']
+                if re.findall(r'<(.*?)>', e_from): e_from = re.findall(r'<(.*?)>', e_from)[0]
+
+                e_to = parsed_email['To']
+                if re.findall(r'<(.*?)>', e_to): e_to = re.findall(r'<(.*?)>', e_to)[0]
+                e_cc = parsed_email['CC']
+                if e_cc:
+                    if re.findall(r'<(.*?)>', e_cc): e_cc = re.findall(r'<(.*?)>', e_cc)[0]
+
+                e_id = parsed_email['Message-ID']
+                e_ref = parsed_email['References']
+                if e_ref is None: e_ref = e_id
+                if e_ref is not None: e_ref = e_ref.split(' ')[0]
+                #converte o corpo do email
+                e_body = body.decode(cs)
+                if e_body:
+                    reply_parse = re.findall(r'(De:+\s+\w.*.\sEnviada em:+\s+\w.*.+[,]+\s+\d+\s+\w+\s+\w+\s+\w+\s+\d+\s+\d+:+\d.*)', e_body)
+                    if reply_parse:
+                        e_body = e_body.split(reply_parse[0])[0].replace('\n', '<br>')
+                w_body = htbody.decode(cs)
+                if w_body:
+                    reply_html = re.findall(r'(<b><span+\s+\w.*.[>]+De:.*.Enviada em:.*.\s+\w.*.[,]+\s+\d+\s+\w+\s+\w+\s+\w+\s+\d+\s+\d+:+\d.*)',w_body)
+                    if reply_html:
+                        w_body = w_body.split(reply_html[0])[0]
+
+                if re.findall(pattern2,w_body):
+                    for q in re.findall(pattern2, w_body):
+                        new = re.findall(pattern1, q)
+                        teste = os.path.join(settings.MEDIA_URL + 'django-summernote/' + str(hoje) + '/',new[0].split('cid:')[1])
+                        w_body = w_body.replace(q, teste)
+                elif re.findall(pattern1,w_body):
+                    for q in re.findall(pattern1, w_body):
+                        new = re.findall(pattern1, q)
+                        try:
+                            teste = os.path.join(settings.MEDIA_URL + 'django-summernote/' + str(hoje) + '/',new[0].split('cid:')[1])
+                        except Exception as e:
+                            print(f'ErrorType: {type(e).__name__}, Error: {e}')
+                        else:
+                            w_body = w_body.replace(q, teste)
+                #continue
+            except Exception as e:
+                 print(f'insert data -- ErrorType: {type(e).__name__}, Error: {e}')
+            else:
+                #salva no banco de dados
+                form = EmailMonitoramento.objects.filter(email_id=e_ref)
+                sender = User.objects.get(username='admin')
+                if form.exists() and form[0].tkt_ref.status != ('CONCLUIDO' or 'CANCELADO'):
+                    xxx = form[0].ult_resp_html
+                    if xxx: zzz = w_body.split(xxx[:50])
+                    try:
+                        tkt = TicketMonitoramento.objects.get(pk=form[0].tkt_ref_id)
+                        notify.send(sender, recipient=tkt.responsavel, verb='message',
+                                description=f"Você recebeu uma nova mensagem do ticket {tkt.id}")
+                    except Exception as e:
+                        print(f'ErrorType: {type(e).__name__}, Error: {e}')
+                    if form[0].ult_resp is not None:
+                        aa = '<hr>' + e_from + ' -- ' + e_date + '\n' + e_body + '\n------Anterior-------\n' + form[0].ult_resp
+                        bb = '<hr>' + e_from + ' -- ' + e_date + '<br>' + zzz[0] + attatch + '<hr>' + form[0].ult_resp_html
+                    else:
+                        aa = '<hr>' + e_from + ' -- ' + e_date + '\n' + e_body
+                        bb = '<hr>' + e_from + ' -- ' + e_date + '<br>' + w_body + attatch
+                    if tkt.status == 'ABERTO':
+                        TicketMonitoramento.objects.filter(pk=form[0].tkt_ref_id).update(status='ANDAMENTO')
+                    form.update(ult_resp=aa,ult_resp_html=bb, ult_rest_dt=e_date)
+                    pp.dele(i+1)
+                elif form.exists() and form[0].tkt_ref.status == ('CONCLUIDO' or 'CANCELADO'):
+                    messages.warning(request, 'Ticket já encerrado')
+                    pp.dele(i + 1)
+                    pp.quit()
+                    return redirect('portaria:monitticket')
+                else:
+                    try:
+                        tkt = TicketMonitoramento.objects.get(msg_id=e_ref)
+                    except Exception as e:
+                        print(f'ErrorType: {type(e).__name__}, Error: {e}')
+                    else:
+                        bb = '<hr>' + e_from + ' -- ' + e_date + w_body
+                        EmailMonitoramento.objects.create(assunto=e_title, mensagem=bb, cc=e_cc, dt_envio=e_date,email_id=tkt.msg_id, tkt_ref_id=tkt.id)
+                        notify.send(sender, recipient=tkt.responsavel, verb='message',
+                                    description="Seu ticket foi criado.")
+                    pp.dele(i + 1)
+    pp.quit()
+    return redirect('portaria:monitticket')
+
+def replymail_monitoramento(request, tktid, area):
+    media = ''
+    pattern = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
+    orig = get_object_or_404(EmailMonitoramento, tkt_ref_id=tktid)
+    if request.method == 'POST':
+        msg1 = MIMEMultipart()
+        msg = area
+        if re.findall(pattern, msg):
+            for q in re.findall(pattern, msg):
+                media = q
+                img_data = open(('/home/bora/www'+media),'rb').read()
+                msgimg = MIMEImage(img_data, name=os.path.basename(media))
+                msgimg.add_header('Content-ID', f'{media}')
+                msg = msg.replace(('src="' + media + '"'), f'src="cid:{media}" ')
+                msg1.attach(msgimg)
+        msg1['Subject'] = orig.assunto
+        msg1['In-Reply-To'] = orig.email_id
+        msg1['References'] = orig.email_id
+        msg_id = make_msgid(idstring=None, domain='bora.com.br')
+        msg1['Message-ID'] = msg_id
+        msg1['From'] = 'teste@bora.com.br'
+        msg1['To'] = 'bora@bora.tec.br'
+        msg1['CC'] = orig.cc
+        msg1.attach(MIMEText(msg, 'html', 'utf-8'))
+        smtp_h = 'smtp.kinghost.net'
+        smtp_p = '587'
+        user = 'bora@bora.tec.br'
+        passw = 'Bor@dev#123'
+        try:
+            print('entrou no try')
+            sm = smtplib.SMTP('smtp.bora.com.br', smtp_p)
+            sm.set_debuglevel(1)
+            sm.login('teste@bora.com.br', 'Bor@413247')
+            sm.sendmail('teste@bora.com.br', ['bora@bora.tec.br']+orig.cc.split(';'), msg1.as_string())
+            print('mandou o email')
+        except Exception as e:
+            print(f'ErrorType:{type(e).__name__}, Error:{e}')
+        return redirect('portaria:monitticket')
+
+def createtktandmail(request,resp,cc,rem,dest,assunto,msg,cte):
+    pattern = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
+    msg1 = MIMEMultipart()
+    msgmail = msg
+    if re.findall(pattern, msg):
+        for q in re.findall(pattern, msg):
+            media = q
+            img_data = open(('/home/bora/www' + media), 'rb').read()
+            msgimg = MIMEImage(img_data, name=os.path.basename(media))
+            msgimg.add_header('Content-ID', f'{media}')
+            msgmail = msgmail.replace(('<img src="' + media + '"'), f'<img src="cid:{media}" ')
+            msg1.attach(msgimg)
+    msg1.attach(MIMEText(msgmail, 'html', 'utf-8'))
+    msg1['Subject'] = assunto
+    msg1['From'] = 'teste@bora.com.br'
+    msg1['To'] = 'bora@bora.tec.br'
+    msg1['CC'] = cc
+    msg_id = make_msgid(idstring=None, domain='bora.com.br')
+    msg1['Message-ID'] = msg_id
+    smtp_h = 'smtp.kinghost.net'
+    smtp_p = '587'
+    user = 'bora@bora.tec.br'
+    passw = 'Bor@dev#123'
+    try:
+        sm = smtplib.SMTP('smtp.bora.com.br', smtp_p, timeout=120)
+        sm.set_debuglevel(1)
+        sm.login('teste@bora.com.br','Bor@413247')
+    except Exception as e:
+        messages.error(request, f'ErrorType:{type(e).__name__}, Error:{e}')
+        print(f'ErrorType:{type(e).__name__}, Error:{e}')
+    else:
+        try:
+            tkt = TicketMonitoramento.objects.create(nome_tkt=assunto, dt_abertura=timezone.now(), responsavel=User.objects.get(username=resp), solicitante=request.user, remetente=rem, destinatario=dest, cte=cte, status='ABERTO', categoria='Aguardando Recebimento',msg_id=msg_id)
+        except IntegrityError:
+            messages.error(request, 'Já existe um ticket com esta CTE')
+            return redirect('portaria:monitticket')
+        sm.sendmail('teste@bora.com.br', (['bora@bora.tec.br'] + cc.split(';')), msg1.as_string())
+        messages.success(request, 'Email enviado e ticket criado com sucesso')
+        return redirect('portaria:monitticket')
+
+def closetkt(request, tktid):
+    tkt = get_object_or_404(TicketMonitoramento, pk=tktid)
+    if tkt and tkt.categoria != 'Aguardando Recebimento':
+        TicketMonitoramento.objects.filter(pk=tkt.id).update(status='CONCLUIDO')
+        messages.info(request, f'Ticket {tkt.id} alterado para CONCLUIDO com sucesso.')
+    else:
+        messages.error(request, 'Não autorizado encerramento do monitoramento.')
+    return redirect('portaria:monitticket')
+
+def chamadoupdate(request,tktid,area):
+    media = ''
+    pattern = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
+    orig = get_object_or_404(EmailChamado, tkt_ref_id=tktid)
+    if request.method == 'POST':
+        msg1 = MIMEMultipart()
+        msg = area
+        if re.findall(pattern, msg):
+            for q in re.findall(pattern,msg):
+                media = q
+                img_data = open(('/home/bora/www' + media), 'rb').read()
+                msgimg = MIMEImage(img_data, name=os.path.basename(media))
+                msgimg.add_header('Content-ID', f'{media}')
+                msg = msg.replace(('src="' + media + '"'), f'src="cid:{media}" ')
+                msg1.attach(msgimg)
+        msg1['Subject'] = orig.assunto
+        msg1['In-Reply-To'] = orig.email_id
+        msg1['References'] = orig.email_id
+        msg_id = make_msgid(idstring=None, domain='bora.com.br')
+        msg1['Message-ID'] = msg_id
+        msg1['From'] = 'teste@bora.com.br'
+        msg1['To'] = orig.tkt_ref.solicitante
+        msg1.attach(MIMEText(msg, 'html', 'utf-8'))
+        smtp_h = 'smtp.kinghost.net'
+        smtp_p = '587'
+        user = 'bora@bora.tec.br'
+        passw = 'Bor@dev#123'
+        try:
+            sm = smtplib.SMTP('smtp.bora.com.br', smtp_p)
+            sm.set_debuglevel(1)
+            sm.login('teste@bora.com.br', 'Bor@413247')
+            sm.sendmail('teste@bora.com.br', ['bora@bora.tec.br']+orig.tkt_ref.solicitante.split(';'), msg1.as_string())
+        except Exception as e:
+            print(f'ErrorType:{type(e).__name__}, Error:{e}')
+
+def chamadoreadmail(request):
+    #params
+    hoje = datetime.date.today()
+    attatch = ''
+    host = 'pop.kinghost.net'
+    e_user = 'bora@bora.tec.br'
+    e_pass = 'Bor@dev#123'
+    pattern1 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
+    pattern2 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp).\w+.\w+')
+
+    #logando no email
+    pp = poplib.POP3(host)
+    pp.set_debuglevel(1)
+    pp.user(e_user)
+    pp.pass_(e_pass)
+
+    num_messages = len(pp.list()[1]) #conta quantos emails existem na caixa
+    for i in range(num_messages):
+        raw_email = b'\n'.join(pp.retr(i+1)[1]) #pega email
+        parsed_email = email.message_from_bytes(raw_email, policy=policy.compat32)
+        if parsed_email.is_multipart():
+            #caminha pelas partes do email e armazena dados e arquivos
+            for part in parsed_email.walk():
+                ctype = part.get_content_type()
+                cdispo = str(part.get('Content-Type'))
+                if ctype == 'text/plain' and 'attatchment' not in cdispo:
+                    body = part.get_payload(decode=True)
+                elif ctype == 'text/html' and 'attatchment' not in cdispo:
+                    body = part.get_payload(decode=True)
+                if ctype == 'text/html' and 'attatchment' not in cdispo:
+                    htbody = part.get_payload(decode=True)
+                filename = part.get_filename()
+                if filename:
+                    path = settings.MEDIA_ROOT + '/django-summernote/' + str(hoje) + '/'
+                    locimg = os.path.join(settings.MEDIA_ROOT + '/django-summernote/' + str(hoje) + '/', filename)
+                    if os.path.exists(os.path.join(path)):
+                        fp = open(locimg, 'wb')
+                        fp.write(part.get_payload(decode=True))
+                        fp.close()
+                    else:
+                        os.mkdir(path=path)
+                        fp = open(locimg, 'wb')
+                        fp.write(part.get_payload(decode=True))
+                        fp.close()
+                    item = os.path.join('/media/django-summernote/' + str(hoje) + '/', filename)
+                    aa = '<div class="mailattatch"><a href="'+item+'" download><img src="/static/images/downicon.png" width="40"><p>'+filename+'</p></a></div>'
+                    attatch += aa
+        else:
+            body = parsed_email.get_payload(decode=True)
+        #funcao para pegar codificacao
+        cs = parsed_email.get_charsets()
+        for q in cs:
+            if q is None: continue
+            else: cs = q
+
+        #pega parametros do email
+        e_date = datetime.datetime.strptime(parsed_email['Date'], '%a, %d %b %Y %H:%M:%S %z').strftime('%Y-%m-%d')
+        e_title = parsed_email['Subject']
+        e_from = parsed_email['From']
+        if re.findall(r'<(.*?)>', e_from): e_from = re.findall(r'<(.*?)>', e_from)[0]
+        e_to = parsed_email['To']
+        if re.findall(r'<(.*?)>', e_to): e_to = re.findall(r'<(.*?)>', e_to)[0]
+        e_cc = parsed_email['CC']
+        if e_cc:
+            if re.findall(r'<(.*?)>', e_cc): e_cc = re.findall(r'<(.*?)>', e_cc)[0]
+        e_id = parsed_email['Message-ID']
+        e_ref = parsed_email['References']
+        if e_ref is None: e_ref = e_id
+        else: e_ref = e_ref.split(' ')[0]
+
+        #separa conteudo email, e pega attatchments
+        e_body = body.decode(cs)
+        if e_body:
+            reply_parse = re.findall(r'(De:*\a*\w.*.\sEnviada em:+\s+\w.*.+[,]+\s+\d+\s+\w+\s+\w+\s+\w+\s+\d+\s+\d+:+\d.*)', e_body)
+            if reply_parse:
+                e_body = e_body.split(reply_parse[0])[0].replace('\n', '<br>')
+        w_body = htbody.decode(cs)
+        if w_body:
+            reply_html = re.findall(r'(<b><span+\s+\w.*.[>]+De:.*.Enviada em:.*.\s+\w.*.[,]+\s+\d+\s+\w+\s+\w+\s+\w+\s+\d+\s+\d+:+\d.*)',w_body)
+            if reply_html:
+                w_body = w_body.split(reply_html[0])[0]
+        if re.findall(pattern2, w_body):
+            for q in re.findall(pattern2, w_body):
+                new = re.findall(pattern1, q)
+                new_cid = os.path.join(settings.MEDIA_URL + 'django-summernote/' + str(hoje) + '/', new[0].split('cid:')[1])
+                w_body = w_body.replace(q, new_cid)
+        elif re.findall(pattern1, w_body):
+            for q in re.findall(pattern1, w_body):
+                new = re.findall(pattern1, w_body)
+                try:
+                    new_cid = os.path.join(settings.MEDIA_URL + 'django-summernote/' + str(hoje) + '/', new[0].split('cid:')[1])
+                except Exception as e:
+                    print(f'ErrorType: {type(e).__name__}, Error: {e}')
+                else:
+                    w_body = w_body.replace(q, new_cid)
+        if e_to == 'bora@bora.tec.br':
+            servico = 'DESENVOLVIMENTO'
+        try:
+            form = EmailChamado.objects.filter(email_id=e_ref)
+            tkt = TicketChamado.objects.get(pk=form[0].tkt_ref_id)
+        except Exception as e:
+            print(e)
+        print(form)
+        if form.exists() and form[0].tkt_ref.status != ('CONCLUIDO' or 'CANCELADO'):
+            oldreply = form[0].ult_resp_html
+            if oldreply: newreply = w_body.split(oldreply[:50])
+            if form[0].ult_resp:
+                aa = '<hr>' + e_from + ' -- ' + e_date + '\n' + e_body + '\n------Anterior-------\n' + form[0].ult_resp
+                bb = '<hr>' + e_from + ' -- ' + e_date + '<br>' + newreply[0] + attatch + '<hr>' + form[0].ult_resp_html
+            else:
+                aa = '<hr>' + e_from + ' -- ' + e_date + '\n' + e_body
+                bb = '<hr>' + e_from + ' -- ' + e_date + '<br>' + w_body + attatch
+            form.update(ult_resp=aa, ult_resp_html=bb, ult_resp_dt=e_date)
+            pp.dele(i + 1)
+        elif form.exists() and form[0].status == ('CANCELADO' or 'CONCLUIDO'):
+            messages.warning(request, 'Ticket já encerrado')
+            pp.dele(i + 1)
+            pp.quit()
+            return redirect('portaria:chamado')
+        else:
+            newtkt = TicketChamado.objects.create(solicitante=e_from, servico=servico, nome_tkt=e_title,
+                                                  dt_abertura=e_date, status='ABERTO', msg_id=e_id)
+            mensagem = '<hr>' + e_from + ' -- ' + e_date + w_body + attatch
+            newmail = EmailChamado.objects.create(assunto=e_title, mensagem=mensagem, cc=e_cc, dt_envio=e_date,
+                                                  email_id=e_id, tkt_ref=newtkt)
+            pp.dele(i + 1)
+    pp.quit()
+    return redirect('portaria:chamado')
+
+
+
+def isnotifyread(request, notifyid):
+    nid = get_object_or_404(Notification, pk=notifyid)
+    next = request.GET.get('next')
+    try:
+        Notification.objects.filter(pk=nid.id).update(unread=False)
+    except Exception as e:
+        print(f'ErrorType:{type(e).__name__}, Error:{e}')
+    return redirect(next)
+
+def setallread(request, user):
+    next = request.GET.get('next')
+    if user:
+        cases = Notification.objects.filter(recipient=user)
+        for n in cases:
+            Notification.objects.filter(pk=n.id).update(unread=False)
+    return redirect(next)
+
+def dictfetchall(cursor):
+    "Return all rows from a cursor as a dict"
+    columns = [col[0] for col in cursor.description]
+    return [
+        dict(zip(columns, row))
+        for row in cursor.fetchall()
+    ]
