@@ -53,6 +53,7 @@ class NfServicoPjAdmin(admin.ModelAdmin):
         ('outros_cred', {'fields':['outros_cred']}),
         ('desc_convenio', {'fields':['desc_convenio']}),
         ('outros_desc', {'fields': ['outros_desc']}),
+        ('data_pagamento', {'fields': ['data_pagamento']}),
         ('data_emissao', {'fields':['data_emissao']}),
         ('autor', {'fields': ['autor']}),
     )

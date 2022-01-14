@@ -8,11 +8,8 @@
             <div class="col col-lg-9 col-md-9 col-sm-9 sr-only" id="sendmail">
                 <form class="form-box" action="{% url 'portaria:get_nfpj_mail' %}" method="post">
                     {% csrf_token %}
-                    <h3 class="title-cad">Selecione o período:
-                    <input type="date" placeholder="Data inicio" name="dataIni">
-                    <input type="date" placeholder="Data final" name="dataFim">
-                    <input type="submit" class="button">
-                    </h3>
+                    <input type="submit" class="button" name="total" value="total">
+                    <input type="submit" class="button" name="adiantamento" value="adiantamento">
                 </form>
             </div>
             <div class="col-10">

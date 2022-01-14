@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load groupscheck %}
+{% if request.user|has_group:"adm_rh" %}
+<div class="container mt-4">
+    {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+            {% endfor %}
+    <div class="row">
+        <h2 class="title-cad">Atualizar Funcionário</h2>
+    </div><hr>
+    {% if not func %}
+    <div class="container">
+        <form method="get">
+            <label for="func">Buscar Funcionario</label>
+            <select name="func" id="func">
+                <option selected disabled>Selecione...</option>
+                {% for q in allfuncs %}
+                <option value="{{ q.id }}">{{ q }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="button">Buscar</button>
+        </form>
+    </div>
+    {% else %}
+    <div class="container">
+        <form method="post">
+        <table class="table table1">
+                {% csrf_token %}
+            {{ fields }}
+            <tr><td><button type="submit" class="button">Atualizar</button></td></tr>
+        </table>
+        </form>
+    </div>
+    {% endif %}
+</div>
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+{% endblock %}

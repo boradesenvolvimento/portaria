@@ -245,19 +245,19 @@ class FuncPj(models.Model):
     ]
 
     id = models.BigAutoField(primary_key=True)
-    filial = models.CharField(choices=TIPO_GARAGEM, max_length=3)
+    filial = models.CharField(choices=TIPO_GARAGEM, max_length=3, blank=True, null=True)
     nome = models.CharField(max_length=50)
-    salario = models.FloatField()
-    adiantamento = models.FloatField()
-    ajuda_custo = models.FloatField()
+    salario = models.FloatField(blank=True, null=True)
+    adiantamento = models.FloatField(blank=True, null=True)
+    ajuda_custo = models.FloatField(blank=True, null=True)
     cpf_cnpj = models.CharField(max_length=14, validators=[only_int])
     tipo_contrato = models.CharField(choices=TIPO_CONTRATO_CHOICES, max_length=2)
-    banco = models.IntegerField()
-    ag = models.IntegerField()
-    conta = models.IntegerField()
-    op = models.IntegerField()
+    banco = models.IntegerField(blank=True, null=True)
+    ag = models.IntegerField(blank=True, null=True)
+    conta = models.IntegerField(blank=True, null=True)
+    op = models.IntegerField(blank=True, null=True)
     email = models.EmailField(max_length=254)
-    admissao = models.DateField(default=timezone.now)
+    admissao = models.DateField(blank=True, null=True)
     ativo = models.BooleanField(default=True)
 
     class Meta:
@@ -275,6 +275,7 @@ class NfServicoPj(models.Model):
     outros_cred = models.FloatField()
     desc_convenio = models.FloatField()
     outros_desc = models.FloatField()
+    data_pagamento = models.DateField()
     data_emissao = models.DateField(default=timezone.now)
     autor = models.ForeignKey(User, on_delete=PROTECT)
 

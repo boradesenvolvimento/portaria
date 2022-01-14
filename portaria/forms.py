@@ -64,7 +64,8 @@ class FuncPjForm(forms.ModelForm):
             'ag',
             'conta',
             'op',
-            'email'
+            'email',
+            'ativo'
         ]
 
 class MotoristaForm(forms.ModelForm):
@@ -162,10 +163,10 @@ class ServicoPjForm(forms.ModelForm):
             'outros_cred',
             'desc_convenio',
             'outros_desc',
-            'data_emissao'
+            'data_pagamento'
         ]
         widgets = {
-            'data_emissao': DateInput(),
+            'data_pagamento': DateInput(),
         }
 
 class ManutencaoForm(forms.ModelForm):

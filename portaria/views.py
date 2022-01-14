@@ -77,9 +77,9 @@ class Visualizacao(generic.ListView):
     def get_queryset(self):
         autor = self.request.user
         if autor.is_staff:
-            qs = Cadastro.objects.all().filter(hr_chegada__month=datetime.datetime.now().month).order_by('-hr_chegada')
+            qs = Cadastro.objects.all().filter(hr_chegada__month=datetime.datetime.now().month,hr_chegada__year=datetime.datetime.now().year).order_by('-hr_chegada')
         else:
-            qs = Cadastro.objects.all().filter(hr_chegada__month=datetime.datetime.now().month, autor=autor).order_by('-hr_chegada')
+            qs = Cadastro.objects.all().filter(hr_chegada__month=datetime.datetime.now().month,hr_chegada__year=datetime.datetime.now().year, autor=autor).order_by('-hr_chegada')
         try:
             form_input1 = self.request.GET.get('date')
             form_input2 = self.request.GET.get('date1')
@@ -229,7 +229,6 @@ def saidapalete(request):
                 PaleteControl.objects.filter(loc_atual=fil, tp_palete=tp_p).delete()
             messages.success(request, 'Saidas cadastradas com sucesso')
             return redirect('portaria:paletecliente')
-
     return render(request, 'portaria/palete/saidapalete.html', {'tp_fil':tp_fil,'tp_emp':tp_emp})
 
 @login_required
@@ -298,25 +297,43 @@ def cadfuncionariopj(request):
                 raise ValidationError('Erro')
             else:
                 messages.success(request, 'Cadastrado com sucesso')
-                return redirect('portaria:index')
+                return redirect('portaria:servicospj')
     return render(request, 'portaria/pj/cadfuncionariopj.html', {'form':form})
+
+def atualizarfunc(request):
+    allfuncs = FuncPj.objects.all()
+    fields = FuncPjForm
+    func = request.GET.get('func')
+    if func:
+        getid = get_object_or_404(FuncPj, pk=func)
+        fields = FuncPjForm(instance=getid)
+        if request.method == 'POST':
+            fields = FuncPjForm(request.POST or None,instance=getid)
+            if fields.is_valid():
+                try:
+                    fields.save()
+                except Exception as e:
+                    print(e)
+                else:
+                    messages.success(request, 'Entrada cadastrada com sucesso.')
+                    return redirect('portaria:atualizarfunc')
+            else:
+                messages.error(request, 'Algo deu errado, por favor contate seu administrador.')
+                return redirect('portaria:index')
+    return render(request, 'portaria/pj/atualizarfunc.html', {'fields':fields,'allfuncs':allfuncs,'func':func})
+
 
 @login_required
 def servicospj(request):
     func = request.GET.get('nomefunc')
-    array = []
+    filter = request.GET.get('filter')
     qnt_funcs = FuncPj.objects.filter(ativo=True).order_by('nome')
-    for q in qnt_funcs:
-        query = FuncPj.objects.filter(pk=q.id)
-        array.extend(query)
     if func:
-        cad = FuncPj.objects.all().filter(nome__icontains=func, ativo=True)
-        if cad:
-            array.clear()
-            for c in cad:
-                query = FuncPj.objects.filter(pk=c.id)
-                array.extend(query)
-    return render(request, 'portaria/pj/servicospj.html', {'array': array})
+        qnt_funcs = FuncPj.objects.all().filter(nome__icontains=func, ativo=True)
+    elif filter:
+        qnt_funcs = FuncPj.objects.all().filter(ativo=True).order_by(filter)
+
+    return render(request, 'portaria/pj/servicospj.html', {'qnt_funcs': qnt_funcs})
 
 @login_required
 def consultanfpj(request):
@@ -324,11 +341,11 @@ def consultanfpj(request):
     qnt_funcs = FuncPj.objects.filter(ativo=True)
     for q in qnt_funcs:
         query = FuncPj.objects.filter(pk=q.id) \
-            .annotate(faculdade=Coalesce(Sum('nfservicopj__faculdade', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month)),Value(0.0)),
-            cred_convenio=Coalesce(Sum('nfservicopj__cred_convenio', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month)),Value(0.0)),
-            outros_cred=Coalesce(Sum('nfservicopj__outros_cred', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month)),Value(0.0)),
-            desc_convenio=Coalesce(Sum('nfservicopj__desc_convenio', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month)),Value(0.0)),
-            outros_desc=Coalesce(Sum('nfservicopj__outros_desc', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month)),Value(0.0)),
+            .annotate(faculdade=Coalesce(Sum('nfservicopj__faculdade', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)),Value(0.0)),
+            cred_convenio=Coalesce(Sum('nfservicopj__cred_convenio', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)),Value(0.0)),
+            outros_cred=Coalesce(Sum('nfservicopj__outros_cred', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)),Value(0.0)),
+            desc_convenio=Coalesce(Sum('nfservicopj__desc_convenio', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)),Value(0.0)),
+            outros_desc=Coalesce(Sum('nfservicopj__outros_desc', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)),Value(0.0)),
             ) \
             .annotate(total=((F('salario') + F('ajuda_custo') + F('faculdade') + F('cred_convenio') + F('outros_cred')) - (F('adiantamento') + F('desc_convenio') + F('outros_desc'))))
         arrya.extend(query)
@@ -897,45 +914,69 @@ def transfpalete(request):
     return render(request,'portaria/palete/transfpaletes.html', {'form':form})
 
 
+
 @login_required
 def get_nfpj_mail(request):
-    data1 = request.POST.get('dataIni')
-    data2 = request.POST.get('dataFim')
-    dateparse = datetime.datetime.strptime(data1, '%Y-%m-%d').replace(hour=00, minute=00)
-    dateparse1 = datetime.datetime.strptime(data2, '%Y-%m-%d').replace(hour=23, minute=59)
+    a = request.POST.get('total')
+    b = request.POST.get('adiantamento')
+    text = ""
+    if a:
+        qs = FuncPj.objects.filter(ativo=True)
+        text = '''
+                Unidade: {}
+                Nome: {}
+                Salario: {:.2f}
+                Faculdade: {:.2f}
+                Ajuda de Custo: {:.2f}
+                Creditos Convenio: {:.2f}
+                Outros Creditos: {:.2f}
+                Adiantamento: {:.2f}
+                Descontos Convenio: {:.2f}
+                Outros Descontos: {:.2f}
+                Total pagamento: {:.2f}
+                Cpf/Cnpj: {}
+                Dados bancários: {} / {} / {} / {}
+                '''
+    if b:
+        qs = FuncPj.objects.filter(ativo=True, adiantamento__gt=0)
+        text = """ 
+                Prestação de Serviços 
+                Período de: ???
+                Valor do Serviço: R$ {7:.2f}
+                Forma de Pagamento: R$ {7:.2f}
+                Data de pagamento:  ?????
+                Serviço Prestado em {0}
+                Dados Bancários: Banco {12} Ag. {13} C.c. {14}
+                CPF: {11}
+                Favor enviar a nf até ???.
+                Att
+                """
     arrya = []
-    qs = FuncPj.objects.filter(ativo=True)
     for q in qs:
         query = FuncPj.objects.filter(pk=q.id) \
             .annotate(
-             faculdade=Coalesce(Sum('nfservicopj__faculdade',filter=Q(nfservicopj__data_emissao__lte=dateparse1, nfservicopj__data_emissao__gte=dateparse)), Value(0.0)),
-             cred_convenio=Coalesce(Sum('nfservicopj__cred_convenio', filter=Q(nfservicopj__data_emissao__lte=dateparse1,nfservicopj__data_emissao__gte=dateparse)), Value(0.0)),
-             outros_cred=Coalesce(Sum('nfservicopj__outros_cred', filter=Q(nfservicopj__data_emissao__lte=dateparse1,nfservicopj__data_emissao__gte=dateparse)), Value(0.0)),
-             desc_convenio=Coalesce(Sum('nfservicopj__desc_convenio', filter=Q(nfservicopj__data_emissao__lte=dateparse1,nfservicopj__data_emissao__gte=dateparse)), Value(0.0)),
-             outros_desc=Coalesce(Sum('nfservicopj__outros_desc',filter=Q(nfservicopj__data_emissao__lte=dateparse1, nfservicopj__data_emissao__gte=dateparse)), Value(0.0)),
+             faculdade=Coalesce(Sum('nfservicopj__faculdade',filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)), Value(0.0)),
+             cred_convenio=Coalesce(Sum('nfservicopj__cred_convenio', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)), Value(0.0)),
+             outros_cred=Coalesce(Sum('nfservicopj__outros_cred', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)), Value(0.0)),
+             desc_convenio=Coalesce(Sum('nfservicopj__desc_convenio', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)), Value(0.0)),
+             outros_desc=Coalesce(Sum('nfservicopj__outros_desc',filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)), Value(0.0)),
              ).annotate(total=(F('salario') + F('ajuda_custo') + F('faculdade') + F('cred_convenio') + F('outros_cred') ) - (F('adiantamento') + F('desc_convenio') + F('outros_desc')))
         arrya.extend(query)
+
     for q in arrya:
-        send_mail(
-            subject='Teste',
-            message=f'''
-                        Unidade: {q.filial}
-                        Nome: {q.nome}
-                        Salario: {q.salario:.2f}
-                        Faculdade: {q.faculdade:.2f}
-                        Ajuda de Custo: {q.ajuda_custo:.2f}
-                        Creditos Convenio: {q.cred_convenio:.2f}
-                        Outros Creditos: {q.outros_cred:.2f}
-                        Adiantamento: {q.adiantamento:.2f}
-                        Descontos Convenio: {q.desc_convenio:.2f}
-                        Outros Descontos: {q.outros_desc:.2f}
-                        Total pagamento: {q.total:.2f}
-                        Cpf/Cnpj: {q.cpf_cnpj}
-                        Dados bancários: {q.banco} / {q.ag} / {q.conta} / {q.op}
-                                ''',
-            from_email=settings.EMAIL_HOST_USER,
-            recipient_list=[q.email]
-        )
+        try:
+            send_mail(
+                subject='Teste',
+                message=text.format(
+                    q.filial, q.nome, q.salario, q.faculdade, q.ajuda_custo, q.cred_convenio,
+                    q.outros_cred, q.adiantamento, q.desc_convenio, q.outros_desc, q.total,
+                    q.cpf_cnpj, q.banco, q.ag, q.conta, q.op
+                ),
+                from_email=settings.EMAIL_HOST_USER,
+                recipient_list=[q.email]
+            )
+        except Exception as e:
+            print(e)
     return redirect('portaria:index')
 
 def get_pj13_mail(request):
@@ -1109,11 +1150,11 @@ def get_nfpj_csv(request):
     for q in qnt_funcs:
         query = FuncPj.objects.filter(pk=q.id) \
             .annotate(
-            faculdade=Coalesce(Sum('nfservicopj__faculdade', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month)),Value(0.0)),
-            cred_convenio=Coalesce(Sum('nfservicopj__cred_convenio', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month)), Value(0.0)),
-            outros_cred=Coalesce(Sum('nfservicopj__outros_cred', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month)), Value(0.0)),
-            desc_convenio=Coalesce(Sum('nfservicopj__desc_convenio', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month)), Value(0.0)),
-            outros_desc=Coalesce(Sum('nfservicopj__outros_desc', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month)), Value(0.0)),) \
+            faculdade=Coalesce(Sum('nfservicopj__faculdade', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)),Value(0.0)),
+            cred_convenio=Coalesce(Sum('nfservicopj__cred_convenio', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)), Value(0.0)),
+            outros_cred=Coalesce(Sum('nfservicopj__outros_cred', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)), Value(0.0)),
+            desc_convenio=Coalesce(Sum('nfservicopj__desc_convenio', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)), Value(0.0)),
+            outros_desc=Coalesce(Sum('nfservicopj__outros_desc', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)), Value(0.0)),) \
             .annotate(total=((F('salario') + F('ajuda_custo') + F('faculdade') + F('cred_convenio') + F('outros_cred')) - (F('adiantamento') + F('desc_convenio') + F('outros_desc'))))
         arrya.extend(query)
     for q in arrya:
