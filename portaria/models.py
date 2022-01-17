@@ -252,7 +252,7 @@ class FuncPj(models.Model):
     ajuda_custo = models.FloatField(blank=True, null=True)
     cpf_cnpj = models.CharField(max_length=14, validators=[only_int])
     tipo_contrato = models.CharField(choices=TIPO_CONTRATO_CHOICES, max_length=2)
-    banco = models.IntegerField(blank=True, null=True)
+    banco = models.CharField(max_length=50 ,blank=True, null=True)
     ag = models.IntegerField(blank=True, null=True)
     conta = models.IntegerField(blank=True, null=True)
     op = models.IntegerField(blank=True, null=True)
