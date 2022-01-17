@@ -919,36 +919,36 @@ def transfpalete(request):
 def get_nfpj_mail(request):
     a = request.POST.get('total')
     b = request.POST.get('adiantamento')
+    dt_1 = request.POST.get('periodo1')
+    dt_2 = request.POST.get('periodo2')
+    dt_pgmt = request.POST.get('dt_pgmt')
     text = ""
     if a:
         qs = FuncPj.objects.filter(ativo=True)
         text = '''
-                Unidade: {}
-                Nome: {}
-                Salario: {:.2f}
-                Faculdade: {:.2f}
-                Ajuda de Custo: {:.2f}
-                Creditos Convenio: {:.2f}
-                Outros Creditos: {:.2f}
-                Adiantamento: {:.2f}
-                Descontos Convenio: {:.2f}
-                Outros Descontos: {:.2f}
-                Total pagamento: {:.2f}
-                Cpf/Cnpj: {}
-                Dados bancários: {} / {} / {} / {}
+                Favor emitir a nf. de prestação serviços
+                Período de: {16} a {17}
+                Valor do Serviço: R$ {2:.2f}
+                Prêmios: R$ {6:.2f}
+                Ajuda de custo: R$ {4:.2f}
+                Forma de Pagamento: R$ {10:.2f}
+                Data de pagamento {18}
+                Serviço Prestado no {0}
+                Dados Bancários: Banco {12} Ag. {13} C.c. {14}
+                CPF: {11}
                 '''
     if b:
         qs = FuncPj.objects.filter(ativo=True, adiantamento__gt=0)
         text = """ 
                 Prestação de Serviços 
-                Período de: ???
+                Período de: {16} até {17}
                 Valor do Serviço: R$ {7:.2f}
                 Forma de Pagamento: R$ {7:.2f}
-                Data de pagamento:  ?????
+                Data de pagamento:  {18}
                 Serviço Prestado em {0}
                 Dados Bancários: Banco {12} Ag. {13} C.c. {14}
                 CPF: {11}
-                Favor enviar a nf até ???.
+                Favor enviar a nf até {18}.
                 Att
                 """
     arrya = []
@@ -970,7 +970,7 @@ def get_nfpj_mail(request):
                 message=text.format(
                     q.filial, q.nome, q.salario, q.faculdade, q.ajuda_custo, q.cred_convenio,
                     q.outros_cred, q.adiantamento, q.desc_convenio, q.outros_desc, q.total,
-                    q.cpf_cnpj, q.banco, q.ag, q.conta, q.op
+                    q.cpf_cnpj, q.banco, q.ag, q.conta, q.op, dt_1, dt_2, dt_pgmt,
                 ),
                 from_email=settings.EMAIL_HOST_USER,
                 recipient_list=[q.email]

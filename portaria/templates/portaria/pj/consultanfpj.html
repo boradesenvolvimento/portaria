@@ -8,8 +8,15 @@
             <div class="col col-lg-9 col-md-9 col-sm-9 sr-only" id="sendmail">
                 <form class="form-box" action="{% url 'portaria:get_nfpj_mail' %}" method="post">
                     {% csrf_token %}
-                    <input type="submit" class="button" name="total" value="total">
-                    <input type="submit" class="button" name="adiantamento" value="adiantamento">
+                    <label for="periodo">Periodo:</label>
+                    <input class="col" type="date" id="periodo" name="periodo1">
+                    <input class="col" type="date" name="periodo2">
+
+                    <label for="dt_pgmt">Data pagamento:</label>
+                    <input class="col" type="date" id="dt_pgmt">
+                    <input type="submit" class="button col-3" name="adiantamento" value="adiantamento">
+                    <input type="submit" class="button col-3" name="total" value="total">
+
                 </form>
             </div>
             <div class="col-10">
