@@ -965,7 +965,6 @@ def get_nfpj_mail(request):
              outros_desc=Coalesce(Sum('nfservicopj__outros_desc',filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)), Value(0.0)),
              ).annotate(total=(F('salario') + F('ajuda_custo') + F('faculdade') + F('cred_convenio') + F('outros_cred') ) - (F('adiantamento') + F('desc_convenio') + F('outros_desc')))
         arrya.extend(query)
-
     for q in arrya:
         try:
             send_mail(
@@ -978,7 +977,12 @@ def get_nfpj_mail(request):
                 from_email=settings.EMAIL_HOST_USER,
                 recipient_list=[q.email]
             )
-            MailsPJ.objects.create(funcionario=q.id, data_pagamento=dt_pgmt, mensagem=text)
+            MailsPJ.objects.create(funcionario_id=q.id, data_pagamento=datetime.datetime.strptime(dt_pgmt,'%Y-%m-%d'),
+                                   mensagem=text.format(
+                    q.filial, q.nome, q.salario, q.faculdade, q.ajuda_custo, q.cred_convenio,
+                    q.outros_cred, q.adiantamento, q.desc_convenio, q.outros_desc, q.total,
+                    q.cpf_cnpj, q.banco, q.ag, q.conta, q.op, dt_1, dt_2, dt_pgmt,
+                ))
         except Exception as e:
             print(e)
     return redirect('portaria:index')

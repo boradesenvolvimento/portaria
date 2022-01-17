@@ -65,6 +65,10 @@ class FuncPjAdmin(admin.ModelAdmin):
     pass
 admin.site.register(FuncPj, FuncPjAdmin)
 
+class MailsPJAdmin(admin.ModelAdmin):
+    pass
+admin.site.register(MailsPJ, MailsPJAdmin)
+
 class ManutencaoFrotaAdmin(admin.ModelAdmin):
     pass
 admin.site.register(ManutencaoFrota, ManutencaoFrotaAdmin)

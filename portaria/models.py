@@ -290,7 +290,7 @@ class MailsPJ(models.Model):
     id = models.BigAutoField(primary_key=True)
     funcionario = models.ForeignKey(FuncPj, on_delete=PROTECT)
     data_envio = models.DateTimeField(default=timezone.now)
-    data_pagamento = models.DateTimeField()
+    data_pagamento = models.DateField()
     mensagem = models.TextField()
 
 
