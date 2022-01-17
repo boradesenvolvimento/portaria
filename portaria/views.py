@@ -923,7 +923,9 @@ def get_nfpj_mail(request):
     dt_2 = request.POST.get('periodo2')
     dt_pgmt = request.POST.get('dt_pgmt')
     text = ""
+    title = ''
     if a:
+        title = 'NF'
         qs = FuncPj.objects.filter(ativo=True)
         text = '''
                 Favor emitir a nf. de prestação serviços
@@ -938,6 +940,7 @@ def get_nfpj_mail(request):
                 CPF: {11}
                 '''
     if b:
+        title = 'NF ADIANTAMENTO'
         qs = FuncPj.objects.filter(ativo=True, adiantamento__gt=0)
         text = """ 
                 Prestação de Serviços 
@@ -966,7 +969,7 @@ def get_nfpj_mail(request):
     for q in arrya:
         try:
             send_mail(
-                subject='Teste',
+                subject=title,
                 message=text.format(
                     q.filial, q.nome, q.salario, q.faculdade, q.ajuda_custo, q.cred_convenio,
                     q.outros_cred, q.adiantamento, q.desc_convenio, q.outros_desc, q.total,
@@ -975,6 +978,7 @@ def get_nfpj_mail(request):
                 from_email=settings.EMAIL_HOST_USER,
                 recipient_list=[q.email]
             )
+            MailsPJ.objects.create(funcionario=q.id, data_pagamento=dt_pgmt, mensagem=text)
         except Exception as e:
             print(e)
     return redirect('portaria:index')

@@ -286,6 +286,13 @@ class NfServicoPj(models.Model):
     def __str__(self):
        return str(self.id)
 
+class MailsPJ(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    funcionario = models.ForeignKey(FuncPj, on_delete=PROTECT)
+    data_envio = models.DateTimeField(default=timezone.now)
+    data_pagamento = models.DateTimeField()
+    mensagem = models.TextField()
+
 
 class pj13(models.Model):
     id = models.BigAutoField(primary_key=True)
