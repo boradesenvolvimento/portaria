@@ -11,16 +11,20 @@
             </div>
             {% endfor %}
     <div class="row linha-baixo">
-        <div class="col-6">
+        <h2 class="title-cad">Buscar funcionário</h2>
+        <div class="col-9">
         <form method="get">
-        <h2 class="title-cad">Buscar funcionário
             <input name="nomefunc" placeholder="Digite o nome completo" type="text">
+            <select name="filter">
+                <option selected disabled>Ordenar...</option>
+                <option value="nome">Por funcionario</option>
+                <option value="filial">Por filial</option>
+            </select>
             <button type="submit" style="height:3.4rem;"><ion-icon style="font-size:2.4rem;" name="search-sharp"></ion-icon></button>
-        </h2>
         </form>
         </div>
         {% if request.user|has_group:'adm_rh' %}
-        <div class="col-6" style="margin-top:5px; text-align:right;">
+        <div class="col-3" style="margin-top:5px; text-align:right;">
             <a class="button" href="{% url 'portaria:consultanfpj' %}">Consultar Valores</a>
         </div>
         {% endif %}
@@ -32,15 +36,23 @@
                     <th>Nome</th>
                     <th>Filial</th>
                     <th>CPF/CNPJ</th>
+                    <th>Dados Bancarios</th>
                     <th>Inserir Valores</th>
+                    <th>Editar Cadastro</th>
                 </tr>
             </thead>
-        {% for q in array %}
+        {% for q in qnt_funcs %}
                 <tr>
                     <th>{{ q.nome|upper }}</th>
                     <th>{{ q.filial }}</th>
                     <th>{{ q.cpf_cnpj }}</th>
-                    <th><button type="submit" style="height:3.4rem;"><a href="{% url 'portaria:cadservicospj' q.id %}" style="color:white;font-size:2.4rem;"><ion-icon name="create-outline"></ion-icon></a></button></th>
+                    <th>Bco:{{ q.banco }} | Ag:{{ q.ag }} | Cc:{{ q.conta }}</th>
+                    <th><button type="submit" style="height:3.4rem;"><a href="{% url 'portaria:cadservicospj' q.id %}" style="color:white;font-size:2.4rem;"><ion-icon name="cash-outline"></ion-icon></a></button></th>
+                {% if request.user|has_group:"adm_rh" %}
+                    <th><button type="submit" style="height:3.4rem;">
+                        <a style="color:white;font-size:2.4rem;" href="/atualizar-funcionariopj/?func={{q.id}}"><ion-icon name="create-outline"></ion-icon></a>
+                    </button></th>
+                {% endif %}
                 </tr>
         {% endfor %}
         </table>

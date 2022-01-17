@@ -74,6 +74,9 @@
                 <a class="nav-link1" href="{% url 'portaria:decimopj' %}">13º PJ</a>
                 <a class="nav-link1" href="{% url 'portaria:feriaspjv' %}">Férias PJ</a>
                 <a class="nav-link1" href="{% url 'portaria:cadfuncionariopj' %}">Cadastrar funcionário</a>
+                {% if request.user|has_group:"adm_rh" %}
+                <a class="nav-link1" href="{% url 'portaria:atualizarfunc' %}">Atualizar funcionário</a>
+                {% endif %}
               </li>
             </ul>
           </div>

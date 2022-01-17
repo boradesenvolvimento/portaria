@@ -42,6 +42,7 @@ urlpatterns = [
     path('feriaspj/<int:idfpj>/agendamento', views.feriasagen, name='feriasagen'),
     path('feriaspj/<int:idfpj>/quitar', views.feriasquit, name='feriasquit'),
     path('cadastro-funcionariopj/', views.cadfuncionariopj, name='cadfuncionariopj'),
+    path('atualizar-funcionariopj/', views.atualizarfunc, name='atualizarfunc'),
     path('fatferramentas/', views.fatferramentas, name='fatferramentas'),
     path('tickets/', views.monitticket, name='monitticket'),
     path('tickets/new/', views.tktcreate, name='tktcreate'),
