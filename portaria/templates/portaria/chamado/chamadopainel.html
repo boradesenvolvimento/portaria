@@ -5,7 +5,7 @@
     {% if auth_message %}
         <p><strong>{{ auth_message }}</strong></p>
     {% else %}
-    {% if request.user|has_group:"monitoramento" %}
+    {% if request.user|has_group:"chamado" %}
             {% for message in messages %}
             <div class="container-fluid p-0">
                 <div class="alert {{ message.tags }} alert-dismissible" role="alert">
@@ -15,7 +15,7 @@
             {% endfor %}
         <section class="container">
             <div class="row">
-                <h2 class="title-cad col-3">Suporte - HelpDesk</h2>
+                <h2 class="title-cad col-3">Suporte Chamados</h2>
                 <div class="col-6"></div>
                 <div class="col-3">
                     <form method="post">
@@ -34,6 +34,7 @@
                             <th scope="col">Aberto em</th>
                             <th scope="col">Responsável</th>
                             <th scope="col">Status</th>
+                            <th scope="col">Serviço</th>
                             <th scope="col">Visualizar</th>
                         </tr>
                     </thead>
@@ -45,6 +46,7 @@
                             <th>{{ q.dt_abertura }}</th>
                             <th>{{ q.responsavel }}</th>
                             <th>{{ q.status }}</th>
+                            <th>{{ q.servico }}</th>
                             <th><a href="{% url 'portaria:chamadodetail' tktid=q.id %}">
                                 <button><ion-icon name="eye-outline"></ion-icon></button>
                             </a></th>

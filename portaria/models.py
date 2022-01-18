@@ -496,10 +496,10 @@ class EmailChamado(models.Model):
     assunto = models.CharField(max_length=100)
     mensagem = models.TextField()
     cc = models.CharField(max_length=1000, blank=True, null=True)
-    dt_envio = models.DateField()
+    dt_envio = models.DateTimeField(blank=True, null=True)
     email_id = models.CharField(max_length=100, unique=True)
     ult_resp = models.TextField(blank=True, null=True)
-    ult_resp_dt = models.DateField(blank=True, null=True)
+    ult_resp_dt = models.DateTimeField(blank=True, null=True)
     ult_resp_html = models.TextField(blank=True, null=True)
     tkt_ref = models.ForeignKey(TicketChamado, on_delete=PROTECT)
 

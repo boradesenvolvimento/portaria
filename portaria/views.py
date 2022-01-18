@@ -35,8 +35,11 @@ from django.views import generic
 
 
 #imports django projeto
+from .dbtest import conndb
 from .models import * #Cadastro, PaletControl, ChecklistFrota, Veiculos, NfServicoPj
 from .forms import * #CadastroForm, isPlacaForm, DateForm, FilterForm, TPaletsForm, TIPO_GARAGEM, ChecklistForm
+from mysite.settings import get_secret
+
 
 def telausuariothiago(request):
     return render(request, "portaria/telausuariothiago.html")
@@ -838,25 +841,63 @@ def tktview(request, tktid):
 
 def chamado(request):
     metrics = TicketChamado.objects.exclude(Q(status='CANCELADO') | Q(status='CONCLUIDO')).annotate(
-        total=Count('id'),executando=Count('id', filter=Q(status='ANDAMENTO'))
-    ).aggregate(total1=Sum('total'),exec=(Sum('executando')))
+        dev=Count('id', filter=Q(servico='DESENVOLVIMENTO')), praxio=Count('id', filter=Q(servico='PRAXIO')),
+        ti=Count('id', filter=Q(servico='TI')), manutencao=Count('id', filter=Q(servico='MANUTENCAO'))
+    ).aggregate(dev1=Sum('dev'), praxio1=Sum('praxio'), ti1=Sum('ti'), manu1=Sum('manutencao'))
     return render(request, 'portaria/chamado/chamado.html', {'metrics':metrics})
+
+def chamadopainel(request):
+    groups = request.user.groups.values_list('name', flat=True)
+    form = TicketChamado.objects.filter(servico__in=groups
+    ).exclude(Q(status='CANCELADO') | Q(status='CONCLUIDO'))
+
+    if request.method == 'POST':
+        srctkt = request.POST.get('srctkt')
+        if srctkt:
+            form = TicketChamado.objects.filter(pk=srctkt).exclude(Q(status='CANCELADO') | Q(status='CONCLUIDO'))
+            return render(request, 'portaria/chamado/chamadopainel.html', {'form': form})
+    return render(request, 'portaria/chamado/chamadopainel.html',{'form':form})
 
 def chamadonovo(request):
     editor = TextEditor()
-    return render(request, 'portaria/chamado/chamadonovo.html', {'editor':editor})
+    stts = TicketChamado.STATUS_CHOICES
+    dp = TicketChamado.DEPARTAMENTO_CHOICES
+    fil = TIPO_GARAGEM
+    svs = TicketChamado.SERVICO_CHOICES
+    resp = User.objects.filter(groups__name='monitoramento')
+    if request.method == 'POST':
+        assnt = request.POST.get('assunto')
+        solic = request.POST.get('solicitante')
+        nresp = request.POST.get('responsavel')
+        ndp = request.POST.get('departamento')
+        nstts = request.POST.get('status')
+        nfil = request.POST.get('filial')
+        nsvs = request.POST.get('svs')
+        area = request.POST.get('area')
+        if assnt and solic and nresp and ndp and nstts and nfil and area and area != '<p><br></p>':
+            dict = {
+                'assnt':assnt,
+                'solic': solic,
+                'nresp': nresp,
+                'ndp': ndp,
+                'nstts': nstts,
+                'nfil': nfil,
+                'area':area,
+                'nsvs': nsvs
+            }
+            createchamado(request, **dict)
+    return render(request, 'portaria/chamado/chamadonovo.html', {'editor':editor,'stts':stts,'dp':dp,'fil':fil,
+                                                                 'resp':resp,'svs':svs})
 
-def chamadopainel(request):
-    form = TicketChamado.objects.exclude(Q(status='CANCELADO') | Q(status='CONCLUIDO'))
-    return render(request, 'portaria/chamado/chamadopainel.html',{'form':form})
 
 def chamadodetail(request, tktid):
     stts = TicketChamado.STATUS_CHOICES
     dp = TicketChamado.DEPARTAMENTO_CHOICES
     fil = TIPO_GARAGEM
-    resp = User.objects.filter(groups__name='monitoramento')
+    resp = User.objects.filter(groups__name='chamado').exclude(id=1)
     form = get_object_or_404(EmailChamado, tkt_ref=tktid)
     editor = TextEditor()
+
     if request.method == 'POST':
         ndptm = request.POST.get('ndptm')
         nstts = request.POST.get('nstts')
@@ -884,7 +925,8 @@ def chamadodetail(request, tktid):
                 chamadoupdate(request, tktid, area)
         except Exception as e:
             print(e)
-    return render(request, 'portaria/chamado/chamadodetail.html', {'form':form,'editor':editor,'stts':stts,'dp':dp,'resp':resp,'fil':fil})
+    return render(request, 'portaria/chamado/chamadodetail.html', {'form':form,'editor':editor,'stts':stts,'dp':dp,
+                                                                   'resp':resp,'fil':fil})
 #fim das views
 
 
@@ -1503,6 +1545,47 @@ def closetkt(request, tktid):
         messages.error(request, 'Não autorizado encerramento do monitoramento.')
     return redirect('portaria:monitticket')
 
+def createchamado(request, **kwargs):
+    dict = kwargs
+    pattern = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
+    msg1 = MIMEMultipart()
+    msgmail = dict['area']
+    if re.findall(pattern, dict['area']):
+        for q in re.findall(pattern, dict['area']):
+            media = q
+            img_data = open(('/home/bora/www' + media), 'rb').read()
+            msgimg = MIMEImage(img_data, name=os.path.basename(media))
+            msgimg.add_header('Content-ID', f'{media}')
+            msgmail = msgmail.replace(('<img src="' + media + '"'), f'<img src="cid:{media}" ')
+            msg1.attach(msgimg)
+    msg1.attach(MIMEText(msgmail, 'html', 'utf-8'))
+    msg1['Subject'] = dict['assnt']
+    msg1['From'] = get_secret('EUSER_CH') ################### alterar
+    msg1['To'] = dict['solic'] ################### alterar
+    msg_id = make_msgid(idstring=None, domain='bora.com.br')
+    msg1['Message-ID'] = msg_id
+    smtp_h = get_secret('ESMTP_CH')
+    smtp_p = '587'
+    try:
+        sm = smtplib.SMTP(smtp_h, smtp_p, timeout=120)
+        sm.set_debuglevel(1)
+        sm.login(get_secret('EUSER_CH'), get_secret('EPASS_CH')) ################### alterar
+    except Exception as e:
+        messages.error(request, f'ErrorType:{type(e).__name__}, Error:{e}')
+        print(f'ErrorType:{type(e).__name__}, Error:{e}')
+    else:
+        try:
+            tkt = TicketChamado.objects.create(nome_tkt=dict['assnt'], dt_abertura=timezone.now(),
+                                                     responsavel_id=dict['nresp'], servico=dict['nsvs'],
+                                                     solicitante=dict['solic'], status=dict['nstts'],
+                                                     msg_id=msg_id, departamento=dict['ndp'], filial=dict['nfil'])
+        except Exception as e:
+            print(e)
+        sm.sendmail(get_secret('EUSER_CH'), [get_secret('EUSER_CH')] + dict['solic'].split(';'), msg1.as_string()) ################### alterar
+        notify.send(request.user, recipient=tkt.responsavel, verb='message',
+                    description="Seu ticket foi criado.")
+        messages.success(request, 'Email enviado e ticket criado com sucesso')
+
 def chamadoupdate(request,tktid,area):
     media = ''
     pattern = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
@@ -1523,28 +1606,30 @@ def chamadoupdate(request,tktid,area):
         msg1['References'] = orig.email_id
         msg_id = make_msgid(idstring=None, domain='bora.com.br')
         msg1['Message-ID'] = msg_id
-        msg1['From'] = 'teste@bora.com.br'
+        msg1['From'] = get_secret('EUSER_CH') ################### alterar
         msg1['To'] = orig.tkt_ref.solicitante
         msg1.attach(MIMEText(msg, 'html', 'utf-8'))
-        smtp_h = 'smtp.kinghost.net'
+        smtp_h = get_secret('EHOST_CH')
         smtp_p = '587'
-        user = 'bora@bora.tec.br'
-        passw = 'Bor@dev#123'
+        user = get_secret('EUSER_CH')  ################### alterar
+        passw = get_secret('EPASS_CH')
         try:
-            sm = smtplib.SMTP('smtp.bora.com.br', smtp_p)
+            sm = smtplib.SMTP('smtp.kinghost.net', smtp_p)
             sm.set_debuglevel(1)
-            sm.login('teste@bora.com.br', 'Bor@413247')
-            sm.sendmail('teste@bora.com.br', ['bora@bora.tec.br']+orig.tkt_ref.solicitante.split(';'), msg1.as_string())
+            sm.login(get_secret('EUSER_CH'), get_secret('EPASS_CH')) ################### alterar################### alterar
+            sm.sendmail(get_secret('EUSER_CH'), [get_secret('EUSER_CH')]+orig.tkt_ref.solicitante.split(';'), msg1.as_string())
         except Exception as e:
             print(f'ErrorType:{type(e).__name__}, Error:{e}')
 
 def chamadoreadmail(request):
     #params
+    tkt = None
+    servico = ''
     hoje = datetime.date.today()
     attatch = ''
-    host = 'pop.kinghost.net'
-    e_user = 'bora@bora.tec.br'
-    e_pass = 'Bor@dev#123'
+    host = get_secret('EHOST_CH')
+    e_user = get_secret('EUSER_CH') ################### alterar
+    e_pass = get_secret('EPASS_CH')
     pattern1 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
     pattern2 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp).\w+.\w+')
 
@@ -1592,9 +1677,13 @@ def chamadoreadmail(request):
         for q in cs:
             if q is None: continue
             else: cs = q
-
+        '''
+        inserir função para determinar qual tipo de serviço
+        para cada email ti/dev/praxio etc
+        ler a caixa de entrada e setar o servico
+        '''
         #pega parametros do email
-        e_date = datetime.datetime.strptime(parsed_email['Date'], '%a, %d %b %Y %H:%M:%S %z').strftime('%Y-%m-%d')
+        e_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
         e_title = parsed_email['Subject']
         e_from = parsed_email['From']
         if re.findall(r'<(.*?)>', e_from): e_from = re.findall(r'<(.*?)>', e_from)[0]
@@ -1633,14 +1722,18 @@ def chamadoreadmail(request):
                     print(f'ErrorType: {type(e).__name__}, Error: {e}')
                 else:
                     w_body = w_body.replace(q, new_cid)
-        if e_to == 'bora@bora.tec.br':
+        '''if e_to == 'bora@bora.tec.br':
             servico = 'DESENVOLVIMENTO'
+        elif e_to == 'teste@bora.com.br':
+            servico = 'TI'
+        else:
+            servico = 'PRAXIO' 
+        '''
         try:
             form = EmailChamado.objects.filter(email_id=e_ref)
-            tkt = TicketChamado.objects.get(pk=form[0].tkt_ref_id)
+            tkt = TicketChamado.objects.get(Q(msg_id=e_id) | Q(msg_id=e_ref))
         except Exception as e:
             print(e)
-        print(form)
         if form.exists() and form[0].tkt_ref.status != ('CONCLUIDO' or 'CANCELADO'):
             oldreply = form[0].ult_resp_html
             if oldreply: newreply = w_body.split(oldreply[:50])
@@ -1651,20 +1744,34 @@ def chamadoreadmail(request):
                 aa = '<hr>' + e_from + ' -- ' + e_date + '\n' + e_body
                 bb = '<hr>' + e_from + ' -- ' + e_date + '<br>' + w_body + attatch
             form.update(ult_resp=aa, ult_resp_html=bb, ult_resp_dt=e_date)
+            notify.send(sender=User.objects.get(pk=1),
+                        recipient=User.objects.filter(Q(groups__name='chamado')),
+                        verb='message', description=f"Nova mensagem para o ticket {tkt.id}")
             pp.dele(i + 1)
         elif form.exists() and form[0].status == ('CANCELADO' or 'CONCLUIDO'):
             messages.warning(request, 'Ticket já encerrado')
             pp.dele(i + 1)
             pp.quit()
             return redirect('portaria:chamado')
+        elif form.exists() == False and tkt != None:
+            mensagem = '<hr>' + e_from + ' -- ' + e_date + w_body + attatch
+            newmail = EmailChamado.objects.create(assunto=e_title, mensagem=mensagem, cc=e_cc, dt_envio=e_date,
+                                                  email_id=e_id, tkt_ref=tkt)
+            notify.send(sender=User.objects.get(pk=1),
+                        recipient=User.objects.filter(Q(groups__name='chamado')),
+                        verb='message', description=f"Nova mensagem para o ticket {tkt.id}")
+            pp.dele(i + 1)
         else:
-            newtkt = TicketChamado.objects.create(solicitante=e_from, servico=servico, nome_tkt=e_title,
+            newtkt = TicketChamado.objects.create(solicitante=e_from, nome_tkt=e_title,
                                                   dt_abertura=e_date, status='ABERTO', msg_id=e_id)
             mensagem = '<hr>' + e_from + ' -- ' + e_date + w_body + attatch
             newmail = EmailChamado.objects.create(assunto=e_title, mensagem=mensagem, cc=e_cc, dt_envio=e_date,
                                                   email_id=e_id, tkt_ref=newtkt)
+            notify.send(sender=User.objects.get(pk=1),
+                        recipient=User.objects.filter(Q(groups__name='chamado')),
+                        verb='message', description=f"Novo Chamado aberto: id {newtkt.id}")
             pp.dele(i + 1)
-    pp.quit()
+        pp.quit()
     return redirect('portaria:chamado')
 
 
@@ -1693,3 +1800,6 @@ def dictfetchall(cursor):
         dict(zip(columns, row))
         for row in cursor.fetchall()
     ]
+
+def testeconn(request):
+    conndb()
