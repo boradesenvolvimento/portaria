@@ -1712,6 +1712,7 @@ def chamadoreadmail(request):
         if re.findall(pattern2, w_body):
             for q in re.findall(pattern2, w_body):
                 new = re.findall(pattern1, q)
+                print(new, 'aaaaa')
                 new_cid = os.path.join(settings.MEDIA_URL + 'django-summernote/' + str(hoje) + '/', new[0].split('cid:')[1])
                 w_body = w_body.replace(q, new_cid)
         elif re.findall(pattern1, w_body):
@@ -1734,7 +1735,7 @@ def chamadoreadmail(request):
         except Exception as e:
             print(e)
         try:
-            if form.exists() and form[0].tkt_ref.status != ('CONCLUIDO' or 'CANCELADO'):
+            if form.exists():
                 oldreply = form[0].ult_resp_html
                 if oldreply: newreply = w_body.split(oldreply[:50])
                 if form[0].ult_resp:
@@ -1747,7 +1748,7 @@ def chamadoreadmail(request):
                 notify.send(sender=User.objects.get(pk=1),
                             recipient=User.objects.filter(Q(groups__name='chamado')),
                             verb='message', description=f"Nova mensagem para o ticket {tkt.id}")
-            elif form.exists() and form[0].status == ('CANCELADO' or 'CONCLUIDO'):
+            elif form.exists() and form[0].tkt_ref.status == ('CANCELADO' or 'CONCLUIDO'):
                 messages.warning(request, 'Ticket já encerrado')
                 pp.dele(i + 1)
                 pp.quit()
