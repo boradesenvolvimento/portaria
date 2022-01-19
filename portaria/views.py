@@ -7,6 +7,7 @@ import re
 import textwrap
 import poplib
 from email import policy
+from email.header import decode_header
 from email.mime.multipart import MIMEMultipart
 import pandas as pd
 from email.mime.text import MIMEText
@@ -1685,7 +1686,8 @@ def chamadoreadmail(request):
         '''
         #pega parametros do email
         e_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
-        e_title = parsed_email['Subject']
+        e_title_unencoded = decode_header(parsed_email['Subject'])
+        e_title = e_title_unencoded[0][0].decode(cs)
         e_from = parsed_email['From']
         if re.findall(r'<(.*?)>', e_from): e_from = re.findall(r'<(.*?)>', e_from)[0]
         e_to = parsed_email['To']
@@ -1727,7 +1729,6 @@ def chamadoreadmail(request):
             servico = 'PRAXIO'
         else:
             servico = 'DESENVOLVIMENTO'
-
         try:
             form = EmailChamado.objects.filter(email_id=e_ref)
             tkt = TicketChamado.objects.get(Q(msg_id=e_id) | Q(msg_id=e_ref))
