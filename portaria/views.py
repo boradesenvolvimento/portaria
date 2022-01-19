@@ -1614,7 +1614,7 @@ def chamadoupdate(request,tktid,area):
         user = get_secret('EUSER_CH')  ################### alterar
         passw = get_secret('EPASS_CH')
         try:
-            sm = smtplib.SMTP('smtp.kinghost.net', smtp_p)
+            sm = smtplib.SMTP(get_secret('ESMTP_CH'), smtp_p)
             sm.set_debuglevel(1)
             sm.login(get_secret('EUSER_CH'), get_secret('EPASS_CH')) ################### alterar################### alterar
             sm.sendmail(get_secret('EUSER_CH'), [get_secret('EUSER_CH')]+orig.tkt_ref.solicitante.split(';'), msg1.as_string())
