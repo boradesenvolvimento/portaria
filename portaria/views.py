@@ -1722,13 +1722,11 @@ def chamadoreadmail(request):
                     print(f'ErrorType: {type(e).__name__}, Error: {e}')
                 else:
                     w_body = w_body.replace(q, new_cid)
-        '''if e_to == 'bora@bora.tec.br':
-            servico = 'DESENVOLVIMENTO'
-        elif e_to == 'teste@bora.com.br':
-            servico = 'TI'
+        if e_to == 'chamado.praxio@bora.com.br':
+            servico = 'PRAXIO'
         else:
-            servico = 'PRAXIO' 
-        '''
+            servico = 'DESENVOLVIMENTO'
+
         try:
             form = EmailChamado.objects.filter(email_id=e_ref)
             tkt = TicketChamado.objects.get(Q(msg_id=e_id) | Q(msg_id=e_ref))

@@ -72,5 +72,6 @@ urlpatterns = [
     path('cardusuario/<int:id>/card', views.card, name='card'),
     path(r'readnotify/<notifyid>/', views.isnotifyread, name='isnotifyread'),
     path(r'allreadnotify/<user>', views.setallread, name='setallread'),
+    path('testeconn/', views.testeconn, name='testeconn'),
 
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
