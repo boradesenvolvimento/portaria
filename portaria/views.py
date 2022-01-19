@@ -1704,7 +1704,7 @@ def chamadoreadmail(request):
             reply_parse = re.findall(r'(De:*\a*\w.*.\sEnviada em:+\s+\w.*.+[,]+\s+\d+\s+\w+\s+\w+\s+\w+\s+\d+\s+\d+:+\d.*)', e_body)
             if reply_parse:
                 e_body = e_body.split(reply_parse[0])[0].replace('\n', '<br>')
-        w_body = htbody.decode(cs)
+        w_body = '<div class="container chmdimg">' + htbody.decode(cs) + '</div>'
         if w_body:
             reply_html = re.findall(r'(<b><span+\s+\w.*.[>]+De:.*.Enviada em:.*.\s+\w.*.[,]+\s+\d+\s+\w+\s+\w+\s+\w+\s+\d+\s+\d+:+\d.*)',w_body)
             if reply_html:
@@ -1712,7 +1712,6 @@ def chamadoreadmail(request):
         if re.findall(pattern2, w_body):
             for q in re.findall(pattern2, w_body):
                 new = re.findall(pattern1, q)
-                print(new, 'aaaaa')
                 new_cid = os.path.join(settings.MEDIA_URL + 'django-summernote/' + str(hoje) + '/', new[0].split('cid:')[1])
                 w_body = w_body.replace(q, new_cid)
         elif re.findall(pattern1, w_body):

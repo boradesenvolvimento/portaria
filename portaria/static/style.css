@@ -284,3 +284,7 @@ button:hover, .button:hover{
     display:block;
     margin:auto;
 }
+
+.chmdimg img{
+    max-width:100rem;
+}

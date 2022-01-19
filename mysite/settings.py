@@ -48,11 +48,11 @@ SECRET_KEY = get_secret('SECRET_KEY')
 
 #develop
 DEBUG = True
-#ALLOWED_HOSTS = []
+ALLOWED_HOSTS = []
 
 #production
 #DEBUG = False
-ALLOWED_HOSTS = ["www.bora.tec.br","www.bora.tec.br/portaria", "bora.tec.br", "bora.tec.br/portaria"]
+#ALLOWED_HOSTS = ["www.bora.tec.br","www.bora.tec.br/portaria", "bora.tec.br", "bora.tec.br/portaria"]
 
 # Application definition
 
