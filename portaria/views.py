@@ -864,7 +864,7 @@ def chamadonovo(request):
     dp = TicketChamado.DEPARTAMENTO_CHOICES
     fil = TIPO_GARAGEM
     svs = TicketChamado.SERVICO_CHOICES
-    resp = User.objects.filter(groups__name='monitoramento')
+    resp = User.objects.filter(groups__name='chamado').exclude(id=1)
     if request.method == 'POST':
         assnt = request.POST.get('assunto')
         solic = request.POST.get('solicitante')
