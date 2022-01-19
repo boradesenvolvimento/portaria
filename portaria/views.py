@@ -1760,7 +1760,7 @@ def chamadoreadmail(request):
                         verb='message', description=f"Nova mensagem para o ticket {tkt.id}")
             pp.dele(i + 1)
         else:
-            newtkt = TicketChamado.objects.create(solicitante=e_from, nome_tkt=e_title,
+            newtkt = TicketChamado.objects.create(solicitante=e_from, servico=servico, nome_tkt=e_title,
                                                   dt_abertura=e_date, status='ABERTO', msg_id=e_id)
             mensagem = '<hr>' + e_from + ' -- ' + e_date + w_body + attatch
             newmail = EmailChamado.objects.create(assunto=e_title, mensagem=mensagem, cc=e_cc, dt_envio=e_date,
