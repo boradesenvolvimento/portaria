@@ -1553,6 +1553,7 @@ def createchamado(request, **kwargs):
     if re.findall(pattern, dict['area']):
         for q in re.findall(pattern, dict['area']):
             media = q
+            print(media)
             img_data = open(('/home/bora/www' + media), 'rb').read()
             msgimg = MIMEImage(img_data, name=os.path.basename(media))
             msgimg.add_header('Content-ID', f'{media}')
@@ -1732,42 +1733,44 @@ def chamadoreadmail(request):
             tkt = TicketChamado.objects.get(Q(msg_id=e_id) | Q(msg_id=e_ref))
         except Exception as e:
             print(e)
-        if form.exists() and form[0].tkt_ref.status != ('CONCLUIDO' or 'CANCELADO'):
-            oldreply = form[0].ult_resp_html
-            if oldreply: newreply = w_body.split(oldreply[:50])
-            if form[0].ult_resp:
-                aa = '<hr>' + e_from + ' -- ' + e_date + '\n' + e_body + '\n------Anterior-------\n' + form[0].ult_resp
-                bb = '<hr>' + e_from + ' -- ' + e_date + '<br>' + newreply[0] + attatch + '<hr>' + form[0].ult_resp_html
+        try:
+            if form.exists() and form[0].tkt_ref.status != ('CONCLUIDO' or 'CANCELADO'):
+                oldreply = form[0].ult_resp_html
+                if oldreply: newreply = w_body.split(oldreply[:50])
+                if form[0].ult_resp:
+                    aa = '<hr>' + e_from + ' -- ' + e_date + '\n' + e_body + '\n------Anterior-------\n' + form[0].ult_resp
+                    bb = '<hr>' + e_from + ' -- ' + e_date + '<br>' + newreply[0] + attatch + '<hr>' + form[0].ult_resp_html
+                else:
+                    aa = '<hr>' + e_from + ' -- ' + e_date + '\n' + e_body
+                    bb = '<hr>' + e_from + ' -- ' + e_date + '<br>' + w_body + attatch
+                form.update(ult_resp=aa, ult_resp_html=bb, ult_resp_dt=e_date)
+                notify.send(sender=User.objects.get(pk=1),
+                            recipient=User.objects.filter(Q(groups__name='chamado')),
+                            verb='message', description=f"Nova mensagem para o ticket {tkt.id}")
+            elif form.exists() and form[0].status == ('CANCELADO' or 'CONCLUIDO'):
+                messages.warning(request, 'Ticket já encerrado')
+                pp.dele(i + 1)
+                pp.quit()
+                return redirect('portaria:chamado')
+            elif form.exists() == False and tkt != None:
+                mensagem = '<hr>' + e_from + ' -- ' + e_date + w_body + attatch
+                newmail = EmailChamado.objects.create(assunto=e_title, mensagem=mensagem, cc=e_cc, dt_envio=e_date,
+                                                      email_id=e_id, tkt_ref=tkt)
+                notify.send(sender=User.objects.get(pk=1),
+                            recipient=User.objects.filter(Q(groups__name='chamado')),
+                            verb='message', description=f"Nova mensagem para o ticket {tkt.id}")
             else:
-                aa = '<hr>' + e_from + ' -- ' + e_date + '\n' + e_body
-                bb = '<hr>' + e_from + ' -- ' + e_date + '<br>' + w_body + attatch
-            form.update(ult_resp=aa, ult_resp_html=bb, ult_resp_dt=e_date)
-            notify.send(sender=User.objects.get(pk=1),
-                        recipient=User.objects.filter(Q(groups__name='chamado')),
-                        verb='message', description=f"Nova mensagem para o ticket {tkt.id}")
-            pp.dele(i + 1)
-        elif form.exists() and form[0].status == ('CANCELADO' or 'CONCLUIDO'):
-            messages.warning(request, 'Ticket já encerrado')
-            pp.dele(i + 1)
-            pp.quit()
-            return redirect('portaria:chamado')
-        elif form.exists() == False and tkt != None:
-            mensagem = '<hr>' + e_from + ' -- ' + e_date + w_body + attatch
-            newmail = EmailChamado.objects.create(assunto=e_title, mensagem=mensagem, cc=e_cc, dt_envio=e_date,
-                                                  email_id=e_id, tkt_ref=tkt)
-            notify.send(sender=User.objects.get(pk=1),
-                        recipient=User.objects.filter(Q(groups__name='chamado')),
-                        verb='message', description=f"Nova mensagem para o ticket {tkt.id}")
-            pp.dele(i + 1)
+                newtkt = TicketChamado.objects.create(solicitante=e_from, servico=servico, nome_tkt=e_title,
+                                                      dt_abertura=e_date, status='ABERTO', msg_id=e_id)
+                mensagem = '<hr>' + e_from + ' -- ' + e_date + w_body + attatch
+                newmail = EmailChamado.objects.create(assunto=e_title, mensagem=mensagem, cc=e_cc, dt_envio=e_date,
+                                                      email_id=e_id, tkt_ref=newtkt)
+                notify.send(sender=User.objects.get(pk=1),
+                            recipient=User.objects.filter(Q(groups__name='chamado')),
+                            verb='message', description=f"Novo Chamado aberto: id {newtkt.id}")
+        except Exception as e:
+            print(e)
         else:
-            newtkt = TicketChamado.objects.create(solicitante=e_from, servico=servico, nome_tkt=e_title,
-                                                  dt_abertura=e_date, status='ABERTO', msg_id=e_id)
-            mensagem = '<hr>' + e_from + ' -- ' + e_date + w_body + attatch
-            newmail = EmailChamado.objects.create(assunto=e_title, mensagem=mensagem, cc=e_cc, dt_envio=e_date,
-                                                  email_id=e_id, tkt_ref=newtkt)
-            notify.send(sender=User.objects.get(pk=1),
-                        recipient=User.objects.filter(Q(groups__name='chamado')),
-                        verb='message', description=f"Novo Chamado aberto: id {newtkt.id}")
             pp.dele(i + 1)
         pp.quit()
     return redirect('portaria:chamado')
