@@ -229,8 +229,8 @@ def saidapalete(request):
         if qnt and fil and emp and tp_p:
             chk = Cliente.objects.get(pk=emp)
             Cliente.objects.filter(pk=emp).update(saldo=(chk.saldo - qnt))
-            for q in range(1,qnt):
-                PaleteControl.objects.filter(loc_atual=fil, tp_palete=tp_p).delete()
+            for q in range(0,qnt):
+                PaleteControl.objects.filter(loc_atual=fil, tp_palete=tp_p).first().delete()
             messages.success(request, 'Saidas cadastradas com sucesso')
             return redirect('portaria:paletecliente')
     return render(request, 'portaria/palete/saidapalete.html', {'tp_fil':tp_fil,'tp_emp':tp_emp})
@@ -1687,7 +1687,11 @@ def chamadoreadmail(request):
         #pega parametros do email
         e_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
         e_title_unencoded = decode_header(parsed_email['Subject'])
-        e_title = e_title_unencoded[0][0].decode(cs)
+        try:
+            e_title = e_title_unencoded[0][0].decode(cs)
+        except:
+            e_title = parsed_email['Subject']
+
         e_from = parsed_email['From']
         if re.findall(r'<(.*?)>', e_from): e_from = re.findall(r'<(.*?)>', e_from)[0]
         e_to = parsed_email['To']
