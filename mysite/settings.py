@@ -161,10 +161,10 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
-STATIC_URL = '/static/'
+STATIC_URL = get_secret('STATIC_URL')
 STATIC_ROOT = get_secret('STATIC_ROOT')
 
-MEDIA_URL = '/media/'
+MEDIA_URL = get_secret('MEDIA_URL')
 MEDIA_ROOT = get_secret('MEDIA_ROOT')
 
 
