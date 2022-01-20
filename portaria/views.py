@@ -1743,7 +1743,7 @@ def chamadoreadmail(request):
             tkt = TicketChamado.objects.get(Q(msg_id=e_id) | Q(msg_id=e_ref))
         except Exception as e:
             print(e)
-        '''try:
+        try:
             if form.exists():
                 oldreply = form[0].ult_resp_html
                 if oldreply: newreply = w_body.split(oldreply[:50])
@@ -1781,7 +1781,7 @@ def chamadoreadmail(request):
         except Exception as e:
             print(e)
         else:
-            pp.dele(i + 1)'''
+            pp.dele(i + 1)
         pp.quit()
     return redirect('portaria:chamado')
 
