@@ -1635,6 +1635,7 @@ def chamadoreadmail(request):
     e_pass = get_secret('EPASS_CH')
     pattern1 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
     pattern2 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp).\w+.\w+')
+    rr = random.random()
 
     #logando no email
     pp = poplib.POP3(host)
@@ -1665,7 +1666,6 @@ def chamadoreadmail(request):
                         fp = open(locimg, 'wb')
                         fp.write(part.get_payload(decode=True))
                         fp.close()
-                        rr = random.random()
                         os.rename(locimg, os.path.join(path, (str(rr) + filename)))
                         print(str(rr) + filename)
                     else:
@@ -1673,7 +1673,6 @@ def chamadoreadmail(request):
                         fp = open(locimg, 'wb')
                         fp.write(part.get_payload(decode=True))
                         fp.close()
-                        rr = random.random()
                         os.rename(locimg, os.path.join(path, (str(rr) + filename)))
                     item = os.path.join('/media/django-summernote/' + str(hoje) + '/', (str(rr) + filename))
                     aa = '<div class="mailattatch"><a href="'+item+'" download><img src="/static/images/downicon.png" width="40"><p>'+filename+'</p></a></div>'
@@ -1744,7 +1743,7 @@ def chamadoreadmail(request):
             tkt = TicketChamado.objects.get(Q(msg_id=e_id) | Q(msg_id=e_ref))
         except Exception as e:
             print(e)
-        try:
+        '''try:
             if form.exists():
                 oldreply = form[0].ult_resp_html
                 if oldreply: newreply = w_body.split(oldreply[:50])
@@ -1782,7 +1781,7 @@ def chamadoreadmail(request):
         except Exception as e:
             print(e)
         else:
-            pp.dele(i + 1)
+            pp.dele(i + 1)'''
         pp.quit()
     return redirect('portaria:chamado')
 
