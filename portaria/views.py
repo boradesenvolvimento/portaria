@@ -1,4 +1,5 @@
 #imports geral
+import random
 import csv
 import datetime
 import email, smtplib
@@ -1664,6 +1665,7 @@ def chamadoreadmail(request):
                         fp = open(locimg, 'wb')
                         fp.write(part.get_payload(decode=True))
                         fp.close()
+                        os.rename(locimg, os.path.join(path, (str(random.random()) + filename)))
                     else:
                         os.mkdir(path=path)
                         fp = open(locimg, 'wb')
