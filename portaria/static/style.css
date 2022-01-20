@@ -285,6 +285,6 @@ button:hover, .button:hover{
     margin:auto;
 }
 
-.chmdimg img{
+.chmdimg img, table{
     max-width:100rem;
 }
