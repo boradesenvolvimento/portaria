@@ -1665,13 +1665,17 @@ def chamadoreadmail(request):
                         fp = open(locimg, 'wb')
                         fp.write(part.get_payload(decode=True))
                         fp.close()
-                        os.rename(locimg, os.path.join(path, (str(random.random()) + filename)))
+                        rr = random.random()
+                        os.rename(locimg, os.path.join(path, (str(rr) + filename)))
+                        print(str(rr) + filename)
                     else:
                         os.mkdir(path=path)
                         fp = open(locimg, 'wb')
                         fp.write(part.get_payload(decode=True))
                         fp.close()
-                    item = os.path.join('/media/django-summernote/' + str(hoje) + '/', filename)
+                        rr = random.random()
+                        os.rename(locimg, os.path.join(path, (str(rr) + filename)))
+                    item = os.path.join('/media/django-summernote/' + str(hoje) + '/', (str(rr) + filename))
                     aa = '<div class="mailattatch"><a href="'+item+'" download><img src="/static/images/downicon.png" width="40"><p>'+filename+'</p></a></div>'
                     attatch += aa
         else:
@@ -1720,13 +1724,13 @@ def chamadoreadmail(request):
         if re.findall(pattern2, w_body):
             for q in re.findall(pattern2, w_body):
                 new = re.findall(pattern1, q)
-                new_cid = os.path.join(settings.MEDIA_URL + 'django-summernote/' + str(hoje) + '/', new[0].split('cid:')[1])
+                new_cid = os.path.join(settings.MEDIA_URL + 'django-summernote/' + str(hoje) + '/', (str(rr) + new[0].split('cid:')[1]))
                 w_body = w_body.replace(q, new_cid)
         elif re.findall(pattern1, w_body):
             for q in re.findall(pattern1, w_body):
                 new = re.findall(pattern1, w_body)
                 try:
-                    new_cid = os.path.join(settings.MEDIA_URL + 'django-summernote/' + str(hoje) + '/', new[0].split('cid:')[1])
+                    new_cid = os.path.join(settings.MEDIA_URL + 'django-summernote/' + str(hoje) + '/', (str(rr) + new[0].split('cid:')[1]))
                 except Exception as e:
                     print(f'ErrorType: {type(e).__name__}, Error: {e}')
                 else:
