@@ -1314,19 +1314,23 @@ def exedicorreios(request):
     return response
 
 def readmail_monitoramento(request):
-    #config poplib
+    #params
     attatch = ''
-    host = 'pop.kinghost.net'
-    e_user = 'bora@bora.tec.br'
-    e_pass = 'Bor@dev#123'
-    print('iniciando readmail')
+    hoje = datetime.date.today()
+    host = 'pop.kinghost.net' ########## alterar
+    e_user = 'bora@bora.tec.br' ########## alterar
+    e_pass = 'Bor@dev#123' ########## alterar
+    pattern1 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
+    pattern2 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp).\w+.\w+')
+    rr = random.random()
+
+    #logando no email
     pp = poplib.POP3(host)
     pp.set_debuglevel(1)
     pp.user(e_user)
     pp.pass_(e_pass)
-    pattern1 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
-    pattern2 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp).\w+.\w+')
-    num_messages = len(pp.list()[1])
+
+    num_messages = len(pp.list()[1]) #conta quantos emails existem na caixa
     for i in range(num_messages):
         #acessa o poplib e pega os emails
         try:
@@ -1345,10 +1349,9 @@ def readmail_monitoramento(request):
                         body = part.get_payload(decode=True)
                     if ctype == 'text/html' and 'attatchment' not in cdispo:
                         htbody = part.get_payload(decode=True)
-                    filename = part.get_filename()
 
-                    hoje = datetime.date.today()
                     #verifica se existem arquivos no email
+                    filename = part.get_filename()
                     if filename:
                         path = settings.MEDIA_ROOT+'/django-summernote/'+str(hoje)+'/'
                         locimg = os.path.join(settings.MEDIA_ROOT + '/django-summernote/' + str(hoje) + '/', filename)
@@ -1356,25 +1359,34 @@ def readmail_monitoramento(request):
                             fp = open(locimg, 'wb')
                             fp.write(part.get_payload(decode=True))
                             fp.close()
+                            os.rename(locimg, os.path.join(path, (str(rr) + filename)))
                         else:
                             os.mkdir(path=path)
                             fp = open(locimg, 'wb')
                             fp.write(part.get_payload(decode=True))
                             fp.close()
-                        #if filename not in re.findall(pattern1, filename):
-                        item = os.path.join('/media/django-summernote/'+str(hoje)+'/', filename)
+                            os.rename(locimg, os.path.join(path, (str(rr) + filename)))
+                        item = os.path.join('/media/django-summernote/'+str(hoje)+'/', (str(rr) + filename))
                         aa = '<div class="mailattatch"><a href="'+item+'" download><img src="/static/images/downicon.png" width="40"><p>'+filename+'</p></a></div>'
                         attatch += aa
             else:
                 body = parsed_email.get_payload(decode=True)
+
+            #pega decode do email
             cs = parsed_email.get_charsets()
             for q in cs:
                 if q is None: continue
                 else: cs = q
+
             #pega parametros do email
             try:
-                e_date = datetime.datetime.strptime(parsed_email['Date'], '%a, %d %b %Y %H:%M:%S %z').strftime('%Y-%m-%d')
-                e_title = parsed_email['Subject']
+                e_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
+                e_title_unencoded = decode_header(parsed_email['Subject'])
+                try:
+                    e_title = e_title_unencoded[0][0].decode(cs)
+                except:
+                    e_title = parsed_email['Subject']
+
                 e_from = parsed_email['From']
                 if re.findall(r'<(.*?)>', e_from): e_from = re.findall(r'<(.*?)>', e_from)[0]
 
@@ -1387,14 +1399,15 @@ def readmail_monitoramento(request):
                 e_id = parsed_email['Message-ID']
                 e_ref = parsed_email['References']
                 if e_ref is None: e_ref = e_id
-                if e_ref is not None: e_ref = e_ref.split(' ')[0]
-                #converte o corpo do email
+                else: e_ref = e_ref.split(' ')[0]
+
+                #separa conteudo e pega attach
                 e_body = body.decode(cs)
                 if e_body:
                     reply_parse = re.findall(r'(De:+\s+\w.*.\sEnviada em:+\s+\w.*.+[,]+\s+\d+\s+\w+\s+\w+\s+\w+\s+\d+\s+\d+:+\d.*)', e_body)
                     if reply_parse:
                         e_body = e_body.split(reply_parse[0])[0].replace('\n', '<br>')
-                w_body = htbody.decode(cs)
+                w_body = '<div class="container chmdimg">' + htbody.decode(cs) + '</div>'
                 if w_body:
                     reply_html = re.findall(r'(<b><span+\s+\w.*.[>]+De:.*.Enviada em:.*.\s+\w.*.[,]+\s+\d+\s+\w+\s+\w+\s+\w+\s+\d+\s+\d+:+\d.*)',w_body)
                     if reply_html:
@@ -1403,43 +1416,44 @@ def readmail_monitoramento(request):
                 if re.findall(pattern2,w_body):
                     for q in re.findall(pattern2, w_body):
                         new = re.findall(pattern1, q)
-                        teste = os.path.join(settings.MEDIA_URL + 'django-summernote/' + str(hoje) + '/',new[0].split('cid:')[1])
-                        w_body = w_body.replace(q, teste)
+                        new_cid = os.path.join(settings.MEDIA_URL + 'django-summernote/' + str(hoje) + '/',(str(rr) + new[0].split('cid:')[1]))
+                        w_body = w_body.replace(q, new_cid)
                 elif re.findall(pattern1,w_body):
                     for q in re.findall(pattern1, w_body):
                         new = re.findall(pattern1, q)
                         try:
-                            teste = os.path.join(settings.MEDIA_URL + 'django-summernote/' + str(hoje) + '/',new[0].split('cid:')[1])
+                            new_cid = os.path.join(settings.MEDIA_URL + 'django-summernote/' + str(hoje) + '/',(str(rr) + new[0].split('cid:')[1]))
                         except Exception as e:
                             print(f'ErrorType: {type(e).__name__}, Error: {e}')
                         else:
-                            w_body = w_body.replace(q, teste)
+                            w_body = w_body.replace(q, new_cid)
                 #continue
             except Exception as e:
                  print(f'insert data -- ErrorType: {type(e).__name__}, Error: {e}')
             else:
                 #salva no banco de dados
                 form = EmailMonitoramento.objects.filter(email_id=e_ref)
-                sender = User.objects.get(username='admin')
+
                 if form.exists() and form[0].tkt_ref.status != ('CONCLUIDO' or 'CANCELADO'):
                     xxx = form[0].ult_resp_html
                     if xxx: zzz = w_body.split(xxx[:50])
                     try:
                         tkt = TicketMonitoramento.objects.get(pk=form[0].tkt_ref_id)
-                        notify.send(sender, recipient=tkt.responsavel, verb='message',
-                                description=f"Você recebeu uma nova mensagem do ticket {tkt.id}")
                     except Exception as e:
                         print(f'ErrorType: {type(e).__name__}, Error: {e}')
-                    if form[0].ult_resp is not None:
-                        aa = '<hr>' + e_from + ' -- ' + e_date + '\n' + e_body + '\n------Anterior-------\n' + form[0].ult_resp
-                        bb = '<hr>' + e_from + ' -- ' + e_date + '<br>' + zzz[0] + attatch + '<hr>' + form[0].ult_resp_html
                     else:
-                        aa = '<hr>' + e_from + ' -- ' + e_date + '\n' + e_body
-                        bb = '<hr>' + e_from + ' -- ' + e_date + '<br>' + w_body + attatch
-                    if tkt.status == 'ABERTO':
-                        TicketMonitoramento.objects.filter(pk=form[0].tkt_ref_id).update(status='ANDAMENTO')
-                    form.update(ult_resp=aa,ult_resp_html=bb, ult_rest_dt=e_date)
-                    pp.dele(i+1)
+                        if form[0].ult_resp is not None:
+                            aa = '<hr>' + e_from + ' -- ' + e_date + '\n' + e_body + '\n------Anterior-------\n' + form[0].ult_resp
+                            bb = '<hr>' + e_from + ' -- ' + e_date + '<br>' + zzz[0] + attatch + '<hr>' + form[0].ult_resp_html
+                        else:
+                            aa = '<hr>' + e_from + ' -- ' + e_date + '\n' + e_body
+                            bb = '<hr>' + e_from + ' -- ' + e_date + '<br>' + w_body + attatch
+                        if tkt.status == 'ABERTO':
+                            TicketMonitoramento.objects.filter(pk=form[0].tkt_ref_id).update(status='ANDAMENTO')
+                        form.update(ult_resp=aa,ult_resp_html=bb, ult_resp_dt=e_date)
+                        notify.send(sender=User.objects.get(pk=1), recipient=tkt.responsavel, verb='message',
+                                    description=f"Você recebeu uma nova mensagem do ticket {tkt.id}")
+                        pp.dele(i+1)
                 elif form.exists() and form[0].tkt_ref.status == ('CONCLUIDO' or 'CANCELADO'):
                     messages.warning(request, 'Ticket já encerrado')
                     pp.dele(i + 1)
@@ -1453,7 +1467,7 @@ def readmail_monitoramento(request):
                     else:
                         bb = '<hr>' + e_from + ' -- ' + e_date + w_body
                         EmailMonitoramento.objects.create(assunto=e_title, mensagem=bb, cc=e_cc, dt_envio=e_date,email_id=tkt.msg_id, tkt_ref_id=tkt.id)
-                        notify.send(sender, recipient=tkt.responsavel, verb='message',
+                        notify.send(sender=User.objects.get(pk=1), recipient=tkt.responsavel, verb='message',
                                     description="Seu ticket foi criado.")
                     pp.dele(i + 1)
     pp.quit()
@@ -1479,20 +1493,20 @@ def replymail_monitoramento(request, tktid, area):
         msg1['References'] = orig.email_id
         msg_id = make_msgid(idstring=None, domain='bora.com.br')
         msg1['Message-ID'] = msg_id
-        msg1['From'] = 'teste@bora.com.br'
-        msg1['To'] = 'bora@bora.tec.br'
+        msg1['From'] = 'teste@bora.com.br'#############
+        msg1['To'] = 'bora@bora.tec.br'#############
         msg1['CC'] = orig.cc
         msg1.attach(MIMEText(msg, 'html', 'utf-8'))
-        smtp_h = 'smtp.kinghost.net'
-        smtp_p = '587'
-        user = 'bora@bora.tec.br'
-        passw = 'Bor@dev#123'
+        smtp_h = 'smtp.kinghost.net'##############
+        smtp_p = '587'##############
+        user = 'bora@bora.tec.br'##############
+        passw = 'Bor@dev#123'##############
         try:
             print('entrou no try')
-            sm = smtplib.SMTP('smtp.bora.com.br', smtp_p)
+            sm = smtplib.SMTP('smtp.bora.com.br', smtp_p)################
             sm.set_debuglevel(1)
-            sm.login('teste@bora.com.br', 'Bor@413247')
-            sm.sendmail('teste@bora.com.br', ['bora@bora.tec.br']+orig.cc.split(';'), msg1.as_string())
+            sm.login('teste@bora.com.br', 'Bor@413247')###############
+            sm.sendmail('teste@bora.com.br', ['bora@bora.tec.br']+orig.cc.split(';'), msg1.as_string())#############
             print('mandou o email')
         except Exception as e:
             print(f'ErrorType:{type(e).__name__}, Error:{e}')
@@ -1512,19 +1526,19 @@ def createtktandmail(request,resp,cc,rem,dest,assunto,msg,cte):
             msg1.attach(msgimg)
     msg1.attach(MIMEText(msgmail, 'html', 'utf-8'))
     msg1['Subject'] = assunto
-    msg1['From'] = 'teste@bora.com.br'
-    msg1['To'] = 'bora@bora.tec.br'
+    msg1['From'] = 'teste@bora.com.br'#################
+    msg1['To'] = 'bora@bora.tec.br' ##############
     msg1['CC'] = cc
     msg_id = make_msgid(idstring=None, domain='bora.com.br')
     msg1['Message-ID'] = msg_id
-    smtp_h = 'smtp.kinghost.net'
-    smtp_p = '587'
-    user = 'bora@bora.tec.br'
-    passw = 'Bor@dev#123'
+    smtp_h = 'smtp.kinghost.net'###############
+    smtp_p = '587'################
+    user = 'bora@bora.tec.br'##################
+    passw = 'Bor@dev#123'################
     try:
-        sm = smtplib.SMTP('smtp.bora.com.br', smtp_p, timeout=120)
+        sm = smtplib.SMTP('smtp.bora.com.br', smtp_p, timeout=120)####################
         sm.set_debuglevel(1)
-        sm.login('teste@bora.com.br','Bor@413247')
+        sm.login('teste@bora.com.br','Bor@413247')####################
     except Exception as e:
         messages.error(request, f'ErrorType:{type(e).__name__}, Error:{e}')
         print(f'ErrorType:{type(e).__name__}, Error:{e}')
@@ -1534,7 +1548,7 @@ def createtktandmail(request,resp,cc,rem,dest,assunto,msg,cte):
         except IntegrityError:
             messages.error(request, 'Já existe um ticket com esta CTE')
             return redirect('portaria:monitticket')
-        sm.sendmail('teste@bora.com.br', (['bora@bora.tec.br'] + cc.split(';')), msg1.as_string())
+        sm.sendmail('teste@bora.com.br', (['bora@bora.tec.br'] + cc.split(';')), msg1.as_string()) #############
         messages.success(request, 'Email enviado e ticket criado com sucesso')
         return redirect('portaria:monitticket')
 
@@ -1555,7 +1569,6 @@ def createchamado(request, **kwargs):
     if re.findall(pattern, dict['area']):
         for q in re.findall(pattern, dict['area']):
             media = q
-            print(media)
             img_data = open(('/home/bora/www' + media), 'rb').read()
             msgimg = MIMEImage(img_data, name=os.path.basename(media))
             msgimg.add_header('Content-ID', f'{media}')
@@ -1645,144 +1658,148 @@ def chamadoreadmail(request):
 
     num_messages = len(pp.list()[1]) #conta quantos emails existem na caixa
     for i in range(num_messages):
-        raw_email = b'\n'.join(pp.retr(i+1)[1]) #pega email
-        parsed_email = email.message_from_bytes(raw_email, policy=policy.compat32)
-        if parsed_email.is_multipart():
-            #caminha pelas partes do email e armazena dados e arquivos
-            for part in parsed_email.walk():
-                ctype = part.get_content_type()
-                cdispo = str(part.get('Content-Type'))
-                if ctype == 'text/plain' and 'attatchment' not in cdispo:
-                    body = part.get_payload(decode=True)
-                elif ctype == 'text/html' and 'attatchment' not in cdispo:
-                    body = part.get_payload(decode=True)
-                if ctype == 'text/html' and 'attatchment' not in cdispo:
-                    htbody = part.get_payload(decode=True)
-                filename = part.get_filename()
-                if filename:
-                    path = settings.MEDIA_ROOT + '/django-summernote/' + str(hoje) + '/'
-                    locimg = os.path.join(settings.MEDIA_ROOT + '/django-summernote/' + str(hoje) + '/', filename)
-                    if os.path.exists(os.path.join(path)):
-                        fp = open(locimg, 'wb')
-                        fp.write(part.get_payload(decode=True))
-                        fp.close()
-                        os.rename(locimg, os.path.join(path, (str(rr) + filename)))
-                        print(str(rr) + filename)
-                    else:
-                        os.mkdir(path=path)
-                        fp = open(locimg, 'wb')
-                        fp.write(part.get_payload(decode=True))
-                        fp.close()
-                        os.rename(locimg, os.path.join(path, (str(rr) + filename)))
-                    item = os.path.join('/media/django-summernote/' + str(hoje) + '/', (str(rr) + filename))
-                    aa = '<div class="mailattatch"><a href="'+item+'" download><img src="/static/images/downicon.png" width="40"><p>'+filename+'</p></a></div>'
-                    attatch += aa
-        else:
-            body = parsed_email.get_payload(decode=True)
-        #funcao para pegar codificacao
-        cs = parsed_email.get_charsets()
-        for q in cs:
-            if q is None: continue
-            else: cs = q
-        '''
-        inserir função para determinar qual tipo de serviço
-        para cada email ti/dev/praxio etc
-        ler a caixa de entrada e setar o servico
-        '''
-        #pega parametros do email
-        e_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
-        e_title_unencoded = decode_header(parsed_email['Subject'])
         try:
-            e_title = e_title_unencoded[0][0].decode(cs)
-        except:
-            e_title = parsed_email['Subject']
-
-        e_from = parsed_email['From']
-        if re.findall(r'<(.*?)>', e_from): e_from = re.findall(r'<(.*?)>', e_from)[0]
-        e_to = parsed_email['To']
-        if re.findall(r'<(.*?)>', e_to): e_to = re.findall(r'<(.*?)>', e_to)[0]
-        e_cc = parsed_email['CC']
-        if e_cc:
-            if re.findall(r'<(.*?)>', e_cc): e_cc = re.findall(r'<(.*?)>', e_cc)[0]
-        e_id = parsed_email['Message-ID']
-        e_ref = parsed_email['References']
-        if e_ref is None: e_ref = e_id
-        else: e_ref = e_ref.split(' ')[0]
-
-        #separa conteudo email, e pega attatchments
-        e_body = body.decode(cs)
-        if e_body:
-            reply_parse = re.findall(r'(De:*\a*\w.*.\sEnviada em:+\s+\w.*.+[,]+\s+\d+\s+\w+\s+\w+\s+\w+\s+\d+\s+\d+:+\d.*)', e_body)
-            if reply_parse:
-                e_body = e_body.split(reply_parse[0])[0].replace('\n', '<br>')
-        w_body = '<div class="container chmdimg">' + htbody.decode(cs) + '</div>'
-        if w_body:
-            reply_html = re.findall(r'(<b><span+\s+\w.*.[>]+De:.*.Enviada em:.*.\s+\w.*.[,]+\s+\d+\s+\w+\s+\w+\s+\w+\s+\d+\s+\d+:+\d.*)',w_body)
-            if reply_html:
-                w_body = w_body.split(reply_html[0])[0]
-        if re.findall(pattern2, w_body):
-            for q in re.findall(pattern2, w_body):
-                new = re.findall(pattern1, q)
-                new_cid = os.path.join(settings.MEDIA_URL + 'django-summernote/' + str(hoje) + '/', (str(rr) + new[0].split('cid:')[1]))
-                w_body = w_body.replace(q, new_cid)
-        elif re.findall(pattern1, w_body):
-            for q in re.findall(pattern1, w_body):
-                new = re.findall(pattern1, w_body)
-                try:
-                    new_cid = os.path.join(settings.MEDIA_URL + 'django-summernote/' + str(hoje) + '/', (str(rr) + new[0].split('cid:')[1]))
-                except Exception as e:
-                    print(f'ErrorType: {type(e).__name__}, Error: {e}')
-                else:
-                    w_body = w_body.replace(q, new_cid)
-        if e_to == 'chamado.praxio@bora.com.br':
-            servico = 'PRAXIO'
-        else:
-            servico = 'DESENVOLVIMENTO'
-        try:
-            form = EmailChamado.objects.filter(email_id=e_ref)
-            tkt = TicketChamado.objects.get(Q(msg_id=e_id) | Q(msg_id=e_ref))
+            raw_email = b'\n'.join(pp.retr(i+1)[1]) #pega email
+            parsed_email = email.message_from_bytes(raw_email, policy=policy.compat32)
         except Exception as e:
-            print(e)
-        try:
-            if form.exists():
-                oldreply = form[0].ult_resp_html
-                if oldreply: newreply = w_body.split(oldreply[:50])
-                if form[0].ult_resp:
-                    aa = '<hr>' + e_from + ' -- ' + e_date + '\n' + e_body + '\n------Anterior-------\n' + form[0].ult_resp
-                    bb = '<hr>' + e_from + ' -- ' + e_date + '<br>' + newreply[0] + attatch + '<hr>' + form[0].ult_resp_html
-                else:
-                    aa = '<hr>' + e_from + ' -- ' + e_date + '\n' + e_body
-                    bb = '<hr>' + e_from + ' -- ' + e_date + '<br>' + w_body + attatch
-                form.update(ult_resp=aa, ult_resp_html=bb, ult_resp_dt=e_date)
-                notify.send(sender=User.objects.get(pk=1),
-                            recipient=User.objects.filter(Q(groups__name='chamado')),
-                            verb='message', description=f"Nova mensagem para o ticket {tkt.id}")
-            elif form.exists() and form[0].tkt_ref.status == ('CANCELADO' or 'CONCLUIDO'):
-                messages.warning(request, 'Ticket já encerrado')
-                pp.dele(i + 1)
-                pp.quit()
-                return redirect('portaria:chamado')
-            elif form.exists() == False and tkt != None:
-                mensagem = '<hr>' + e_from + ' -- ' + e_date + w_body + attatch
-                newmail = EmailChamado.objects.create(assunto=e_title, mensagem=mensagem, cc=e_cc, dt_envio=e_date,
-                                                      email_id=e_id, tkt_ref=tkt)
-                notify.send(sender=User.objects.get(pk=1),
-                            recipient=User.objects.filter(Q(groups__name='chamado')),
-                            verb='message', description=f"Nova mensagem para o ticket {tkt.id}")
+            print(f'Error type:{type(e).__name__}, error: {e}')
+        else:
+            if parsed_email.is_multipart():
+                #caminha pelas partes do email e armazena dados e arquivos
+                for part in parsed_email.walk():
+                    ctype = part.get_content_type()
+                    cdispo = str(part.get('Content-Type'))
+                    if ctype == 'text/plain' and 'attatchment' not in cdispo:
+                        body = part.get_payload(decode=True)
+                    elif ctype == 'text/html' and 'attatchment' not in cdispo:
+                        body = part.get_payload(decode=True)
+                    if ctype == 'text/html' and 'attatchment' not in cdispo:
+                        htbody = part.get_payload(decode=True)
+                    filename = part.get_filename()
+                    if filename:
+                        path = settings.MEDIA_ROOT + '/django-summernote/' + str(hoje) + '/'
+                        locimg = os.path.join(settings.MEDIA_ROOT + '/django-summernote/' + str(hoje) + '/', filename)
+                        if os.path.exists(os.path.join(path)):
+                            fp = open(locimg, 'wb')
+                            fp.write(part.get_payload(decode=True))
+                            fp.close()
+                            os.rename(locimg, os.path.join(path, (str(rr) + filename)))
+                            print(str(rr) + filename)
+                        else:
+                            os.mkdir(path=path)
+                            fp = open(locimg, 'wb')
+                            fp.write(part.get_payload(decode=True))
+                            fp.close()
+                            os.rename(locimg, os.path.join(path, (str(rr) + filename)))
+                        item = os.path.join('/portaria/media/django-summernote/' + str(hoje) + '/', (str(rr) + filename))
+                        aa = '<div class="mailattatch"><a href="'+item+'" download><img src="/static/images/downicon.png" width="40"><p>'+filename+'</p></a></div>'
+                        attatch += aa
             else:
-                newtkt = TicketChamado.objects.create(solicitante=e_from, servico=servico, nome_tkt=e_title,
-                                                      dt_abertura=e_date, status='ABERTO', msg_id=e_id)
-                mensagem = '<hr>' + e_from + ' -- ' + e_date + w_body + attatch
-                newmail = EmailChamado.objects.create(assunto=e_title, mensagem=mensagem, cc=e_cc, dt_envio=e_date,
-                                                      email_id=e_id, tkt_ref=newtkt)
-                notify.send(sender=User.objects.get(pk=1),
-                            recipient=User.objects.filter(Q(groups__name='chamado')),
-                            verb='message', description=f"Novo Chamado aberto: id {newtkt.id}")
-        except Exception as e:
-            print(e)
-        else:
-            pp.dele(i + 1)
-        pp.quit()
+                body = parsed_email.get_payload(decode=True)
+            #funcao para pegar codificacao
+            cs = parsed_email.get_charsets()
+            for q in cs:
+                if q is None: continue
+                else: cs = q
+            '''
+            inserir função para determinar qual tipo de serviço
+            para cada email ti/dev/praxio etc
+            ler a caixa de entrada e setar o servico
+            '''
+            #pega parametros do email
+            e_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
+            e_title_unencoded = decode_header(parsed_email['Subject'])
+            try:
+                e_title = e_title_unencoded[0][0].decode(cs)
+            except:
+                e_title = parsed_email['Subject']
+
+            e_from = parsed_email['From']
+            if re.findall(r'<(.*?)>', e_from): e_from = re.findall(r'<(.*?)>', e_from)[0]
+            e_to = parsed_email['To']
+            if re.findall(r'<(.*?)>', e_to): e_to = re.findall(r'<(.*?)>', e_to)[0]
+            e_cc = parsed_email['CC']
+            if e_cc:
+                if re.findall(r'<(.*?)>', e_cc): e_cc = re.findall(r'<(.*?)>', e_cc)[0]
+            e_id = parsed_email['Message-ID']
+            e_ref = parsed_email['References']
+            if e_ref is None: e_ref = e_id
+            else: e_ref = e_ref.split(' ')[0]
+
+            #separa conteudo email, e pega attatchments
+            e_body = body.decode(cs)
+            if e_body:
+                reply_parse = re.findall(r'(De:*\a*\w.*.\sEnviada em:+\s+\w.*.+[,]+\s+\d+\s+\w+\s+\w+\s+\w+\s+\d+\s+\d+:+\d.*)', e_body)
+                if reply_parse:
+                    e_body = e_body.split(reply_parse[0])[0].replace('\n', '<br>')
+            w_body = '<div class="container chmdimg">' + htbody.decode(cs) + '</div>'
+            if w_body:
+                reply_html = re.findall(r'(<b><span+\s+\w.*.[>]+De:.*.Enviada em:.*.\s+\w.*.[,]+\s+\d+\s+\w+\s+\w+\s+\w+\s+\d+\s+\d+:+\d.*)',w_body)
+                if reply_html:
+                    w_body = w_body.split(reply_html[0])[0]
+            if re.findall(pattern2, w_body):
+                for q in re.findall(pattern2, w_body):
+                    new = re.findall(pattern1, q)
+                    new_cid = os.path.join('/portaria' + settings.MEDIA_URL + 'django-summernote/' + str(hoje) + '/', (str(rr) + new[0].split('cid:')[1]))
+                    w_body = w_body.replace(q, new_cid)
+            elif re.findall(pattern1, w_body):
+                for q in re.findall(pattern1, w_body):
+                    new = re.findall(pattern1, w_body)
+                    try:
+                        new_cid = os.path.join('/portaria' + settings.MEDIA_URL + 'django-summernote/' + str(hoje) + '/', (str(rr) + new[0].split('cid:')[1]))
+                    except Exception as e:
+                        print(f'ErrorType: {type(e).__name__}, Error: {e}')
+                    else:
+                        w_body = w_body.replace(q, new_cid)
+            if e_to == 'chamado.praxio@bora.com.br':
+                servico = 'PRAXIO'
+            else:
+                servico = 'DESENVOLVIMENTO'
+            try:
+                form = EmailChamado.objects.filter(email_id=e_ref)
+                tkt = TicketChamado.objects.get(Q(msg_id=e_id) | Q(msg_id=e_ref))
+            except Exception as e:
+                print(e)
+            try:
+                if form.exists():
+                    oldreply = form[0].ult_resp_html
+                    if oldreply: newreply = w_body.split(oldreply[:50])
+                    if form[0].ult_resp:
+                        aa = '<hr>' + e_from + ' -- ' + e_date + '\n' + e_body + '\n------Anterior-------\n' + form[0].ult_resp
+                        bb = '<hr>' + e_from + ' -- ' + e_date + '<br>' + newreply[0] + attatch + '<hr>' + form[0].ult_resp_html
+                    else:
+                        aa = '<hr>' + e_from + ' -- ' + e_date + '\n' + e_body
+                        bb = '<hr>' + e_from + ' -- ' + e_date + '<br>' + w_body + attatch
+                    form.update(ult_resp=aa, ult_resp_html=bb, ult_resp_dt=e_date)
+                    notify.send(sender=User.objects.get(pk=1),
+                                recipient=User.objects.filter(Q(groups__name='chamado')),
+                                verb='message', description=f"Nova mensagem para o ticket {tkt.id}")
+                elif form.exists() and form[0].tkt_ref.status == ('CANCELADO' or 'CONCLUIDO'):
+                    messages.warning(request, 'Ticket já encerrado')
+                    pp.dele(i + 1)
+                    pp.quit()
+                    return redirect('portaria:chamado')
+                elif form.exists() == False and tkt != None:
+                    mensagem = '<hr>' + e_from + ' -- ' + e_date + w_body + attatch
+                    newmail = EmailChamado.objects.create(assunto=e_title, mensagem=mensagem, cc=e_cc, dt_envio=e_date,
+                                                          email_id=e_id, tkt_ref=tkt)
+                    notify.send(sender=User.objects.get(pk=1),
+                                recipient=User.objects.filter(Q(groups__name='chamado')),
+                                verb='message', description=f"Nova mensagem para o ticket {tkt.id}")
+                else:
+                    newtkt = TicketChamado.objects.create(solicitante=e_from, servico=servico, nome_tkt=e_title,
+                                                          dt_abertura=e_date, status='ABERTO', msg_id=e_id)
+                    mensagem = '<hr>' + e_from + ' -- ' + e_date + w_body + attatch
+                    newmail = EmailChamado.objects.create(assunto=e_title, mensagem=mensagem, cc=e_cc, dt_envio=e_date,
+                                                          email_id=e_id, tkt_ref=newtkt)
+                    notify.send(sender=User.objects.get(pk=1),
+                                recipient=User.objects.filter(Q(groups__name='chamado')),
+                                verb='message', description=f"Novo Chamado aberto: id {newtkt.id}")
+            except Exception as e:
+                print(e)
+            else:
+                pp.dele(i + 1)
+            pp.quit()
     return redirect('portaria:chamado')
 
 
