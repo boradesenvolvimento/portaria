@@ -1743,11 +1743,11 @@ def chamadoreadmail(request):
             if re.findall(pattern2, w_body):
                 for q in re.findall(pattern2, w_body):
                     new = re.findall(pattern1, q)
-                    if re.findall(f'/portaria/media/django-summernote/{str(hoje)}/', q):
+                    if re.findall(f'/media/django-summernote/{str(hoje)}/', q):
                         new_cid = os.path.join('/portaria' + settings.MEDIA_URL + 'django-summernote/'
                                                + str(hoje) + '/', (str(rr) +
                                                                    new[0].split(
-                                                                       f'cid:/portaria/media/django-summernote/{str(hoje)}/')[
+                                                                       f'cid:/media/django-summernote/{str(hoje)}/')[
                                                                        1]))
                     else:
                         new_cid = os.path.join('/portaria' + settings.MEDIA_URL + 'django-summernote/' + str(hoje)
@@ -1757,10 +1757,10 @@ def chamadoreadmail(request):
                 for q in re.findall(pattern1, w_body):
                     new = re.findall(pattern1, q)
                     try:
-                        if re.findall(f'/portaria/media/django-summernote/{str(hoje)}/', q):
+                        if re.findall(f'/media/django-summernote/{str(hoje)}/', q):
                             new_cid = os.path.join('/portaria' + settings.MEDIA_URL + 'django-summernote/'
                                                    + str(hoje) + '/', (str(rr) +
-                                                   new[0].split(f'cid:/portaria/media/django-summernote/{str(hoje)}/')[1]))
+                                                   new[0].split(f'cid:/media/django-summernote/{str(hoje)}/')[1]))
                         else:
                             new_cid = os.path.join('/portaria' + settings.MEDIA_URL + 'django-summernote/' + str(hoje)
                                                    + '/', (str(rr) + new[0].split('cid:')[1]))
