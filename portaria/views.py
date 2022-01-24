@@ -1680,21 +1680,24 @@ def chamadoreadmail(request):
                         htbody = part.get_payload(decode=True)
                     filename = part.get_filename()
                     if filename:
-                        path = settings.STATIC_URL + '/chamados/' + str(hoje) + '/'
+                        path = settings.STATIC_ROOT + '/chamados/' + str(hoje) + '/'
                         locimg = os.path.join(path, filename)
                         if os.path.exists(os.path.join(path)):
                             fp = open(path, 'wb')
                             fp.write(part.get_payload(decode=True))
                             fp.close()
+                            os.chmod(locimg, 0o777)
                             os.rename(locimg, os.path.join(path, (str(rr) + filename)))
 
                         else:
                             os.mkdir(path=path)
+                            os.chmod(path, 0o777)
                             fp = open(path, 'wb')
                             fp.write(part.get_payload(decode=True))
                             fp.close()
+                            os.chmod(locimg, 0o777)
                             os.rename(locimg, os.path.join(path, (str(rr) + filename)))
-                        item = os.path.join(path, (str(rr) + filename))
+                        item = os.path.join((settings.STATIC_URL + 'chamados/' + str(hoje) + '/'), (str(rr) + filename))
                         aa = '<div class="mailattatch"><a href="'+item+'" download><img src="/static/images/downicon.png" width="40"><p>'+filename+'</p></a></div>'
                         attatch += aa
             else:
