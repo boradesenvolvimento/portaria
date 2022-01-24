@@ -1746,9 +1746,9 @@ def chamadoreadmail(request):
             if re.findall(pattern2, w_body):
                 for q in re.findall(pattern2, w_body):
                     new = re.findall(pattern1, q)
-                    if re.findall(f'/static/chamados/{str(hoje)}/', q):
+                    if re.findall(f'/media/django-summernote/{str(hoje)}/', q):
                         new_cid = os.path.join(settings.STATIC_URL + 'chamados/' + str(hoje) + '/', (str(rr) +
-                                                new[0].split(f'cid:/static/chamados/{str(hoje)}/')[1]))
+                                                new[0].split(f'cid:/media/django-summernote/{str(hoje)}/')[1]))
                     else:
                         new_cid = os.path.join(settings.STATIC_URL + 'chamados/' + str(hoje) + '/',
                                                (str(rr) + new[0].split('cid:')[1]))
@@ -1757,9 +1757,9 @@ def chamadoreadmail(request):
                 for q in re.findall(pattern1, w_body):
                     new = re.findall(pattern1, q)
                     try:
-                        if re.findall(f'/static/chamados/{str(hoje)}/', q):
+                        if re.findall(f'/media/django-summernote/{str(hoje)}/', q):
                             new_cid = os.path.join(settings.STATIC_URL + 'chamado/' + str(hoje) + '/', (str(rr) +
-                                                   new[0].split(f'cid:/static/chamados/{str(hoje)}/')[1]))
+                                                   new[0].split(f'cid:/media/django-summernote/{str(hoje)}/')[1]))
                         else:
                             new_cid = os.path.join(settings.STATIC_URL + 'chamado/' + str(hoje)
                                                    + '/', (str(rr) + new[0].split('cid:')[1]))
