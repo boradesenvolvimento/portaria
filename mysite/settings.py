@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 import json
 import os.path
 from pathlib import Path
-#import MySQLdb
+import MySQLdb
 import cx_Oracle
 from django.urls import reverse_lazy
 from django.core.management.utils import get_random_secret_key
@@ -47,12 +47,12 @@ SECRET_KEY = get_secret('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 
 #develop
-DEBUG = True
-ALLOWED_HOSTS = []
+#DEBUG = True
+#ALLOWED_HOSTS = []
 
 #production
-#DEBUG = False
-#ALLOWED_HOSTS = ["www.bora.tec.br","www.bora.tec.br/portaria", "bora.tec.br", "bora.tec.br/portaria"]
+DEBUG = False
+ALLOWED_HOSTS = ["www.bora.tec.br","www.bora.tec.br/portaria", "bora.tec.br", "bora.tec.br/portaria"]
 
 # Application definition
 
