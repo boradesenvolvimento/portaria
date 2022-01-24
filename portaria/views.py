@@ -1353,20 +1353,23 @@ def readmail_monitoramento(request):
                     #verifica se existem arquivos no email
                     filename = part.get_filename()
                     if filename:
-                        path = settings.MEDIA_ROOT+'/django-summernote/'+str(hoje)+'/'
-                        locimg = os.path.join(settings.MEDIA_ROOT + '/django-summernote/' + str(hoje) + '/', filename)
+                        path = settings.STATIC_ROOT+'/monitoramento/'+str(hoje)+'/'
+                        locimg = os.path.join(path, filename)
                         if os.path.exists(os.path.join(path)):
                             fp = open(locimg, 'wb')
                             fp.write(part.get_payload(decode=True))
                             fp.close()
+                            os.chmod(locimg, 0o777)
                             os.rename(locimg, os.path.join(path, (str(rr) + filename)))
                         else:
                             os.mkdir(path=path)
+                            os.chmod(path, 0o777)
                             fp = open(locimg, 'wb')
                             fp.write(part.get_payload(decode=True))
                             fp.close()
+                            os.chmod(locimg, 0o777)
                             os.rename(locimg, os.path.join(path, (str(rr) + filename)))
-                        item = os.path.join('/media/django-summernote/'+str(hoje)+'/', (str(rr) + filename))
+                        item = os.path.join('/static/monitoramento/'+str(hoje)+'/', (str(rr) + filename))
                         aa = '<div class="mailattatch"><a href="'+item+'" download><img src="/static/images/downicon.png" width="40"><p>'+filename+'</p></a></div>'
                         attatch += aa
             else:
@@ -1416,13 +1419,24 @@ def readmail_monitoramento(request):
                 if re.findall(pattern2,w_body):
                     for q in re.findall(pattern2, w_body):
                         new = re.findall(pattern1, q)
-                        new_cid = os.path.join(settings.MEDIA_URL + 'django-summernote/' + str(hoje) + '/',(str(rr) + new[0].split('cid:')[1]))
+                        if re.findall(f'/media/django-summernote/{str(hoje)}/', q):
+                            new_cid = os.path.join(settings.STATIC_URL+'monitoramento/'+str(hoje)+'/', (str(rr)
+                                                    + new[0].split(f'cid:/media/django-summernote/{str(hoje)}/')[1]))
+                        else:
+                            new_cid = os.path.join(settings.STATIC_URL + 'monitoramento/' + str(hoje) + '/',(str(rr)
+                                                    + new[0].split('cid:')[1]))
                         w_body = w_body.replace(q, new_cid)
                 elif re.findall(pattern1,w_body):
                     for q in re.findall(pattern1, w_body):
                         new = re.findall(pattern1, q)
                         try:
-                            new_cid = os.path.join(settings.MEDIA_URL + 'django-summernote/' + str(hoje) + '/',(str(rr) + new[0].split('cid:')[1]))
+                            if re.findall(f'/media/django-summernote/{str(hoje)}/', q):
+                                new_cid = os.path.join(settings.STATIC_URL + 'monitoramento/' + str(hoje) + '/',
+                                                       (str(rr) +
+                                                        new[0].split(f'cid:/media/django-summernote/{str(hoje)}/')[1]))
+                            else:
+                                new_cid = os.path.join(settings.STATIC_URL + 'monitoramento/' + str(hoje) + '/',
+                                                       (str(rr) + new[0].split('cid:')[1]))
                         except Exception as e:
                             print(f'ErrorType: {type(e).__name__}, Error: {e}')
                         else:
@@ -1688,7 +1702,6 @@ def chamadoreadmail(request):
                             fp.close()
                             os.chmod(locimg, 0o777)
                             os.rename(locimg, os.path.join(path, (str(rr) + filename)))
-
                         else:
                             os.mkdir(path=path)
                             os.chmod(path, 0o777)
@@ -1818,8 +1831,6 @@ def chamadoreadmail(request):
                 pp.dele(i + 1)
             pp.quit()
     return redirect('portaria:chamado')
-
-
 
 def isnotifyread(request, notifyid):
     nid = get_object_or_404(Notification, pk=notifyid)
