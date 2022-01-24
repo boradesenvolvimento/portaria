@@ -1614,6 +1614,7 @@ def chamadoupdate(request,tktid,area):
                 media = q
                 img_data = open(('/home/bora/www' + media), 'rb').read()
                 msgimg = MIMEImage(img_data, name=os.path.basename(media))
+                print(msgimg)
                 msgimg.add_header('Content-ID', f'{media}')
                 msg = msg.replace(('src="' + media + '"'), f'src="cid:{media}" ')
                 msg1.attach(msgimg)
@@ -1636,6 +1637,8 @@ def chamadoupdate(request,tktid,area):
             sm.sendmail(get_secret('EUSER_CH'), [get_secret('EUSER_CH')]+orig.tkt_ref.solicitante.split(';'), msg1.as_string())
         except Exception as e:
             print(f'ErrorType:{type(e).__name__}, Error:{e}')
+    else:
+        print('nao entrou no if')
 
 def chamadoreadmail(request):
     #params
@@ -1684,7 +1687,7 @@ def chamadoreadmail(request):
                             fp.write(part.get_payload(decode=True))
                             fp.close()
                             os.rename(locimg, os.path.join(path, (str(rr) + filename)))
-                            print(str(rr) + filename)
+
                         else:
                             os.mkdir(path=path)
                             fp = open(locimg, 'wb')
@@ -1740,17 +1743,33 @@ def chamadoreadmail(request):
             if re.findall(pattern2, w_body):
                 for q in re.findall(pattern2, w_body):
                     new = re.findall(pattern1, q)
-                    new_cid = os.path.join('/portaria' + settings.MEDIA_URL + 'django-summernote/' + str(hoje) + '/', (str(rr) + new[0].split('cid:')[1]))
+                    if re.findall(f'/media/django-summernote/{str(hoje)}/', q):
+                        new_cid = os.path.join('/portaria' + settings.MEDIA_URL + 'django-summernote/'
+                                               + str(hoje) + '/', (str(rr) +
+                                                                   new[0].split(
+                                                                       f'cid:/media/django-summernote/{str(hoje)}/')[
+                                                                       1]))
+                    else:
+                        new_cid = os.path.join('/portaria' + settings.MEDIA_URL + 'django-summernote/' + str(hoje)
+                                               + '/', (str(rr) + new[0].split('cid:')[1]))
                     w_body = w_body.replace(q, new_cid)
             elif re.findall(pattern1, w_body):
                 for q in re.findall(pattern1, w_body):
-                    new = re.findall(pattern1, w_body)
+                    new = re.findall(pattern1, q)
                     try:
-                        new_cid = os.path.join('/portaria' + settings.MEDIA_URL + 'django-summernote/' + str(hoje) + '/', (str(rr) + new[0].split('cid:')[1]))
+                        if re.findall(f'/media/django-summernote/{str(hoje)}/', q):
+                            new_cid = os.path.join('/portaria' + settings.MEDIA_URL + 'django-summernote/'
+                                                   + str(hoje) + '/', (str(rr) +
+                                                   new[0].split(f'cid:/media/django-summernote/{str(hoje)}/')[1]))
+                        else:
+                            new_cid = os.path.join('/portaria' + settings.MEDIA_URL + 'django-summernote/' + str(hoje)
+                                                   + '/', (str(rr) + new[0].split('cid:')[1]))
+
                     except Exception as e:
                         print(f'ErrorType: {type(e).__name__}, Error: {e}')
                     else:
                         w_body = w_body.replace(q, new_cid)
+                    print(w_body)
             if e_to == 'chamado.praxio@bora.com.br':
                 servico = 'PRAXIO'
             else:
