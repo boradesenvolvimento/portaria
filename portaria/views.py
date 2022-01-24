@@ -1683,7 +1683,7 @@ def chamadoreadmail(request):
                         path = settings.STATIC_ROOT + '/chamados/' + str(hoje) + '/'
                         locimg = os.path.join(path, filename)
                         if os.path.exists(os.path.join(path)):
-                            fp = open(path, 'wb')
+                            fp = open(locimg, 'wb')
                             fp.write(part.get_payload(decode=True))
                             fp.close()
                             os.chmod(locimg, 0o777)
@@ -1692,7 +1692,7 @@ def chamadoreadmail(request):
                         else:
                             os.mkdir(path=path)
                             os.chmod(path, 0o777)
-                            fp = open(path, 'wb')
+                            fp = open(locimg, 'wb')
                             fp.write(part.get_payload(decode=True))
                             fp.close()
                             os.chmod(locimg, 0o777)
