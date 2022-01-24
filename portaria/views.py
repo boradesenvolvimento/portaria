@@ -1758,10 +1758,10 @@ def chamadoreadmail(request):
                     new = re.findall(pattern1, q)
                     try:
                         if re.findall(f'/media/django-summernote/{str(hoje)}/', q):
-                            new_cid = os.path.join(settings.STATIC_URL + 'chamado/' + str(hoje) + '/', (str(rr) +
+                            new_cid = os.path.join(settings.STATIC_URL + 'chamados/' + str(hoje) + '/', (str(rr) +
                                                    new[0].split(f'cid:/media/django-summernote/{str(hoje)}/')[1]))
                         else:
-                            new_cid = os.path.join(settings.STATIC_URL + 'chamado/' + str(hoje)
+                            new_cid = os.path.join(settings.STATIC_URL + 'chamados/' + str(hoje)
                                                    + '/', (str(rr) + new[0].split('cid:')[1]))
 
                     except Exception as e:
