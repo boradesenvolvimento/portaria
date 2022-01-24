@@ -1680,21 +1680,21 @@ def chamadoreadmail(request):
                         htbody = part.get_payload(decode=True)
                     filename = part.get_filename()
                     if filename:
-                        path = settings.MEDIA_ROOT + '/django-summernote/' + str(hoje) + '/'
-                        locimg = os.path.join(settings.MEDIA_ROOT + '/django-summernote/' + str(hoje) + '/', filename)
+                        path = settings.STATIC_URL + '/chamados/' + str(hoje) + '/'
+                        locimg = os.path.join(path, filename)
                         if os.path.exists(os.path.join(path)):
-                            fp = open(locimg, 'wb')
+                            fp = open(path, 'wb')
                             fp.write(part.get_payload(decode=True))
                             fp.close()
                             os.rename(locimg, os.path.join(path, (str(rr) + filename)))
 
                         else:
                             os.mkdir(path=path)
-                            fp = open(locimg, 'wb')
+                            fp = open(path, 'wb')
                             fp.write(part.get_payload(decode=True))
                             fp.close()
                             os.rename(locimg, os.path.join(path, (str(rr) + filename)))
-                        item = os.path.join('/portaria/media/django-summernote/' + str(hoje) + '/', (str(rr) + filename))
+                        item = os.path.join(path, (str(rr) + filename))
                         aa = '<div class="mailattatch"><a href="'+item+'" download><img src="/static/images/downicon.png" width="40"><p>'+filename+'</p></a></div>'
                         attatch += aa
             else:
@@ -1743,33 +1743,28 @@ def chamadoreadmail(request):
             if re.findall(pattern2, w_body):
                 for q in re.findall(pattern2, w_body):
                     new = re.findall(pattern1, q)
-                    if re.findall(f'/media/django-summernote/{str(hoje)}/', q):
-                        new_cid = os.path.join('/portaria' + settings.MEDIA_URL + 'django-summernote/'
-                                               + str(hoje) + '/', (str(rr) +
-                                                                   new[0].split(
-                                                                       f'cid:/media/django-summernote/{str(hoje)}/')[
-                                                                       1]))
+                    if re.findall(f'/static/chamados/{str(hoje)}/', q):
+                        new_cid = os.path.join(settings.STATIC_URL + 'chamados/' + str(hoje) + '/', (str(rr) +
+                                                new[0].split(f'cid:/static/chamados/{str(hoje)}/')[1]))
                     else:
-                        new_cid = os.path.join('/portaria' + settings.MEDIA_URL + 'django-summernote/' + str(hoje)
-                                               + '/', (str(rr) + new[0].split('cid:')[1]))
+                        new_cid = os.path.join(settings.STATIC_URL + 'chamados/' + str(hoje) + '/',
+                                               (str(rr) + new[0].split('cid:')[1]))
                     w_body = w_body.replace(q, new_cid)
             elif re.findall(pattern1, w_body):
                 for q in re.findall(pattern1, w_body):
                     new = re.findall(pattern1, q)
                     try:
-                        if re.findall(f'/media/django-summernote/{str(hoje)}/', q):
-                            new_cid = os.path.join('/portaria' + settings.MEDIA_URL + 'django-summernote/'
-                                                   + str(hoje) + '/', (str(rr) +
-                                                   new[0].split(f'cid:/media/django-summernote/{str(hoje)}/')[1]))
+                        if re.findall(f'/static/chamados/{str(hoje)}/', q):
+                            new_cid = os.path.join(settings.STATIC_URL + 'chamado/' + str(hoje) + '/', (str(rr) +
+                                                   new[0].split(f'cid:/static/chamados/{str(hoje)}/')[1]))
                         else:
-                            new_cid = os.path.join('/portaria' + settings.MEDIA_URL + 'django-summernote/' + str(hoje)
+                            new_cid = os.path.join(settings.STATIC_URL + 'chamado/' + str(hoje)
                                                    + '/', (str(rr) + new[0].split('cid:')[1]))
 
                     except Exception as e:
                         print(f'ErrorType: {type(e).__name__}, Error: {e}')
                     else:
                         w_body = w_body.replace(q, new_cid)
-                    print(w_body)
             if e_to == 'chamado.praxio@bora.com.br':
                 servico = 'PRAXIO'
             else:
