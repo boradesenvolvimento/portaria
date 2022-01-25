@@ -54,7 +54,8 @@
         <form method="post">
             {% csrf_token %}
         <div class="row">
-            <h2 class="title-cad">CTE: {% for q in res %}{{ q.CTE }}{% endfor %}</h2>
+            <h2 class="title-cad">CTE: {% for q in res %}{{ q.CTE }}
+                <input hidden type="text" value="{{ q.CTE }}" name="cte">{% endfor %}</h2>
         <div class="container col-4 createboxes">
             <div class="row">
             <label for="remetente">Remetente:</label>
@@ -87,7 +88,7 @@
                     </select>
             </div>
                 <div class="row">
-                    <label for="responsavel">Responsavel</label>
+                    <label for="responsavel">Responsavel:</label>
                     <select style="width:30rem;" id="responsavel" name="responsavel">
                         <option>-Selecione-</option>
                         {% for q in users %}

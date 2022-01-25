@@ -795,12 +795,15 @@ def tktcreate(request):
     if request.method == 'POST':
         responsavel = request.POST.get('responsavel')
         cc = request.POST.get('cc')
+        cte = request.POST.get('cte')
         assunto = request.POST.get('assunto')
+        filial = request.POST.get('filial')
         mensagem = request.POST.get('area')
-        rem = request.POST.get('remetente')
+        rem = request. POST.get('remetente')
         dest = request.POST.get('destinatario')
         if responsavel and rem and assunto and mensagem and cc and dest:
-            createtktandmail(request, resp=responsavel, cc=cc, rem=rem, dest=dest, assunto=assunto, msg=mensagem, cte='12345')
+            createtktandmail(request, resp=responsavel, cc=cc, rem=rem, filial=filial, dest=dest, assunto=assunto, msg=mensagem, cte=cte)
+
         else:
             messages.error(request, 'Está faltando campos')
             return redirect('portaria:tktcreate')
@@ -1434,6 +1437,10 @@ def readmail_monitoramento(request):
                                 new_cid = os.path.join(settings.STATIC_URL + 'monitoramento/' + str(hoje) + '/',
                                                        (str(rr) +
                                                         new[0].split(f'cid:/media/django-summernote/{str(hoje)}/')[1]))
+                            elif re.findall(f'/static/images/macros-monit/\w+[.](?i:jpeg|jpg|gif|png|bmp)', q):
+                                new_cid = os.path.join(settings.STATIC_URL + 'monitoramento/' + str(hoje) + '/',
+                                                       (str(rr) +
+                                                        new[0].split(f'cid:/static/images/macros-monit/')[1]))
                             else:
                                 new_cid = os.path.join(settings.STATIC_URL + 'monitoramento/' + str(hoje) + '/',
                                                        (str(rr) + new[0].split('cid:')[1]))
@@ -1502,6 +1509,12 @@ def replymail_monitoramento(request, tktid, area):
                 msgimg.add_header('Content-ID', f'{media}')
                 msg = msg.replace(('src="' + media + '"'), f'src="cid:{media}" ')
                 msg1.attach(msgimg)
+        sign = f'<img src="cid:{request.user}.jpg">'
+        signimg = open(f'{settings.STATIC_ROOT}/images/macros-monit/{request.user}.jpg', 'rb').read()
+        msgimg1 = MIMEImage(signimg, name=f'{request.user}.jpg')
+        msgimg1.add_header('Content-ID', f'{request.user}.jpg')
+        msg1.attach(msgimg1)
+        msg += sign
         msg1['Subject'] = orig.assunto
         msg1['In-Reply-To'] = orig.email_id
         msg1['References'] = orig.email_id
@@ -1526,7 +1539,7 @@ def replymail_monitoramento(request, tktid, area):
             print(f'ErrorType:{type(e).__name__}, Error:{e}')
         return redirect('portaria:monitticket')
 
-def createtktandmail(request,resp,cc,rem,dest,assunto,msg,cte):
+def createtktandmail(request,resp,cc,filial,rem,dest,assunto,msg,cte):
     pattern = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
     msg1 = MIMEMultipart()
     msgmail = msg
@@ -1538,6 +1551,12 @@ def createtktandmail(request,resp,cc,rem,dest,assunto,msg,cte):
             msgimg.add_header('Content-ID', f'{media}')
             msgmail = msgmail.replace(('<img src="' + media + '"'), f'<img src="cid:{media}" ')
             msg1.attach(msgimg)
+    sign = f'<img src="cid:{request.user}.jpg">'
+    signimg = open(f'{settings.STATIC_ROOT}/images/macros-monit/{request.user}.jpg', 'rb').read()
+    msgimg1 = MIMEImage(signimg, name=f'{request.user}.jpg')
+    msgimg1.add_header('Content-ID', f'{request.user}.jpg')
+    msg1.attach(msgimg1)
+    msgmail += sign
     msg1.attach(MIMEText(msgmail, 'html', 'utf-8'))
     msg1['Subject'] = assunto
     msg1['From'] = get_secret('EUSER_MN')#################
