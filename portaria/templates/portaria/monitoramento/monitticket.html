@@ -16,10 +16,11 @@
         <section class="container">
             <div class="row">
                 <h2 class="title-cad col-1">Tickets</h2>
-                <button class="col-1" style="height:3.4rem;">
-                <a href="{% url 'portaria:tktcreate' %}" style="font-size:2.4rem; color:white;" ><ion-icon style="pointer-events:none;" name="add-circle-outline">
-                </ion-icon></a>
-                </button>
+                <a class="col-1" href="{% url 'portaria:tktcreate' %}" style="height:3.4rem; color:white;" >
+                <button class="col-12">
+                <ion-icon style="pointer-events:none;" name="add-circle-outline">
+                </ion-icon></button></a>
+
                 <div class="col-6"><a href="{% url 'portaria:readmail_monitoramento' %}">aaaaaaa</a></div>
                 <div class="col-3">
                     <form method="post">
@@ -50,12 +51,12 @@
                             <td>{{ q.dt_abertura }}</td>
                             <td>{{ q.responsavel }}</td>
                             <td>{{ q.status }}</td>
-                            <td><button type="submit"><a style="color:white" href="{% url 'portaria:tktview' tktid=q.id %}">
-                                <ion-icon name="eye-outline"></ion-icon></a>
-                            </button></td>
-                            <td><button type="submit"><a style="color:white" href="{% url 'portaria:closetkt' tktid=q.id %}">
-                                <ion-icon name="close-circle-outline"></ion-icon>
-                            </a></button></td>
+                            <td><a style="color:white" href="{% url 'portaria:tktview' tktid=q.id %}"><button type="submit">
+                                <ion-icon name="eye-outline"></ion-icon></button></a>
+                            </td>
+                            <td><a style="color:white" href="{% url 'portaria:closetkt' tktid=q.id %}"><button type="submit">
+                                <ion-icon name="close-circle-outline"></ion-icon></button></a>
+                            </td>
                         </tr>
                     {% endfor %}
                     </tbody>
