@@ -1515,15 +1515,15 @@ def replymail_monitoramento(request, tktid, area):
         smtp_p = '587'##############
         user = 'bora@bora.tec.br'##############
         passw = 'Bor@dev#123'##############
-        '''try:
+        try:
             print('entrou no try')
             sm = smtplib.SMTP(get_secret('EHOST_MN'), smtp_p)################
             sm.set_debuglevel(1)
             sm.login(get_secret('EUSER_MN'), get_secret('EPASS_MN'))###############
-            sm.sendmail(get_secret('EUSER_MN'), [get_secret('EUSER_MN')]+orig.cc.split(';'), msg1.as_string())#############
+            sm.sendmail(get_secret('EUSER_MN'), [user]+orig.cc.split(';'), msg1.as_string())#############
             print('mandou o email')
         except Exception as e:
-            print(f'ErrorType:{type(e).__name__}, Error:{e}')'''
+            print(f'ErrorType:{type(e).__name__}, Error:{e}')
         return redirect('portaria:monitticket')
 
 def createtktandmail(request,resp,cc,rem,dest,assunto,msg,cte):
@@ -1559,7 +1559,7 @@ def createtktandmail(request,resp,cc,rem,dest,assunto,msg,cte):
     else:
         try:
             tkt = TicketMonitoramento.objects.create(nome_tkt=assunto, dt_abertura=timezone.now(), responsavel=User.objects.get(username=resp), solicitante=request.user, remetente=rem, destinatario=dest, cte=cte, status='ABERTO', categoria='Aguardando Recebimento',msg_id=msg_id)
-            sm.sendmail(get_secret('EUSER_MN'), [get_secret('EUSER_MN')] + cc.split(';'), msg1.as_string())  #############
+            sm.sendmail(get_secret('EUSER_MN'), [user] + cc.split(';'), msg1.as_string())  #############
         except IntegrityError:
             messages.error(request, 'Já existe um ticket com esta CTE')
             return redirect('portaria:monitticket')
