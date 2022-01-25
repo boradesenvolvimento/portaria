@@ -829,7 +829,7 @@ def tktview(request, tktid):
 
         if addcc:
             oldcc = form.cc
-            newcc = addcc + ';' + oldcc + ';'
+            newcc = addcc + '; ' + oldcc
             try:
                 EmailMonitoramento.objects.filter(tkt_ref_id=tktid).update(cc=newcc)
             except Exception as e:
@@ -1507,23 +1507,23 @@ def replymail_monitoramento(request, tktid, area):
         msg1['References'] = orig.email_id
         msg_id = make_msgid(idstring=None, domain='bora.com.br')
         msg1['Message-ID'] = msg_id
-        msg1['From'] = 'teste@bora.com.br'#############
-        msg1['To'] = 'bora@bora.tec.br'#############
+        msg1['From'] = get_secret('EUSER_MN')#############
+        msg1['To'] = orig.cc#############
         msg1['CC'] = orig.cc
         msg1.attach(MIMEText(msg, 'html', 'utf-8'))
         smtp_h = 'smtp.kinghost.net'##############
         smtp_p = '587'##############
         user = 'bora@bora.tec.br'##############
         passw = 'Bor@dev#123'##############
-        try:
+        '''try:
             print('entrou no try')
-            sm = smtplib.SMTP('smtp.bora.com.br', smtp_p)################
+            sm = smtplib.SMTP(get_secret('EHOST_MN'), smtp_p)################
             sm.set_debuglevel(1)
-            sm.login('teste@bora.com.br', 'Bor@413247')###############
-            sm.sendmail('teste@bora.com.br', ['bora@bora.tec.br']+orig.cc.split(';'), msg1.as_string())#############
+            sm.login(get_secret('EUSER_MN'), get_secret('EPASS_MN'))###############
+            sm.sendmail(get_secret('EUSER_MN'), [get_secret('EUSER_MN')]+orig.cc.split(';'), msg1.as_string())#############
             print('mandou o email')
         except Exception as e:
-            print(f'ErrorType:{type(e).__name__}, Error:{e}')
+            print(f'ErrorType:{type(e).__name__}, Error:{e}')'''
         return redirect('portaria:monitticket')
 
 def createtktandmail(request,resp,cc,rem,dest,assunto,msg,cte):
@@ -1540,8 +1540,8 @@ def createtktandmail(request,resp,cc,rem,dest,assunto,msg,cte):
             msg1.attach(msgimg)
     msg1.attach(MIMEText(msgmail, 'html', 'utf-8'))
     msg1['Subject'] = assunto
-    msg1['From'] = 'teste@bora.com.br'#################
-    msg1['To'] = 'bora@bora.tec.br' ##############
+    msg1['From'] = get_secret('EUSER_MN')#################
+    msg1['To'] = cc ##############
     msg1['CC'] = cc
     msg_id = make_msgid(idstring=None, domain='bora.com.br')
     msg1['Message-ID'] = msg_id
@@ -1550,20 +1550,21 @@ def createtktandmail(request,resp,cc,rem,dest,assunto,msg,cte):
     user = 'bora@bora.tec.br'##################
     passw = 'Bor@dev#123'################
     try:
-        sm = smtplib.SMTP('smtp.bora.com.br', smtp_p, timeout=120)####################
+        sm = smtplib.SMTP(get_secret('EHOST_MN'), smtp_p)####################
         sm.set_debuglevel(1)
-        sm.login('teste@bora.com.br','Bor@413247')####################
+        sm.login(get_secret('EUSER_MN'), get_secret('EPASS_MN'))####################
     except Exception as e:
         messages.error(request, f'ErrorType:{type(e).__name__}, Error:{e}')
         print(f'ErrorType:{type(e).__name__}, Error:{e}')
     else:
         try:
             tkt = TicketMonitoramento.objects.create(nome_tkt=assunto, dt_abertura=timezone.now(), responsavel=User.objects.get(username=resp), solicitante=request.user, remetente=rem, destinatario=dest, cte=cte, status='ABERTO', categoria='Aguardando Recebimento',msg_id=msg_id)
+            sm.sendmail(get_secret('EUSER_MN'), [get_secret('EUSER_MN')] + cc.split(';'), msg1.as_string())  #############
         except IntegrityError:
             messages.error(request, 'Já existe um ticket com esta CTE')
             return redirect('portaria:monitticket')
-        sm.sendmail('teste@bora.com.br', (['bora@bora.tec.br'] + cc.split(';')), msg1.as_string()) #############
-        messages.success(request, 'Email enviado e ticket criado com sucesso')
+        else:
+            messages.success(request, 'Email enviado e ticket criado com sucesso')
         return redirect('portaria:monitticket')
 
 def closetkt(request, tktid):

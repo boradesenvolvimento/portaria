@@ -32,18 +32,16 @@
             <div class="tktcontainer">
             <div class="row">
             <div class="col-lg-4 col-md">
-                <div>
-                    <ul>
-                        <li><strong>Assunto:</strong> {{ form.assunto }} </li>
-                        <li><strong>Remetente:</strong> {{ form.tkt_ref.remetente }} </li>
-                        <li><strong>Destinatario:</strong> {{ form.tkt_ref.destinatario }} </li>
-                        <li><strong>Data envio:</strong> {{ form.tkt_ref.dt_abertura }} </li>
-                        <li><strong>Responsável:</strong> {{ form.tkt_ref.responsavel }}</li>
-                        <li><strong>Categoria:</strong> {{ form.tkt_ref.categoria }}</li>
-                        <li><strong>Status:</strong> {{ form.tkt_ref.status }}</li>
-                        <li><strong>CC:</strong> {{ form.cc|default_if_none:'' }} </li>
-                    </ul>
-                </div>
+                <ul>
+                    <li><strong>Assunto:</strong> {{ form.assunto }} </li>
+                    <li><strong>Remetente:</strong> {{ form.tkt_ref.remetente }} </li>
+                    <li><strong>Destinatario:</strong> {{ form.tkt_ref.destinatario }} </li>
+                    <li><strong>Data envio:</strong> {{ form.tkt_ref.dt_abertura }} </li>
+                    <li><strong>Responsável:</strong> {{ form.tkt_ref.responsavel }}</li>
+                    <li><strong>Categoria:</strong> {{ form.tkt_ref.categoria }}</li>
+                    <li><strong>Status:</strong> {{ form.tkt_ref.status }}</li>
+                    <li><strong>CC:</strong> {{ form.cc|default_if_none:'' }} </li>
+                </ul>
             </div>
             <div class="container col-lg col-md-12">
                 <div>

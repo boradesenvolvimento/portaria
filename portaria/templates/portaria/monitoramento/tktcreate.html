@@ -37,13 +37,13 @@
                                 <option value="23">TMA</option>
                                 <option value="24">VIX</option>
                             </select>
-                    CTE:<input name="cte" type="text">
                     Tipo Doc:<select name="tp_docto">
                                 <option hidden>Selecione...</option>
                                     {% for q,v in tp_doc_choices %}
                                     <option value="{{ q }}">{{ v }}</option>
                                     {% endfor %}
                              </select>
+                    CTE:<input name="cte" type="text">
                     <input type="submit" class="button"></h2>
                 </form>
             </div>
