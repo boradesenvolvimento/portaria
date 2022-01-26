@@ -800,6 +800,7 @@ def tktcreate(request):
         responsavel = request.POST.get('responsavel')
         cc = request.POST.get('cc')
         cte = request.POST.get('cte')
+        tp_docto = request.POST.get('tp_docto')
         assunto = request.POST.get('assunto')
         filial = request.POST.get('filial')
         mensagem = request.POST.get('area')
