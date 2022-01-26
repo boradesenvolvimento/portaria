@@ -56,6 +56,7 @@
         <div class="row">
             <h2 class="title-cad">CTE: {% for q in res %}{{ q.CTE }}
                 <input hidden type="text" value="{{ q.CTE }}" name="cte">{% endfor %}</h2>
+            {% for q in res %}<input hidden type="text" value="{{ q.TIPO_DOCTO }}" name="tp_docto">{% endfor %}
         <div class="container col-4 createboxes">
             <div class="row">
             <label for="remetente">Remetente:</label>

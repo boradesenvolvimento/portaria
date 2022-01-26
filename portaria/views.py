@@ -1652,8 +1652,8 @@ def createtktandmail(request,resp,cc,filial,rem,dest,assunto,msg,cte, tp_docto):
                   destinatario=dest, cte=cte, status='ABERTO', categoria='Aguardando Recebimento',msg_id=msg_id,
                          filial=filial, tp_docto=tp_docto)
             sm.sendmail(get_secret('EUSER_MN'), [user] + cc.split(';'), msg1.as_string())  #############
-        except IntegrityError:
-            messages.error(request, 'Já existe um ticket com esta CTE')
+        except Exception as e:
+            messages.error(request, f'ErrorType:{type(e).__name__}, error:{e}')
             return redirect('portaria:monitticket')
         else:
             messages.success(request, 'Email enviado e ticket criado com sucesso')
