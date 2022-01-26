@@ -1470,9 +1470,12 @@ def readmail_monitoramento(request):
 
                 e_id = parsed_email['Message-ID']
                 e_ref = parsed_email['References']
+                #print(e_ref)
                 if e_ref is None: e_ref = e_id
-                else: e_ref = e_ref.split(',')[0]
-
+                else:
+                    e_ref = e_ref.split(' ')[0]
+                    if len(e_ref[0]) == 1:
+                        e_ref = e_ref.split(',')[0]
                 #separa conteudo e pega attach
                 e_body = body.decode(cs)
                 if e_body:
@@ -1481,8 +1484,9 @@ def readmail_monitoramento(request):
                         e_body = e_body.split(reply_parse[0])[0].replace('\n', '<br>')
                 w_body = '<div class="container chmdimg">' + htbody.decode(cs) + '</div>'
                 if w_body:
-                    reply_html = re.findall(r'(<b><span+\s+\w.*.[>]+De:.*.Enviada em:.*.\s+\w.*.[,]+\s+\d+\s+\w+\s+\w+\s+\w+\s+\d+\s+\d+:+\d.*)',w_body)
+                    reply_html = re.findall(r'(<b><span.*[>]+De:.*)',w_body)
                     if reply_html:
+                        #print(reply_html)
                         w_body = w_body.split(reply_html[0])[0]
 
                 if re.findall(pattern2,w_body):
@@ -1523,7 +1527,8 @@ def readmail_monitoramento(request):
                  print(f'insert data -- ErrorType: {type(e).__name__}, Error: {e}')
             else:
                 #salva no banco de dados
-                form = EmailMonitoramento.objects.filter(email_id=e_ref)
+                form = EmailMonitoramento.objects.filter(email_id=e_ref.strip())
+
                 if form.exists() and form[0].tkt_ref.status != ('CONCLUIDO' or 'CANCELADO'):
                     xxx = form[0].ult_resp_html
                     if xxx: zzz = w_body.split(xxx[:50])
