@@ -734,26 +734,28 @@ def tktcreate(request):
                                 SELECT 
                                       F1.EMPRESA,
                                       CASE
-                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '1'  THEN 'SPO'
-                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '2'  THEN 'REC'
-                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '3'  THEN 'SSA'
-                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '4'  THEN 'FOR'
-                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '5'  THEN 'MCZ'
-                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '6'  THEN 'NAT'
-                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '7'  THEN 'JPA'
-                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '8'  THEN 'AJU'
-                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '9'  THEN 'VDC'
-                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '10' THEN 'MG'
-                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '50' THEN 'SPO'
-                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '20' THEN 'SPO'
-                                          WHEN F1.EMPRESA = '1' AND F1.GARAGEM = '21' THEN 'SPO'
-                                          WHEN F1.EMPRESA = '2' AND F1.GARAGEM = '20' THEN 'CTG'
-                                          WHEN F1.EMPRESA = '2' AND F1.GARAGEM = '21' THEN 'TCO'
-                                          WHEN F1.EMPRESA = '2' AND F1.GARAGEM = '22' THEN 'UDI'
-                                          WHEN F1.EMPRESA = '2' AND F1.GARAGEM = '23' THEN 'TMA'
-                                          WHEN F1.EMPRESA = '2' AND F1.GARAGEM = '24' THEN 'VIX'  
-                                          WHEN F1.EMPRESA = '2' AND F1.GARAGEM = '50' THEN 'TMA'  
+                                          WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '1'  THEN 'SPO'
+                                          WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '2'  THEN 'REC'
+                                          WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '3'  THEN 'SSA'
+                                          WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '4'  THEN 'FOR'
+                                          WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '5'  THEN 'MCZ'
+                                          WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '6'  THEN 'NAT'
+                                          WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '7'  THEN 'JPA'
+                                          WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '8'  THEN 'AJU'
+                                          WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '9'  THEN 'VDC'
+                                          WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '10' THEN 'MG'
+                                          WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '50' THEN 'SPO'
+                                          WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '20' THEN 'SPO'
+                                          WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '21' THEN 'SPO'
+                                          WHEN F1.EMPRESA = '2' AND F1.ID_GARAGEM = '20' THEN 'CTG'
+                                          WHEN F1.EMPRESA = '2' AND F1.ID_GARAGEM = '21' THEN 'TCO'
+                                          WHEN F1.EMPRESA = '2' AND F1.ID_GARAGEM = '22' THEN 'UDI'
+                                          WHEN F1.EMPRESA = '2' AND F1.ID_GARAGEM = '23' THEN 'TMA'
+                                          WHEN F1.EMPRESA = '2' AND F1.ID_GARAGEM = '24' THEN 'VIX'  
+                                          WHEN F1.EMPRESA = '2' AND F1.ID_GARAGEM = '50' THEN 'TMA'  
                                       END GARAGEM,
+                                      F1.DEST_MUNIC_DEST,
+                                      F1.DEST_UF_DEST,
                                       F1.TIPO_DOCTO,
                                       F1.CONHECIMENTO CTE,
                                       F1.REM_RZ_SOCIAL,
@@ -774,11 +776,13 @@ def tktcreate(request):
                                      F1.TIPO_DOCTO = {tp_docto}            
                                 GROUP BY
                                      F1.EMPRESA,
-                                      F1.GARAGEM,
+                                      F1.ID_GARAGEM,
                                       F1.TIPO_DOCTO,
                                       F1.CONHECIMENTO,
                                       F1.REM_RZ_SOCIAL,
-                                      F1.DEST_RZ_SOCIAL''')
+                                      F1.DEST_RZ_SOCIAL,
+                                      F1.DEST_MUNIC_DEST,
+                                      F1.DEST_UF_DEST''')
                 res = dictfetchall(cur)
             except Exception as e:
                 messages.error(request, f'{e}')
@@ -802,7 +806,8 @@ def tktcreate(request):
         rem = request. POST.get('remetente')
         dest = request.POST.get('destinatario')
         if responsavel and rem and assunto and mensagem and cc and dest:
-            createtktandmail(request, resp=responsavel, cc=cc, rem=rem, filial=filial, dest=dest, assunto=assunto, msg=mensagem, cte=cte)
+            createtktandmail(request, resp=responsavel, cc=cc, rem=rem, filial=filial, dest=dest, assunto=assunto,
+                             msg=mensagem, cte=cte, tp_docto=tp_docto)
 
         else:
             messages.error(request, 'Está faltando campos')
@@ -814,6 +819,66 @@ def tktview(request, tktid):
     stts = TicketMonitoramento.STATUS_CHOICES
     form = get_object_or_404(EmailMonitoramento, tkt_ref_id=tktid)
     editor = TextEditor()
+    try:
+        conn = settings.CONNECTION
+        cur = conn.cursor()
+        cur.execute(f'''
+                        SELECT 
+                              F1.EMPRESA,
+                              CASE
+                                  WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '1'  THEN 'SPO'
+                                  WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '2'  THEN 'REC'
+                                  WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '3'  THEN 'SSA'
+                                  WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '4'  THEN 'FOR'
+                                  WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '5'  THEN 'MCZ'
+                                  WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '6'  THEN 'NAT'
+                                  WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '7'  THEN 'JPA'
+                                  WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '8'  THEN 'AJU'
+                                  WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '9'  THEN 'VDC'
+                                  WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '10' THEN 'MG'
+                                  WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '50' THEN 'SPO'
+                                  WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '20' THEN 'SPO'
+                                  WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '21' THEN 'SPO'
+                                  WHEN F1.EMPRESA = '2' AND F1.ID_GARAGEM = '20' THEN 'CTG'
+                                  WHEN F1.EMPRESA = '2' AND F1.ID_GARAGEM = '21' THEN 'TCO'
+                                  WHEN F1.EMPRESA = '2' AND F1.ID_GARAGEM = '22' THEN 'UDI'
+                                  WHEN F1.EMPRESA = '2' AND F1.ID_GARAGEM = '23' THEN 'TMA'
+                                  WHEN F1.EMPRESA = '2' AND F1.ID_GARAGEM = '24' THEN 'VIX'  
+                                  WHEN F1.EMPRESA = '2' AND F1.ID_GARAGEM = '50' THEN 'TMA'  
+                              END GARAGEM,
+                              F1.DEST_MUNIC_DEST,
+                              F1.DEST_UF_DEST,
+                              F1.TIPO_DOCTO,
+                              F1.CONHECIMENTO CTE,
+                              F1.REM_RZ_SOCIAL,
+                              F1.DEST_RZ_SOCIAL,
+                              LISTAGG ((LTRIM (F4.NOTA_FISCAL,0)), ' / ') WITHIN GROUP (ORDER BY F1.CONHECIMENTO) NOTA_FISCAL 
+                        FROM
+                            FTA001 F1,
+                            FTA004 F4
+                        WHERE
+                             F1.EMPRESA = F4.EMPRESA AND
+                             F1.FILIAL = F4.FILIAL   AND
+                             F1.GARAGEM = F4.GARAGEM AND
+                             F1.CONHECIMENTO = F4.CONHECIMENTO AND
+                             F1.SERIE = F4.SERIE               AND
+                             F1.TIPO_DOCTO = F4.TIPO_DOCTO     AND
+                             F1.CONHECIMENTO = {form.tkt_ref.cte}           AND
+                             F1.GARAGEM = {TIPO_GARAGEM.index((form.tkt_ref.filial,form.tkt_ref.filial))+1} AND
+                             F1.TIPO_DOCTO = {form.tkt_ref.tp_docto}            
+                        GROUP BY
+                             F1.EMPRESA,
+                              F1.ID_GARAGEM,
+                              F1.TIPO_DOCTO,
+                              F1.CONHECIMENTO,
+                              F1.REM_RZ_SOCIAL,
+                              F1.DEST_RZ_SOCIAL,
+                              F1.DEST_MUNIC_DEST,
+                              F1.DEST_UF_DEST''')
+        res = dictfetchall(cur)
+    except Exception as e:
+        messages.error(request, f'{e}')
+        return redirect('portaria:monitticket')
     if request.method == 'POST':
         ctg = request.POST.get('categs')
         addcc = request.POST.get('addcc')
@@ -842,7 +907,7 @@ def tktview(request, tktid):
         if area and area != '<p><br></p>':
             replymail_monitoramento(request, tktid, area)
         return redirect('portaria:monitticket')
-    return render(request, 'portaria/monitoramento/ticketview.html', {'form':form,'editor':editor,'opts':opts,'stts':stts})
+    return render(request, 'portaria/monitoramento/ticketview.html', {'form':form,'editor':editor,'opts':opts,'stts':stts,'res':res})
 
 def chamado(request):
     metrics = TicketChamado.objects.exclude(Q(status='CANCELADO') | Q(status='CONCLUIDO')).annotate(
@@ -1432,12 +1497,13 @@ def readmail_monitoramento(request):
                 elif re.findall(pattern1,w_body):
                     for q in re.findall(pattern1, w_body):
                         new = re.findall(pattern1, q)
+                        print(new)
                         try:
                             if re.findall(f'/media/django-summernote/{str(hoje)}/', q):
                                 new_cid = os.path.join(settings.STATIC_URL + 'monitoramento/' + str(hoje) + '/',
                                                        (str(rr) +
                                                         new[0].split(f'cid:/media/django-summernote/{str(hoje)}/')[1]))
-                            elif re.findall(f'/static/images/macros-monit/\w+[.](?i:jpeg|jpg|gif|png|bmp)', q):
+                            elif re.findall(f'/static/images/macros-monit/\w+.(?i:jpeg|jpg|gif|png|bmp)', q):
                                 new_cid = os.path.join(settings.STATIC_URL + 'monitoramento/' + str(hoje) + '/',
                                                        (str(rr) +
                                                         new[0].split(f'cid:/static/images/macros-monit/')[1]))
@@ -1539,7 +1605,7 @@ def replymail_monitoramento(request, tktid, area):
             print(f'ErrorType:{type(e).__name__}, Error:{e}')
         return redirect('portaria:monitticket')
 
-def createtktandmail(request,resp,cc,filial,rem,dest,assunto,msg,cte):
+def createtktandmail(request,resp,cc,filial,rem,dest,assunto,msg,cte, tp_docto):
     pattern = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
     msg1 = MIMEMultipart()
     msgmail = msg
@@ -1577,7 +1643,10 @@ def createtktandmail(request,resp,cc,filial,rem,dest,assunto,msg,cte):
         print(f'ErrorType:{type(e).__name__}, Error:{e}')
     else:
         try:
-            tkt = TicketMonitoramento.objects.create(nome_tkt=assunto, dt_abertura=timezone.now(), responsavel=User.objects.get(username=resp), solicitante=request.user, remetente=rem, destinatario=dest, cte=cte, status='ABERTO', categoria='Aguardando Recebimento',msg_id=msg_id)
+            tkt = TicketMonitoramento.objects.create(nome_tkt=assunto, dt_abertura=timezone.now(),
+                  responsavel=User.objects.get(username=resp), solicitante=request.user, remetente=rem,
+                  destinatario=dest, cte=cte, status='ABERTO', categoria='Aguardando Recebimento',msg_id=msg_id,
+                         filial=filial, tp_docto=tp_docto)
             sm.sendmail(get_secret('EUSER_MN'), [user] + cc.split(';'), msg1.as_string())  #############
         except IntegrityError:
             messages.error(request, 'Já existe um ticket com esta CTE')
