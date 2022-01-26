@@ -1490,6 +1490,10 @@ def readmail_monitoramento(request):
                         if re.findall(f'/media/django-summernote/{str(hoje)}/', q):
                             new_cid = os.path.join(settings.STATIC_URL+'monitoramento/'+str(hoje)+'/', (str(rr)
                                                     + new[0].split(f'cid:/media/django-summernote/{str(hoje)}/')[1]))
+                        elif re.findall(f'/static/images/macros-monit/\w+[.]\w+.(?i:jpeg|jpg|gif|png|bmp)', q):
+                            new_cid = os.path.join(settings.STATIC_URL + 'monitoramento/' + str(hoje) + '/',
+                                                   (str(rr) +
+                                                    new[0].split(f'cid:/static/images/macros-monit/')[1]))
                         else:
                             new_cid = os.path.join(settings.STATIC_URL + 'monitoramento/' + str(hoje) + '/',(str(rr)
                                                     + new[0].split('cid:')[1]))
@@ -1497,16 +1501,15 @@ def readmail_monitoramento(request):
                 elif re.findall(pattern1,w_body):
                     for q in re.findall(pattern1, w_body):
                         new = re.findall(pattern1, q)
-                        print(new)
                         try:
                             if re.findall(f'/media/django-summernote/{str(hoje)}/', q):
                                 new_cid = os.path.join(settings.STATIC_URL + 'monitoramento/' + str(hoje) + '/',
                                                        (str(rr) +
                                                         new[0].split(f'cid:/media/django-summernote/{str(hoje)}/')[1]))
-                            elif re.findall(f'/static/images/macros-monit/\w+.(?i:jpeg|jpg|gif|png|bmp)', q):
-                                new_cid = os.path.join(settings.STATIC_URL + 'monitoramento/' + str(hoje) + '/',
-                                                       (str(rr) +
-                                                        new[0].split(f'cid:/static/images/macros-monit/')[1]))
+                            elif re.findall(f'/static/images/macros-monit/\w+[.]\w+.(?i:jpeg|jpg|gif|png|bmp)', q):
+                            new_cid = os.path.join(settings.STATIC_URL + 'monitoramento/' + str(hoje) + '/',
+                                                   (str(rr) +
+                                                    new[0].split(f'cid:/static/images/macros-monit/')[1]))
                             else:
                                 new_cid = os.path.join(settings.STATIC_URL + 'monitoramento/' + str(hoje) + '/',
                                                        (str(rr) + new[0].split('cid:')[1]))
