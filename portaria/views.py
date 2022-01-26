@@ -1471,7 +1471,7 @@ def readmail_monitoramento(request):
                 e_id = parsed_email['Message-ID']
                 e_ref = parsed_email['References']
                 if e_ref is None: e_ref = e_id
-                else: e_ref = e_ref.split(' ')[0]
+                else: e_ref = e_ref.split(',')[0]
 
                 #separa conteudo e pega attach
                 e_body = body.decode(cs)
@@ -1524,7 +1524,6 @@ def readmail_monitoramento(request):
             else:
                 #salva no banco de dados
                 form = EmailMonitoramento.objects.filter(email_id=e_ref)
-
                 if form.exists() and form[0].tkt_ref.status != ('CONCLUIDO' or 'CANCELADO'):
                     xxx = form[0].ult_resp_html
                     if xxx: zzz = w_body.split(xxx[:50])
@@ -1579,7 +1578,7 @@ def replymail_monitoramento(request, tktid, area):
                 msgimg.add_header('Content-ID', f'{media}')
                 msg = msg.replace(('src="' + media + '"'), f'src="cid:{media}" ')
                 msg1.attach(msgimg)
-        sign = f'<img src="cid:{request.user}.jpg">'
+        sign = f'<img src="cid:{request.user}.jpg" width="600">'
         signimg = open(f'{settings.STATIC_ROOT}/images/macros-monit/{request.user}.jpg', 'rb').read()
         msgimg1 = MIMEImage(signimg, name=f'{request.user}.jpg')
         msgimg1.add_header('Content-ID', f'{request.user}.jpg')
@@ -1621,7 +1620,7 @@ def createtktandmail(request,resp,cc,filial,rem,dest,assunto,msg,cte, tp_docto):
             msgimg.add_header('Content-ID', f'{media}')
             msgmail = msgmail.replace(('<img src="' + media + '"'), f'<img src="cid:{media}" ')
             msg1.attach(msgimg)
-    sign = f'<img src="cid:{request.user}.jpg">'
+    sign = f'<img src="cid:{request.user}.jpg" width="600">'
     signimg = open(f'{settings.STATIC_ROOT}/images/macros-monit/{request.user}.jpg', 'rb').read()
     msgimg1 = MIMEImage(signimg, name=f'{request.user}.jpg')
     msgimg1.add_header('Content-ID', f'{request.user}.jpg')
