@@ -427,6 +427,30 @@ class TicketMonitoramento(models.Model):
         ('Veículo em rota','Veículo em rota'),
         ('Veículo Quebrado','Veículo Quebrado')
     ]
+    GARAGEM_CHOICES = [
+        ('1', 'SPO'),
+        ('2', 'REC'),
+        ('3', 'SSA'),
+        ('4', 'FOR'),
+        ('5', 'MCZ'),
+        ('6', 'NAT'),
+        ('7', 'JPA'),
+        ('8', 'AJU'),
+        ('9', 'VDC'),
+        ('10', 'MG'),
+        ('20', 'CTG'),
+        ('21', 'TCO'),
+        ('22', 'UDI'),
+        ('23', 'TMA'),
+        ('24', 'VIX'),
+        ('30', 'BMA'),
+        ('31', 'BPE'),
+        ('32', 'BEL'),
+        ('33', 'BPB'),
+        ('34', 'SLZ'),
+        ('35', 'BAL'),
+        ('36', 'THE')
+    ]
     id = models.BigAutoField(primary_key=True)
     nome_tkt = models.CharField(max_length=100, unique=True, error_messages={'unique':'Já existe ticket criado para este CTE'})
     dt_abertura = models.DateField()
@@ -434,7 +458,7 @@ class TicketMonitoramento(models.Model):
     solicitante = models.ForeignKey(User, on_delete=PROTECT, related_name='solicitante')
     remetente = models.CharField(max_length=100)
     destinatario = models.CharField(max_length=100)
-    filial = models.CharField(max_length=3, choices=TIPO_GARAGEM)
+    filial = models.CharField(max_length=3, choices=GARAGEM_CHOICES)
     cte = models.CharField(max_length=100)
     tp_docto = models.CharField(max_length=3, choices=TIPO_DOCTO_CHOICES)
     categoria = models.CharField(max_length=100, choices=CATEGORIA_CHOICES)

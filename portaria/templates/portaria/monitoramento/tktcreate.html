@@ -21,21 +21,9 @@
                 <h2 class="title-cad">
                     Garagem:<select name="garagem">
                                 <option hidden>Selecione...</option>
-                                <option value="1">SPO</option>
-                                <option value="2">REC</option>
-                                <option value="3">SSA</option>
-                                <option value="4">FOR</option>
-                                <option value="5">MCZ</option>
-                                <option value="6">NAT</option>
-                                <option value="7">JPA</option>
-                                <option value="8">AJU</option>
-                                <option value="9">VDC</option>
-                                <option value="10">MG</option>
-                                <option value="20">CTG</option>
-                                <option value="21">TCO</option>
-                                <option value="22">UDI</option>
-                                <option value="23">TMA</option>
-                                <option value="24">VIX</option>
+                                {% for q,v in garagem %}
+                                <option value="{{ q }}">{{ v }}</option>
+                                {% endfor %}
                             </select>
                     Tipo Doc:<select name="tp_docto">
                                 <option hidden>Selecione...</option>

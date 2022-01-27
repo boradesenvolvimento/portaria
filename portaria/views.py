@@ -718,9 +718,9 @@ def monitticket(request):
 
 def tktcreate(request):
     users = User.objects.filter(groups__name='monitoramento')
-    fil = TIPO_GARAGEM
     tp_doc_choices = TIPO_DOCTO_CHOICES
     editor = TextEditor()
+    garagem = TicketMonitoramento.GARAGEM_CHOICES
     opts = TicketMonitoramento.CATEGORIA_CHOICES
     if request.method == 'GET':
         cte = request.GET.get('cte')
@@ -734,25 +734,32 @@ def tktcreate(request):
                                 SELECT 
                                       F1.EMPRESA,
                                       CASE
-                                          WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '1'  THEN 'SPO'
-                                          WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '2'  THEN 'REC'
-                                          WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '3'  THEN 'SSA'
-                                          WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '4'  THEN 'FOR'
-                                          WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '5'  THEN 'MCZ'
-                                          WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '6'  THEN 'NAT'
-                                          WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '7'  THEN 'JPA'
-                                          WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '8'  THEN 'AJU'
-                                          WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '9'  THEN 'VDC'
-                                          WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '10' THEN 'MG'
-                                          WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '50' THEN 'SPO'
-                                          WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '20' THEN 'SPO'
-                                          WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '21' THEN 'SPO'
-                                          WHEN F1.EMPRESA = '2' AND F1.ID_GARAGEM = '20' THEN 'CTG'
-                                          WHEN F1.EMPRESA = '2' AND F1.ID_GARAGEM = '21' THEN 'TCO'
-                                          WHEN F1.EMPRESA = '2' AND F1.ID_GARAGEM = '22' THEN 'UDI'
-                                          WHEN F1.EMPRESA = '2' AND F1.ID_GARAGEM = '23' THEN 'TMA'
-                                          WHEN F1.EMPRESA = '2' AND F1.ID_GARAGEM = '24' THEN 'VIX'  
-                                          WHEN F1.EMPRESA = '2' AND F1.ID_GARAGEM = '50' THEN 'TMA'  
+                                          WHEN F1.ID_EMPRESA = '1' AND F1.ID_GARAGEM = '1'  THEN 'SPO'
+                                          WHEN F1.ID_EMPRESA = '1' AND F1.ID_GARAGEM = '2'  THEN 'REC'
+                                          WHEN F1.ID_EMPRESA = '1' AND F1.ID_GARAGEM = '3'  THEN 'SSA'
+                                          WHEN F1.ID_EMPRESA = '1' AND F1.ID_GARAGEM = '4'  THEN 'FOR'
+                                          WHEN F1.ID_EMPRESA = '1' AND F1.ID_GARAGEM = '5'  THEN 'MCZ'
+                                          WHEN F1.ID_EMPRESA = '1' AND F1.ID_GARAGEM = '6'  THEN 'NAT'
+                                          WHEN F1.ID_EMPRESA = '1' AND F1.ID_GARAGEM = '7'  THEN 'JPA'
+                                          WHEN F1.ID_EMPRESA = '1' AND F1.ID_GARAGEM = '8'  THEN 'AJU'
+                                          WHEN F1.ID_EMPRESA = '1' AND F1.ID_GARAGEM = '9'  THEN 'VDC'
+                                          WHEN F1.ID_EMPRESA = '1' AND F1.ID_GARAGEM = '10' THEN 'MG'
+                                          WHEN F1.ID_EMPRESA = '1' AND F1.ID_GARAGEM = '50' THEN 'SPO'
+                                          WHEN F1.ID_EMPRESA = '1' AND F1.ID_GARAGEM = '20' THEN 'SPO'
+                                          WHEN F1.ID_EMPRESA = '1' AND F1.ID_GARAGEM = '21' THEN 'SPO'
+                                          WHEN F1.ID_EMPRESA = '2' AND F1.ID_GARAGEM = '20' THEN 'CTG'
+                                          WHEN F1.ID_EMPRESA = '2' AND F1.ID_GARAGEM = '21' THEN 'TCO'
+                                          WHEN F1.ID_EMPRESA = '2' AND F1.ID_GARAGEM = '22' THEN 'UDI'
+                                          WHEN F1.ID_EMPRESA = '2' AND F1.ID_GARAGEM = '23' THEN 'TMA'
+                                          WHEN F1.ID_EMPRESA = '2' AND F1.ID_GARAGEM = '24' THEN 'VIX'  
+                                          WHEN F1.ID_EMPRESA = '2' AND F1.ID_GARAGEM = '50' THEN 'VIX'
+                                          WHEN F1.ID_EMPRESA = '3' AND F1.ID_GARAGEM = '30' THEN 'BMA'
+                                          WHEN F1.ID_EMPRESA = '3' AND F1.ID_GARAGEM = '31' THEN 'BPE'
+                                          WHEN F1.ID_EMPRESA = '3' AND F1.ID_GARAGEM = '32' THEN 'BEL'    
+                                          WHEN F1.ID_EMPRESA = '3' AND F1.ID_GARAGEM = '33' THEN 'BPB'
+                                          WHEN F1.ID_EMPRESA = '3' AND F1.ID_GARAGEM = '34' THEN 'SLZ'
+                                          WHEN F1.ID_EMPRESA = '3' AND F1.ID_GARAGEM = '35' THEN 'BAL'
+                                          WHEN F1.ID_EMPRESA = '3' AND F1.ID_GARAGEM = '36' THEN 'THE'  
                                       END GARAGEM,
                                       F1.DEST_MUNIC_DEST,
                                       F1.DEST_UF_DEST,
@@ -772,10 +779,11 @@ def tktcreate(request):
                                      F1.SERIE = F4.SERIE               AND
                                      F1.TIPO_DOCTO = F4.TIPO_DOCTO     AND
                                      F1.CONHECIMENTO = {cte}           AND
-                                     F1.GARAGEM = {gar}                AND
+                                     F1.ID_GARAGEM = {gar}                AND
                                      F1.TIPO_DOCTO = {tp_docto}            
                                 GROUP BY
                                      F1.EMPRESA,
+                                     F1.ID_EMPRESA,
                                       F1.ID_GARAGEM,
                                       F1.TIPO_DOCTO,
                                       F1.CONHECIMENTO,
@@ -813,13 +821,15 @@ def tktcreate(request):
         else:
             messages.error(request, 'Está faltando campos')
             return redirect('portaria:tktcreate')
-    return render(request, 'portaria/monitoramento/tktcreate.html',{'editor': editor, 'users': users, 'opts': opts, 'tp_doc_choices':tp_doc_choices})
+    return render(request, 'portaria/monitoramento/tktcreate.html',{'editor': editor, 'users': users, 'opts': opts,
+                                                                    'tp_doc_choices':tp_doc_choices, 'garagem':garagem})
 
 def tktview(request, tktid):
     opts = TicketMonitoramento.CATEGORIA_CHOICES
     stts = TicketMonitoramento.STATUS_CHOICES
     form = get_object_or_404(EmailMonitoramento, tkt_ref_id=tktid)
     editor = TextEditor()
+    keyga = {v:k for k, v in TicketMonitoramento.GARAGEM_CHOICES}
     try:
         conn = settings.CONNECTION
         cur = conn.cursor()
@@ -827,25 +837,32 @@ def tktview(request, tktid):
                         SELECT 
                               F1.EMPRESA,
                               CASE
-                                  WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '1'  THEN 'SPO'
-                                  WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '2'  THEN 'REC'
-                                  WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '3'  THEN 'SSA'
-                                  WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '4'  THEN 'FOR'
-                                  WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '5'  THEN 'MCZ'
-                                  WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '6'  THEN 'NAT'
-                                  WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '7'  THEN 'JPA'
-                                  WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '8'  THEN 'AJU'
-                                  WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '9'  THEN 'VDC'
-                                  WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '10' THEN 'MG'
-                                  WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '50' THEN 'SPO'
-                                  WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '20' THEN 'SPO'
-                                  WHEN F1.EMPRESA = '1' AND F1.ID_GARAGEM = '21' THEN 'SPO'
-                                  WHEN F1.EMPRESA = '2' AND F1.ID_GARAGEM = '20' THEN 'CTG'
-                                  WHEN F1.EMPRESA = '2' AND F1.ID_GARAGEM = '21' THEN 'TCO'
-                                  WHEN F1.EMPRESA = '2' AND F1.ID_GARAGEM = '22' THEN 'UDI'
-                                  WHEN F1.EMPRESA = '2' AND F1.ID_GARAGEM = '23' THEN 'TMA'
-                                  WHEN F1.EMPRESA = '2' AND F1.ID_GARAGEM = '24' THEN 'VIX'  
-                                  WHEN F1.EMPRESA = '2' AND F1.ID_GARAGEM = '50' THEN 'TMA'  
+                                  WHEN F1.ID_EMPRESA = '1' AND F1.ID_GARAGEM = '1'  THEN 'SPO'
+                                  WHEN F1.ID_EMPRESA = '1' AND F1.ID_GARAGEM = '2'  THEN 'REC'
+                                  WHEN F1.ID_EMPRESA = '1' AND F1.ID_GARAGEM = '3'  THEN 'SSA'
+                                  WHEN F1.ID_EMPRESA = '1' AND F1.ID_GARAGEM = '4'  THEN 'FOR'
+                                  WHEN F1.ID_EMPRESA = '1' AND F1.ID_GARAGEM = '5'  THEN 'MCZ'
+                                  WHEN F1.ID_EMPRESA = '1' AND F1.ID_GARAGEM = '6'  THEN 'NAT'
+                                  WHEN F1.ID_EMPRESA = '1' AND F1.ID_GARAGEM = '7'  THEN 'JPA'
+                                  WHEN F1.ID_EMPRESA = '1' AND F1.ID_GARAGEM = '8'  THEN 'AJU'
+                                  WHEN F1.ID_EMPRESA = '1' AND F1.ID_GARAGEM = '9'  THEN 'VDC'
+                                  WHEN F1.ID_EMPRESA = '1' AND F1.ID_GARAGEM = '10' THEN 'MG'
+                                  WHEN F1.ID_EMPRESA = '1' AND F1.ID_GARAGEM = '50' THEN 'SPO'
+                                  WHEN F1.ID_EMPRESA = '1' AND F1.ID_GARAGEM = '20' THEN 'SPO'
+                                  WHEN F1.ID_EMPRESA = '1' AND F1.ID_GARAGEM = '21' THEN 'SPO'
+                                  WHEN F1.ID_EMPRESA = '2' AND F1.ID_GARAGEM = '20' THEN 'CTG'
+                                  WHEN F1.ID_EMPRESA = '2' AND F1.ID_GARAGEM = '21' THEN 'TCO'
+                                  WHEN F1.ID_EMPRESA = '2' AND F1.ID_GARAGEM = '22' THEN 'UDI'
+                                  WHEN F1.ID_EMPRESA = '2' AND F1.ID_GARAGEM = '23' THEN 'TMA'
+                                  WHEN F1.ID_EMPRESA = '2' AND F1.ID_GARAGEM = '24' THEN 'VIX'  
+                                  WHEN F1.ID_EMPRESA = '2' AND F1.ID_GARAGEM = '50' THEN 'VIX'
+                                  WHEN F1.ID_EMPRESA = '3' AND F1.ID_GARAGEM = '30' THEN 'BMA'
+                                  WHEN F1.ID_EMPRESA = '3' AND F1.ID_GARAGEM = '31' THEN 'BPE'
+                                  WHEN F1.ID_EMPRESA = '3' AND F1.ID_GARAGEM = '32' THEN 'BEL'    
+                                  WHEN F1.ID_EMPRESA = '3' AND F1.ID_GARAGEM = '33' THEN 'BPB'
+                                  WHEN F1.ID_EMPRESA = '3' AND F1.ID_GARAGEM = '34' THEN 'SLZ'
+                                  WHEN F1.ID_EMPRESA = '3' AND F1.ID_GARAGEM = '35' THEN 'BAL'
+                                  WHEN F1.ID_EMPRESA = '3' AND F1.ID_GARAGEM = '36' THEN 'THE' 
                               END GARAGEM,
                               F1.DEST_MUNIC_DEST,
                               F1.DEST_UF_DEST,
@@ -865,10 +882,11 @@ def tktview(request, tktid):
                              F1.SERIE = F4.SERIE               AND
                              F1.TIPO_DOCTO = F4.TIPO_DOCTO     AND
                              F1.CONHECIMENTO = {form.tkt_ref.cte}           AND
-                             F1.GARAGEM = {TIPO_GARAGEM.index((form.tkt_ref.filial,form.tkt_ref.filial))+1} AND
+                             F1.ID_GARAGEM = {keyga[form.tkt_ref.filial]} AND
                              F1.TIPO_DOCTO = {form.tkt_ref.tp_docto}            
                         GROUP BY
                              F1.EMPRESA,
+                             F1.ID_EMPRESA,
                               F1.ID_GARAGEM,
                               F1.TIPO_DOCTO,
                               F1.CONHECIMENTO,
@@ -908,7 +926,8 @@ def tktview(request, tktid):
         if area and area != '<p><br></p>':
             replymail_monitoramento(request, tktid, area)
         return redirect('portaria:monitticket')
-    return render(request, 'portaria/monitoramento/ticketview.html', {'form':form,'editor':editor,'opts':opts,'stts':stts,'res':res})
+    return render(request, 'portaria/monitoramento/ticketview.html', {'form':form,'editor':editor,'opts':opts,
+                                                                      'stts':stts,'res':res})
 
 def chamado(request):
     metrics = TicketChamado.objects.exclude(Q(status='CANCELADO') | Q(status='CONCLUIDO')).annotate(
