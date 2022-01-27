@@ -717,7 +717,7 @@ def monitticket(request):
     return render(request, 'portaria/monitoramento/monitticket.html', {'tkts':tkts})
 
 def tktcreate(request):
-    users = User.objects.filter(groups__name='monitoramento')
+    users = User.objects.filter(groups__name='monitoramento').exclude(id=1)
     tp_doc_choices = TIPO_DOCTO_CHOICES
     editor = TextEditor()
     garagem = TicketMonitoramento.GARAGEM_CHOICES
