@@ -9,6 +9,7 @@ import textwrap
 import poplib
 from email import policy
 from email.header import decode_header
+from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 import pandas as pd
 from email.mime.text import MIMEText
@@ -701,18 +702,12 @@ def fatferramentas(request):
     return render(request,'portaria/etc/fatferramentas.html')
 
 def monitticket(request):
-    if request.user.is_staff:
-        tkts = TicketMonitoramento.objects.filter(Q(status='ABERTO') | Q(status='ANDAMENTO'))
-    else:
-        tkts = TicketMonitoramento.objects.filter(Q(status='ABERTO') | Q(status='ANDAMENTO'), responsavel=request.user)
+    tkts = TicketMonitoramento.objects.filter(Q(status='ABERTO') | Q(status='ANDAMENTO'))
+
     if request.method == 'POST':
         tkt = request.POST.get('srctkt')
         if tkt:
-            if request.user.is_staff:
-                tkts = TicketMonitoramento.objects.filter(pk=tkt).exclude(Q(status='CONCLUIDO') | Q(status='CANCELADO'))
-            else:
-                tkts = TicketMonitoramento.objects.filter(pk=tkt, responsavel=request.user).exclude(Q(status='CONCLUIDO')|Q(status='CANCELADO'))
-
+            tkts = TicketMonitoramento.objects.filter(Q(pk=tkt)|Q(cte=tkt))
             return render(request, 'portaria/monitoramento/monitticket.html', {'tkts': tkts})
     return render(request, 'portaria/monitoramento/monitticket.html', {'tkts':tkts})
 
@@ -722,11 +717,18 @@ def tktcreate(request):
     editor = TextEditor()
     garagem = TicketMonitoramento.GARAGEM_CHOICES
     opts = TicketMonitoramento.CATEGORIA_CHOICES
+    file = UploadForm
     if request.method == 'GET':
         cte = request.GET.get('cte')
         gar = request.GET.get('garagem')
         tp_docto = request.GET.get('tp_docto')
         if cte and gar and tp_docto:
+            if tp_docto == '8':
+                remet = 'BC.RSOCIALCLI'
+                dest = 'F11.REC_RZ_SOCIAL'
+            else:
+                remet = 'F1.REM_RZ_SOCIAL'
+                dest = 'F1.DEST_RZ_SOCIAL'
             try:
                 conn = settings.CONNECTION
                 cur = conn.cursor()
@@ -765,12 +767,14 @@ def tktcreate(request):
                                       F1.DEST_UF_DEST,
                                       F1.TIPO_DOCTO,
                                       F1.CONHECIMENTO CTE,
-                                      F1.REM_RZ_SOCIAL,
-                                      F1.DEST_RZ_SOCIAL,
+                                      {remet} REMETENTE,
+                                      {dest} DESTINATARIO,
                                       LISTAGG ((LTRIM (F4.NOTA_FISCAL,0)), ' / ') WITHIN GROUP (ORDER BY F1.CONHECIMENTO) NOTA_FISCAL 
                                 FROM
                                     FTA001 F1,
-                                    FTA004 F4
+                                    FTA004 F4,
+                                    FTA011 F11,
+                                    BGM_CLIENTE BC
                                 WHERE
                                      F1.EMPRESA = F4.EMPRESA AND
                                      F1.FILIAL = F4.FILIAL   AND
@@ -778,19 +782,28 @@ def tktcreate(request):
                                      F1.CONHECIMENTO = F4.CONHECIMENTO AND
                                      F1.SERIE = F4.SERIE               AND
                                      F1.TIPO_DOCTO = F4.TIPO_DOCTO     AND
+                                     F1.EMPRESA = F11.EMPRESA           AND
+                                     F1.FILIAL = F11.FILIAL             AND
+                                     F1.GARAGEM = F11.GARAGEM           AND
+                                     F1.CONHECIMENTO = F11.CONHECIMENTO AND
+                                     F1.SERIE = F11.SERIE               AND
+                                     F1.TIPO_DOCTO = F11.TIPO_DOCTO     AND
                                      F1.CONHECIMENTO = {cte}           AND
-                                     F1.ID_GARAGEM = {gar}                AND
-                                     F1.TIPO_DOCTO = {tp_docto}            
+                                     F1.ID_GARAGEM = {gar}             AND
+                                     F1.TIPO_DOCTO = {tp_docto}        AND
+                                     F1.CLIENTE_FAT = BC.CODCLI                                                      
                                 GROUP BY
                                      F1.EMPRESA,
                                      F1.ID_EMPRESA,
-                                      F1.ID_GARAGEM,
-                                      F1.TIPO_DOCTO,
-                                      F1.CONHECIMENTO,
-                                      F1.REM_RZ_SOCIAL,
-                                      F1.DEST_RZ_SOCIAL,
-                                      F1.DEST_MUNIC_DEST,
-                                      F1.DEST_UF_DEST''')
+                                     F1.ID_GARAGEM,
+                                     F1.TIPO_DOCTO,
+                                     F1.CONHECIMENTO,
+                                     F1.REM_RZ_SOCIAL,
+                                     F1.DEST_RZ_SOCIAL,
+                                     F1.DEST_MUNIC_DEST,
+                                     F1.DEST_UF_DEST,
+                                     BC.RSOCIALCLI,
+                                     F11.REC_RZ_SOCIAL''')
                 res = dictfetchall(cur)
             except Exception as e:
                 messages.error(request, f'{e}')
@@ -800,29 +813,54 @@ def tktcreate(request):
                     messages.error(request, f'Mais de 1 registro encontrado')
                     return redirect('portaria:monitticket')
                 elif res:
-                    return render(request, 'portaria/monitoramento/tktcreate.html', {'editor': editor, 'users': users,'res': res,'opts': opts,})
+                    modal = EmailOcorenciasMonit.objects.filter(rsocial=res[0]['REMETENTE'], ativo=1)
+                    return render(request, 'portaria/monitoramento/tktcreate.html', {'editor': editor, 'users': users,
+                                                                 'res': res,'opts': opts,'file':file, 'modal':modal})
                 else:
                     messages.error(request, f'Nenhum registro encontrado')
                     return redirect('portaria:monitticket')
     if request.method == 'POST':
         responsavel = request.POST.get('responsavel')
-        cc = request.POST.get('cc')
         cte = request.POST.get('cte')
         tp_docto = request.POST.get('tp_docto')
         assunto = request.POST.get('assunto')
+        cc = request.POST.get('cc').replace(',', ';')
         filial = request.POST.get('filial')
         mensagem = request.POST.get('area')
-        rem = request. POST.get('remetente')
+        rem = request.POST.get('remetente')
         dest = request.POST.get('destinatario')
-        if responsavel and rem and assunto and mensagem and cc and dest:
-            createtktandmail(request, resp=responsavel, cc=cc, rem=rem, filial=filial, dest=dest, assunto=assunto,
-                             msg=mensagem, cte=cte, tp_docto=tp_docto)
+        if request.POST.get('file') != '':
+            myfile = request.FILES.getlist('file')
+        else:
+            myfile = None
 
+        if responsavel and rem and mensagem and assunto and cc and dest:
+            if TicketMonitoramento.objects.filter(nome_tkt=assunto).exists():
+                assunto += '*'
+                createtktandmail(request, **{'resp':responsavel,'cc':cc, 'rem':rem, 'filial':filial, 'dest':dest,
+                                               'assunto':assunto, 'msg':mensagem, 'cte':cte, 'tp_docto':tp_docto,
+                                               'file':myfile})
+            else:
+                createtktandmail(request, **{'resp':responsavel, 'cc':cc, 'rem':rem, 'filial':filial, 'dest':dest,
+                                             'assunto':assunto, 'msg':mensagem, 'cte':cte, 'tp_docto':tp_docto,
+                                             'file':myfile})
         else:
             messages.error(request, 'Está faltando campos')
             return redirect('portaria:tktcreate')
+
     return render(request, 'portaria/monitoramento/tktcreate.html',{'editor': editor, 'users': users, 'opts': opts,
                                                                     'tp_doc_choices':tp_doc_choices, 'garagem':garagem})
+
+def modaltkt(request):
+    ccs = request.POST.getlist('vals[]')
+    for q in ccs:
+        try:
+            EmailOcorenciasMonit.objects.filter(email=q).update(ativo=0)
+        except Exception as e:
+            print(e)
+        else:
+            print('200')
+    return HttpResponse('200')
 
 def tktview(request, tktid):
     opts = TicketMonitoramento.CATEGORIA_CHOICES
@@ -830,6 +868,13 @@ def tktview(request, tktid):
     form = get_object_or_404(EmailMonitoramento, tkt_ref_id=tktid)
     editor = TextEditor()
     keyga = {v:k for k, v in TicketMonitoramento.GARAGEM_CHOICES}
+    if form.tkt_ref.tp_docto == '8':
+        remet = 'BC.RSOCIALCLI'
+        dest = 'F11.REC_RZ_SOCIAL'
+    else:
+        remet = 'F1.REM_RZ_SOCIAL'
+        dest = 'F1.DEST_RZ_SOCIAL'
+    print(form.tkt_ref.tp_docto)
     try:
         conn = settings.CONNECTION
         cur = conn.cursor()
@@ -868,12 +913,14 @@ def tktview(request, tktid):
                               F1.DEST_UF_DEST,
                               F1.TIPO_DOCTO,
                               F1.CONHECIMENTO CTE,
-                              F1.REM_RZ_SOCIAL,
-                              F1.DEST_RZ_SOCIAL,
+                              {remet} REMETENTE,
+                              {dest} DESTINATARIO,
                               LISTAGG ((LTRIM (F4.NOTA_FISCAL,0)), ' / ') WITHIN GROUP (ORDER BY F1.CONHECIMENTO) NOTA_FISCAL 
                         FROM
                             FTA001 F1,
-                            FTA004 F4
+                            FTA004 F4,
+                            FTA011 F11,
+                            BGM_CLIENTE BC
                         WHERE
                              F1.EMPRESA = F4.EMPRESA AND
                              F1.FILIAL = F4.FILIAL   AND
@@ -881,9 +928,16 @@ def tktview(request, tktid):
                              F1.CONHECIMENTO = F4.CONHECIMENTO AND
                              F1.SERIE = F4.SERIE               AND
                              F1.TIPO_DOCTO = F4.TIPO_DOCTO     AND
+                             F1.EMPRESA = F11.EMPRESA AND
+                             F1.FILIAL = F11.FILIAL   AND
+                             F1.GARAGEM = F11.GARAGEM AND
+                             F1.CONHECIMENTO = F11.CONHECIMENTO AND
+                             F1.SERIE = F11.SERIE               AND
+                             F1.TIPO_DOCTO = F11.TIPO_DOCTO     AND
                              F1.CONHECIMENTO = {form.tkt_ref.cte}           AND
-                             F1.ID_GARAGEM = {keyga[form.tkt_ref.filial]} AND
-                             F1.TIPO_DOCTO = {form.tkt_ref.tp_docto}            
+                             F1.ID_GARAGEM = {form.tkt_ref.filial} AND
+                             F1.TIPO_DOCTO = {form.tkt_ref.tp_docto}  AND
+                             F1.CLIENTE_FAT = BC.CODCLI         
                         GROUP BY
                              F1.EMPRESA,
                              F1.ID_EMPRESA,
@@ -893,11 +947,14 @@ def tktview(request, tktid):
                               F1.REM_RZ_SOCIAL,
                               F1.DEST_RZ_SOCIAL,
                               F1.DEST_MUNIC_DEST,
-                              F1.DEST_UF_DEST''')
+                              F1.DEST_UF_DEST,
+                              F11.REC_RZ_SOCIAL,
+                              BC.RSOCIALCLI''')
         res = dictfetchall(cur)
     except Exception as e:
-        messages.error(request, f'{e}')
-        return redirect('portaria:monitticket')
+        '''messages.error(request, f'{e}')
+        return redirect('portaria:monitticket')'''
+        raise e
     if request.method == 'POST':
         ctg = request.POST.get('categs')
         addcc = request.POST.get('addcc')
@@ -1458,7 +1515,7 @@ def readmail_monitoramento(request):
                             os.chmod(locimg, 0o777)
                             os.rename(locimg, os.path.join(path, (str(rr) + filename)))
                         item = os.path.join('/static/monitoramento/'+str(hoje)+'/', (str(rr) + filename))
-                        aa = '<div class="mailattatch"><a href="'+item+'" download><img src="/static/images/downicon.png" width="40"><p>'+filename+'</p></a></div>'
+                        aa = '<br><div class="mailattatch"><a href="'+item+'" download><img src="/static/images/downicon.png" width="40"><p>'+filename+'</p></a></div>'
                         attatch += aa
             else:
                 body = parsed_email.get_payload(decode=True)
@@ -1489,7 +1546,7 @@ def readmail_monitoramento(request):
 
                 e_id = parsed_email['Message-ID']
                 e_ref = parsed_email['References']
-                #print(e_ref)
+
                 if e_ref is None: e_ref = e_id
                 else:
                     e_ref = e_ref.split(' ')[0]
@@ -1505,7 +1562,6 @@ def readmail_monitoramento(request):
                 if w_body:
                     reply_html = re.findall(r'(<b><span.*[>]+De:.*)',w_body)
                     if reply_html:
-                        #print(reply_html)
                         w_body = w_body.split(reply_html[0])[0]
 
                 if re.findall(pattern2,w_body):
@@ -1602,7 +1658,7 @@ def replymail_monitoramento(request, tktid, area):
                 msgimg.add_header('Content-ID', f'{media}')
                 msg = msg.replace(('src="' + media + '"'), f'src="cid:{media}" ')
                 msg1.attach(msgimg)
-        sign = f'<img src="cid:{request.user}.jpg" width="600">'
+        sign = f'<br><img src="cid:{request.user}.jpg" width="600">'
         signimg = open(f'{settings.STATIC_ROOT}/images/macros-monit/{request.user}.jpg', 'rb').read()
         msgimg1 = MIMEImage(signimg, name=f'{request.user}.jpg')
         msgimg1.add_header('Content-ID', f'{request.user}.jpg')
@@ -1632,29 +1688,35 @@ def replymail_monitoramento(request, tktid, area):
             print(f'ErrorType:{type(e).__name__}, Error:{e}')
         return redirect('portaria:monitticket')
 
-def createtktandmail(request,resp,cc,filial,rem,dest,assunto,msg,cte, tp_docto):
+def createtktandmail(request, **kwargs):
     pattern = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
     msg1 = MIMEMultipart()
-    msgmail = msg
-    if re.findall(pattern, msg):
-        for q in re.findall(pattern, msg):
+    if kwargs['file'] is not None:
+        for q in kwargs['file']:
+            part = MIMEApplication(q.read(), name=str(q))
+            part['Content-Disposition'] = 'attachment; filename="%s"' % q
+            msg1.attach(part)
+    msgmail = kwargs['msg']
+    keyga = {v: k for k, v in TicketMonitoramento.GARAGEM_CHOICES}
+    if re.findall(pattern, kwargs['msg']):
+        for q in re.findall(pattern, kwargs['msg']):
             media = q
             img_data = open(('/home/bora/www' + media), 'rb').read()
             msgimg = MIMEImage(img_data, name=os.path.basename(media))
             msgimg.add_header('Content-ID', f'{media}')
             msgmail = msgmail.replace(('<img src="' + media + '"'), f'<img src="cid:{media}" ')
             msg1.attach(msgimg)
-    sign = f'<img src="cid:{request.user}.jpg" width="600">'
+    sign = f'<br><img src="cid:{request.user}.jpg" width="600">'
     signimg = open(f'{settings.STATIC_ROOT}/images/macros-monit/{request.user}.jpg', 'rb').read()
     msgimg1 = MIMEImage(signimg, name=f'{request.user}.jpg')
     msgimg1.add_header('Content-ID', f'{request.user}.jpg')
     msg1.attach(msgimg1)
     msgmail += sign
     msg1.attach(MIMEText(msgmail, 'html', 'utf-8'))
-    msg1['Subject'] = assunto
+    msg1['Subject'] = kwargs['assunto']
     msg1['From'] = get_secret('EUSER_MN')#################
-    msg1['To'] = cc ##############
-    msg1['CC'] = cc
+    msg1['To'] = kwargs['cc'] ##############
+    msg1['CC'] = kwargs['cc']
     msg_id = make_msgid(idstring=None, domain='bora.com.br')
     msg1['Message-ID'] = msg_id
     smtp_h = 'smtp.kinghost.net'###############
@@ -1670,11 +1732,11 @@ def createtktandmail(request,resp,cc,filial,rem,dest,assunto,msg,cte, tp_docto):
         print(f'ErrorType:{type(e).__name__}, Error:{e}')
     else:
         try:
-            tkt = TicketMonitoramento.objects.create(nome_tkt=assunto, dt_abertura=timezone.now(),
-                  responsavel=User.objects.get(username=resp), solicitante=request.user, remetente=rem,
-                  destinatario=dest, cte=cte, status='ABERTO', categoria='Aguardando Recebimento',msg_id=msg_id,
-                         filial=filial, tp_docto=tp_docto)
-            sm.sendmail(get_secret('EUSER_MN'), [user] + cc.split(';'), msg1.as_string())  #############
+            tkt = TicketMonitoramento.objects.create(nome_tkt=kwargs['assunto'], dt_abertura=timezone.now(),
+                  responsavel=User.objects.get(username=kwargs['resp']), solicitante=request.user, remetente=kwargs['rem'],
+                  destinatario=kwargs['dest'], cte=kwargs['cte'], status='ABERTO', categoria='Aguardando Recebimento',msg_id=msg_id,
+                         filial=keyga[kwargs['filial']], tp_docto=kwargs['tp_docto'])
+            sm.sendmail(get_secret('EUSER_MN'), [user] + kwargs['cc'].split(';'), msg1.as_string())  #############
         except Exception as e:
             messages.error(request, f'ErrorType:{type(e).__name__}, error:{e}')
             return redirect('portaria:monitticket')

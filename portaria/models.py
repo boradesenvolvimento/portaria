@@ -8,7 +8,12 @@ from django.db import models
 from django.db.models import PROTECT, Sum, F
 from django.utils import timezone
 
-
+MAIL_CHOICES = [
+        ('1', '1'),
+        ('2', '2'),
+        ('3', '3'),
+        ('4', '4'),
+    ]
 
 #validators
 
@@ -476,6 +481,12 @@ class EmailMonitoramento(models.Model):
     ult_resp_dt = models.DateTimeField(blank=True, null=True)
     ult_resp_html = models.TextField(blank=True, null=True)
     tkt_ref = models.ForeignKey(TicketMonitoramento, on_delete=PROTECT)
+
+class EmailOcorenciasMonit(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    email = models.CharField(max_length=255)
+    rsocial = models.CharField(max_length=255)
+    ativo = models.BooleanField(default=True)
 
 class TicketChamado(models.Model):
     SERVICO_CHOICES = [

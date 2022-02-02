@@ -45,7 +45,7 @@
             </div>
             <div class="container col-lg col-md-12">
                 <div>
-                        <form method="post">
+                    <form id="formdata-id" method="post">
                         {% csrf_token %}
                         <div>
                         {{ editor.area|safe }}
@@ -87,12 +87,16 @@
                                     {% endfor %}
                                 </select>
                             </div>
-                            <div class="col-4">
+                            <div class="col-3">
                                 <label for="addcc">CC:</label>
-                                <input type="text" id="addcc" name="addcc" style="width:20rem;" placeholder="Inserir novas cópias...">
+                                <input type="text" id="addcc" name="addcc" style="width:17rem;" placeholder="Inserir novas cópias...">
                             </div>
-                            <div class="col-2">
-                                <button type="submit" style="height:5rem;">Enviar</button>
+                            <div class="col-1">
+                                <label for="id_file" style="margin-top:1.5rem;font-size:3.2rem;cursor:pointer;"><ion-icon name="attach-outline"></ion-icon></label>
+                                <input type="file" name="file" multiple id="id_file">
+                            </div>
+                            <div class="col-1">
+                                <button id="submiter" type="button" style="height:5rem;">Enviar</button>
                             </div>
                         </div>
                     </form>
@@ -119,6 +123,20 @@
     </div>
     {% endif %}
 <script type="text/javascript">
+
+    $(document).ready(function() {
+        botao = document.getElementById('submiter');
+        $(botao).click(function(){
+            result = confirm("Confirmar envio.");
+            if(!result){
+                alert("Envio cancelado.");
+            }else{
+                $("#formdata-id").submit();
+                console.log('200');
+            }
+        });
+    });
+
     aa = document.getElementById('selecter')
     aa.addEventListener('change', function(){
         if(aa.value == 'Bora'){
@@ -150,7 +168,7 @@
     });
 
     function addText1(){
-        var text = "{% for q in res %}<table style='border:double;border-color: #000000; background-color: #ffffff; width: 695px' border='3'><tbody><tr style='border:double;height: 84px'><td style='border:double;height: 84px; width: 323px; text-align: left'><img src='{% static "images/macros-monit/logo_moni.png" %}'></td><td style='border:double;height: 84px; width: 352px; text-align: center'><span style='font-size: 14pt; background-color: #ffffff; color: #003366'><strong>&nbsp;<span style='font-family: verdana, geneva; color: #333333'>Planilha de Monitoramento.</span></strong></span></td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>FILIAL</td><td style='border:double;height: 17px; width: 352px'>{{ q.GARAGEM }}</td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>DATA E HORA DA OCORRÊNCIA</td><td style='border:double;height: 17px; width: 352px'>{% now 'd/m/Y H:i' %}</td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>CONTATO TRANSPORTADORA</td><td style='border:double;height: 17px; width: 352px'>{{ request.user }}</td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>Nº NOTA FISCAL</td><td style='border:double;height: 17px; width: 352px'>{{ q.NOTA_FISCAL }}</td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>MOTORISTA / PLACA</td><td style='border:double;height: 17px; width: 352px'></td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>REMETENTE</td><td style='border:double;height: 17px; width: 352px'>{{ q.REM_RZ_SOCIAL }}</td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>DESTINATARIO</td><td style='border:double;height: 17px; width: 352px'>{{ q.DEST_RZ_SOCIAL }}</td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>CIDADE</td><td style='border:double;height: 17px; width: 352px'>{{ q.DEST_MUNIC_DEST }}</td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>UF</td><td style='border:double;height: 17px; width: 352px'>{{ q.DEST_UF_DEST }}</td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>MOTIVO DA OCORRÊNCIA</td><td style='border:double;height: 17px; width: 352px'></td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>Nº SENHA DA AGENDA</td><td style='border:double;height: 17px; width: 352px'></td></tr><tr style='border:double;height: 90px'><td style='border:double;height: 90px; width: 323px'>OBS:</td><td style='border:double;height: 90px; width: 352px'></td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>FINALIZAÇÃO</td><td style='border:double;height: 17px; width: 352px'></td></tr></tbody></table>{% endfor %}";
+        var text = "{% for q in res %}<table style='border:double;border-color: #000000; background-color: #ffffff; width: 695px' border='3'><tbody><tr style='border:double;height: 84px'><td style='border:double;height: 84px; width: 323px; text-align: left'><img src='{% static "images/macros-monit/logo_moni.png" %}'></td><td style='border:double;height: 84px; width: 352px; text-align: center'><span style='font-size: 14pt; background-color: #ffffff; color: #003366'><strong>&nbsp;<span style='font-family: verdana, geneva; color: #333333'>Planilha de Monitoramento.</span></strong></span></td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>FILIAL</td><td style='border:double;height: 17px; width: 352px'>{{ q.GARAGEM }}</td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>DATA E HORA DA OCORRÊNCIA</td><td style='border:double;height: 17px; width: 352px'>{% now 'd/m/Y H:i' %}</td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>CONTATO TRANSPORTADORA</td><td style='border:double;height: 17px; width: 352px'>{{ request.user }}</td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>Nº NOTA FISCAL</td><td style='border:double;height: 17px; width: 352px'>{{ q.NOTA_FISCAL }}</td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>MOTORISTA / PLACA</td><td style='border:double;height: 17px; width: 352px'></td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>REMETENTE</td><td style='border:double;height: 17px; width: 352px'>{{ q.REMETENTE }}</td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>DESTINATARIO</td><td style='border:double;height: 17px; width: 352px'>{{ q.DESTINATARIO }}</td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>CIDADE</td><td style='border:double;height: 17px; width: 352px'>{{ q.DEST_MUNIC_DEST }}</td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>UF</td><td style='border:double;height: 17px; width: 352px'>{{ q.DEST_UF_DEST }}</td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>MOTIVO DA OCORRÊNCIA</td><td style='border:double;height: 17px; width: 352px'></td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>Nº SENHA DA AGENDA</td><td style='border:double;height: 17px; width: 352px'></td></tr><tr style='border:double;height: 90px'><td style='border:double;height: 90px; width: 323px'>OBS:</td><td style='border:double;height: 90px; width: 352px'></td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>FINALIZAÇÃO</td><td style='border:double;height: 17px; width: 352px'></td></tr></tbody></table>{% endfor %}";
         var doc = document.getElementById('id_area_iframe').contentWindow.document.getElementsByClassName('note-editable')[0];
         $(doc).append(text)
     };
@@ -165,7 +183,7 @@
         $(doc).append(text)
     };
     function addText4(){
-        var text = "{% for q in res %}<table style='border:solid; border-color: #000000; width: 695px;'><tbody><tr style='height: 14.7266px;'><td style='border:solid 1px; height: 14.7266px; width: 323px; text-align: left;'>DATA:</td><td style='border:solid 1px; height: 14.7266px; width: 352px; text-align: left;'>{% now 'd/m/Y' %}</td></tr><tr style='height: 17px;' data-mce-style='height: 17px;'><td style='border:solid 1px; height: 17px; width: 323px;'>HORA:&nbsp;</td><td style='border:solid 1px; height: 17px; width: 352px;'>{% now 'H:i' %}</td></tr><tr style='height: 17px;'><td style='border:solid 1px; height: 17px; width: 323px;'>Nº NOTA FISCAL</td><td style='border:solid 1px; height: 17px; width: 352px;'>{{ q.NOTA_FISCAL }}</td></tr><tr style='height: 17px;'><td style='border:solid 1px; height: 17px; width: 323px;'>MOTORISTA:</td><td style='border:solid 1px; height: 17px; width: 352px;'>&nbsp;</td></tr><tr style='height: 17px;'><td style='border:solid 1px; height: 17px; width: 323px;'>PLACA:</td><td style='border:solid 1px; height: 17px; width: 352px;'>&nbsp;</td></tr><tr style='height: 17px;'><td style='border:solid 1px; height: 17px; width: 323px;'>CLIENTE:</td><td style='border:solid 1px; height: 17px; width: 352px;'>{{ q.DEST_RZ_SOCIAL }}</td></tr><tr style='height: 17px;'><td style='border:solid 1px; height: 17px; width: 323px;'>CIDADE:</td><td style='border:solid 1px; height: 17px; width: 352px;'>{{ q.DEST_MUNIC_DEST }}</td></tr><tr style='height: 17px;'><td style='border:solid 1px; height: 17px; width: 323px;'>UF:</td><td style='border:solid 1px; height: 17px; width: 352px;'>{{ q.DEST_UF_DEST }}</td></tr><tr style='height: 17px;'><td style='border:solid 1px; height: 17px; width: 323px;'>MOTIVO DA OCORRÊNCIA:</td><td style='border:solid 1px; height: 17px; width: 352px;'>&nbsp;</td></tr><tr style='height: 17px;'><td style='border:solid 1px; height: 17px; width: 323px;'>OBS:</td><td style='border:solid 1px; height: 17px; width: 352px;'>&nbsp;</td></tr><tr style='height: 17px;'><td style='border:solid 1px; height: 17px; width: 323px;'>FINALIZAÇÃO</td><td style='border:solid 1px; height: 17px; width: 352px;'>&nbsp;</td></tr></tbody></table>{% endfor %}"
+        var text = "{% for q in res %}<table style='border:solid; border-color: #000000; width: 695px;'><tbody><tr style='height: 14.7266px;'><td style='border:solid 1px; height: 14.7266px; width: 323px; text-align: left;'>DATA:</td><td style='border:solid 1px; height: 14.7266px; width: 352px; text-align: left;'>{% now 'd/m/Y' %}</td></tr><tr style='height: 17px;' data-mce-style='height: 17px;'><td style='border:solid 1px; height: 17px; width: 323px;'>HORA:&nbsp;</td><td style='border:solid 1px; height: 17px; width: 352px;'>{% now 'H:i' %}</td></tr><tr style='height: 17px;'><td style='border:solid 1px; height: 17px; width: 323px;'>Nº NOTA FISCAL</td><td style='border:solid 1px; height: 17px; width: 352px;'>{{ q.NOTA_FISCAL }}</td></tr><tr style='height: 17px;'><td style='border:solid 1px; height: 17px; width: 323px;'>MOTORISTA:</td><td style='border:solid 1px; height: 17px; width: 352px;'>&nbsp;</td></tr><tr style='height: 17px;'><td style='border:solid 1px; height: 17px; width: 323px;'>PLACA:</td><td style='border:solid 1px; height: 17px; width: 352px;'>&nbsp;</td></tr><tr style='height: 17px;'><td style='border:solid 1px; height: 17px; width: 323px;'>CLIENTE:</td><td style='border:solid 1px; height: 17px; width: 352px;'>{{ q.DEST_RZ_SOCIAL }}</td></tr><tr style='height: 17px;'><td style='border:solid 1px; height: 17px; width: 323px;'>CIDADE:</td><td style='border:solid 1px; height: 17px; width: 352px;'>{{ q.DEST_MUNIC_DEST }}</td></tr><tr style='height: 17px;'><td style='border:solid 1px; height: 17px; width: 323px;'>UF:</td><td style='border:solid 1px; height: 17px; width: 352px;'>{{ q.DESTINATARIO }}</td></tr><tr style='height: 17px;'><td style='border:solid 1px; height: 17px; width: 323px;'>MOTIVO DA OCORRÊNCIA:</td><td style='border:solid 1px; height: 17px; width: 352px;'>&nbsp;</td></tr><tr style='height: 17px;'><td style='border:solid 1px; height: 17px; width: 323px;'>OBS:</td><td style='border:solid 1px; height: 17px; width: 352px;'>&nbsp;</td></tr><tr style='height: 17px;'><td style='border:solid 1px; height: 17px; width: 323px;'>FINALIZAÇÃO</td><td style='border:solid 1px; height: 17px; width: 352px;'>&nbsp;</td></tr></tbody></table>{% endfor %}"
         var doc = document.getElementById('id_area_iframe').contentWindow.document.getElementsByClassName('note-editable')[0];
         $(doc).append(text)
     };

@@ -73,5 +73,6 @@ urlpatterns = [
     path(r'readnotify/<notifyid>/', views.isnotifyread, name='isnotifyread'),
     path(r'allreadnotify/<user>', views.setallread, name='setallread'),
     path('testeconn/', views.testeconn, name='testeconn'),
+    path(r'modaltkt/', views.modaltkt, name='modaltkt')
 
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

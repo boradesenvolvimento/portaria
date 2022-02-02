@@ -39,7 +39,7 @@
 
         {% else %}
         <div class="createtkt">
-        <form method="post">
+        <form id="formdata-id" action="" method="post" enctype="multipart/form-data">
             {% csrf_token %}
         <div class="row">
             <h2 class="title-cad">CTE: {% for q in res %}{{ q.CTE }}
@@ -50,7 +50,7 @@
             <label for="remetente">Remetente:</label>
             <select style="width: 30rem;" id="remetente" name="remetente">
                 {% for q in res %}
-                <option value="{{ q.REM_RZ_SOCIAL }}">{{ q.REM_RZ_SOCIAL }}</option>
+                <option value="{{ q.REMETENTE }}">{{ q.REMETENTE }}</option>
                 {% endfor %}
             </select>
             </div>
@@ -58,7 +58,7 @@
             <label for="destinatario">Destinatário:</label>
             <select style="width: 30rem;" id="destinatario" name="destinatario">
                 {% for q in res %}
-                <option value="{{ q.DEST_RZ_SOCIAL }}">{{ q.DEST_RZ_SOCIAL }}</option>
+                <option value="{{ q.DESTINATARIO }}">{{ q.DESTINATARIO }}</option>
                 {% endfor %}
             </select>
             </div>
@@ -87,7 +87,8 @@
                 </div>
                 <div class="row">
                     <label for="cc">CC</label>
-                    <input type="text"  id="cc" name="cc" style="width:30rem;">
+                    <input type="text" id="cc" name="cc" style="width:30rem;" autocomplete="off">
+                    <button type="button" id="myBtn">Emails</button>
                 </div>
         </div>
 
@@ -95,8 +96,8 @@
         <div class="container col-8 createboxes">
             <div class="row">
                 <label for="assunto">Assunto:</label>
-                <div class="col-9">
-                <input id="assunto" autocomplete="off" value="{% for q in res %}{{ q.REM_RZ_SOCIAL }} x {{ q.DEST_RZ_SOCIAL }} - {{ q.NOTA_FISCAL }}{% endfor %}" name="assunto" type="text" size="50rem;"><br>
+                <div class="col-8">
+                <input id="assunto" value="{% for q in res %}{{ q.CTE }} - {{ q.REMETENTE }} x {{ q.DESTINATARIO }} - {{ q.NOTA_FISCAL }}{% endfor %}" name="assunto" type="text" size="50rem;" readonly><br>
                 </div>
                 <div class="col-3">
                     <select id="selecter">
@@ -115,6 +116,10 @@
                         <option style="cursor:pointer;">Negeubauer</option>
                     </select>
                 </div>
+                <div class="col-1">
+                    <label for="id_file" style="font-size:3.2rem;cursor:pointer;"><ion-icon name="attach-outline"></ion-icon></label>
+                    <input type="file" name="file" multiple="" id="id_file">
+                </div>
             </div>
             <div class="row">
                 <h4>Mensagem:</h4>
@@ -123,15 +128,147 @@
                 </div>
             </div>
         </div>
-            <button type="submit">Criar</button>
+            <button id="submiter" type="button">Criar</button>
         </div>
         </form>
         </div>
         {% endif %}
     </div>
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <div>
+                <span class="title-cad">Selecionar Emails</span>
+                <span class="close col">&times;</span>
+            </div>
+            <form action="" method="post">
+                {% csrf_token %}
+            <div class="container tktcontainer">
+                {% if modal %}
+                {% for q in modal %}
+                    <p style="margin: 0 0 0 0;">
+                    <input type="checkbox" style="height:1.3rem" name="modal" value="{{ q.email }}" />
+                    {{ q.email }}</p>
+                {% endfor %}
+                {% else %}
+                    <p style="margin: 0 0 0 0;">Nenhum email cadastrado encontrado.</p>
+                {% endif %}
+            </div>
+            <div class="container">
+                <div class="row">
+                    <div class="col">
+                        <center><button id="add" name="add" type="button" style="background-color:green;">Selecionar</button></center>
+                    </div>
+                    <div class="col">
+                        <center><button type="button" id="remove" name="remove" style="background-color:red;">Remover</button></center>
+                    </div>
+                </div>
+            </div>
+            </form>
+        </div>
+
+    </div>
     {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
     </div>
     {% endif %}
+
+<script>
+    var modal = document.getElementById("myModal");
+    var btn = document.getElementById("myBtn");
+    var span = document.getElementsByClassName("close")[0];
+
+    btn.onclick = function() {
+        modal.style.display = "block";
+    };
+
+    span.onclick = function() {
+        modal.style.display = "none";
+    };
+
+    window.onclick = function(event) {
+        if (event.target == modal){
+            modal.style.display = "none";
+        }
+    };
+
+    $(document).ready(function() {
+        botao = document.getElementById('submiter');
+        $(botao).click(function(){
+            result = confirm('Confirma criação do ticket');
+            if(!result){
+                alert("Envio cancelado.");
+            }else{
+                $("#formdata-id").submit();
+                console.log('200');
+            }
+        });
+    });
+
+    $(document).ready(function (){
+        vals = []
+        botao = document.getElementById('add');
+        $(botao).click(function(){
+            mails = document.getElementsByName('modal');
+            for(var i = 0; mails[i]; i++){
+                if(mails[i].checked){
+                    checkedValue = mails[i].value;
+                    vals.push(checkedValue)
+                }
+            }
+            result = confirm("Confirma seleção de emails.")
+            if(!result){
+                event.preventDefault();
+                modal.style.display = "none";
+                vals = []
+            }else{
+                cccc = document.getElementById('cc').value = vals
+                modal.style.display = "none";
+                vals = []
+            }
+        });
+    });
+
+    $(document).ready(function (){
+        vals = []
+        botao = document.getElementById('remove');
+        $(botao).click(function(){
+            mails = document.getElementsByName('modal');
+            for(var i = 0; mails[i]; i++){
+                if(mails[i].checked){
+                    checkedValue = mails[i].value;
+                    vals.push(checkedValue)
+                }
+            }
+            result = confirm("Deseja remover os emails da lista?");
+            if(!result){
+                event.preventDefault();
+                modal.style.display = "none";
+                vals = []
+            }else{
+            $.ajax({
+                type: "POST",
+                url: "{% url 'portaria:modaltkt' %}",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                data: {
+                    'vals':vals,
+                },
+                success: function(data){
+                    console.log("success");
+                    console.log(data);
+                },
+                failure: function(data){
+                    console.log("failure");
+                    console.log(data);
+                },
+            });
+            location.reload();
+            }
+        });
+    });
+</script>
+
     <script type="text/javascript">
     aa = document.getElementById('selecter')
     aa.addEventListener('change', function(){
@@ -164,7 +301,7 @@
     });
 
     function addText1(){
-        var text = "{% for q in res %}<table style='border:double;border-color: #000000; background-color: #ffffff; width: 695px' border='3'><tbody><tr style='border:double;height: 84px'><td style='border:double;height: 84px; width: 323px; text-align: left'><img src='{% static "images/macros-monit/logo_moni.png" %}'></td><td style='border:double;height: 84px; width: 352px; text-align: center'><span style='font-size: 14pt; background-color: #ffffff; color: #003366'><strong>&nbsp;<span style='font-family: verdana, geneva; color: #333333'>Planilha de Monitoramento.</span></strong></span></td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>FILIAL</td><td style='border:double;height: 17px; width: 352px'>{{ q.GARAGEM }}</td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>DATA E HORA DA OCORRÊNCIA</td><td style='border:double;height: 17px; width: 352px'>{% now 'd/m/Y H:i' %}</td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>CONTATO TRANSPORTADORA</td><td style='border:double;height: 17px; width: 352px'>{{ request.user }}</td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>Nº NOTA FISCAL</td><td style='border:double;height: 17px; width: 352px'>{{ q.NOTA_FISCAL }}</td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>MOTORISTA / PLACA</td><td style='border:double;height: 17px; width: 352px'></td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>REMETENTE</td><td style='border:double;height: 17px; width: 352px'>{{ q.REM_RZ_SOCIAL }}</td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>DESTINATARIO</td><td style='border:double;height: 17px; width: 352px'>{{ q.DEST_RZ_SOCIAL }}</td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>CIDADE</td><td style='border:double;height: 17px; width: 352px'>{{ q.DEST_MUNIC_DEST }}</td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>UF</td><td style='border:double;height: 17px; width: 352px'>{{ q.DEST_UF_DEST }}</td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>MOTIVO DA OCORRÊNCIA</td><td style='border:double;height: 17px; width: 352px'></td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>Nº SENHA DA AGENDA</td><td style='border:double;height: 17px; width: 352px'></td></tr><tr style='border:double;height: 90px'><td style='border:double;height: 90px; width: 323px'>OBS:</td><td style='border:double;height: 90px; width: 352px'></td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>FINALIZAÇÃO</td><td style='border:double;height: 17px; width: 352px'></td></tr></tbody></table>{% endfor %}";
+        var text = "{% for q in res %}<table style='border:double;border-color: #000000; background-color: #ffffff; width: 695px' border='3'><tbody><tr style='border:double;height: 84px'><td style='border:double;height: 84px; width: 323px; text-align: left'><img src='{% static "images/macros-monit/logo_moni.png" %}'></td><td style='border:double;height: 84px; width: 352px; text-align: center'><span style='font-size: 14pt; background-color: #ffffff; color: #003366'><strong>&nbsp;<span style='font-family: verdana, geneva; color: #333333'>Planilha de Monitoramento.</span></strong></span></td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>FILIAL</td><td style='border:double;height: 17px; width: 352px'>{{ q.GARAGEM }}</td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>DATA E HORA DA OCORRÊNCIA</td><td style='border:double;height: 17px; width: 352px'>{% now 'd/m/Y H:i' %}</td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>CONTATO TRANSPORTADORA</td><td style='border:double;height: 17px; width: 352px'>{{ request.user }}</td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>Nº NOTA FISCAL</td><td style='border:double;height: 17px; width: 352px'>{{ q.NOTA_FISCAL }}</td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>MOTORISTA / PLACA</td><td style='border:double;height: 17px; width: 352px'></td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>REMETENTE</td><td style='border:double;height: 17px; width: 352px'>{{ q.REMETENTE }}</td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>DESTINATARIO</td><td style='border:double;height: 17px; width: 352px'>{{ q.DESTINATARIO }}</td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>CIDADE</td><td style='border:double;height: 17px; width: 352px'>{{ q.DEST_MUNIC_DEST }}</td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>UF</td><td style='border:double;height: 17px; width: 352px'>{{ q.DEST_UF_DEST }}</td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>MOTIVO DA OCORRÊNCIA</td><td style='border:double;height: 17px; width: 352px'></td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>Nº SENHA DA AGENDA</td><td style='border:double;height: 17px; width: 352px'></td></tr><tr style='border:double;height: 90px'><td style='border:double;height: 90px; width: 323px'>OBS:</td><td style='border:double;height: 90px; width: 352px'></td></tr><tr style='border:double;height: 17px'><td style='border:double;height: 17px; width: 323px'>FINALIZAÇÃO</td><td style='border:double;height: 17px; width: 352px'></td></tr></tbody></table>{% endfor %}";
         var doc = document.getElementById('id_area_iframe').contentWindow.document.getElementsByClassName('note-editable')[0];
         $(doc).append(text)
     };
@@ -179,7 +316,7 @@
         $(doc).append(text)
     };
     function addText4(){
-        var text = "{% for q in res %}<table style='border:solid; border-color: #000000; width: 695px;'><tbody><tr style='height: 14.7266px;'><td style='border:solid 1px; height: 14.7266px; width: 323px; text-align: left;'>DATA:</td><td style='border:solid 1px; height: 14.7266px; width: 352px; text-align: left;'>{% now 'd/m/Y' %}</td></tr><tr style='height: 17px;' data-mce-style='height: 17px;'><td style='border:solid 1px; height: 17px; width: 323px;'>HORA:&nbsp;</td><td style='border:solid 1px; height: 17px; width: 352px;'>{% now 'H:i' %}</td></tr><tr style='height: 17px;'><td style='border:solid 1px; height: 17px; width: 323px;'>Nº NOTA FISCAL</td><td style='border:solid 1px; height: 17px; width: 352px;'>{{ q.NOTA_FISCAL }}</td></tr><tr style='height: 17px;'><td style='border:solid 1px; height: 17px; width: 323px;'>MOTORISTA:</td><td style='border:solid 1px; height: 17px; width: 352px;'>&nbsp;</td></tr><tr style='height: 17px;'><td style='border:solid 1px; height: 17px; width: 323px;'>PLACA:</td><td style='border:solid 1px; height: 17px; width: 352px;'>&nbsp;</td></tr><tr style='height: 17px;'><td style='border:solid 1px; height: 17px; width: 323px;'>CLIENTE:</td><td style='border:solid 1px; height: 17px; width: 352px;'>{{ q.DEST_RZ_SOCIAL }}</td></tr><tr style='height: 17px;'><td style='border:solid 1px; height: 17px; width: 323px;'>CIDADE:</td><td style='border:solid 1px; height: 17px; width: 352px;'>{{ q.DEST_MUNIC_DEST }}</td></tr><tr style='height: 17px;'><td style='border:solid 1px; height: 17px; width: 323px;'>UF:</td><td style='border:solid 1px; height: 17px; width: 352px;'>{{ q.DEST_UF_DEST }}</td></tr><tr style='height: 17px;'><td style='border:solid 1px; height: 17px; width: 323px;'>MOTIVO DA OCORRÊNCIA:</td><td style='border:solid 1px; height: 17px; width: 352px;'>&nbsp;</td></tr><tr style='height: 17px;'><td style='border:solid 1px; height: 17px; width: 323px;'>OBS:</td><td style='border:solid 1px; height: 17px; width: 352px;'>&nbsp;</td></tr><tr style='height: 17px;'><td style='border:solid 1px; height: 17px; width: 323px;'>FINALIZAÇÃO</td><td style='border:solid 1px; height: 17px; width: 352px;'>&nbsp;</td></tr></tbody></table>{% endfor %}"
+        var text = "{% for q in res %}<table style='border:solid; border-color: #000000; width: 695px;'><tbody><tr style='height: 14.7266px;'><td style='border:solid 1px; height: 14.7266px; width: 323px; text-align: left;'>DATA:</td><td style='border:solid 1px; height: 14.7266px; width: 352px; text-align: left;'>{% now 'd/m/Y' %}</td></tr><tr style='height: 17px;' data-mce-style='height: 17px;'><td style='border:solid 1px; height: 17px; width: 323px;'>HORA:&nbsp;</td><td style='border:solid 1px; height: 17px; width: 352px;'>{% now 'H:i' %}</td></tr><tr style='height: 17px;'><td style='border:solid 1px; height: 17px; width: 323px;'>Nº NOTA FISCAL</td><td style='border:solid 1px; height: 17px; width: 352px;'>{{ q.NOTA_FISCAL }}</td></tr><tr style='height: 17px;'><td style='border:solid 1px; height: 17px; width: 323px;'>MOTORISTA:</td><td style='border:solid 1px; height: 17px; width: 352px;'>&nbsp;</td></tr><tr style='height: 17px;'><td style='border:solid 1px; height: 17px; width: 323px;'>PLACA:</td><td style='border:solid 1px; height: 17px; width: 352px;'>&nbsp;</td></tr><tr style='height: 17px;'><td style='border:solid 1px; height: 17px; width: 323px;'>CLIENTE:</td><td style='border:solid 1px; height: 17px; width: 352px;'>{{ q.DESTINATARIO }}</td></tr><tr style='height: 17px;'><td style='border:solid 1px; height: 17px; width: 323px;'>CIDADE:</td><td style='border:solid 1px; height: 17px; width: 352px;'>{{ q.DEST_MUNIC_DEST }}</td></tr><tr style='height: 17px;'><td style='border:solid 1px; height: 17px; width: 323px;'>UF:</td><td style='border:solid 1px; height: 17px; width: 352px;'>{{ q.DEST_UF_DEST }}</td></tr><tr style='height: 17px;'><td style='border:solid 1px; height: 17px; width: 323px;'>MOTIVO DA OCORRÊNCIA:</td><td style='border:solid 1px; height: 17px; width: 352px;'>&nbsp;</td></tr><tr style='height: 17px;'><td style='border:solid 1px; height: 17px; width: 323px;'>OBS:</td><td style='border:solid 1px; height: 17px; width: 352px;'>&nbsp;</td></tr><tr style='height: 17px;'><td style='border:solid 1px; height: 17px; width: 323px;'>FINALIZAÇÃO</td><td style='border:solid 1px; height: 17px; width: 352px;'>&nbsp;</td></tr></tbody></table>{% endfor %}"
         var doc = document.getElementById('id_area_iframe').contentWindow.document.getElementsByClassName('note-editable')[0];
         $(doc).append(text)
     };

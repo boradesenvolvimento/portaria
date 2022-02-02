@@ -213,6 +213,9 @@ class feriaspjForm(forms.ModelForm):
             'ultimas_ferias_fim': DateInput(),
         }
 
+class UploadForm(forms.Form):
+    file = forms.FileField(required=False,widget=forms.ClearableFileInput(attrs={'multiple': True}))
+
 #summernote
 class TextEditor(forms.Form):
     area = forms.CharField(widget=SummernoteWidget())
