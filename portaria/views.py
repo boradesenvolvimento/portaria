@@ -867,6 +867,7 @@ def tktview(request, tktid):
     stts = TicketMonitoramento.STATUS_CHOICES
     form = get_object_or_404(EmailMonitoramento, tkt_ref_id=tktid)
     editor = TextEditor()
+    file = UploadForm
     keyga = {v:k for k, v in TicketMonitoramento.GARAGEM_CHOICES}
     if form.tkt_ref.tp_docto == '8':
         remet = 'BC.RSOCIALCLI'
@@ -874,7 +875,6 @@ def tktview(request, tktid):
     else:
         remet = 'F1.REM_RZ_SOCIAL'
         dest = 'F1.DEST_RZ_SOCIAL'
-    print(form.tkt_ref.tp_docto)
     try:
         conn = settings.CONNECTION
         cur = conn.cursor()
@@ -981,7 +981,11 @@ def tktview(request, tktid):
 
         area = request.POST.get('area')
         if area and area != '<p><br></p>':
-            replymail_monitoramento(request, tktid, area)
+            if request.POST.get('file') != '':
+                myfile = request.FILES.getlist('file')
+            else:
+                myfile = None
+            replymail_monitoramento(request, tktid, area, myfile)
         return redirect('portaria:monitticket')
     return render(request, 'portaria/monitoramento/ticketview.html', {'form':form,'editor':editor,'opts':opts,
                                                                       'stts':stts,'res':res})
@@ -1515,8 +1519,10 @@ def readmail_monitoramento(request):
                             os.chmod(locimg, 0o777)
                             os.rename(locimg, os.path.join(path, (str(rr) + filename)))
                         item = os.path.join('/static/monitoramento/'+str(hoje)+'/', (str(rr) + filename))
-                        aa = '<div class="mailattatch"><a href="'+item+'" download><img src="/static/images/downicon.png" width="40"><p>'+filename+'</p></a></div>'
-                        attatch += aa
+                        if TicketMonitoramento.objects.filter(msg_id=parsed_email['References']):
+                            print(filename)
+                        #aa = '<div class="mailattatch"><a href="'+item+'" download><img src="/static/images/downicon.png" width="40"><p>'+filename+'</p></a></div>'
+                        #attatch += aa
             else:
                 body = parsed_email.get_payload(decode=True)
 
@@ -1560,6 +1566,7 @@ def readmail_monitoramento(request):
                         e_body = e_body.split(reply_parse[0])[0].replace('\n', '<br>')
                 w_body = '<div class="container chmdimg">' + htbody.decode(cs) + '</div>'
                 if w_body:
+                    print(re.findall(r'.*[>]+De:.*', w_body))
                     reply_html = re.findall(r'(<b><span.*[>]+De:.*)',w_body)
                     if reply_html:
                         w_body = w_body.split(reply_html[0])[0]
@@ -1651,13 +1658,19 @@ def readmail_monitoramento(request):
     pp.quit()
     return redirect('portaria:monitticket')
 
-def replymail_monitoramento(request, tktid, area):
+def replymail_monitoramento(request, tktid, area, myfile):
     media = ''
     pattern = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
     orig = get_object_or_404(EmailMonitoramento, tkt_ref_id=tktid)
     if request.method == 'POST':
         msg1 = MIMEMultipart()
         msg = area
+        if myfile is not None:
+            for q in myfile:
+                part = MIMEApplication(q.read(), name=str(q))
+                part['Content-Disposition'] = 'attachment; filename="%s"' % q
+                msg1.attach(part)
+        print(myfile)
         if re.findall(pattern, msg):
             for q in re.findall(pattern, msg):
                 media = q
@@ -1694,7 +1707,7 @@ def replymail_monitoramento(request, tktid, area):
             print('mandou o email')
         except Exception as e:
             print(f'ErrorType:{type(e).__name__}, Error:{e}')
-        return redirect('portaria:monitticket')
+    return redirect('portaria:monitticket')
 
 def createtktandmail(request, **kwargs):
     pattern = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')

@@ -45,7 +45,7 @@
             </div>
             <div class="container col-lg col-md-12">
                 <div>
-                    <form id="formdata-id" method="post">
+                    <form id="formdata-id" method="post" enctype="multipart/form-data">
                         {% csrf_token %}
                         <div>
                         {{ editor.area|safe }}
@@ -93,7 +93,7 @@
                             </div>
                             <div class="col-1">
                                 <label for="id_file" style="margin-top:1.5rem;font-size:3.2rem;cursor:pointer;"><ion-icon name="attach-outline"></ion-icon></label>
-                                <input type="file" name="file" multiple id="id_file">
+                                <input type="file" name="file" multiple="" id="id_file">
                             </div>
                             <div class="col-1">
                                 <button id="submiter" type="button" style="height:5rem;">Enviar</button>
