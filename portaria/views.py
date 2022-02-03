@@ -1574,6 +1574,10 @@ def readmail_monitoramento(request):
                             new_cid = os.path.join(settings.STATIC_URL + 'monitoramento/' + str(hoje) + '/',
                                                    (str(rr) +
                                                     new[0].split(f'cid:/static/images/macros-monit/')[1]))
+                        elif re.findall(f'/static/images/macros-monit/\w+.(?i:jpeg|jpg|gif|png|bmp)', q):
+                            new_cid = os.path.join(settings.STATIC_URL + 'monitoramento/' + str(hoje) + '/',
+                                                   (str(rr) +
+                                                    new[0].split(f'cid:/static/images/macros-monit/')[1]))
                         else:
                             new_cid = os.path.join(settings.STATIC_URL + 'monitoramento/' + str(hoje) + '/',(str(rr)
                                                     + new[0].split('cid:')[1]))
@@ -1587,6 +1591,10 @@ def readmail_monitoramento(request):
                                                        (str(rr) +
                                                         new[0].split(f'cid:/media/django-summernote/{str(hoje)}/')[1]))
                             elif re.findall(f'/static/images/macros-monit/\w+[.]\w+.(?i:jpeg|jpg|gif|png|bmp)', q):
+                                new_cid = os.path.join(settings.STATIC_URL + 'monitoramento/' + str(hoje) + '/',
+                                                       (str(rr) +
+                                                        new[0].split(f'cid:/static/images/macros-monit/')[1]))
+                            elif re.findall(f'/static/images/macros-monit/\w+.(?i:jpeg|jpg|gif|png|bmp)', q):
                                 new_cid = os.path.join(settings.STATIC_URL + 'monitoramento/' + str(hoje) + '/',
                                                        (str(rr) +
                                                         new[0].split(f'cid:/static/images/macros-monit/')[1]))
@@ -1660,7 +1668,7 @@ def replymail_monitoramento(request, tktid, area):
                 msg1.attach(msgimg)
         sign = f'<br><img src="cid:{request.user}.jpg" width="600">'
         signimg = open(f'{settings.STATIC_ROOT}/images/macros-monit/{request.user}.jpg', 'rb').read()
-        msgimg1 = MIMEImage(signimg, name=f'{request.user}.jpg')
+        msgimg1 = MIMEImage(signimg, name=f'{request.user}.jpg', _subtype='jpg')
         msgimg1.add_header('Content-ID', f'{request.user}.jpg')
         msg1.attach(msgimg1)
         msg += sign
@@ -1708,7 +1716,7 @@ def createtktandmail(request, **kwargs):
             msg1.attach(msgimg)
     sign = f'<br><img src="cid:{request.user}.jpg" width="600">'
     signimg = open(f'{settings.STATIC_ROOT}/images/macros-monit/{request.user}.jpg', 'rb').read()
-    msgimg1 = MIMEImage(signimg, name=f'{request.user}.jpg')
+    msgimg1 = MIMEImage(signimg, name=f'{request.user}.jpg', _subtype='jpg')
     msgimg1.add_header('Content-ID', f'{request.user}.jpg')
     msg1.attach(msgimg1)
     msgmail += sign
