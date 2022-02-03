@@ -789,7 +789,7 @@ def tktcreate(request):
                                      F1.SERIE = F11.SERIE               AND
                                      F1.TIPO_DOCTO = F11.TIPO_DOCTO     AND
                                      F1.CONHECIMENTO = {cte}           AND
-                                     F1.ID_GARAGEM = {gar}             AND
+                                     F1.GARAGEM = {gar}             AND
                                      F1.TIPO_DOCTO = {tp_docto}        AND
                                      F1.CLIENTE_FAT = BC.CODCLI                                                      
                                 GROUP BY
@@ -935,7 +935,7 @@ def tktview(request, tktid):
                              F1.SERIE = F11.SERIE               AND
                              F1.TIPO_DOCTO = F11.TIPO_DOCTO     AND
                              F1.CONHECIMENTO = {form.tkt_ref.cte}           AND
-                             F1.ID_GARAGEM = {form.tkt_ref.filial} AND
+                             F1.GARAGEM = {form.tkt_ref.filial} AND
                              F1.TIPO_DOCTO = {form.tkt_ref.tp_docto}  AND
                              F1.CLIENTE_FAT = BC.CODCLI         
                         GROUP BY
@@ -1515,7 +1515,7 @@ def readmail_monitoramento(request):
                             os.chmod(locimg, 0o777)
                             os.rename(locimg, os.path.join(path, (str(rr) + filename)))
                         item = os.path.join('/static/monitoramento/'+str(hoje)+'/', (str(rr) + filename))
-                        aa = '<br><div class="mailattatch"><a href="'+item+'" download><img src="/static/images/downicon.png" width="40"><p>'+filename+'</p></a></div>'
+                        aa = '<div class="mailattatch"><a href="'+item+'" download><img src="/static/images/downicon.png" width="40"><p>'+filename+'</p></a></div>'
                         attatch += aa
             else:
                 body = parsed_email.get_payload(decode=True)
