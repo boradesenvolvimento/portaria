@@ -109,11 +109,20 @@
                 <div class="row">
                     <div class="col">
                         <ul style="list-style-type:none;">
+                             <div class="item">
                             {% if form.ult_resp %}
-                            <li>{{ form.ult_resp_html|safe }}</li>
+                            {% for q in teste %}
+                            <div class="item-inner">
+                                <div class="expand-content" style="margin:10px;padding-bottom:4rem;"></div>
+                                <li>{{ q|safe }}</li>
+                            </div>
+                            {% endfor %}
                             {% endif %}
-                            <li><hr style="border-top:solid 5px;"></li>
-                            <li><strong>Mensagem:</strong> {{ form.mensagem|safe }}</li>
+                             </div>
+                            <div class="msg">
+                                <li><hr style="border-top:solid 5px;"></li>
+                                <li><strong>Mensagem:</strong> {{ form.mensagem|safe }}</li>
+                            </div>
                         </ul>
                     </div>
                 </div>
@@ -122,6 +131,32 @@
         {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
     </div>
     {% endif %}
+
+<script>
+    var text;
+    jQuery(document).ready(function($){
+        var limit = 150;
+        var i = $('.item-inner');
+
+        $(i).each(function(){
+            var text = $(this).find('.chmdimg').text();
+            var button = $(this).find('.expand-content');
+            if(text.length > limit){
+                item = button;
+                $(item).append('<center><button class="item-expand">Expandir</button></center>');
+            };
+        });
+        $('.item-expand').click(function(){
+                box = $(this).closest('.item-inner')
+            if(box[0].offsetHeight == 300){
+                $(box).animate({'height':'100%'});
+            }else{
+                $(box).animate({'height':'300px'});
+            }
+        });
+
+    });
+</script>
 <script type="text/javascript">
 
     $(document).ready(function() {
