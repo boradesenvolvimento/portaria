@@ -1473,9 +1473,9 @@ def exedicorreios(request):
 def readmail_monitoramento(request):
     #params
     hoje = datetime.date.today()
-    host = get_secret('EHOST_MN') ########## alterar
-    e_user = get_secret('EUSER_MN') ########## alterar
-    e_pass = get_secret('EPASS_MN') ########## alterar
+    host = 'pop.kinghost.net' ########## alterar
+    e_user = 'bora@bora.tec.br' ########## alterar
+    e_pass = 'Bor@dev#123' ########## alterar
     pattern1 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
     pattern2 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp).\w+.\w+')
 
@@ -1701,7 +1701,7 @@ def replymail_monitoramento(request, tktid, area, myfile):
             sm = smtplib.SMTP(get_secret('EHOST_MN'), smtp_p)################
             sm.set_debuglevel(1)
             sm.login(get_secret('EUSER_MN'), get_secret('EPASS_MN'))###############
-            sm.sendmail(get_secret('EUSER_MN'), [get_secret('EUSER_MN')]+orig.cc.split(';'), msg1.as_string())#############
+            sm.sendmail(get_secret('EUSER_MN'), [user]+orig.cc.split(';'), msg1.as_string())#############
             print('mandou o email')
         except Exception as e:
             print(f'ErrorType:{type(e).__name__}, Error:{e}')
@@ -1755,7 +1755,7 @@ def createtktandmail(request, **kwargs):
                   responsavel=User.objects.get(username=kwargs['resp']), solicitante=request.user, remetente=kwargs['rem'],
                   destinatario=kwargs['dest'], cte=kwargs['cte'], status='ABERTO', categoria='Aguardando Recebimento',msg_id=msg_id,
                          filial=keyga[kwargs['filial']], tp_docto=kwargs['tp_docto'])
-            sm.sendmail(get_secret('EUSER_MN'), [get_secret('EUSER_MN')] + kwargs['cc'].split(';'), msg1.as_string())  #############
+            sm.sendmail(get_secret('EUSER_MN'), [user] + kwargs['cc'].split(';'), msg1.as_string())  #############
         except Exception as e:
             messages.error(request, f'ErrorType:{type(e).__name__}, error:{e}')
             return redirect('portaria:monitticket')
