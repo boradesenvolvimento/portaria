@@ -876,93 +876,6 @@ def tktview(request, tktid):
     editor = TextEditor()
     file = UploadForm
     keyga = {v:k for k, v in TicketMonitoramento.GARAGEM_CHOICES}
-    if form.tkt_ref.tp_docto == '8':
-        remet = 'BC.RSOCIALCLI'
-        dest = 'F11.REC_RZ_SOCIAL'
-    else:
-        remet = 'F1.REM_RZ_SOCIAL'
-        dest = 'F1.DEST_RZ_SOCIAL'
-    try:
-        conn = settings.CONNECTION
-        cur = conn.cursor()
-        cur.execute(f'''
-                        SELECT 
-                              F1.EMPRESA,
-                              CASE
-                                  WHEN F1.ID_EMPRESA = '1' AND F1.ID_GARAGEM = '1'  THEN 'SPO'
-                                  WHEN F1.ID_EMPRESA = '1' AND F1.ID_GARAGEM = '2'  THEN 'REC'
-                                  WHEN F1.ID_EMPRESA = '1' AND F1.ID_GARAGEM = '3'  THEN 'SSA'
-                                  WHEN F1.ID_EMPRESA = '1' AND F1.ID_GARAGEM = '4'  THEN 'FOR'
-                                  WHEN F1.ID_EMPRESA = '1' AND F1.ID_GARAGEM = '5'  THEN 'MCZ'
-                                  WHEN F1.ID_EMPRESA = '1' AND F1.ID_GARAGEM = '6'  THEN 'NAT'
-                                  WHEN F1.ID_EMPRESA = '1' AND F1.ID_GARAGEM = '7'  THEN 'JPA'
-                                  WHEN F1.ID_EMPRESA = '1' AND F1.ID_GARAGEM = '8'  THEN 'AJU'
-                                  WHEN F1.ID_EMPRESA = '1' AND F1.ID_GARAGEM = '9'  THEN 'VDC'
-                                  WHEN F1.ID_EMPRESA = '1' AND F1.ID_GARAGEM = '10' THEN 'MG'
-                                  WHEN F1.ID_EMPRESA = '1' AND F1.ID_GARAGEM = '50' THEN 'SPO'
-                                  WHEN F1.ID_EMPRESA = '1' AND F1.ID_GARAGEM = '20' THEN 'SPO'
-                                  WHEN F1.ID_EMPRESA = '1' AND F1.ID_GARAGEM = '21' THEN 'SPO'
-                                  WHEN F1.ID_EMPRESA = '2' AND F1.ID_GARAGEM = '20' THEN 'CTG'
-                                  WHEN F1.ID_EMPRESA = '2' AND F1.ID_GARAGEM = '21' THEN 'TCO'
-                                  WHEN F1.ID_EMPRESA = '2' AND F1.ID_GARAGEM = '22' THEN 'UDI'
-                                  WHEN F1.ID_EMPRESA = '2' AND F1.ID_GARAGEM = '23' THEN 'TMA'
-                                  WHEN F1.ID_EMPRESA = '2' AND F1.ID_GARAGEM = '24' THEN 'VIX'  
-                                  WHEN F1.ID_EMPRESA = '2' AND F1.ID_GARAGEM = '50' THEN 'VIX'
-                                  WHEN F1.ID_EMPRESA = '3' AND F1.ID_GARAGEM = '30' THEN 'BMA'
-                                  WHEN F1.ID_EMPRESA = '3' AND F1.ID_GARAGEM = '31' THEN 'BPE'
-                                  WHEN F1.ID_EMPRESA = '3' AND F1.ID_GARAGEM = '32' THEN 'BEL'    
-                                  WHEN F1.ID_EMPRESA = '3' AND F1.ID_GARAGEM = '33' THEN 'BPB'
-                                  WHEN F1.ID_EMPRESA = '3' AND F1.ID_GARAGEM = '34' THEN 'SLZ'
-                                  WHEN F1.ID_EMPRESA = '3' AND F1.ID_GARAGEM = '35' THEN 'BAL'
-                                  WHEN F1.ID_EMPRESA = '3' AND F1.ID_GARAGEM = '36' THEN 'THE' 
-                              END GARAGEM,
-                              F1.DEST_MUNIC_DEST,
-                              F1.DEST_UF_DEST,
-                              F1.TIPO_DOCTO,
-                              F1.CONHECIMENTO CTE,
-                              {remet} REMETENTE,
-                              {dest} DESTINATARIO,
-                              LISTAGG ((LTRIM (F4.NOTA_FISCAL,0)), ' / ') WITHIN GROUP (ORDER BY F1.CONHECIMENTO) NOTA_FISCAL 
-                        FROM
-                            FTA001 F1,
-                            FTA004 F4,
-                            FTA011 F11,
-                            BGM_CLIENTE BC
-                        WHERE
-                             F1.EMPRESA = F4.EMPRESA AND
-                             F1.FILIAL = F4.FILIAL   AND
-                             F1.GARAGEM = F4.GARAGEM AND
-                             F1.CONHECIMENTO = F4.CONHECIMENTO AND
-                             F1.SERIE = F4.SERIE               AND
-                             F1.TIPO_DOCTO = F4.TIPO_DOCTO     AND
-                             F1.EMPRESA = F11.EMPRESA AND
-                             F1.FILIAL = F11.FILIAL   AND
-                             F1.GARAGEM = F11.GARAGEM AND
-                             F1.CONHECIMENTO = F11.CONHECIMENTO AND
-                             F1.SERIE = F11.SERIE               AND
-                             F1.TIPO_DOCTO = F11.TIPO_DOCTO     AND
-                             F1.CONHECIMENTO = {form.tkt_ref.cte}           AND
-                             F1.GARAGEM = {form.tkt_ref.filial} AND
-                             F1.TIPO_DOCTO = {form.tkt_ref.tp_docto}  AND
-                             F1.DATA_EMISSAO BETWEEN ((SYSDATE) - 90) AND (SYSDATE) AND
-                             F1.CLIENTE_FAT = BC.CODCLI         
-                        GROUP BY
-                             F1.EMPRESA,
-                             F1.ID_EMPRESA,
-                              F1.ID_GARAGEM,
-                              F1.TIPO_DOCTO,
-                              F1.CONHECIMENTO,
-                              F1.REM_RZ_SOCIAL,
-                              F1.DEST_RZ_SOCIAL,
-                              F1.DEST_MUNIC_DEST,
-                              F1.DEST_UF_DEST,
-                              F11.REC_RZ_SOCIAL,
-                              BC.RSOCIALCLI''')
-        res = dictfetchall(cur)
-    except Exception as e:
-        '''messages.error(request, f'{e}')
-        return redirect('portaria:monitticket')'''
-        raise e
     if request.method == 'POST':
         ctg = request.POST.get('categs')
         addcc = request.POST.get('addcc')
@@ -996,7 +909,7 @@ def tktview(request, tktid):
             replymail_monitoramento(request, tktid, area, myfile)
         return redirect('portaria:monitticket')
     return render(request, 'portaria/monitoramento/ticketview.html', {'form':form,'editor':editor,'opts':opts,
-                                                                      'stts':stts,'res':res,'teste':teste})
+                                                                      'stts':stts,'teste':teste})
 
 def chamado(request):
     metrics = TicketChamado.objects.exclude(Q(status='CANCELADO') | Q(status='CONCLUIDO')).annotate(
@@ -1473,12 +1386,11 @@ def exedicorreios(request):
 def readmail_monitoramento(request):
     #params
     hoje = datetime.date.today()
-    host = 'pop.kinghost.net' ########## alterar
-    e_user = 'bora@bora.tec.br' ########## alterar
-    e_pass = 'Bor@dev#123' ########## alterar
+    host = get_secret('EHOST_MN') ########## alterar
+    e_user = get_secret('EUSER_MN') ########## alterar
+    e_pass = get_secret('EPASS_MN') ########## alterar
     pattern1 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
     pattern2 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp).\w+.\w+')
-
 
     #logando no email
     pp = poplib.POP3(host)
@@ -1537,6 +1449,7 @@ def readmail_monitoramento(request):
                         attatch += aa
             else:
                 body = parsed_email.get_payload(decode=True)
+                htbody = body
 
             #pega decode do email
             cs = parsed_email.get_charsets()
@@ -1589,8 +1502,13 @@ def readmail_monitoramento(request):
                                                    (str(rr) +
                                                     new[0].split(f'cid:/static/images/macros-monit/')[1]))
                         else:
-                            new_cid = os.path.join(settings.STATIC_URL + 'monitoramento/' + str(hoje) + '/',(str(rr)
-                                                    + new[0].split('cid:')[1]))
+                            try:
+                                new_cid = os.path.join(settings.STATIC_URL + 'monitoramento/' + str(hoje) + '/',
+                                                       (str(rr)
+                                                        + new[0].split('cid:')[1]))
+                            except Exception as e:
+                                new_cid = os.path.join(settings.STATIC_URL + 'monitoramento/' + str(hoje) + '/',
+                                                       (str(rr) + q))
                         w_body = w_body.replace(q, new_cid)
                 elif re.findall(pattern1,w_body):
                     for q in re.findall(pattern1, w_body):
@@ -1609,8 +1527,13 @@ def readmail_monitoramento(request):
                                                        (str(rr) +
                                                         new[0].split(f'cid:/static/images/macros-monit/')[1]))
                             else:
-                                new_cid = os.path.join(settings.STATIC_URL + 'monitoramento/' + str(hoje) + '/',
-                                                       (str(rr) + new[0].split('cid:')[1]))
+                                try:
+                                    new_cid = os.path.join(settings.STATIC_URL + 'monitoramento/' + str(hoje) + '/',
+                                                           (str(rr)
+                                                            + new[0].split('cid:')[1]))
+                                except Exception as e:
+                                    new_cid = os.path.join(settings.STATIC_URL + 'monitoramento/' + str(hoje) + '/',
+                                                           (str(rr) + q))
                         except Exception as e:
                             print(f'ErrorType: {type(e).__name__}, Error: {e}')
                         else:
