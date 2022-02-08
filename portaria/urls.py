@@ -44,6 +44,7 @@ urlpatterns = [
     path('cadastro-funcionariopj/', views.cadfuncionariopj, name='cadfuncionariopj'),
     path('atualizar-funcionariopj/', views.atualizarfunc, name='atualizarfunc'),
     path('fatferramentas/', views.fatferramentas, name='fatferramentas'),
+    path('paineltickets/', views.tktmetrics, name='tktmetrics'),
     path('tickets/', views.monitticket, name='monitticket'),
     path('tickets/new/', views.tktcreate, name='tktcreate'),
     path('tickets/<tktid>/', views.closetkt, name='closetkt'),

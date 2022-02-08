@@ -104,3 +104,8 @@ admin.site.register(TicketChamado,TicketChamadoAdmin)
 class EmailChamadoAdmin(admin.ModelAdmin):
     pass
 admin.site.register(EmailChamado,EmailChamadoAdmin)
+
+class EmailOcorenciasMonitAdmin(admin.ModelAdmin):
+    pass
+admin.site.register(EmailOcorenciasMonit,EmailOcorenciasMonitAdmin)
+

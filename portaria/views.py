@@ -702,14 +702,30 @@ def fatferramentas(request):
     return render(request,'portaria/etc/fatferramentas.html')
 
 def monitticket(request):
+    employee = User.objects.filter(groups__name='monitoramento').exclude(id=1)
     tkts = TicketMonitoramento.objects.filter(Q(status='ABERTO') | Q(status='ANDAMENTO'))
 
     if request.method == 'POST':
         tkt = request.POST.get('srctkt')
+        employee1 = request.POST.get('employee')
+        period1 = request.POST.get('period1')
+        period2 = request.POST.get('period2')
+        stts = request.POST.getlist('stts_choice')
+
         if tkt:
-            tkts = TicketMonitoramento.objects.filter(Q(pk=tkt)|Q(cte=tkt))
-            return render(request, 'portaria/monitoramento/monitticket.html', {'tkts': tkts})
-    return render(request, 'portaria/monitoramento/monitticket.html', {'tkts':tkts})
+            tkts = TicketMonitoramento.objects.filter(Q(pk=tkt)|Q(nome_tkt__icontains=tkt)).exclude(
+                Q(status='CANCELADO')|Q(status='CONCLUIDO'))
+        if employee1 and not period1 and not period2:
+            tkts = TicketMonitoramento.objects.filter(responsavel_id=employee1, status__in=stts)
+        elif period1 and period2 and not employee1:
+            tkts = TicketMonitoramento.objects.filter(dt_abertura__lte=period2, dt_abertura__gte=period1, status__in=stts)
+        elif period1 and period2 and employee1:
+            tkts = TicketMonitoramento.objects.filter(dt_abertura__lte=period2, dt_abertura__gte=period1,
+                                                      responsavel_id=employee1, status__in=stts)
+        elif not period1 and not period2 and not employee1 and stts:
+            messages.error(request, 'Por gentileza selecione o período ou o funcionário')
+        return render(request, 'portaria/monitoramento/monitticket.html', {'tkts': tkts,'employee':employee})
+    return render(request, 'portaria/monitoramento/monitticket.html', {'tkts':tkts,'employee':employee})
 
 def tktcreate(request):
     users = User.objects.filter(groups__name='monitoramento').exclude(id=1)
@@ -834,7 +850,6 @@ def tktcreate(request):
             myfile = request.FILES.getlist('file')
         else:
             myfile = None
-
         if responsavel and rem and mensagem and assunto and cc and dest:
             if TicketMonitoramento.objects.filter(nome_tkt=assunto).exists():
                 assunto += '*'
@@ -847,7 +862,7 @@ def tktcreate(request):
                                              'file':myfile})
         else:
             messages.error(request, 'Está faltando campos')
-            return redirect('portaria:tktcreate')
+        return redirect('portaria:monitticket')
 
     return render(request, 'portaria/monitoramento/tktcreate.html',{'editor': editor, 'users': users, 'opts': opts,
                                                                     'tp_doc_choices':tp_doc_choices, 'garagem':garagem})
@@ -889,12 +904,13 @@ def tktview(request, tktid):
                 TicketMonitoramento.objects.filter(pk=tkt.id).update(status=nstts)
                 messages.info(request, f'Ticket {tkt.id} alterado para {nstts} com sucesso.')
             else:
-                messages.error(request, 'Não autorizado encerramento do monitoramento.')
+                messages.error(request, f'Não autorizado a mudança de status para {nstts}, por gentileza mude a primeira categoria.')
                 return redirect('portaria:monitticket')
 
         if addcc:
             oldcc = form.cc
-            newcc = addcc + '; ' + oldcc
+            newcc = oldcc + addcc+','
+
             try:
                 EmailMonitoramento.objects.filter(tkt_ref_id=tktid).update(cc=newcc)
             except Exception as e:
@@ -910,6 +926,14 @@ def tktview(request, tktid):
         return redirect('portaria:monitticket')
     return render(request, 'portaria/monitoramento/ticketview.html', {'form':form,'editor':editor,'opts':opts,
                                                                       'stts':stts,'teste':teste})
+
+def tktmetrics(request):
+    hj = datetime.date.today()
+    metrics = TicketMonitoramento.objects.exclude(status='CANCELADO').annotate(
+        total=Count('id', filter=~Q(status='CONCLUIDO')), hoje=Count('id', filter=Q(dt_abertura=hj)),
+        andamento=Count('id', filter=Q(status='ANDAMENTO')), aberto=Count('id', filter=Q(status='ABERTO'))
+    ).aggregate(total1=Sum('total'), hoje1=Sum('hoje'), andamento1=Sum('andamento'), aberto1=Sum('aberto'))
+    return render(request, 'portaria/monitoramento/ticketmetrics.html', {'metrics':metrics})
 
 def chamado(request):
     metrics = TicketChamado.objects.exclude(Q(status='CANCELADO') | Q(status='CONCLUIDO')).annotate(
@@ -1386,9 +1410,9 @@ def exedicorreios(request):
 def readmail_monitoramento(request):
     #params
     hoje = datetime.date.today()
-    host = get_secret('EHOST_MN') ########## alterar
-    e_user = get_secret('EUSER_MN') ########## alterar
-    e_pass = get_secret('EPASS_MN') ########## alterar
+    host = 'pop.kinghost.net' ########## alterar
+    e_user = 'bora@bora.tec.br' ########## alterar
+    e_pass = 'Bor@dev#123' ########## alterar
     pattern1 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
     pattern2 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp).\w+.\w+')
 
@@ -1473,8 +1497,18 @@ def readmail_monitoramento(request):
                 if re.findall(r'<(.*?)>', e_to): e_to = re.findall(r'<(.*?)>', e_to)[0]
                 e_cc = parsed_email['CC']
                 if e_cc:
-                    if re.findall(r'<(.*?)>', e_cc): e_cc = re.findall(r'<(.*?)>', e_cc)[0]
-
+                    try:
+                        e_cc = e_cc.split(',')
+                        x = ''
+                    except:
+                        pass
+                    else:
+                        for q in e_cc:
+                            if re.findall(r'<(.*?)>', q):
+                                ncc = re.findall(r'<(.*?)>', q)
+                                for a in ncc:
+                                    x += a + ', '
+                    e_cc = x
                 e_id = parsed_email['Message-ID']
                 e_ref = parsed_email['References']
 
@@ -1486,7 +1520,6 @@ def readmail_monitoramento(request):
                 #separa conteudo e pega attach
                 e_body = body.decode(cs)
                 w_body = '<div class="container chmdimg">' + htbody.decode(cs) + '</div>'
-
                 if re.findall(pattern2,w_body):
                     for q in re.findall(pattern2, w_body):
                         new = re.findall(pattern1, q)
@@ -1541,6 +1574,7 @@ def readmail_monitoramento(request):
                 #continue
             except Exception as e:
                  print(f'insert data -- ErrorType: {type(e).__name__}, Error: {e}')
+                 raise e
             else:
                 #salva no banco de dados
                 form = EmailMonitoramento.objects.filter(email_id=e_ref.strip())
@@ -1584,6 +1618,11 @@ def replymail_monitoramento(request, tktid, area, myfile):
     media = ''
     pattern = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
     orig = get_object_or_404(EmailMonitoramento, tkt_ref_id=tktid)
+    getmailfil = EmailOcorenciasMonit.objects.filter(rsocial=orig.tkt_ref.filial, ativo=1)
+    mailfil = ''
+    for i in getmailfil:
+        mailfil += i.email + ', '
+    send = [get_secret('ESEND_MN'), 'IGOR.ROSARIO@BORA.COM.BR', 'ROBERT.DIAS@BORA.COM.BR'] + mailfil.split(',') + orig.cc.split(',')
     if request.method == 'POST':
         msg1 = MIMEMultipart()
         msg = area
@@ -1615,16 +1654,14 @@ def replymail_monitoramento(request, tktid, area, myfile):
         msg1['To'] = orig.cc#############
         msg1['CC'] = orig.cc
         msg1.attach(MIMEText(msg, 'html', 'utf-8'))
-        smtp_h = 'smtp.kinghost.net'##############
         smtp_p = '587'##############
         user = 'bora@bora.tec.br'##############
-        passw = 'Bor@dev#123'##############
         try:
             print('entrou no try')
             sm = smtplib.SMTP(get_secret('EHOST_MN'), smtp_p)################
             sm.set_debuglevel(1)
             sm.login(get_secret('EUSER_MN'), get_secret('EPASS_MN'))###############
-            sm.sendmail(get_secret('EUSER_MN'), [user]+orig.cc.split(';'), msg1.as_string())#############
+            sm.sendmail(get_secret('EUSER_MN'), send, msg1.as_string())#############
             print('mandou o email')
         except Exception as e:
             print(f'ErrorType:{type(e).__name__}, Error:{e}')
@@ -1633,6 +1670,11 @@ def replymail_monitoramento(request, tktid, area, myfile):
 def createtktandmail(request, **kwargs):
     pattern = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
     msg1 = MIMEMultipart()
+    getmailfil = EmailOcorenciasMonit.objects.filter(rsocial=kwargs['filial'], ativo=1)
+    mailfil = ''
+    for i in getmailfil:
+        mailfil += i.email+', '
+    send = [get_secret('ESEND_MN'),'IGOR.ROSARIO@BORA.COM.BR','ROBERT.DIAS@BORA.COM.BR']+mailfil.split(',') + kwargs['cc'].split(';')
     if kwargs['file'] is not None:
         for q in kwargs['file']:
             part = MIMEApplication(q.read(), name=str(q))
@@ -1661,10 +1703,8 @@ def createtktandmail(request, **kwargs):
     msg1['CC'] = kwargs['cc']
     msg_id = make_msgid(idstring=None, domain='bora.com.br')
     msg1['Message-ID'] = msg_id
-    smtp_h = 'smtp.kinghost.net'###############
     smtp_p = '587'################
     user = 'bora@bora.tec.br'##################
-    passw = 'Bor@dev#123'################
     try:
         sm = smtplib.SMTP(get_secret('EHOST_MN'), smtp_p)####################
         sm.set_debuglevel(1)
@@ -1678,13 +1718,11 @@ def createtktandmail(request, **kwargs):
                   responsavel=User.objects.get(username=kwargs['resp']), solicitante=request.user, remetente=kwargs['rem'],
                   destinatario=kwargs['dest'], cte=kwargs['cte'], status='ABERTO', categoria='Aguardando Recebimento',msg_id=msg_id,
                          filial=keyga[kwargs['filial']], tp_docto=kwargs['tp_docto'])
-            sm.sendmail(get_secret('EUSER_MN'), [user] + kwargs['cc'].split(';'), msg1.as_string())  #############
+            sm.sendmail(get_secret('EUSER_MN'), send, msg1.as_string())  #############
         except Exception as e:
             messages.error(request, f'ErrorType:{type(e).__name__}, error:{e}')
-            return redirect('portaria:monitticket')
         else:
-            messages.success(request, 'Email enviado e ticket criado com sucesso')
-        return redirect('portaria:monitticket')
+            messages.success(request, f'Email enviado e ticket criado com sucesso. ID: {tkt.id}')
 
 def closetkt(request, tktid):
     tkt = get_object_or_404(TicketMonitoramento, pk=tktid)

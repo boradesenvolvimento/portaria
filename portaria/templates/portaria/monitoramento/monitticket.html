@@ -22,12 +22,14 @@
                 </ion-icon></button></a>
 
                 <div class="col-6"></div>
-                <div class="col-3">
+                <div class="col-4">
                     <form method="post">
                         {% csrf_token %}
                     <input type="text" name="srctkt" placeholder="Buscar Ticket por ID">
                     <button type="submit"><ion-icon size="small" name="search"></ion-icon></button>
+                    <button id="myBtn" type="button"><ion-icon size="small" name="filter"></ion-icon></button>
                     </form>
+
                 </div>
             </div>
             <div class="row">
@@ -47,7 +49,7 @@
                     {% for q in tkts %}
                         <tr class="tabletkt">
                             <td>{{ q.id }}</td>
-                            <td>{{ q.nome_tkt|truncatechars:20 }}</td>
+                            <td>{{ q.nome_tkt|truncatechars:25 }}</td>
                             <td>{{ q.dt_abertura }}</td>
                             <td>{{ q.responsavel }}</td>
                             <td>{{ q.status }}</td>
@@ -64,7 +66,78 @@
 
             </div>
         </section>
+        <div id="myModal" class="modal">
+        <div class="modal-content">
+            <div>
+                <span class="title-cad">Filtros</span>
+                <span class="close col">&times;</span>
+            </div>
+            <form action="" id="formdata-id" method="post">
+                {% csrf_token %}
+                <div class="row linha-baixo" style="margin-left:0;">
+                    <label for="period" class="title-cad">Período</label>
+                    <input class="col-3" name="period1" id="period" type="date">
+                    <input class="col-3" name="period2" type="date">
+                </div>
+                <div class="row linha-baixo" style="margin-left:0;">
+                    <label for="employee" class="title-cad">Funcionários</label>
+                    <select class="col-3" name="employee" id="employee">
+                        <option selected disabled>Selecione...</option>
+                        {% for q in employee %}
+                        <option value="{{ q.id }}">{{ q }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="row linha-baixo" style="margin-left:0;">
+                    <label for="stts" class="title-cad">Status</label>
+                    <fieldset id="stts">
+                        <input type="checkbox" name="stts_choice" value="ABERTO" style="height:1.8rem;">ABERTO
+                        <input type="checkbox" name="stts_choice" value="ANDAMENTO" style="height:1.8rem;">ANDAMENTO
+                        <input type="checkbox" name="stts_choice" value="CONCLUIDO" style="height:1.8rem;">CONCLUIDO
+                        <input type="checkbox" name="stts_choice" value="CANCELADO" style="height:1.8rem;">CANCELADO
+                    </fieldset>
+                </div>
+                <div class="row">
+                        <center><button id="submiter" type="submit">Filtrar</button></center>
+                </div>
+            </form>
+        </div>
+
+    </div>
     {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
     </div>
     {% endif %}
+    <script>
+    var modal = document.getElementById("myModal");
+    var btn = document.getElementById("myBtn");
+    var span = document.getElementsByClassName("close")[0];
+
+    btn.onclick = function() {
+        modal.style.display = "block";
+    };
+
+    span.onclick = function() {
+        modal.style.display = "none";
+    };
+
+    window.onclick = function(event) {
+        if (event.target == modal){
+            modal.style.display = "none";
+        }
+    };
+
+    $(document).ready(function(){
+        var button = document.getElementById('submiter');
+        $(button).click(function(){
+            result = confirm('Deseja aplicar os filtros?');
+            if(!result){
+                event.preventDefault();
+                location.reload();
+            }else{
+                $('#formdata-id').submit();
+                console.log('200');
+            }
+        });
+    });
+    </script>
     {% endblock %}

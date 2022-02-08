@@ -1,0 +1,70 @@
+    {% extends 'base.html' %}
+    {% block content %}
+    {% load groupscheck %}
+    {% load static %}
+    <div class="container mt-5">
+    {% if auth_message %}
+        <p><strong>{{ auth_message }}</strong></p>
+    {% else %}
+    {% if request.user|has_group:"monitoramento" %}
+            {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+            {% endfor %}
+        <section class="container createtkt">
+            <div class="row">
+                <h2 class="title-cad col-3">Tickets Monitoramento</h2>
+
+            </div><hr>
+            <div class="row">
+                <div class="col-3">
+                    <div class="container createboxes">
+                        <label for="botao1">Novo Ticket</label>
+                        <a id="botao1" href="{% url 'portaria:tktcreate' %}"><button style="width:10rem;">Acessar</button></a>
+                    </div>
+
+                    <div class="container createboxes">
+                        <label for="botao2">Painel Tickets</label>
+                        <a id="botao2" href="{% url 'portaria:monitticket' %}"><button style="width:10rem;">Acessar</button></a>
+                    </div>
+                </div>
+                <div class="col-9 createboxes">
+                    <h2 class="title-cad">Métricas</h2>
+                    <hr>
+                    <div class="row">
+                        <div class="container col-3 card" style="width:auto;background:#e8eef5;border:solid 3px;border-radius:10px;">
+                                <div class="card-body" style="text-align:center;">
+                                    <h3 class="card-title">Hoje</h3>
+                                    <p class="card-text">{{ metrics.hoje1|default_if_none:'0' }}</p>
+                                </div>
+                        </div>
+                        <div class="container col-3 card" style="width:auto;background:#e8eef5;border:solid 3px;border-radius:10px;">
+                                <div class="card-body" style="text-align:center;">
+                                    <h3 class="card-title">Andamento</h3>
+                                    <p class="card-text">{{ metrics.andamento1|default_if_none:'0' }}</p>
+                                </div>
+                        </div>
+                        <div class="container col-3 card" style="width:auto;background:#e8eef5;border:solid 3px;border-radius:10px;">
+                                <div class="card-body" style="text-align:center;">
+                                    <h3 class="card-title"> &nbsp; Aberto &nbsp; </h3>
+                                    <p class="card-text">{{ metrics.aberto1|default_if_none:'0' }}</p>
+                                </div>
+                        </div>
+                        <div class="container col-3 card" style="width:auto;background:#e8eef5;border:solid 3px;border-radius:10px;">
+                                <div class="card-body" style="text-align:center;">
+                                    <h3 class="card-title"> &nbsp; Total &nbsp; </h3>
+                                    <p class="card-text">{{ metrics.total1|default_if_none:'0' }}</p>
+                                </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+    {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+    </div>
+    {% endif %}
+    {% endblock %}
