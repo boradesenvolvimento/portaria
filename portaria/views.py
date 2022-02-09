@@ -1622,7 +1622,7 @@ def replymail_monitoramento(request, tktid, area, myfile):
     mailfil = ''
     for i in getmailfil:
         mailfil += i.email + ', '
-    send = [get_secret('ESEND_MN'), 'IGOR.ROSARIO@BORA.COM.BR', 'ROBERT.DIAS@BORA.COM.BR'] + mailfil.split(',') + orig.cc.split(',')
+    send = [get_secret('ESEND_MN'), 'IGOR.ROSARIO@BORA.COM.BR', 'ROBERT.DIAS@BORA.COM.BR', request.user.email] + mailfil.split(',') + orig.cc.split(',')
     if request.method == 'POST':
         msg1 = MIMEMultipart()
         msg = area
@@ -1651,8 +1651,8 @@ def replymail_monitoramento(request, tktid, area, myfile):
         msg_id = make_msgid(idstring=None, domain='bora.com.br')
         msg1['Message-ID'] = msg_id
         msg1['From'] = get_secret('EUSER_MN')#############
-        msg1['To'] = orig.cc#############
-        msg1['CC'] = orig.cc
+        msg1['To'] = send
+        msg1['CC'] = send
         msg1.attach(MIMEText(msg, 'html', 'utf-8'))
         smtp_p = '587'##############
         user = 'bora@bora.tec.br'##############
@@ -1673,8 +1673,8 @@ def createtktandmail(request, **kwargs):
     getmailfil = EmailOcorenciasMonit.objects.filter(rsocial=kwargs['filial'], ativo=1)
     mailfil = ''
     for i in getmailfil:
-        mailfil += i.email+', '
-    send = [get_secret('ESEND_MN'),'IGOR.ROSARIO@BORA.COM.BR','ROBERT.DIAS@BORA.COM.BR']+mailfil.split(',') + kwargs['cc'].split(';')
+        mailfil += i.email+','
+    send = [get_secret('ESEND_MN'),'IGOR.ROSARIO@BORA.COM.BR','ROBERT.DIAS@BORA.COM.BR', request.user.email]+mailfil.split(',') + kwargs['cc'].split(';')
     if kwargs['file'] is not None:
         for q in kwargs['file']:
             part = MIMEApplication(q.read(), name=str(q))
@@ -1699,8 +1699,8 @@ def createtktandmail(request, **kwargs):
     msg1.attach(MIMEText(msgmail, 'html', 'utf-8'))
     msg1['Subject'] = kwargs['assunto']
     msg1['From'] = get_secret('EUSER_MN')#################
-    msg1['To'] = kwargs['cc'] ##############
-    msg1['CC'] = kwargs['cc']
+    msg1['To'] = send
+    msg1['CC'] = send
     msg_id = make_msgid(idstring=None, domain='bora.com.br')
     msg1['Message-ID'] = msg_id
     smtp_p = '587'################
