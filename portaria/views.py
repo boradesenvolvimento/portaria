@@ -1419,9 +1419,9 @@ def exedicorreios(request):
 def readmail_monitoramento(request):
     #params
     hoje = datetime.date.today()
-    host = get_secret('EHOST_MN') ########## alterar
-    e_user = get_secret('EUSER_MN') ########## alterar
-    e_pass = get_secret('EPASS_MN') ########## alterar
+    host = 'pop.kinghost.net' ########## alterar
+    e_user = 'bora@bora.tec.br' ########## alterar
+    e_pass = 'Bor@dev#123' ########## alterar
     pattern1 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
     pattern2 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp).\w+.\w+')
 
