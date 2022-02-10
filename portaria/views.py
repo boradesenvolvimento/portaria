@@ -871,7 +871,8 @@ def modaltkt(request):
     ccs = request.POST.getlist('vals[]')
     for q in ccs:
         try:
-            EmailOcorenciasMonit.objects.filter(email=q).update(ativo=0)
+            a = EmailOcorenciasMonit.objects.filter(email=q)
+            obj = EmailOcorenciasMonit.objects.filter(pk=a[0].id).update(ativo=0)
         except Exception as e:
             print(e)
         else:
@@ -941,16 +942,17 @@ def tktmetrics(request):
                 totalf=Sum('totalfull'))
 
     totfunc = User.objects.filter(groups__name='monitoramento')\
-        .annotate(total=Count('responsavel__id',filter=Q(
-        responsavel__dt_abertura__month=datetime.datetime.now().month,
-        responsavel__dt_abertura__year=datetime.datetime.now().year,
-        responsavel__status__in=['ABERTO', 'ANDAMENTO'])),
+        .annotate(total=Count('responsavel__id',filter=Q(responsavel__status__in=['ABERTO', 'ANDAMENTO'])),
         diario=Count('responsavel__id',filter=Q(responsavel__dt_abertura=datetime.date.today())),
         concluido=Count('responsavel__id',filter=Q(responsavel__dt_abertura__month=datetime.datetime.now().month,
-        responsavel__dt_abertura__year=datetime.datetime.now().year, responsavel__status='CONCLUIDO')))\
-        .exclude(total=0)
-    totfuncself = totfunc.filter(responsavel__responsavel=request.user)
-
+        responsavel__dt_abertura__year=datetime.datetime.now().year, responsavel__status='CONCLUIDO'))
+        ).exclude(total=0)
+    totfuncself = User.objects.filter(groups__name='monitoramento', responsavel__responsavel=request.user)\
+        .annotate(total=Count('responsavel__id',filter=Q(responsavel__status__in=['ABERTO', 'ANDAMENTO'])),
+        diario=Count('responsavel__id',filter=Q(responsavel__dt_abertura=datetime.date.today())),
+        concluido=Count('responsavel__id',filter=Q(responsavel__dt_abertura__month=datetime.datetime.now().month,
+        responsavel__dt_abertura__year=datetime.datetime.now().year, responsavel__status='CONCLUIDO')),
+        )
     return render(request, 'portaria/monitoramento/ticketmetrics.html', {'metrics':metrics,'totfunc':totfunc,
                                                                          'totfuncself':totfuncself})
 

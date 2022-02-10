@@ -7,6 +7,12 @@ register = template.Library()
 def has_group(user, group_name):
     return user.groups.filter(name=group_name).exists()
 
+@register.filter(is_safe=True)
+def sumfields(value):
+    total = value.total
+    concluido = value.concluido
+    sum = total + concluido
+    return sum
 
 @register.simple_tag(takes_context=True)
 def param_replace(context, **kwargs):

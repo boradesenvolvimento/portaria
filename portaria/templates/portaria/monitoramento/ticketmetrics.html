@@ -73,8 +73,9 @@
                     <tr>
                         <td>Funcionário</td>
                         <td>Aberto hoje</td>
-                        <td>Aberto mensal</td>
+                        <td>Em Aberto</td>
                         <td>Concluido mensal</td>
+                        <td>Total</td>
                     </tr>
                 </thead>
                 <tbody>
@@ -85,6 +86,7 @@
                             <td>{{ q.diario }}</td>
                             <td>{{ q.total }}</td>
                             <td>{{ q.concluido }}</td>
+                            <td>{{ q|sumfields }}</td>
                         </tr>
                     {% endfor %}
                 {% else %}
@@ -94,6 +96,7 @@
                             <td>{{ q.diario }}</td>
                             <td>{{ q.total }}</td>
                             <td>{{ q.concluido }}</td>
+                            <td>{{ q|sumfields }}</td>
                         </tr>
                     {% endfor %}
                 {% endif %}

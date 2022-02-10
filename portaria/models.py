@@ -457,7 +457,7 @@ class TicketMonitoramento(models.Model):
         ('36', 'THE')
     ]
     id = models.BigAutoField(primary_key=True)
-    nome_tkt = models.CharField(max_length=100, unique=True, error_messages={'unique':'Já existe ticket criado para este CTE'})
+    nome_tkt = models.CharField(max_length=150, unique=True, error_messages={'unique':'Já existe ticket criado para este CTE'})
     dt_abertura = models.DateField()
     responsavel = models.ForeignKey(User, on_delete=PROTECT, related_name='responsavel')
     solicitante = models.ForeignKey(User, on_delete=PROTECT, related_name='solicitante')
@@ -472,7 +472,7 @@ class TicketMonitoramento(models.Model):
 
 class EmailMonitoramento(models.Model):
     id = models.BigAutoField(primary_key=True)
-    assunto = models.CharField(max_length=100)
+    assunto = models.CharField(max_length=150)
     mensagem = models.TextField()
     cc = models.CharField(max_length=1000, blank=True, null=True)
     dt_envio = models.DateTimeField()
