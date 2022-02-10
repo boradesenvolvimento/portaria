@@ -1632,7 +1632,7 @@ def replymail_monitoramento(request, tktid, area, myfile):
     mailfil = ''
     for i in getmailfil:
         mailfil += i.email + ', '
-    send = [get_secret('ESEND_MN'), request.user.email] + orig.cc.split(',') #'IGOR.ROSARIO@BORA.COM.BR','ROBERT.DIAS@BORA.COM.BR',+mailfil.split(',')
+    send = [get_secret('ESEND_MN'), 'IGOR.ROSARIO@BORA.COM.BR','ROBERT.DIAS@BORA.COM.BR', request.user.email]+mailfil.split(',') + orig.cc.split(',') #
     if request.method == 'POST':
         msg1 = MIMEMultipart()
         msg = area
@@ -1684,7 +1684,7 @@ def createtktandmail(request, **kwargs):
     mailfil = ''
     for i in getmailfil:
         mailfil += i.email+','
-    send = [get_secret('ESEND_MN'), request.user.email] + kwargs['cc'].split(';') #'IGOR.ROSARIO@BORA.COM.BR','ROBERT.DIAS@BORA.COM.BR',+mailfil.split(',')
+    send = [get_secret('ESEND_MN'), 'IGOR.ROSARIO@BORA.COM.BR','ROBERT.DIAS@BORA.COM.BR', request.user.email]+mailfil.split(',') + kwargs['cc'].split(';') #
     if kwargs['file'] is not None:
         for q in kwargs['file']:
             part = MIMEApplication(q.read(), name=str(q))
