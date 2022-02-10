@@ -192,7 +192,8 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = get_secret('E_UMAIL')
 EMAIL_HOST_PASSWORD = get_secret('E_UPASS')
 
-#summernote
+DJANGO_NOTIFICATIONS_CONFIG = { 'USE_JSONFIELD': True}
+
 #summernote
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 

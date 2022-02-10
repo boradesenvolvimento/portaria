@@ -933,7 +933,16 @@ def tktmetrics(request):
         total=Count('id', filter=~Q(status='CONCLUIDO')), hoje=Count('id', filter=Q(dt_abertura=hj)),
         andamento=Count('id', filter=Q(status='ANDAMENTO')), aberto=Count('id', filter=Q(status='ABERTO'))
     ).aggregate(total1=Sum('total'), hoje1=Sum('hoje'), andamento1=Sum('andamento'), aberto1=Sum('aberto'))
-    return render(request, 'portaria/monitoramento/ticketmetrics.html', {'metrics':metrics})
+
+    totfunc = User.objects.filter(groups=9)\
+        .annotate(total=Count('responsavel__id',filter=Q(responsavel__dt_abertura__month=datetime.datetime.now().month,
+                                                         responsavel__dt_abertura__year=datetime.datetime.now().year)),
+                 diario=Count('responsavel__id',filter=Q(responsavel__dt_abertura=datetime.date.today())),
+                 concluido=Count('responsavel__id',filter=Q(responsavel__dt_abertura__month=datetime.datetime.now().month,
+                                                            responsavel__dt_abertura__year=datetime.datetime.now().year,
+                                                            responsavel__status='CONCLUIDO')))
+
+    return render(request, 'portaria/monitoramento/ticketmetrics.html', {'metrics':metrics,'totfunc':totfunc})
 
 def chamado(request):
     metrics = TicketChamado.objects.exclude(Q(status='CANCELADO') | Q(status='CONCLUIDO')).annotate(
@@ -1410,9 +1419,9 @@ def exedicorreios(request):
 def readmail_monitoramento(request):
     #params
     hoje = datetime.date.today()
-    host = 'pop.kinghost.net' ########## alterar
-    e_user = 'bora@bora.tec.br' ########## alterar
-    e_pass = 'Bor@dev#123' ########## alterar
+    host = get_secret('EHOST_MN') ########## alterar
+    e_user = get_secret('EUSER_MN') ########## alterar
+    e_pass = get_secret('EPASS_MN') ########## alterar
     pattern1 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
     pattern2 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp).\w+.\w+')
 
@@ -1593,7 +1602,7 @@ def readmail_monitoramento(request):
                         if tkt.status == 'ABERTO':
                             TicketMonitoramento.objects.filter(pk=form[0].tkt_ref_id).update(status='ANDAMENTO')
                         form.update(ult_resp=aa,ult_resp_html=bb, ult_resp_dt=e_date)
-                        notify.send(sender=User.objects.get(pk=1), recipient=tkt.responsavel, verb='message',
+                        notify.send(sender=User.objects.get(pk=1), data=tkt.id, recipient=tkt.responsavel, verb='message',
                                     description=f"Você recebeu uma nova mensagem do ticket {tkt.id}")
                         pp.dele(i+1)
                 elif form.exists() and form[0].tkt_ref.status == ('CONCLUIDO' or 'CANCELADO'):
@@ -1608,7 +1617,7 @@ def readmail_monitoramento(request):
                     else:
                         bb = '<hr>' + e_from + ' -- ' + e_date + w_body
                         EmailMonitoramento.objects.create(assunto=e_title, mensagem=bb, cc=e_cc, dt_envio=e_date,email_id=tkt.msg_id, tkt_ref_id=tkt.id)
-                        notify.send(sender=User.objects.get(pk=1), recipient=tkt.responsavel, verb='message',
+                        notify.send(sender=User.objects.get(pk=1), data=tkt.id,recipient=tkt.responsavel, verb='message',
                                     description="Seu ticket foi criado.")
                     pp.dele(i + 1)
     pp.quit()
@@ -1618,11 +1627,12 @@ def replymail_monitoramento(request, tktid, area, myfile):
     media = ''
     pattern = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
     orig = get_object_or_404(EmailMonitoramento, tkt_ref_id=tktid)
-    getmailfil = EmailOcorenciasMonit.objects.filter(rsocial=orig.tkt_ref.filial, ativo=1)
+    keyga = {v: k for k, v in TicketMonitoramento.GARAGEM_CHOICES}
+    getmailfil = EmailOcorenciasMonit.objects.filter(rsocial=orig.tkt_ref.get_filial_display(), ativo=1)
     mailfil = ''
     for i in getmailfil:
         mailfil += i.email + ', '
-    send = [get_secret('ESEND_MN'), 'IGOR.ROSARIO@BORA.COM.BR', 'ROBERT.DIAS@BORA.COM.BR', request.user.email] + mailfil.split(',') + orig.cc.split(',')
+    send = [get_secret('ESEND_MN'), request.user.email] + orig.cc.split(',') #'IGOR.ROSARIO@BORA.COM.BR','ROBERT.DIAS@BORA.COM.BR',+mailfil.split(',')
     if request.method == 'POST':
         msg1 = MIMEMultipart()
         msg = area
@@ -1651,8 +1661,8 @@ def replymail_monitoramento(request, tktid, area, myfile):
         msg_id = make_msgid(idstring=None, domain='bora.com.br')
         msg1['Message-ID'] = msg_id
         msg1['From'] = get_secret('EUSER_MN')#############
-        msg1['To'] = send
-        msg1['CC'] = send
+        msg1['To'] = orig.cc
+        msg1['CC'] = orig.cc
         msg1.attach(MIMEText(msg, 'html', 'utf-8'))
         smtp_p = '587'##############
         user = 'bora@bora.tec.br'##############
@@ -1674,7 +1684,7 @@ def createtktandmail(request, **kwargs):
     mailfil = ''
     for i in getmailfil:
         mailfil += i.email+','
-    send = [get_secret('ESEND_MN'),'IGOR.ROSARIO@BORA.COM.BR','ROBERT.DIAS@BORA.COM.BR', request.user.email]+mailfil.split(',') + kwargs['cc'].split(';')
+    send = [get_secret('ESEND_MN'), request.user.email] + kwargs['cc'].split(';') #'IGOR.ROSARIO@BORA.COM.BR','ROBERT.DIAS@BORA.COM.BR',+mailfil.split(',')
     if kwargs['file'] is not None:
         for q in kwargs['file']:
             part = MIMEApplication(q.read(), name=str(q))
@@ -1699,8 +1709,8 @@ def createtktandmail(request, **kwargs):
     msg1.attach(MIMEText(msgmail, 'html', 'utf-8'))
     msg1['Subject'] = kwargs['assunto']
     msg1['From'] = get_secret('EUSER_MN')#################
-    msg1['To'] = send
-    msg1['CC'] = send
+    msg1['To'] = kwargs['cc']
+    msg1['CC'] = kwargs['cc']
     msg_id = make_msgid(idstring=None, domain='bora.com.br')
     msg1['Message-ID'] = msg_id
     smtp_p = '587'################

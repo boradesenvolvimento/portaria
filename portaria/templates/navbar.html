@@ -122,20 +122,19 @@
           {% endif %}
         </ul>
 
-
         {% if user.notifications.unread.exists %}
-          <div class="dropdown">
+          <div class="dropdown" style="position:absolute;right:0;">
             <button class="dropdown-toggle" data-bs-toggle="dropdown" aria-labelledby="dropdownMenu2" aria-expanded="false">
               <ion-icon name="notifications"></ion-icon>
             <span class="badge-notifications badge badge-pill badge-danger" style="position:absolute;padding:0;margin-top: -2px !important; font-size: 1rem;">
                {% live_notify_badge %}
             </span>
             </button>
-            <div class="dropdown-menu">
+            <div class="dropdown-menu" style="right:1rem;left:-30rem;">
               {% for notification in  user.notifications.unread %}
               <div class="container" style="font-size:12px;">
                     Mensagem de <b>{{ notification.actor }}</b>.
-                <div class="dropdown-item">{{ notification.description }} <a style="text-decoration:none;color:blue !important;" href="{% url 'portaria:isnotifyread' notification.id %}?next={{request.path}}"><ion-icon name="checkmark-done-sharp"></ion-icon></a></div>
+                <div class="dropdown-item"><a style="color:black !important;" href="/tickets/{{ notification.data.data }}/view/">{{ notification.description }}</a>  <a style="text-decoration:none;color:blue !important;" href="{% url 'portaria:isnotifyread' notification.id %}?next={{request.path}}"><ion-icon size="small" name="close-outline"></a></ion-icon></div>
                     <div class="dropdown-divider"></div>
               </div>
               {% endfor %}
@@ -143,7 +142,7 @@
             </div>
           </div>
           {% endif %}
-      </div>
-    </div>
 
+    </div>
+    </div>
   </nav>

@@ -64,6 +64,30 @@
             </div>
 
         </section>
+        <section class="container createtkt">
+            <h2 class="title-cad">Funcionário x Ticket</h2>
+            <hr>
+            <table class="table table1">
+                <thead class="title-cad">
+                    <tr>
+                        <td>Funcionário</td>
+                        <td>Aberto hoje</td>
+                        <td>Total mensal</td>
+                        <td>Concluido mensal</td>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for q in totfunc %}
+                    <tr>
+                        <td>{{ q }}</td>
+                        <td>{{ q.diario }}</td>
+                        <td>{{ q.total }}</td>
+                        <td>{{ q.concluido }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </section>
     {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
     </div>
     {% endif %}
