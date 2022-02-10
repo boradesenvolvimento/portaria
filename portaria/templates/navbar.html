@@ -134,7 +134,7 @@
               {% for notification in  user.notifications.unread %}
               <div class="container" style="font-size:12px;">
                     Mensagem de <b>{{ notification.actor }}</b>.
-                <div class="dropdown-item"><a style="color:black !important;" href="/tickets/{{ notification.data.data }}/view/">{{ notification.description }}</a>  <a style="text-decoration:none;color:blue !important;" href="{% url 'portaria:isnotifyread' notification.id %}?next={{request.path}}"><ion-icon size="small" name="close-outline"></a></ion-icon></div>
+                <div class="dropdown-item"><a style="color:black !important;" href="/portaria/tickets/{{ notification.data.data }}/view/">{{ notification.description }}</a>  <a style="text-decoration:none;color:blue !important;" href="{% url 'portaria:isnotifyread' notification.id %}?next={{request.path}}"><ion-icon size="small" name="close-outline"></a></ion-icon></div>
                     <div class="dropdown-divider"></div>
               </div>
               {% endfor %}

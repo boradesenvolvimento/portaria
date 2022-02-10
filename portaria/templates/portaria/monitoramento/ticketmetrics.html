@@ -65,26 +65,38 @@
 
         </section>
         <section class="container createtkt">
-            <h2 class="title-cad">Funcionário x Ticket</h2>
+            <div style="display:flex;"><h2 class="title-cad">Funcionário x Ticket</h2>
+            <h4 style="margin-left:auto;">Total geral: {{ metrics.totalf }}</h4></div>
             <hr>
             <table class="table table1">
                 <thead class="title-cad">
                     <tr>
                         <td>Funcionário</td>
                         <td>Aberto hoje</td>
-                        <td>Total mensal</td>
+                        <td>Aberto mensal</td>
                         <td>Concluido mensal</td>
                     </tr>
                 </thead>
                 <tbody>
-                {% for q in totfunc %}
-                    <tr>
-                        <td>{{ q }}</td>
-                        <td>{{ q.diario }}</td>
-                        <td>{{ q.total }}</td>
-                        <td>{{ q.concluido }}</td>
-                    </tr>
-                {% endfor %}
+                {% if request.user|has_group:"adm_moni" %}
+                    {% for q in totfunc %}
+                        <tr>
+                            <td>{{ q }}</td>
+                            <td>{{ q.diario }}</td>
+                            <td>{{ q.total }}</td>
+                            <td>{{ q.concluido }}</td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    {% for q in totfuncself %}
+                        <tr>
+                            <td>{{ q }}</td>
+                            <td>{{ q.diario }}</td>
+                            <td>{{ q.total }}</td>
+                            <td>{{ q.concluido }}</td>
+                        </tr>
+                    {% endfor %}
+                {% endif %}
                 </tbody>
             </table>
         </section>
