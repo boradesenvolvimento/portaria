@@ -1583,7 +1583,6 @@ def readmail_monitoramento(request):
                 #continue
             except Exception as e:
                  print(f'insert data -- ErrorType: {type(e).__name__}, Error: {e}')
-                 raise e
             else:
                 #salva no banco de dados
                 form = EmailMonitoramento.objects.filter(email_id=e_ref.strip())
