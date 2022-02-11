@@ -938,7 +938,7 @@ def tktmetrics(request):
         aberto=Count('id', filter=Q(status='ABERTO', dt_abertura__month=datetime.datetime.now().month,
         dt_abertura__year=datetime.datetime.now().year)), totalfull=Count('id',
         filter=Q(dt_abertura__month=datetime.datetime.now().month,dt_abertura__year=datetime.datetime.now().year))
-    ).aggregate(total1=Sum('total'), hoje1=Sum('hoje'), andamento1=Sum('andamento'), aberto1=Sum('aberto'),
+    ).aggregate(total1=Sum(F('andamento')+F('aberto')), hoje1=Sum('hoje'), andamento1=Sum('andamento'), aberto1=Sum('aberto'),
                 totalf=Sum('totalfull'))
 
     totfunc = User.objects.filter(groups__name='monitoramento')\
@@ -946,13 +946,13 @@ def tktmetrics(request):
         diario=Count('responsavel__id',filter=Q(responsavel__dt_abertura=datetime.date.today())),
         concluido=Count('responsavel__id',filter=Q(responsavel__dt_abertura__month=datetime.datetime.now().month,
         responsavel__dt_abertura__year=datetime.datetime.now().year, responsavel__status='CONCLUIDO'))
-        ).exclude(total=0)
+        ).exclude(total=0).order_by('username')
     totfuncself = User.objects.filter(groups__name='monitoramento', responsavel__responsavel=request.user)\
         .annotate(total=Count('responsavel__id',filter=Q(responsavel__status__in=['ABERTO', 'ANDAMENTO'])),
         diario=Count('responsavel__id',filter=Q(responsavel__dt_abertura=datetime.date.today())),
         concluido=Count('responsavel__id',filter=Q(responsavel__dt_abertura__month=datetime.datetime.now().month,
         responsavel__dt_abertura__year=datetime.datetime.now().year, responsavel__status='CONCLUIDO')),
-        )
+        ).order_by('username')
     return render(request, 'portaria/monitoramento/ticketmetrics.html', {'metrics':metrics,'totfunc':totfunc,
                                                                          'totfuncself':totfuncself})
 
