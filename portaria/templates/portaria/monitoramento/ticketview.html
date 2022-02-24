@@ -24,9 +24,12 @@
             </div>
             {% endfor %}
         <div class="container">
-            <div class="row">
                 <h2 class="title-cad">Ticket {{ form.tkt_ref_id }}</h2>
-            </div>
+
+                <div style="position:absolute;right:10rem;top:8rem;">
+                    <input placeholder="Mover para outro ticket" type="text" id="travelticket">
+                    <button type="button" onclick="travelfunc()"><ion-icon name="navigate"></ion-icon></button>
+                </div>
         </div>
         <section class="container viewmonit">
             <div class="tktcontainer">
@@ -108,8 +111,8 @@
                 <h2>Resposta: </h2>
                 <div class="row">
                     <div class="col">
-                        <ul style="list-style-type:none;">
-                             <div class="item">
+                        <ul  style="list-style-type:none;">
+                         <div class="item">
                             {% if form.ult_resp %}
                             {% for q in teste %}
                             <div class="item-inner">
@@ -118,11 +121,11 @@
                             </div>
                             {% endfor %}
                             {% endif %}
-                             </div>
-                            <div class="msg">
-                                <li><hr style="border-top:solid 5px;"></li>
-                                <li><strong>Mensagem:</strong> {{ form.mensagem|safe }}</li>
-                            </div>
+                         </div>
+                        <div class="msg col" style="list-style-type:none;">
+                            <li><hr style="border-top:solid 5px;"></li>
+                            <li><strong>Mensagem:</strong> {{ form.mensagem|safe }}</li>
+                        </div>
                         </ul>
                     </div>
                 </div>
@@ -131,7 +134,19 @@
         {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
     </div>
     {% endif %}
+<script>
 
+    function travelfunc(){
+        var i = document.getElementById('travelticket')
+        console.log(i.value)
+        if(!i.value){
+            window.location.reload();
+        }else{
+            window.location.href = "http://www.localhost:8000/tickets/"+i.value+"/view/";
+        }
+
+    };
+</script>
 <script>
     var text;
     jQuery(document).ready(function($){

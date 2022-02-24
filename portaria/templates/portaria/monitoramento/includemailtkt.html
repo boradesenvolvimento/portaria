@@ -1,0 +1,99 @@
+    {% extends 'base.html' %}
+    {% block content %}
+    {% load groupscheck %}
+    {% load static %}
+    <div class="container mt-5">
+    {% if auth_message %}
+        <p><strong>{{ auth_message }}</strong></p>
+    {% else %}
+    {% if request.user|has_group:"monitoramento" %}
+            {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+            {% endfor %}
+        <section class="container">
+            <h2>Incluir Emails</h2>
+            <hr>
+            <div class="container">
+                <form method="post">
+                    {% csrf_token %}
+                <div class="container" style="padding:1rem; border-bottom: 1px solid grey">
+                    <div class="row">
+                        <div class="col-12">
+                            <label for="empresas">Selecione a empresa:</label>
+                            <input type="text" name="empresas" id="empresas">
+                        </div>
+                    </div>
+                </div>
+                <div class="container" style="margin-top:1rem;">
+                <div class="row">
+                    <table id="addHTML" class="col-6">
+                        <tr>
+                            <td>
+                                <label for="getmail">Email</label>
+                                <input type="text" name="getmail" id="getmail">
+                            </td>
+                            <td><a href="#" id="btnAdiciona" class="button">Add+</a></td>
+                        </tr>
+                    </table>
+                </div>
+                    <input type="submit" class="button">
+                    <input type="hidden" id="setCount" name="setcount">
+                </div>
+                </form>
+            </div>
+
+
+        </section>
+    {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+    </div>
+    {% endif %}
+    <script>
+        $(function(){
+            var availableTags = [
+                {% for q in ac %}
+                    "{{ q }}",
+                {% endfor %}
+            ];
+            $('#empresas').autocomplete({source: availableTags});
+        });
+    </script>
+    <script>
+
+	var idContador = 0;
+
+	function exclui(id){
+		var campo = $("#"+id);
+		campo.remove();
+	}
+
+	$( document ).ready(function() {
+		$("#btnAdiciona").click(function(e){
+			e.preventDefault();
+			adicionaCampo();
+		})
+
+		function adicionaCampo(){
+
+			idContador++;
+			var idCampo = "campoExtra"+idContador;
+			var idForm = "formExtra"+idContador;
+			var idNum = idContador;
+			var tp_sv_input = "tp_servico"+idContador;
+
+			var html = "";
+			html += "<tr id='"+idNum+"'><td><label for='getmail"+idNum+"'>Email "+idContador+"</label>"
+			html += "<input type='text' name='getmail"+idNum+"' id='getmail"+idNum+"'>"
+			html += "</td>"
+			html += "<td><button class='btn' onclick='exclui("+idNum+")' type='button'>Excluir</button></td></tr>";
+
+			$("#addHTML").append(html);
+			document.getElementById('setCount').value = idContador;
+		}
+    });
+    </script>
+
+    {% endblock %}

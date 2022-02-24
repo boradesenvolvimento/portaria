@@ -49,6 +49,7 @@ urlpatterns = [
     path('tickets/new/', views.tktcreate, name='tktcreate'),
     path('tickets/<tktid>/', views.closetkt, name='closetkt'),
     path('tickets/<tktid>/view/', views.tktview, name='tktview'),
+    path('tickets/includemail', views.includemailtkt, name='includemailtkt'),
     path('chamados/', views.chamado, name='chamado'),
     path('chamados/novo', views.chamadonovo, name='chamadonovo'),
     path('chamados/painel', views.chamadopainel, name='chamadopainel'),

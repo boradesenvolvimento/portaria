@@ -33,7 +33,7 @@ from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, Http404
 from django.shortcuts import get_object_or_404, render, redirect
 from django.template.defaultfilters import upper
 from django.urls import reverse
-from django.utils import timezone
+from django.utils import timezone, dateformat
 from django.views import generic
 
 
@@ -822,6 +822,7 @@ def tktcreate(request):
                                      BC.RSOCIALCLI,
                                      F11.REC_RZ_SOCIAL''')
                 res = dictfetchall(cur)
+                cur.close()
             except Exception as e:
                 messages.error(request, f'{e}')
                 return redirect('portaria:monitticket')
@@ -871,7 +872,7 @@ def modaltkt(request):
     ccs = request.POST.getlist('vals[]')
     for q in ccs:
         try:
-            a = EmailOcorenciasMonit.objects.filter(email=q)
+            a = EmailOcorenciasMonit.objects.filter(email=q, ativo=1)
             obj = EmailOcorenciasMonit.objects.filter(pk=a[0].id).update(ativo=0)
         except Exception as e:
             print(e)
@@ -956,6 +957,29 @@ def tktmetrics(request):
     return render(request, 'portaria/monitoramento/ticketmetrics.html', {'metrics':metrics,'totfunc':totfunc,
                                                                          'totfuncself':totfuncself})
 
+def includemailtkt(request):
+    ac = EmailOcorenciasMonit.objects.values_list('rsocial', flat=True).distinct()
+    if request.method == 'POST':
+        empresa = request.POST.get('empresas')
+        mail = request.POST.get('getmail')
+        count = request.POST.get('setcount')
+        if empresa and mail:
+            EmailOcorenciasMonit.objects.create(email=mail, rsocial=empresa, ativo=1)
+            if count:
+                ncount = int(count)
+                for c in range(0, ncount):
+                    d = c + 1
+                    mails = request.POST.get(f'getmail{d}')
+                    if mails:
+                        try:
+                            EmailOcorenciasMonit.objects.create(email=mails, rsocial=empresa, ativo=1)
+                        except Exception as e:
+                            messages.error(request, f'Erro ao cadastrar os emails, ErrorType:{type(e).__name__}, Error: {e}')
+                        finally:
+                            redirect('portaria:monitticket')
+                    else:
+                        continue
+    return render(request, 'portaria/monitoramento/includemailtkt.html', {'ac':ac})
 def chamado(request):
     metrics = TicketChamado.objects.exclude(Q(status='CANCELADO') | Q(status='CONCLUIDO')).annotate(
         dev=Count('id', filter=Q(servico='DESENVOLVIMENTO')), praxio=Count('id', filter=Q(servico='PRAXIO')),
@@ -1431,9 +1455,9 @@ def exedicorreios(request):
 def readmail_monitoramento(request):
     #params
     hoje = datetime.date.today()
-    host = 'pop.kinghost.net' ########## alterar
-    e_user = 'bora@bora.tec.br' ########## alterar
-    e_pass = 'Bor@dev#123' ########## alterar
+    host = get_secret('EHOST_MN') #'pop.kinghost.net' ########## alterar
+    e_user = get_secret('EUSER_MN') #'bora@bora.tec.br' ########## alterar
+    e_pass = get_secret('EPASS_MN') #'Bor@dev#123' ########## alterar
     pattern1 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
     pattern2 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp).\w+.\w+')
 
@@ -1540,7 +1564,9 @@ def readmail_monitoramento(request):
                         e_ref = e_ref.split(',')[0]
                 #separa conteudo e pega attach
                 e_body = body.decode(cs)
+                print(re.findall(pattern1, e_body))
                 w_body = '<div class="container chmdimg">' + htbody.decode(cs) + '</div>'
+                print(re.findall(pattern1, w_body))
                 if re.findall(pattern2,w_body):
                     for q in re.findall(pattern2, w_body):
                         new = re.findall(pattern1, q)
@@ -1564,6 +1590,7 @@ def readmail_monitoramento(request):
                                 new_cid = os.path.join(settings.STATIC_URL + 'monitoramento/' + str(hoje) + '/',
                                                        (str(rr) + q))
                         w_body = w_body.replace(q, new_cid)
+                        e_body = e_body.replace(q, new_cid)
                 elif re.findall(pattern1,w_body):
                     for q in re.findall(pattern1, w_body):
                         new = re.findall(pattern1, q)
@@ -1592,23 +1619,25 @@ def readmail_monitoramento(request):
                             print(f'ErrorType: {type(e).__name__}, Error: {e}')
                         else:
                             w_body = w_body.replace(q, new_cid)
+                            e_body = e_body.replace(q, new_cid)
+                print(e_body)
                 #continue
             except Exception as e:
                  print(f'insert data -- ErrorType: {type(e).__name__}, Error: {e}')
             else:
                 #salva no banco de dados
                 form = EmailMonitoramento.objects.filter(email_id=e_ref.strip())
-                if form.exists() and form[0].tkt_ref.status != ('CONCLUIDO' or 'CANCELADO'):
+                if form.exists():
                     try:
                         tkt = TicketMonitoramento.objects.get(pk=form[0].tkt_ref_id)
                     except Exception as e:
                         print(f'1ErrorType: {type(e).__name__}, Error: {e}')
                     else:
                         if form[0].ult_resp is not None:
-                            aa = '<hr>' + e_from + ' -- ' + e_date + '\n' + e_body + '\n------Anterior-------\n' + form[0].ult_resp
+                            aa = '<hr>' + e_body + '<p>Anterior</p><hr>' + form[0].ult_resp
                             bb = '<hr>' + e_from + ' -- ' + e_date + '<br>' + w_body + '<br>' + attatch + '<p>Anterior</p><hr>' + form[0].ult_resp_html
                         else:
-                            aa = '<hr>' + e_from + ' -- ' + e_date + '\n' + e_body
+                            aa = '<hr>' + e_body
                             bb = '<hr>' + e_from + ' -- ' + e_date + '<br>' + w_body + '<br>' + attatch
                         if tkt.status == 'ABERTO':
                             TicketMonitoramento.objects.filter(pk=form[0].tkt_ref_id).update(status='ANDAMENTO')
@@ -1616,39 +1645,58 @@ def readmail_monitoramento(request):
                         notify.send(sender=User.objects.get(pk=1), data=tkt.id, recipient=tkt.responsavel, verb='message',
                                     description=f"Você recebeu uma nova mensagem do ticket {tkt.id}")
                         pp.dele(i+1)
-                elif form.exists() and form[0].tkt_ref.status == ('CONCLUIDO' or 'CANCELADO'):
-                    pp.dele(i + 1)
-                    pp.quit()
-                    return redirect('portaria:monitticket')
                 else:
-                    try:
-                        tkt = TicketMonitoramento.objects.get(msg_id=e_ref)
-                    except Exception as e:
-                        print(f'1ErrorType: {type(e).__name__}, Error: {e}')
-                    else:
-                        bb = '<hr>' + e_from + ' -- ' + e_date + w_body
-                        EmailMonitoramento.objects.create(assunto=e_title, mensagem=bb, cc=e_cc, dt_envio=e_date,email_id=tkt.msg_id, tkt_ref_id=tkt.id)
-                        notify.send(sender=User.objects.get(pk=1), data=tkt.id,recipient=tkt.responsavel, verb='message',
-                                    description="Seu ticket foi criado.")
                     pp.dele(i + 1)
+                    continue
     pp.quit()
     return redirect('portaria:monitticket')
 
 def replymail_monitoramento(request, tktid, area, myfile):
+    hoje = datetime.date.today()
+    path = settings.STATIC_ROOT + '/monitoramento/' + str(hoje) + '/'
     media = ''
+    attatch = ''
+    rr = random.random()
     pattern = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
+    pattern2 = re.compile(r'/static/monitoramento/\S+(?i:jpeg|jpg|gif|png|bmp)')
     orig = get_object_or_404(EmailMonitoramento, tkt_ref_id=tktid)
     keyga = {v: k for k, v in TicketMonitoramento.GARAGEM_CHOICES}
     getmailfil = EmailOcorenciasMonit.objects.filter(rsocial=orig.tkt_ref.get_filial_display(), ativo=1)
     mailfil = ''
     for i in getmailfil:
         mailfil += i.email + ', '
-    send = [get_secret('ESEND_MN'), 'IGOR.ROSARIO@BORA.COM.BR','ROBERT.DIAS@BORA.COM.BR', request.user.email]+mailfil.split(',') + orig.cc.split(',') #
+    send = []+ orig.cc.split(',') #+mailfil.split(',')  get_secret('ESEND_MN'), 'IGOR.ROSARIO@BORA.COM.BR','ROBERT.DIAS@BORA.COM.BR', request.user.email
     if request.method == 'POST':
-        msg1 = MIMEMultipart()
+        msg1 = MIMEMultipart('related')
         msg = area
+        msgm = area
         if myfile is not None:
             for q in myfile:
+                locimg = os.path.join(path, str(q))
+                if os.path.exists(os.path.join(path)):
+                    fp = open(locimg, 'wb')
+                    fp.write(q.read())
+                    fp.close()
+                    os.chmod(locimg, 0o777)
+                    try:
+                        os.rename(locimg, os.path.join(path, (str(rr) + str(q))))
+                    except Exception as e:
+                        os.rename(locimg, os.path.join(path, (str(rr) + str(q) + str(random.randint(1, 100)))))
+                else:
+                    os.mkdir(path=path)
+                    os.chmod(path, 0o777)
+                    fp = open(locimg, 'wb')
+                    fp.write(q.read())
+                    fp.close()
+                    os.chmod(locimg, 0o777)
+                    try:
+                        os.rename(locimg, os.path.join(path, (str(rr) + str(q))))
+                    except Exception as e:
+                        os.rename(locimg, os.path.join(path, (str(rr) + str(q) + str(random.randint(1, 100)))))
+                item = os.path.join('/static/monitoramento/' + str(hoje) + '/', (str(rr) + str(q)))
+                aatt = '<div class="mailattatch"><a href="' + item + '" download><img src="/static/images/downicon.png" width="40"><p>' + str(q) + '</p></a></div>'
+                attatch += aatt
+
                 part = MIMEApplication(q.read(), name=str(q))
                 part['Content-Disposition'] = 'attachment; filename="%s"' % q
                 msg1.attach(part)
@@ -1656,16 +1704,46 @@ def replymail_monitoramento(request, tktid, area, myfile):
             for q in re.findall(pattern, msg):
                 media = q
                 img_data = open(('/home/bora/www'+media),'rb').read()
-                msgimg = MIMEImage(img_data, name=os.path.basename(media))
+                msgimg = MIMEImage(img_data, name=os.path.basename(media), _subtype='jpg')
                 msgimg.add_header('Content-ID', f'{media}')
-                msg = msg.replace(('src="' + media + '"'), f'src="cid:{media}" ')
                 msg1.attach(msgimg)
-        sign = f'<br><img src="cid:{request.user}.jpg" width="600">'
+                msgm = msg.replace(('src="' + media + '"'), f'src="cid:{media}" ')
+        sign = f'<br><img src="/static/images/macros-monit/{request.user}.jpg" width="600">'
         signimg = open(f'{settings.STATIC_ROOT}/images/macros-monit/{request.user}.jpg', 'rb').read()
         msgimg1 = MIMEImage(signimg, name=f'{request.user}.jpg', _subtype='jpg')
         msgimg1.add_header('Content-ID', f'{request.user}.jpg')
         msg1.attach(msgimg1)
-        msg += sign
+
+        if orig.ult_resp:
+            msgmail2222 = '<div class="container chmdimg">' + msgm + sign + '</div>' + orig.ult_resp.split('<p>Anterior</p><hr>')[0]
+            msgmail1234 = '<div class="container chmdimg">' + msg + sign + '</div>' + orig.ult_resp_html
+        else:
+            msgmail2222 = '<div class="container chmdimg">' + msgm + sign + '</div>'
+            msgmail1234 = '<div class="container chmdimg">' + msg + sign + '</div>'
+        if re.findall(pattern2, msgmail2222):
+            arrayzz = []
+            for q in re.findall(pattern2, msgmail2222):
+                #print(msgimg2['Content-ID'])
+                fp = open(('/home/bora/www' + q), 'rb')
+                img_data = fp.read()
+                msgimg2 = MIMEImage(img_data, name=os.path.basename(q), _subtype='jpg')
+                msgimg2.add_header('Content-ID', f'{os.path.basename(q)}')
+                for i in msgimg2.walk():
+                    if i['Content-ID'] not in arrayzz:
+                        msg1.attach(msgimg2)  # causa dos attach pelas repetições duplicadas
+                        msgmail2222 = msgmail2222.replace((f'="{q}"'), f'="cid:{os.path.basename(q)}"')
+                        arrayzz.append(i['Content-ID'])
+        msgmail2222 = msgmail2222.replace(f'<br><img src="/static/images/macros-monit/{request.user}.jpg" width="600">',f'<br><img src="cid:{request.user}.jpg" width="600">')
+        msgmail1234 = msgmail1234.replace(f'<p>Anterior</p><hr>', '<hr>')
+        msgmail2222 = msgmail2222.replace(f'<p>Anterior</p><hr>', '<hr>')
+
+        if orig.ult_resp is not None:
+            aa = msgm + sign + orig.ult_resp
+            bb = '<hr>' + str(request.user) + ' -- ' + str(dateformat.format(timezone.now(), 'd-m-Y H:i')) + '<br>' + msgmail1234 + '<br>' + attatch + '<p>Anterior</p><hr>' + orig.ult_resp_html
+        else:
+            aa = msgm + sign
+            bb = '<hr>' + str(request.user) + ' -- ' + str(dateformat.format(timezone.now(), 'd-m-Y H:i')) + '<br>' + msgmail1234 + '<br>' + attatch
+
         msg1['Subject'] = orig.assunto
         msg1['In-Reply-To'] = orig.email_id
         msg1['References'] = orig.email_id
@@ -1674,28 +1752,30 @@ def replymail_monitoramento(request, tktid, area, myfile):
         msg1['From'] = get_secret('EUSER_MN')#############
         msg1['To'] = orig.cc
         msg1['CC'] = orig.cc
-        msg1.attach(MIMEText(msg, 'html', 'utf-8'))
+        msg1.attach(MIMEText(msgmail2222, 'html', 'utf-8'))
         smtp_p = '587'##############
         user = 'bora@bora.tec.br'##############
         try:
             print('entrou no try')
             sm = smtplib.SMTP(get_secret('EHOST_MN'), smtp_p)################
-            sm.set_debuglevel(1)
+            #sm.set_debuglevel(1)
             sm.login(get_secret('EUSER_MN'), get_secret('EPASS_MN'))###############
             sm.sendmail(get_secret('EUSER_MN'), send, msg1.as_string())#############
             print('mandou o email')
+            EmailMonitoramento.objects.filter(pk=orig.id).update(ult_resp=aa,ult_resp_html=bb, ult_resp_dt=dateformat.format(timezone.now(), 'Y-m-d H:i'))
         except Exception as e:
             print(f'ErrorType:{type(e).__name__}, Error:{e}')
-    return redirect('portaria:monitticket')
+        else:
+            messages.success(request, 'Resposta enviada com sucesso!')
 
 def createtktandmail(request, **kwargs):
     pattern = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
-    msg1 = MIMEMultipart()
+    msg1 = MIMEMultipart('related')
     getmailfil = EmailOcorenciasMonit.objects.filter(rsocial=kwargs['filial'], ativo=1)
     mailfil = ''
     for i in getmailfil:
         mailfil += i.email+','
-    send = [get_secret('ESEND_MN'), 'IGOR.ROSARIO@BORA.COM.BR','ROBERT.DIAS@BORA.COM.BR', request.user.email]+mailfil.split(',') + kwargs['cc'].split(';') #
+    send = [ ]+ kwargs['cc'].split(';') #+mailfil.split(',')  'IGOR.ROSARIO@BORA.COM.BR','ROBERT.DIAS@BORA.COM.BR', request.user.email
     if kwargs['file'] is not None:
         for q in kwargs['file']:
             part = MIMEApplication(q.read(), name=str(q))
@@ -1735,10 +1815,14 @@ def createtktandmail(request, **kwargs):
         print(f'ErrorType:{type(e).__name__}, Error:{e}')
     else:
         try:
+            bb = '<hr>' + str(request.user) + ' -- ' + str(dateformat.format(timezone.now(), 'd-m-Y H:i')) + kwargs['msg']
             tkt = TicketMonitoramento.objects.create(nome_tkt=kwargs['assunto'], dt_abertura=timezone.now(),
                   responsavel=User.objects.get(username=kwargs['resp']), solicitante=request.user, remetente=kwargs['rem'],
                   destinatario=kwargs['dest'], cte=kwargs['cte'], status='ABERTO', categoria='Aguardando Recebimento',msg_id=msg_id,
                          filial=keyga[kwargs['filial']], tp_docto=kwargs['tp_docto'])
+            mail = EmailMonitoramento.objects.create(assunto=kwargs['assunto'], mensagem=bb, cc=kwargs['cc'],
+                                                     dt_envio=dateformat.format(timezone.now(), 'Y-m-d H:i'),
+                                                     email_id=tkt.msg_id,tkt_ref_id=tkt.id)
             sm.sendmail(get_secret('EUSER_MN'), send, msg1.as_string())  #############
         except Exception as e:
             messages.error(request, f'ErrorType:{type(e).__name__}, error:{e}')
