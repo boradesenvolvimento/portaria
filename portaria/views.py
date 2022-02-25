@@ -5,17 +5,21 @@ import datetime
 import email, smtplib
 import os
 import re
+import tempfile
 import textwrap
 import poplib
+from io import BytesIO, StringIO
+
+import pandas as pd
 from email import policy
 from email.header import decode_header
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
-import pandas as pd
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from email.utils import make_msgid
 
+from django.template.loader import render_to_string, get_template
 from notifications.models import Notification
 from notifications.signals import notify
 #imports django built-ins
@@ -29,7 +33,7 @@ from django.db import IntegrityError
 from django.db.models import Count, Sum, F, Q, Value, Subquery, CharField, ExpressionWrapper, IntegerField, \
     DateTimeField
 from django.db.models.functions import Coalesce, TruncDate, Cast, TruncMinute
-from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, Http404
+from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, Http404, FileResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.template.defaultfilters import upper
 from django.urls import reverse
@@ -38,6 +42,8 @@ from django.views import generic
 
 
 #imports django projeto
+from xhtml2pdf import pisa
+
 from .dbtest import conndb
 from .models import * #Cadastro, PaletControl, ChecklistFrota, Veiculos, NfServicoPj
 from .forms import * #CadastroForm, isPlacaForm, DateForm, FilterForm, TPaletsForm, TIPO_GARAGEM, ChecklistForm
@@ -1068,6 +1074,59 @@ def chamadodetail(request, tktid):
             print(e)
     return render(request, 'portaria/chamado/chamadodetail.html', {'form':form,'editor':editor,'stts':stts,'dp':dp,
                                                                    'resp':resp,'fil':fil})
+
+def etiquetas(request):
+    gachoices = TicketMonitoramento.GARAGEM_CHOICES
+    docchoices = TIPO_DOCTO_CHOICES
+    if request.method == 'POST':
+        lista = request.POST.getlist('getcte')
+        ga = int(request.POST.get('getga'))
+        doc = int(request.POST.get('getdoc'))
+        if len(lista) == 1:
+            lista = lista[0]
+        else:
+            lista = tuple(lista)
+        try:
+            conn = settings.CONNECTION
+            cur = conn.cursor()
+            cur.execute(f"""
+                        SELECT F4.NOTA_FISCAL, F4.VOLUMES
+                        FROM
+                            FTA004 F4,
+                            EXA026 E26,
+                            EXA025 E25
+                        WHERE
+                             F4.EMPRESA = E26.EMPRESA AND
+                             F4.FILIAL = E26.FILIAL   AND
+                             F4.GARAGEM = E26.GARAGEM AND
+                             F4.SERIE = E26.SERIE_CTRC     AND
+                             F4.CONHECIMENTO = E26.NUMERO_CTRC AND
+                             F4.TIPO_DOCTO = E26.TIPO_DOCTO    AND
+                             E26.RECNUM_EXA025 = E25.RECNUM    AND
+                             
+                             E26.COD_MANIFESTO IN {lista}      AND
+                             E26.GAR_MANIFESTO = {ga}                   AND
+                             E25.TIPO_DOCTO = {doc}            AND
+                             E26.DATA_CADASTRO BETWEEN ((SYSDATE) - 90) AND (SYSDATE)
+                        """)
+            res = dictfetchall(cur)
+            cur.close()
+        except Exception as e:
+            raise e
+        else:
+            request.session['dict'] = res
+            return redirect('portaria:createetiquetas')
+    return render(request, 'portaria/etiquetas/etiquetas.html', {'gachoices':gachoices, 'docchoices':docchoices})
+
+def createetiquetas(request):
+    lista = request.session['dict']
+    if lista:
+        return render(request, 'portaria/etiquetas/generate_pdf.html', {'lista':lista})
+    else:
+        messages.error(request, 'Não encontrado para este romaneio')
+        return redirect('portaria:etiquetas')
+
+
 #fim das views
 
 
@@ -1455,9 +1514,9 @@ def exedicorreios(request):
 def readmail_monitoramento(request):
     #params
     hoje = datetime.date.today()
-    host = get_secret('EHOST_MN') #'pop.kinghost.net' ########## alterar
-    e_user = get_secret('EUSER_MN') #'bora@bora.tec.br' ########## alterar
-    e_pass = get_secret('EPASS_MN') #'Bor@dev#123' ########## alterar
+    host = 'pop.kinghost.net' #get_secret('EHOST_MN') ########## alterar
+    e_user = 'bora@bora.tec.br' #get_secret('EUSER_MN') ########## alterar
+    e_pass = 'Bor@dev#123' #get_secret('EPASS_MN') ########## alterar
     pattern1 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
     pattern2 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp).\w+.\w+')
 
@@ -1564,9 +1623,7 @@ def readmail_monitoramento(request):
                         e_ref = e_ref.split(',')[0]
                 #separa conteudo e pega attach
                 e_body = body.decode(cs)
-                print(re.findall(pattern1, e_body))
                 w_body = '<div class="container chmdimg">' + htbody.decode(cs) + '</div>'
-                print(re.findall(pattern1, w_body))
                 if re.findall(pattern2,w_body):
                     for q in re.findall(pattern2, w_body):
                         new = re.findall(pattern1, q)
@@ -1620,7 +1677,6 @@ def readmail_monitoramento(request):
                         else:
                             w_body = w_body.replace(q, new_cid)
                             e_body = e_body.replace(q, new_cid)
-                print(e_body)
                 #continue
             except Exception as e:
                  print(f'insert data -- ErrorType: {type(e).__name__}, Error: {e}')
@@ -1665,7 +1721,7 @@ def replymail_monitoramento(request, tktid, area, myfile):
     mailfil = ''
     for i in getmailfil:
         mailfil += i.email + ', '
-    send = []+ orig.cc.split(',') #+mailfil.split(',')  get_secret('ESEND_MN'), 'IGOR.ROSARIO@BORA.COM.BR','ROBERT.DIAS@BORA.COM.BR', request.user.email
+    send = ['IGOR.ROSARIO@BORA.COM.BR','ROBERT.DIAS@BORA.COM.BR', request.user.email] + orig.cc.split(',') + mailfil.split(',')
     if request.method == 'POST':
         msg1 = MIMEMultipart('related')
         msg = area
@@ -1723,7 +1779,6 @@ def replymail_monitoramento(request, tktid, area, myfile):
         if re.findall(pattern2, msgmail2222):
             arrayzz = []
             for q in re.findall(pattern2, msgmail2222):
-                #print(msgimg2['Content-ID'])
                 fp = open(('/home/bora/www' + q), 'rb')
                 img_data = fp.read()
                 msgimg2 = MIMEImage(img_data, name=os.path.basename(q), _subtype='jpg')
@@ -1775,7 +1830,7 @@ def createtktandmail(request, **kwargs):
     mailfil = ''
     for i in getmailfil:
         mailfil += i.email+','
-    send = [ ]+ kwargs['cc'].split(';') #+mailfil.split(',')  'IGOR.ROSARIO@BORA.COM.BR','ROBERT.DIAS@BORA.COM.BR', request.user.email
+    send = ['IGOR.ROSARIO@BORA.COM.BR','ROBERT.DIAS@BORA.COM.BR', request.user.email] + kwargs['cc'].split(';') + mailfil.split(',')
     if kwargs['file'] is not None:
         for q in kwargs['file']:
             part = MIMEApplication(q.read(), name=str(q))
