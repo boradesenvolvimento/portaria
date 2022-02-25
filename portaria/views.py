@@ -8,7 +8,6 @@ import re
 import tempfile
 import textwrap
 import poplib
-from io import BytesIO, StringIO
 
 import pandas as pd
 from email import policy
@@ -19,7 +18,6 @@ from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from email.utils import make_msgid
 
-from django.template.loader import render_to_string, get_template
 from notifications.models import Notification
 from notifications.signals import notify
 #imports django built-ins
@@ -42,8 +40,6 @@ from django.views import generic
 
 
 #imports django projeto
-from xhtml2pdf import pisa
-
 from .dbtest import conndb
 from .models import * #Cadastro, PaletControl, ChecklistFrota, Veiculos, NfServicoPj
 from .forms import * #CadastroForm, isPlacaForm, DateForm, FilterForm, TPaletsForm, TIPO_GARAGEM, ChecklistForm
