@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Bora - pdf generator</title>
+    {% load static %}
+
+    <style type="text/css">
+            @page{
+                size: 110mm 75mm;
+            }
+            @font-face {
+                font-family: LibBarcodeFont;
+                src: url(/static/librebarcode128-regular.ttf)
+            }
+            .etiquetable{
+                border:solid 1px;
+                max-width:100%;
+                width:auto;
+                height:auto;
+                border-collapse: collapse;
+                border-spacing:0;
+                zoom: 1.5;
+            }
+            .rot {
+                position:absolute;
+                transform: rotate(90deg);
+                margin-top:2.5rem;
+                left:-1.3rem;
+            }
+            .infosum{
+                border: solid 1px;
+                margin-top:1rem;
+                margin-left:3rem;
+                margin-right: 1rem;
+                width:auto;
+                float:left;
+                font-weight: bold;
+            }
+            .infosum p{
+                font-family: Arial, Helvetica, sans-serif;
+                font-size:9px;
+                margin: 0.2rem 1rem 0.2rem 1rem;
+            }
+            .barcode{
+                font-family:LibBarcodeFont;
+                font-size: 50px;
+                margin: 0 1rem 0 3rem;
+            }
+
+    </style>
+</head>
+<body>
+{% for q in lista %}
+<div class="container">
+<table class="etiquetable" cellspacing="1" cellpadding="1">
+    <tr>
+        <td class="rot">
+            <img width="100" src="{% static 'images/logo.png' %}">
+        </td>
+        <td>
+            <div class="infosum">
+                <p>Nota: {{ q.NOTA_FISCAL }}</p>
+                <hr>
+                <p>Volumes: {{ q.VOLUMES }}</p>
+            </div>
+        </td>
+    </tr>
+    <tr><td></td><td><hr style="margin-left:3rem;margin-right: 1rem;"><p class="barcode">{{ q.NOTA_FISCAL }}</p></td></tr>
+</table>
+</div><br>
+{% endfor %}
+</body>
+</html>

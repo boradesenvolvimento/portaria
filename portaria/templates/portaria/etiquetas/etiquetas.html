@@ -1,0 +1,91 @@
+    {% extends 'base.html' %}
+    {% block content %}
+    {% load groupscheck %}
+    {% load static %}
+    <div class="container mt-5">
+    {% if auth_message %}
+        <p><strong>{{ auth_message }}</strong></p>
+    {% else %}
+    {% if request.user|has_group:"etiquetas" %}
+            {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+            {% endfor %}
+            <section>
+                <div class="container">
+                    <div class="row">
+                    <h2>Lançar etiquetas</h2>
+                    </div><hr>
+                    <div class="row">
+                        <form method="post">
+                            {% csrf_token %}
+                        <table id="addHTML" class="col-9">
+                            <tr>
+                                <td>
+                                    <label for="getga" style="font-weight:bold;">Garagem:</label>
+                                    <select id="getga" name="getga" >
+                                        <option hidden>Selecione...</option>
+                                        {% for q,v in gachoices %}
+                                        <option value="{{ q }}">{{ v }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <label for="getdoc" style="font-weight:bold;">Tipo doc:</label>
+                                    <select id="getdoc" name="getdoc">
+                                        <option hidden>Selecione...</option>
+                                        <option value="04">Romaneio</option>
+                                        <option value="58">MDFE</option>
+                                    </select>
+                                    <label for="getcte" style="font-weight:bold;">Romaneio:</label>
+                                    <input type="text" name="getcte" id="getcte">
+                                </td>
+                                <td><a href="#" id="btnAdiciona" class="button">Add+</a></td>
+                            </tr>
+                        </table>
+                    <input type="submit" class="button">
+                    <input type="hidden" id="setCount" name="setcount">
+                    </form>
+                </div>
+                </div>
+            </section>
+    {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+    </div>
+    {% endif %}
+
+    <script>
+
+	var idContador = 0;
+
+	function exclui(id){
+		var campo = $("#"+id);
+		campo.remove();
+	}
+
+	$( document ).ready(function() {
+		$("#btnAdiciona").click(function(e){
+			e.preventDefault();
+			adicionaCampo();
+		})
+
+		function adicionaCampo(){
+
+			idContador++;
+			var idCampo = "campoExtra"+idContador;
+			var idForm = "formExtra"+idContador;
+			var idNum = idContador;
+
+			var html = "";
+			html += "<tr id='"+idNum+"'><td><label for='getcte"+idNum+"'>Romaneio "+idContador+"</label>"
+			html += "<input type='text' name='getcte' id='getcte"+idNum+"'>"
+			html += "</td>"
+			html += "<td><button class='btn' onclick='exclui("+idNum+")' type='button'>Excluir</button></td></tr>";
+
+			$("#addHTML").append(html);
+			document.getElementById('setCount').value = idContador;
+		}
+    });
+    </script>
+
+    {% endblock %}
