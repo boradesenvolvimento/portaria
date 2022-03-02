@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Bora - pdf generator</title>
     {% load static %}
+    {% load groupscheck %}
 
     <style type="text/css">
             @page{
@@ -52,6 +53,7 @@
 </head>
 <body>
 {% for q in lista %}
+{% for i in q.VOLUMES|rangeloop %}
 <div class="container">
 <table class="etiquetable" cellspacing="1" cellpadding="1">
     <tr>
@@ -62,13 +64,14 @@
             <div class="infosum">
                 <p>Nota: {{ q.NOTA_FISCAL }}</p>
                 <hr>
-                <p>Volumes: {{ q.VOLUMES }}</p>
+                <p>Volumes: {{ forloop.counter }} de {{ q.VOLUMES }}</p>
             </div>
         </td>
     </tr>
     <tr><td></td><td><hr style="margin-left:3rem;margin-right: 1rem;"><p class="barcode">{{ q.NOTA_FISCAL }}</p></td></tr>
 </table>
 </div><br>
+{% endfor %}
 {% endfor %}
 </body>
 </html>
