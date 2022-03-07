@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+{% load groupscheck %}
+{% if request.user|has_group:"frota" %}
+    <div class="container mt-4">
+        {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+        {% endfor %}
+        <h1>Funções<hr></h1>
+        <div class="container">
+            <div class="linha-baixo">
+                <form method="post" enctype="multipart/form-data" action="{% url 'portaria:entradaxml' %}">
+                    {% csrf_token %}
+                <h3 style="display:inline;">Entrada XML:</h3>
+                <input style="display:inline;border-radius:0;" id="getxml" name="getxml" type="file" accept="application/xml"/>
+                    <button type="submit">Enviar</button>
+                </form>
+                <!--<a href="{% url 'portaria:entradaxml' %}" style="color:white;text-decoration:none;font-size:20px;"></a>-->
+            </div>
+            <div class="linha-baixo">
+                <h3 style="display:inline;">Entrada Manual:</h3>
+                <button type="button"><a href="{% url 'portaria:entradaromaneio' %}" style="color:white;text-decoration:none;font-size:20px;">
+                    <ion-icon name="enter-outline"></ion-icon></a></button>
+            </div>
+            <div class="linha-baixo">
+                <h3 style="display:inline;">Painel XMLS:</h3>
+                <button type="button"><a href="{% url 'portaria:painelromaneio' %}" style="color:white;text-decoration:none;font-size:20px;">
+                    <ion-icon name="list-outline"></ion-icon></a></button>
+            </div>
+        </div>
+    </div>
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+{% endblock %}

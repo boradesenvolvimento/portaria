@@ -8,7 +8,9 @@ import re
 import tempfile
 import textwrap
 import poplib
+from io import BytesIO
 
+import numpy as np
 import pandas as pd
 from email import policy
 from email.header import decode_header
@@ -37,7 +39,8 @@ from django.template.defaultfilters import upper
 from django.urls import reverse
 from django.utils import timezone, dateformat
 from django.views import generic
-
+from xml.dom import minidom
+from xlsxwriter import Workbook
 
 #imports django projeto
 from .dbtest import conndb
@@ -596,7 +599,6 @@ def manupendentes(request):
 
 @login_required
 def manuentrada(request, placa_id):
-    print('inicio')
     array = []
     gp_servs = TipoServicosManut.objects.values_list('grupo_servico', flat=True).distinct()
     for q in gp_servs:
@@ -632,7 +634,6 @@ def manuentrada(request, placa_id):
                             d = c + 1
                             variable = 'tp_servico' + str(d)
                             tp_sv = request.POST.get(variable)
-                            print(tp_sv)
                             if tp_sv:
                                 ServJoinManu.objects.create(id_svs_id=tp_sv,autor=autor,id_os_id=manu.id)
                             else:
@@ -682,7 +683,7 @@ class ManutencaoListView(generic.ListView):
         try:
             placa = self.request.GET.get('isplaca')
             if placa:
-                qs = ManutencaoFrota.objects.filter(dt_saida=None, veiculo__prefixoveic=placa).order_by('dt_entrada')
+                qs = ManutencaoFrota.objects.filter(Q(veiculo__prefixoveic=placa) | Q(id=placa)).exclude(dt_saida__isnull=False).order_by('dt_entrada')
         except ObjectDoesNotExist:
             raise Exception('Valor digitado inválido')
         return qs
@@ -1121,6 +1122,133 @@ def createetiquetas(request):
     else:
         messages.error(request, 'Não encontrado para este romaneio')
         return redirect('portaria:etiquetas')
+
+def romaneioxml(request):
+    return render(request, 'portaria/etc/romaneioindex.html')
+
+def painelromaneio(request):
+    context = RomXML.objects.all().order_by('-pub_date')
+    if request.method == 'POST':
+        dt1 = datetime.datetime.strptime(request.POST.get('data1'), '%Y-%m-%d')
+        dt2 = datetime.datetime.strptime(request.POST.get('data2'), '%Y-%m-%d')
+        if dt1 and dt2:
+            romaneio = SkuRefXML.objects.filter(xmlref__pub_date__gte=dt1, xmlref__pub_date__lte=dt2).annotate(
+                nf1=F('xmlref__nota_fiscal'), municipio1=F('xmlref__municipio'), uf1=F('xmlref__uf'),codigo1=F('codigo'),
+                qnt_un1=F('qnt_un'), desc_prod1=F('desc_prod'),
+            )
+            sheet = romxmltoexcel(*romaneio)
+            if sheet:
+                return sheet
+    return render(request, 'portaria/etc/painelromaneio.html', {'context':context})
+
+def entradaromaneio(request):
+    if request.method == 'POST':
+        emissao = datetime.datetime.strptime(request.POST.get('emissao'), '%Y-%m-%dT%H:%M')
+        nrnota = request.POST.get('nrnota')
+        remet = upper(request.POST.get('remet'))
+        destin = upper(request.POST.get('destin'))
+        peso = request.POST.get('peso')
+        volume = request.POST.get('volume')
+        vlr_nf = request.POST.get('vlr_nf')
+        uf = upper(request.POST.get('uf'))
+        municipio = upper(request.POST.get('municipio'))
+        autor = request.user
+
+        codigo = request.POST.get('codigo')
+        descr = request.POST.get('descr')
+        tp_un = request.POST.get('tp_un')
+        qnt_un = request.POST.get('qnt_un')
+        count = request.POST.get('setcount')
+        if emissao and nrnota and remet and destin and volume and vlr_nf:
+            try:
+                rom = RomXML.objects.create(dt_emissao=emissao, nota_fiscal=nrnota, remetente=remet, destinatario=destin,
+                                            peso=peso,volume=volume,vlr_nf=vlr_nf,autor=autor,municipio=municipio, uf=uf)
+            except Exception as e:
+                print(f'Error:{e}, error-type:{type(e).__name__}')
+            else:
+                SkuRefXML.objects.create(codigo=codigo,desc_prod=descr, tp_un=tp_un,qnt_un=qnt_un, xmlref=rom)
+                if count:
+                    ncount = int(count)
+                    if ncount > 0:
+                        for c in range(0, ncount):
+                            d = c + 1
+                            codigo = upper(request.POST.get(f'codigo{str(d)}'))
+                            descr = upper(request.POST.get(f'descr{str(d)}'))
+                            tp_un = upper(request.POST.get(f'tp_un{str(d)}'))
+                            qnt_un = upper(request.POST.get(f'qnt_un{str(d)}'))
+                            if codigo and descr and tp_un and qnt_un:
+                                SkuRefXML.objects.create(codigo=codigo,desc_prod=descr, tp_un=tp_un,qnt_un=qnt_un,
+                                                     xmlref=rom)
+    return render(request, 'portaria/etc/romaneiomanual.html')
+
+def entradaxml(request):
+    file = request.FILES.get('getxml')
+    mydoc = minidom.parse(file)
+    nf = mydoc.getElementsByTagName('nNF')[0].firstChild.nodeValue
+    dhEmi = dateformat.format(datetime.datetime.strptime(mydoc.getElementsByTagName('dhEmi')[0].firstChild.nodeValue, '%Y-%m-%dT%H:%M:%S%z'), 'Y-m-d H:i')
+    rem = mydoc.getElementsByTagName('emit')[0].getElementsByTagName('xFant')[0].firstChild.nodeValue
+    dest = mydoc.getElementsByTagName('dest')[0].getElementsByTagName('xNome')[0].firstChild.nodeValue
+    dest_mun = mydoc.getElementsByTagName('dest')[0].getElementsByTagName('xMun')[0].firstChild.nodeValue
+    dest_uf = mydoc.getElementsByTagName('dest')[0].getElementsByTagName('UF')[0].firstChild.nodeValue
+    peso = mydoc.getElementsByTagName('transp')[0].getElementsByTagName('pesoB')[0].firstChild.nodeValue
+    volume = mydoc.getElementsByTagName('transp')[0].getElementsByTagName('qVol')[0].firstChild.nodeValue
+    vlr_nf = mydoc.getElementsByTagName('total')[0].getElementsByTagName('vNF')[0].firstChild.nodeValue
+    skus = getText(mydoc)
+    if skus:
+        try:
+            rom = RomXML.objects.create(dt_emissao=dhEmi, nota_fiscal=nf, remetente=rem, destinatario=dest,
+            peso=peso, volume=volume, vlr_nf=vlr_nf, municipio=dest_mun, uf=dest_uf, autor=request.user)
+        except Exception as e:
+            print(f'Error: {e}, error_type: {type(e).__name__}')
+        else:
+            for q in skus:
+                print(q['sku'], q['descprod'], q['un'], q['qnt'])
+                SkuRefXML.objects.create(codigo=q['sku'],desc_prod=q['descprod'],tp_un=q['un'], qnt_un=int(q['qnt']),
+                                         xmlref=rom)
+    return redirect('portaria:romaneioxml')
+
+
+
+def getText(nodelist):
+    doc = nodelist.getElementsByTagName('det')
+    rc = []
+    for q in doc:
+        var1 = q.getElementsByTagName('prod')[0]
+        sku = var1.getElementsByTagName('cProd')[0].firstChild.nodeValue
+        descprod = var1.getElementsByTagName('xProd')[0].firstChild.nodeValue
+        un = var1.getElementsByTagName('uTrib')[0].firstChild.nodeValue
+        qnt = var1.getElementsByTagName('qTrib')[0].firstChild.nodeValue.split('.')[0]
+        all = {'sku':sku, 'descprod':descprod, 'un':un, 'qnt':qnt}
+        rc.append(all)
+    return rc
+
+
+def romxmltoexcel(*romaneio):
+    array = []
+    for q in romaneio:
+        array.append({'nf':q.nf1, 'municipio':q.municipio1, 'uf':q.uf1, 'codigo':q.codigo1,
+                      'qnt_un':q.qnt_un1, 'desc':q.desc_prod1})
+
+    pdr = pd.DataFrame(array)
+    dt = (pdr.pivot_table(index=['codigo','desc'],
+                         columns=['uf'],
+                         values=['qnt_un'],
+                         aggfunc=np.sum,
+                         fill_value='0',
+                         margins=True,
+                         margins_name='Total')).astype(np.int64)
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = f'attachment; filename="relatorio{datetime.datetime.today()}.xlsx"'
+    writer = pd.ExcelWriter(response, engine='xlsxwriter')
+    dt.to_excel(writer, 'Dinamica')
+    pdr.to_excel(writer, 'Relatorio')
+    writer.save()
+    try:
+        return response
+    except Exception as e:
+        raise e
+
+
 
 
 #fim das views
@@ -1717,6 +1845,7 @@ def replymail_monitoramento(request, tktid, area, myfile):
     mailfil = ''
     for i in getmailfil:
         mailfil += i.email + ', '
+    #send = orig.cc.split(';')
     send = ['IGOR.ROSARIO@BORA.COM.BR','ROBERT.DIAS@BORA.COM.BR', request.user.email] + orig.cc.split(',') + mailfil.split(',')
     if request.method == 'POST':
         msg1 = MIMEMultipart('related')
@@ -1768,10 +1897,10 @@ def replymail_monitoramento(request, tktid, area, myfile):
 
         if orig.ult_resp:
             msgmail2222 = '<div class="container chmdimg">' + msgm + sign + '</div>' + orig.ult_resp.split('<p>Anterior</p><hr>')[0]
-            msgmail1234 = '<div class="container chmdimg">' + msg + sign + '</div>' + orig.ult_resp_html
+            msgmail1234 = '<div class="container chmdimg">' + msg + sign + '</div>' + orig.ult_resp_html.split('<p>Anterior</p><hr>')[0]
         else:
-            msgmail2222 = '<div class="container chmdimg">' + msgm + sign + '</div>'
-            msgmail1234 = '<div class="container chmdimg">' + msg + sign + '</div>'
+            msgmail2222 = '<div class="container chmdimg">' + msgm + sign + '</div>' + orig.mensagem
+            msgmail1234 = '<div class="container chmdimg">' + msg + sign + '</div>' + orig.mensagem
         if re.findall(pattern2, msgmail2222):
             arrayzz = []
             for q in re.findall(pattern2, msgmail2222):
@@ -1826,6 +1955,7 @@ def createtktandmail(request, **kwargs):
     mailfil = ''
     for i in getmailfil:
         mailfil += i.email+','
+    #send = kwargs['cc'].split(';')
     send = ['IGOR.ROSARIO@BORA.COM.BR','ROBERT.DIAS@BORA.COM.BR', request.user.email] + kwargs['cc'].split(';') + mailfil.split(',')
     if kwargs['file'] is not None:
         for q in kwargs['file']:

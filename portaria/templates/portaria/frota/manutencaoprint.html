@@ -3,6 +3,13 @@
 {% load static %}
 {% load groupscheck %}
 {% if request.user|has_group:"frota" %}
+<style type="text/css">
+    @media print{
+        #printbutton{
+            display:none !important;
+        }
+    }
+</style>
     <div class="container mt-4">
         {% for message in messages %}
             <div class="container-fluid p-0">
@@ -13,7 +20,7 @@
         {% endfor %}
         <div class="row mt-4 linha-baixo">
             <h2 class="title-cad col-8">OS: {{ os }} - Placa veículo: {{ os.veiculo }}</h2>
-            <input class="button col-3" type="submit" value="Imprimir" onclick="window.print();">
+            <input class="button col-3" type="submit" id="printbutton" value="Imprimir" onclick="window.print();">
         </div>
         <div class="row printing mt-4">
             <p>Socorro: {% if os.socorro == True %}SIM{% else %}NÃO{% endif %}</p>

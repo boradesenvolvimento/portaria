@@ -70,6 +70,7 @@ class Cadastro(models.Model):
     destino = models.CharField(max_length=5, choices=TIPO_GARAGEM, blank=True, null=True)
     tipo_mot = models.CharField(max_length=11, choices=TIPO_MOT)
     tipo_viagem = models.CharField(max_length=10, choices=TIPO_VIAGEM)
+    notas = models.IntegerField()
     hr_chegada = models.DateTimeField(blank=True)
     hr_saida = models.DateTimeField(blank=True, null=True)
     autor = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
@@ -540,3 +541,25 @@ class EmailChamado(models.Model):
     ult_resp_html = models.TextField(blank=True, null=True)
     tkt_ref = models.ForeignKey(TicketChamado, on_delete=PROTECT)
 
+class RomXML(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    dt_emissao = models.DateTimeField()
+    nota_fiscal = models.IntegerField()
+    remetente = models.CharField(max_length=200)
+    destinatario = models.CharField(max_length=200)
+    peso = models.FloatField()
+    volume = models.IntegerField()
+    vlr_nf = models.FloatField()
+    municipio = models.CharField(max_length=100)
+    uf = models.CharField(max_length=2)
+    autor = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
+    printed = models.BooleanField(default=False)
+    pub_date = models.DateTimeField(default=timezone.now)
+
+class SkuRefXML(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    codigo = models.IntegerField()
+    desc_prod = models.CharField(max_length=200)
+    tp_un = models.CharField(max_length=10)
+    qnt_un = models.IntegerField()
+    xmlref = models.ForeignKey(RomXML, on_delete=models.CASCADE)

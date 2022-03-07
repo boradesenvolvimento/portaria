@@ -14,11 +14,12 @@ class CadastroAdmin(admin.ModelAdmin):
         ('destino', {'fields': ['destino']}),
         ('tipo_mot', {'fields': ['tipo_mot']}),
         ('tipo_viagem', {'fields': ['tipo_viagem']}),
+        ('notas', {'fields': ['notas']}),
         ('hr_chegada', {'fields':['hr_chegada']}),
         ('hr_saida',{'fields':['hr_saida']}),
         ('autor', {'fields': ['autor']}),
     ]
-    list_display = ('id','placa', 'placa2', 'motorista', 'empresa','origem','destino','tipo_viagem','tipo_mot','hr_chegada','hr_saida', 'autor')
+    list_display = ('id','placa', 'placa2', 'motorista', 'empresa','origem','destino','tipo_viagem','notas','tipo_mot','hr_chegada','hr_saida', 'autor')
 admin.site.register(Cadastro, CadastroAdmin)
 
 class PaleteControlAdmin(admin.ModelAdmin):
@@ -108,4 +109,12 @@ admin.site.register(EmailChamado,EmailChamadoAdmin)
 class EmailOcorenciasMonitAdmin(admin.ModelAdmin):
     pass
 admin.site.register(EmailOcorenciasMonit,EmailOcorenciasMonitAdmin)
+
+class RomXMLAdmin(admin.ModelAdmin):
+    pass
+admin.site.register(RomXML,RomXMLAdmin)
+
+class SkuRefXMLdmin(admin.ModelAdmin):
+    pass
+admin.site.register(SkuRefXML,SkuRefXMLdmin)
 

@@ -7,9 +7,14 @@
     {% load groupscheck %}
 
     <style type="text/css">
-            @page{
-                size: 110mm 75mm;
+        @media print{
+            #etiquetable{
+                zoom: 1.5;
             }
+            @page{
+                size: 140mm 80mm;
+            }
+        }
             @font-face {
                 font-family: LibBarcodeFont;
                 src: url(/static/librebarcode128-regular.ttf)
@@ -21,7 +26,6 @@
                 height:auto;
                 border-collapse: collapse;
                 border-spacing:0;
-                zoom: 1.5;
             }
             .rot {
                 position:absolute;
@@ -55,7 +59,7 @@
 {% for q in lista %}
 {% for i in q.VOLUMES|rangeloop %}
 <div class="container">
-<table class="etiquetable" cellspacing="1" cellpadding="1">
+<table class="etiquetable" id="etiquetable" cellspacing="1" cellpadding="1">
     <tr>
         <td class="rot">
             <img width="100" src="{% static 'images/logo.png' %}">
@@ -68,7 +72,7 @@
             </div>
         </td>
     </tr>
-    <tr><td></td><td><hr style="margin-left:3rem;margin-right: 1rem;"><p class="barcode">{{ q.NOTA_FISCAL }}</p></td></tr>
+    <tr><td></td><td><hr style="margin-left:3rem;margin-right: 1rem;"><p class="barcode">{{ q.NOTA_FISCAL }}{{ forloop.counter }}</p></td></tr>
 </table>
 </div><br>
 {% endfor %}

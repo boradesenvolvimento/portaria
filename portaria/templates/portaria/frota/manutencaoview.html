@@ -14,12 +14,12 @@
         <div class="row">
             <div class="col-6">
                 <form method="get">
-                <h2 class="title-cad">Filtrar placa:<input type="text" name="isplaca"><input type="submit" class="button"></h2>
+                <h2 class="title-cad">Filtrar:<input placeholder="ID ou placa."  type="text" name="isplaca"><input type="submit" class="button"></h2>
                 </form>
             </div>
             <div class="col-3"></div>
             <div class="col-3">
-                <button><a class="button" href="{% url 'portaria:manupendentes' %}">Lista pendentes</a></button>
+                <a style="text-decoration:none;color:white;" href="{% url 'portaria:manupendentes' %}"><button type="button">Lista pendentes</button></a>
             </div>
         </div>
         <div class="row">
@@ -48,7 +48,7 @@
                 <th>{{ c.prev_entrega|date:'d/m/Y' }}</th>
                 {% now 'd/m/Y' as hoje %}
                 <th>{% if c.prev_entrega|date:'d/m/Y' > hoje %}NORMAL{% elif c.prev_entrega|date:'d/m/Y' <= hoje %}ATRASADO{% endif %}</th>
-                <th><a href="{% url 'portaria:manutencaoprint' c.id %}">Print</a> | <a href="{% url 'portaria:manusaida' c.id %}">Saida</a></th>
+                <th><a style="text-decoration:none;font-size:20px;" href="{% url 'portaria:manutencaoprint' c.id %}"><ion-icon name="print"></ion-icon></a> | <a style="text-decoration:none;font-size:20px;" href="{% url 'portaria:manusaida' c.id %}"><ion-icon name="exit-outline"></ion-icon></a></th>
             </tr>
             {% endfor %}
             </tbody>

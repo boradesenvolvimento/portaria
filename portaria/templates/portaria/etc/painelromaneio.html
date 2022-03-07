@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+{% load groupscheck %}
+{% if request.user|has_group:"frota" %}
+    <div class="container mt-4">
+        {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+        {% endfor %}
+        <div class="container">
+            <h2>Exportar<hr></h2>
+            <form method="post">
+                {% csrf_token %}
+            <input name="data1" type="date"><input name="data2" type="date">
+            <button type="submit">Enviar</button>
+            </form>
+            <hr>
+        </div>
+        <div class="container">
+            <h2>Painel<hr></h2>
+            <table class="table table1">
+                <thead>
+                    <tr>
+                        <td>ID</td>
+                        <td>Data Emissão</td>
+                        <td>Nota Fiscal</td>
+                        <td>Valor NF</td>
+                        <td>Remetente</td>
+                        <td>Destinatario</td>
+                        <td>UF</td>
+                        <td>Peso</td>
+                        <td>Volume</td>
+                        <td>Autor</td>
+                        <td>Data Publicado</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for q in context %}
+                    <tr>
+                        <th>{{ q.id }}</th>
+                        <th>{{ q.dt_emissao }}</th>
+                        <th>{{ q.nota_fiscal }}</th>
+                        <th>R$ {{ q.vlr_nf|floatformat:'2' }}</th>
+                        <th>{{ q.remetente }}</th>
+                        <th>{{ q.destinatario }}</th>
+                        <th>{{ q.uf }}</th>
+                        <th>{{ q.peso }}</th>
+                        <th>{{ q.volume }}</th>
+                        <th>{{ q.autor }}</th>
+                        <th>{{ q.pub_date|date:'d/m/Y' }}</th>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+{% endblock %}

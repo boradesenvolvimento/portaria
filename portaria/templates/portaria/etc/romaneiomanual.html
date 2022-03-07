@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+{% load groupscheck %}
+{% if request.user|has_group:"frota" %}
+    <div class="container mt-4">
+        {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+        {% endfor %}
+        <div class="container">
+            <h2>Entrada XML Manual<hr></h2>
+            <form method="post">
+                {% csrf_token %}
+                <div class="row">
+                    <label class="col-3" for="emissao">Emissao</label>
+                    <input class="col-3" type="datetime-local" name="emissao" id="emissao">
+                </div>
+                <div class="row">
+                    <label class="col-3" for="nrnota">Nº Nota Fiscal</label>
+                    <input class="col-3" type="text" name="nrnota" id="nrnota">
+                </div>
+                <div class="row">
+                    <label class="col-3" for="remet">Remetente</label>
+                    <input class="col-3" type="text" name="remet" id="remet">
+                </div>
+                <div class="row">
+                    <label class="col-3" for="destin">Destinatario</label>
+                    <input class="col-3" type="text" name="destin" id="destin">
+                </div>
+                <div class="row">
+                    <label class="col-3" for="volume">Volume</label>
+                    <input class="col-3" type="text" name="volume" id="volume">
+                </div>
+                <div class="row">
+                    <label class="col-3" for="peso">Peso</label>
+                    <input class="col-3" type="text" name="peso" id="peso">
+                </div>
+                <div class="row">
+                    <label class="col-3" for="vlr_nf">Valor NF</label>
+                    <input class="col-3" type="text" name="vlr_nf" id="vlr_nf">
+                </div>
+                <div class="row">
+                    <label class="col-3" for="municipio">Município</label>
+                    <input class="col-3" type="text" name="municipio" id="municipio">
+                </div>
+                <div class="row">
+                    <label class="col-3" for="ufrom">UF</label>
+                    <input class="col-3" type="text" name="uf" id="ufrom">
+                </div>
+                <hr>
+                <div>
+                    <h2 style="display:inline;">Produtos</h2><a href="#" id="btnAdiciona" class="button">Add+</a>
+                    <div id="addHTML" class="container">
+                        <div class="row">
+                            <div class="col">
+                            <label for="idsku">Código:</label>
+                            <input id="idsku" name="codigo" type="text">
+                            </div>
+                            <div class="col">
+                            <label for="iddesc_prod">Descrição:</label>
+                            <input id="iddesc_prod" name="descr" type="text">
+                            </div>
+                            <div class="col">
+                            <label class="col" for="idtp_un">Tipo unidade:</label>
+                            <input class="col" id="idtp_un" name="tp_un" type="text">
+                            </div>
+                            <div class="col">
+                            <label for="idqnt_un">Quantidade:</label>
+                            <input id="idqnt_un" name="qnt_un" type="text">
+                            </div><hr>
+                        </div>
+                    </div>
+                </div>
+                <button type="submit">Enviar</button>
+                <input type="hidden" id="setCount" name="setcount">
+            </form>
+        </div>
+    </div>
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+<script type="text/javascript">
+
+	var idContador = 0;
+
+	function exclui(id){
+		var campo = $("#"+id.id);
+		campo.remove();
+	}
+
+	$( document ).ready(function() {
+		$("#btnAdiciona").click(function(e){
+			e.preventDefault();
+			adicionaCampo();
+		})
+
+		function adicionaCampo(){
+
+			idContador++;
+			var idCampo = "campoExtra"+idContador;
+			var idForm = "formExtra"+idContador;
+			var idNum = "idNum"+idContador;
+
+			var html = "";
+			html += "<div class='row' id="+idNum+"><div class='col'><label for='idsku'>Código "+idContador+":</label><input id='idsku' name='codigo"+idContador+"' type='text'></div><div class='col'><label for='iddesc_prod'>Descrição "+idContador+":</label><input id='iddesc_prod' name='descr"+idContador+"' type='text'></div><div class='col'><label for='idtp_un'>Tipo unidade "+idContador+":</label><input id='idtp_un' name='tp_un"+idContador+"' type='text'></div><div class='col'><label for='idqnt_un'>Quantidade "+idContador+":</label><input id='idqnt_un' name='qnt_un"+idContador+"' type='text'></div><hr>"
+
+			$("#addHTML").append(html);
+			document.getElementById('setCount').value = idContador;
+		}
+    });
+
+	</script>
+{% endblock %}

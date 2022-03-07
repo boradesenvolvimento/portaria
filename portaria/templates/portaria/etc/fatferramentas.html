@@ -21,7 +21,7 @@
                 <form method="post" action="{% url 'portaria:ediexceltosd1' %}" enctype="multipart/form-data">
                     {% csrf_token %}
                     <label class="title-cad" style="border-radius:2px;">EDI Correios:
-                <input style="border-radius:0;" type="file" name="edi_excel">
+                <input style="border-radius:0;display:block;" type="file" name="edi_excel">
                 <input type="submit" class="button" placeholder="Upload">
                     </label>
                 </form>

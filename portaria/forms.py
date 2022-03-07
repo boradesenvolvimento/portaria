@@ -37,6 +37,7 @@ class CadastroForm(forms.ModelForm):
             'destino',
             'tipo_mot',
             'tipo_viagem',
+            'notas',
             'hr_chegada',
             'hr_saida',
             'autor'

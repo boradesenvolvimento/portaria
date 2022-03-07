@@ -81,9 +81,6 @@
             </ul>
           </div>
           {% endif %}
-          {% if request.user|has_group:"adm_rh" %}
-          <li class="nav-item"><a class="nav-link1" href="{% url 'portaria:cardusuario' %}">Cards</a></li>
-          {% endif %}
           {% if request.user|has_group:"faturamento" %}
           <div class="dropdown">
             <button class="dropdown-toggle menutext-navbar nav-link1" type="button" style="background-color: #3188E8;" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
@@ -111,16 +108,26 @@
             </ul>
           </div>
           {% endif %}
+          {% if request.user|has_group:'ferramentas' %}
           <div class="dropdown">
             <button class="dropdown-toggle menutext-navbar nav-link1" type="button" style="background-color: #3188E8;" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-              Etiquetas
+              Ferramentas
             </button>
             <ul class="dropdown-menu" style="background-color: #3188E8;" aria-labelledby="dropdownMenuButton1">
-            <li class="nav-item">
-              <a class="nav-link1" href="{% url 'portaria:etiquetas' %}">Lançar Etiquetas</a>
-            </li>
+              {% if request.user|has_group:"etiquetas" %}
+              <li class="nav-item">
+                <a class="nav-link1" href="{% url 'portaria:etiquetas' %}">Lançar Etiquetas</a>
+              </li>
+              {%  %}
+              {% if request.user|has_group:"adm_rh" %}
+              <li class="nav-item"><a class="nav-link1" href="{% url 'portaria:cardusuario' %}">Cards</a></li>
+              {% endif %}
+              {% if request.user|has_group:"romaneioxml" %}
+              <li class="nav-item"><a class="nav-link1" href="{% url 'portaria:romaneioxml' %}">XMLS</a></li>
+              {% endfic %}
             </ul>
           </div>
+          {% endif %}
           {% if request.user|has_group:"chamado" %}
             <!--<div class="dropdown">
             <button class="dropdown-toggle menutext-navbar nav-link1" type="button" style="background-color: #3188E8;" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">

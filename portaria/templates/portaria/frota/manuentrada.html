@@ -13,11 +13,11 @@
                     {% csrf_token %}
                 <table id="addHTML">
                     <tr><th>Socorro:</th><th>{{ form.socorro }}</th></tr>
-                    <tr><th>Tipo manutenção:</th><th>{{ form.tp_manutencao }}</th></tr>
-                    <tr><th>Local Manutenção:</th><th>{{ form.local_manu }}</th></tr>
-                    <tr><th>Kilometragem da última troca de óleo:</th><th>{{ form.km_ult_troca_oleo }}</th></tr>
                     <tr><th>Filial:</th><th>{{ form.filial }}</th></tr>
+                    <tr><th>Local Manutenção:</th><th>{{ form.local_manu }}</th></tr>
+                    <tr><th>Tipo manutenção:</th><th>{{ form.tp_manutencao }}</th></tr>
                     <tr><th>Previsão de entrega:</th><th>{{ form.prev_entrega }}</th></tr>
+                    <tr><th>Kilometragem da última troca de óleo:</th><th>{{ form.km_ult_troca_oleo }}</th></tr>
                     <tr><th>Observacao:</th><th>{{ form.observacao }}</th></tr>
                     <tr><th>Tipo serviço:</th><th>
                             <select name="tp_servico">
