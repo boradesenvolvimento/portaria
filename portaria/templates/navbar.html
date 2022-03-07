@@ -118,13 +118,13 @@
               <li class="nav-item">
                 <a class="nav-link1" href="{% url 'portaria:etiquetas' %}">Lançar Etiquetas</a>
               </li>
-              {%  %}
+              {% endif %}
               {% if request.user|has_group:"adm_rh" %}
               <li class="nav-item"><a class="nav-link1" href="{% url 'portaria:cardusuario' %}">Cards</a></li>
               {% endif %}
               {% if request.user|has_group:"romaneioxml" %}
               <li class="nav-item"><a class="nav-link1" href="{% url 'portaria:romaneioxml' %}">XMLS</a></li>
-              {% endfic %}
+              {% endif %}
             </ul>
           </div>
           {% endif %}
