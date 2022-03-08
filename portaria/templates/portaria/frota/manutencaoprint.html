@@ -27,7 +27,7 @@
             <p>Tipo manutenção: {{ os.tp_manutencao }}</p>
             <p>Local: {% if os.local_manu == 'E' %}EXTERNO{% else %}INTERNO{% endif %}</p>
             <p>Última manutenção: {{ os.dt_ult_manutencao|date:'d/m/Y' }}</p>
-            <p>Km última troca de óleo: {{ os.km_ult_troca_oleo }}km</p>
+            <p>Km atual: {{ os.km_atual }}km</p>
             <p>Tipo de serviço: {% for b in aa %}{{ b.grp }} - {{ b.svs }} || {% endfor %}</p>
             <p>Filial: {{ os.filial }}</p>
             <p>Previsão entrega: {{ os.prev_entrega|date:'d/m/Y' }}</p>

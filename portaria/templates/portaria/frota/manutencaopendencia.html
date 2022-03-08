@@ -22,7 +22,7 @@
         <table class="table table1">
             <thead>
             <tr>
-                <td>ID</td>
+                <td>OS</td>
                 <td>PLACA</td>
                 <td>SERVICO</td>
                 <td>OBSERVACAO</td>
@@ -36,11 +36,13 @@
                     {% csrf_token %}
                 <th>{{ c.id }}</th>
                 <th>{{ c.veiculo }}</th>
-                <th>{% for i in qs2 %}{% if i.id_os_id == c.id %}
+                <th style="white-space: nowrap;overflow: hidden;text-overflow: ellipsis;">
+                    {% for i in qs2 %}{% if i.id_os_id == c.id %}
                     {{ i.id_svs.grupo_servico }} - {{ i.id_svs.tipo_servico }} || {% endif %}{% endfor %}</th>
                 <th>{{ c.observacao }}</th>
                 <th>{{ c.status }}</th>
                 <th><input type="hidden" id="idos" name="os" value="{{ c.id }}">
+                    <a style="text-decoration:none;font-size:20px;" href="{% url 'portaria:manutencaoprint' c.id %}"><ion-icon name="print"></ion-icon></a>
                     <input type="submit" value="Confirmar" class="button">
                 </form>
             </tr>

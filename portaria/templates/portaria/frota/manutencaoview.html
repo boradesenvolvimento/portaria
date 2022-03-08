@@ -3,6 +3,14 @@
 {% load static %}
 {% load groupscheck %}
 {% if request.user|has_group:"frota" %}
+<style>
+    .PREVENTIVA{
+        background-color:#FF7F50;
+    }
+    .CORRETIVA{
+        background-color:#FFFACD;
+    }
+</style>
     <div class="container mt-4">
         {% for message in messages %}
             <div class="container-fluid p-0">
@@ -14,7 +22,7 @@
         <div class="row">
             <div class="col-6">
                 <form method="get">
-                <h2 class="title-cad">Filtrar:<input placeholder="ID ou placa."  type="text" name="isplaca"><input type="submit" class="button"></h2>
+                <h2 class="title-cad">Filtrar:<input placeholder="OS ou placa."  type="text" name="isplaca"><input type="submit" class="button"></h2>
                 </form>
             </div>
             <div class="col-3"></div>
@@ -26,7 +34,7 @@
         <table class="table table1">
             <thead>
             <tr>
-                <td>ID</td>
+                <td>OS</td>
                 <td>PLACA</td>
                 <td>TIPO</td>
                 <td>SERVICO</td>
@@ -37,17 +45,17 @@
             </thead>
             <tbody>
             {% for c in lista %}
-            <tr>
+            <tr class="{{ c.tp_manutencao }}">
                 <th>{{ c.id }}</th>
                 <th>{{ c.veiculo }}</th>
                 <th>{{ c.tp_manutencao }}</th>
-                <th>{% for i in form %}{% if i.id_os_id == c.id %}
+                <th style="white-space: nowrap;overflow: hidden;text-overflow: ellipsis;">{% for i in form %}{% if i.id_os_id == c.id %}
                     {{ i.id_svs.grupo_servico }} - {{ i.id_svs.tipo_servico }} ||
                     {% endif %}{% endfor %}</th>
                 <th>{{ c.dt_entrada|date:'d/m/Y' }}</th>
                 <th>{{ c.prev_entrega|date:'d/m/Y' }}</th>
                 {% now 'd/m/Y' as hoje %}
-                <th>{% if c.prev_entrega|date:'d/m/Y' > hoje %}NORMAL{% elif c.prev_entrega|date:'d/m/Y' <= hoje %}ATRASADO{% endif %}</th>
+                <th>{% if c.prev_entrega|date:'d/m/Y' <= hoje %}NORMAL{% elif c.prev_entrega|date:'d/m/Y' > hoje %}ATRASADO{% endif %}</th>
                 <th><a style="text-decoration:none;font-size:20px;" href="{% url 'portaria:manutencaoprint' c.id %}"><ion-icon name="print"></ion-icon></a> | <a style="text-decoration:none;font-size:20px;" href="{% url 'portaria:manusaida' c.id %}"><ion-icon name="exit-outline"></ion-icon></a></th>
             </tr>
             {% endfor %}

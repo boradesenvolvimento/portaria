@@ -150,11 +150,6 @@ class ChecklistForm(forms.ModelForm):
             'obs': Textarea(attrs={'cols': 30, 'rows': 3}),
         }
 
-class TipoServicosManutForm(forms.ModelForm):
-    class Meta:
-        model = TipoServicosManut
-        fields = '__all__'
-
 class ServicoPjForm(forms.ModelForm):
     class Meta:
         model = NfServicoPj
@@ -177,7 +172,7 @@ class ManutencaoForm(forms.ModelForm):
             'socorro',
             'tp_manutencao',
             'local_manu',
-            'km_ult_troca_oleo',
+            'km_atual',
             'filial',
             'prev_entrega',
             'observacao',

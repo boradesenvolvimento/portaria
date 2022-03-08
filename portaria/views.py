@@ -542,17 +542,25 @@ def cadveiculo(request):
     return render(request, 'portaria/frota/cadveiculo.html', {'form': form})
 
 def cadtpservico(request):
-    form = TipoServicosManutForm
+    grps = TipoServicosManut.objects.values_list('grupo_servico', flat=True)
     if request.method == 'POST':
-        form = TipoServicosManutForm(request.POST or None)
-        if form.is_valid():
-            form.save()
+        grp = request.POST.get('grp')
+        tp_sv = request.POST.get('tp_sv')
+        if grp and tp_sv:
+            try:
+                TipoServicosManut.objects.create(grupo_servico=grp, tipo_servico=tp_sv)
+            except Exception as e:
+                print(e)
             messages.success(request, 'Cadastrado com sucesso')
             return redirect('portaria:frotacadastros')
-    return render(request, 'portaria/frota/cadtpservico.html', {'form':form})
+    return render(request, 'portaria/frota/cadtpservico.html', {'grps':grps})
 
 @login_required
 def manutencaofrota(request):
+    metrics = ManutencaoFrota.objects.all().annotate(
+        preventiva=Count('tp_manutencao', filter=Q(tp_manutencao='PREVENTIVA')),
+        corretiva=Count('tp_manutencao', filter=Q(tp_manutencao='CORRETIVA'))).aggregate(prev=Sum('preventiva'),
+                                                                                         corr=Sum('corretiva'))
     if request.method == 'GET':
         pla = request.GET.get('placa')
         if pla:
@@ -576,7 +584,7 @@ def manutencaofrota(request):
             return render(request, 'portaria/frota/manutencaofrota.html')
         else:
             return redirect('portaria:manusaida', osid=idmanu)
-    return render(request, 'portaria/frota/manutencaofrota.html')
+    return render(request, 'portaria/frota/manutencaofrota.html', {'metrics':metrics})
 
 def manupendentes(request):
     qs = ManutencaoFrota.objects.filter(status='PENDENTE').order_by('dt_entrada')
@@ -648,27 +656,42 @@ def manuentrada(request, placa_id):
 @login_required
 def manusaida(request, osid):
     get_os = get_object_or_404(ManutencaoFrota, pk=osid)
+    svsss = ServJoinManu.objects.filter(id_os_id=get_os.id)
     if get_os.dt_saida == None:
-        dtsaida = request.POST.get('dtsaida')
-        vlmao = request.POST.get('vlmao')
-        vlpeca = request.POST.get('vlpeca')
-        if dtsaida:
-            try:
-                date_dtsaida = datetime.datetime.strptime(dtsaida, '%d/%m/%Y').date()
-            except ValueError:
-                messages.error(request, 'Por favor digite uma data válida')
-                return render(request, 'portaria/frota/manusaida.html',{'get_os':get_os})
-            else:
-                between_days = (date_dtsaida - get_os.dt_entrada).days
-                ManutencaoFrota.objects.filter(pk=get_os.id).update(valor_peca=vlpeca,valor_maodeobra=vlmao,
-                                                                    dt_saida=date_dtsaida,
-                                                                    dias_veic_parado=str(between_days),
-                                                                    status='PENDENTE',
-                                                                    autor=request.user)
+        if request.method == 'POST':
+            idsvs = request.POST.getlist('idsvs')
+            dtsaida = request.POST.get('dtsaida')
+            vlmao = request.POST.getlist('vlmao')
+            vlpeca = request.POST.getlist('vlpeca')
+            prod = request.POST.getlist('produto')
+            forn = request.POST.getlist('fornecedor')
+            if dtsaida and vlmao and vlpeca:
+                try:
+                    array = []
+                    date_dtsaida = datetime.datetime.strptime(dtsaida, '%d/%m/%Y').date()
+                    for i in range(0, len(idsvs)):
+                        array.append({'idsvs':idsvs[i], 'vlmao':vlmao[i].replace(',','.'),
+                                      'vlpeca':vlpeca[i].replace(',','.'), 'prod':prod[i], 'forn':forn[i]})
 
-                messages.success(request, f'Saída cadastrada para OS {get_os.id}, placa {get_os.veiculo}')
-                return redirect('portaria:manutencaoview')
-        return render(request, 'portaria/frota/manusaida.html',{'get_os':get_os})
+                except ValueError:
+                    messages.error(request, 'Por favor digite uma data válida')
+                    return render(request, 'portaria/frota/manusaida.html',{'get_os':get_os})
+                else:
+                    between_days = (date_dtsaida - get_os.dt_entrada).days
+                    ManutencaoFrota.objects.filter(pk=get_os.id).update(dt_saida=date_dtsaida,
+                                                                        dias_veic_parado=str(between_days),
+                                                                        status='PENDENTE',
+                                                                        autor=request.user)
+                    for q in array:
+                        try:
+                            ServJoinManu.objects.filter(pk=q['idsvs']).update(valor_maodeobra=q['vlmao'],
+                                                                              valor_peca=q['vlpeca'],produto=q['prod'],
+                                                                              fornecedor=q['forn'])
+                        except Exception as e:
+                            print(e)
+                    messages.success(request, f'Saída cadastrada para OS {get_os.id}, placa {get_os.veiculo}')
+                    return redirect('portaria:manutencaoview')
+        return render(request, 'portaria/frota/manusaida.html',{'get_os':get_os,'svsss':svsss})
     else:
         messages.error(request, 'Saída já cadastrada para OS')
         return redirect('portaria:manutencaofrota')
@@ -1202,7 +1225,6 @@ def entradaxml(request):
             print(f'Error: {e}, error_type: {type(e).__name__}')
         else:
             for q in skus:
-                print(q['sku'], q['descprod'], q['un'], q['qnt'])
                 SkuRefXML.objects.create(codigo=q['sku'],desc_prod=q['descprod'],tp_un=q['un'], qnt_un=int(q['qnt']),
                                          xmlref=rom)
     return redirect('portaria:romaneioxml')
