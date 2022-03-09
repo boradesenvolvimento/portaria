@@ -29,11 +29,12 @@
         </div>
         <table class="table table1">
             <tr>
-                <th><strong>Nº Checklist</strong></th>
-                <th><strong>Data</strong></th>
-                <th><strong>Placa Veiculo</strong></th>
-                <th><strong>Motorista</strong></th>
-                <th><strong>Detalhes Checklist</strong></th>
+                <th>Nº Checklist</th>
+                <th>Data</th>
+                <th>Placa Veiculo</th>
+                <th>Motorista</th>
+                <th>Filial</th>
+                <th>Detalhes Checklist</th>
             </tr>
         {% for q in form %}
             <tr>
@@ -41,6 +42,7 @@
                 <th>{{ q.datachecklist }}</th>
                 <th>{{ q.placaveic }}</th>
                 <th>{{ q.motoristaveic }}</th>
+                <th>{{ q.get_filial_display }}</th>
                 <th><a href="{% url 'portaria:checklistdetail' idckl=q.idchecklist %}" style="font-size:2.4rem;">
                     <ion-icon name="settings-outline"></ion-icon>
                 </a></th>

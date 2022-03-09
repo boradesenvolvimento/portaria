@@ -289,7 +289,7 @@ def checklistfrota(request, placa_id, moto_id):
     return render(request,'portaria/frota/checklistfrota.html', {'form':form,'pla':pla, 'mot':mot})
 
 def checklistview(request):
-    form = ChecklistFrota.objects.all().order_by('-datachecklist')
+    form = ChecklistFrota.objects.all().order_by('-idchecklist')
     return render(request, 'portaria/frota/checklistview.html', {'form':form})
 
 def checklistdetail(request, idckl):
@@ -700,7 +700,7 @@ class ManutencaoListView(generic.ListView):
     context_object_name = 'lista'
 
     def get_queryset(self):
-        qs = ManutencaoFrota.objects.filter(dt_saida=None,).order_by('dt_entrada')
+        qs = ManutencaoFrota.objects.filter(dt_saida=None,).order_by('dt_entrada', 'tp_manutencao')
         try:
             placa = self.request.GET.get('isplaca')
             if placa:
