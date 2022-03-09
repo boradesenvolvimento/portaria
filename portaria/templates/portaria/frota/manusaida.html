@@ -19,11 +19,20 @@
                 {% csrf_token %}
                 <table>
                     <tr>
-                        <td>Data de saída:</td><td><input type="text" name="dtsaida"></td>
+                        <td>Data de saída:</td><td><input autocomplete="off" type="text" name="dtsaida"></td>
                     </tr>
                     <tr><td><hr></td><td><hr></td></tr>
                     {% for q in svsss %}
                     <tr><td>{{ q.id_svs.tipo_servico }}<input type="hidden" name="idsvs" value="{{ q.id }}"></td></tr>
+                    <tr>
+                        <td>Tipo mão de obra:</td>
+                        <td>
+                            <select name="localmanu">
+                                <option value="I">INTERNO</option>
+                                <option value="E">EXTERNO</option>
+                            </select>
+                        </td>
+                    </tr>
                     <tr>
                         <td>Valor mão de obra:</td><td><input type="text" name="vlmao"></td>
                     </tr>

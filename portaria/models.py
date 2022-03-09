@@ -184,6 +184,31 @@ class Veiculos(models.Model):
        return self.prefixoveic
 
 class ChecklistFrota(models.Model):
+    GARAGEM_CHOICES = [
+        ('1', 'SPO'),
+        ('2', 'REC'),
+        ('3', 'SSA'),
+        ('4', 'FOR'),
+        ('5', 'MCZ'),
+        ('6', 'NAT'),
+        ('7', 'JPA'),
+        ('8', 'AJU'),
+        ('9', 'VDC'),
+        ('10', 'MG'),
+        ('20', 'CTG'),
+        ('21', 'TCO'),
+        ('22', 'UDI'),
+        ('23', 'TMA'),
+        ('24', 'VIX'),
+        ('30', 'BMA'),
+        ('31', 'BPE'),
+        ('32', 'BEL'),
+        ('33', 'BPB'),
+        ('34', 'SLZ'),
+        ('35', 'BAL'),
+        ('36', 'THE')
+    ]
+
     idchecklist = models.BigAutoField(primary_key=True)
     datachecklist = models.DateField(default=timezone.now)
     placaveic = models.ForeignKey(Veiculos, on_delete=models.CASCADE)
@@ -193,6 +218,7 @@ class ChecklistFrota(models.Model):
     kmanterior = models.IntegerField()
     kmatual = models.IntegerField()
     horimetro = models.CharField(max_length=10)
+    filial = models.CharField(max_length=2, choices=GARAGEM_CHOICES)
     p1_1 = models.BooleanField('Uniforme da Empresa')
     p1_2 = models.BooleanField('Motorista identificado por crachá')
     p2_1 = models.BooleanField('Lanterna do farol dianteiro funcionando?')
@@ -220,13 +246,14 @@ class ChecklistFrota(models.Model):
     p2_23 = models.BooleanField('A suspensão está em condições perfeitas?')
     p2_24 = models.BooleanField('O carro está limpo e higienizado?')
     p3_1 = models.BooleanField('Foi verificado as luzes de advertência das laterais?')
-    p3_2 = models.BooleanField('Foi verificado o lacre da placa?')
-    p3_3 = models.BooleanField('Foi verificado se o aparelho thermoking apresenta falhas?')
-    p3_4 = models.BooleanField('Foi verificado a carroceria, assoalho e baú?')
-    p3_5 = models.BooleanField('Foi verificado a luz de freio?')
-    p3_6 = models.BooleanField('Foi verificado a luz de ré?')
-    p3_7 = models.BooleanField('Foi verificado se as luzes da lanterna traseira direita funciona?')
-    p3_8 = models.BooleanField('Foi verificado se as luzes da lanterna traseira esquerda funciona?')
+    p3_2 = models.BooleanField('Foi verificado se o aparelho thermoking apresenta falhas?')
+    p3_3 = models.BooleanField('Foi verificado a carroceria, assoalho e baú?')
+    p3_4 = models.BooleanField('Foi verificado a luz de freio?')
+    p3_5 = models.BooleanField('Foi verificado a luz de ré?')
+    p3_6 = models.BooleanField('Foi verificado se as luzes da lanterna traseira direita funciona?')
+    p3_7 = models.BooleanField('Foi verificado se as luzes da lanterna traseira esquerda funciona?')
+    p3_8 = models.BooleanField('Veículo Plotado?')
+    p3_9 = models.BooleanField('Plotagem do veículo possui avarias?')
     obs = models.TextField('Observação', blank=True)
     autor = models.ForeignKey(User, on_delete=models.PROTECT)
 
@@ -377,6 +404,10 @@ class ManutencaoFrota(models.Model):
         return str(self.id)
 
 class ServJoinManu(models.Model):
+    LOCAL_MANU_CHOICES = [
+        ('I', 'INTERNO'),
+        ('E', 'EXTERNO')
+    ]
     id = models.BigAutoField(primary_key=True)
     id_os = models.ForeignKey(ManutencaoFrota, on_delete=PROTECT)
     id_svs = models.ForeignKey(TipoServicosManut, on_delete=PROTECT)
@@ -384,6 +415,7 @@ class ServJoinManu(models.Model):
     valor_peca = models.FloatField('Valor peça', blank=True, null=True)
     produto = models.CharField(max_length=100, blank=True, null=True)
     fornecedor = models.CharField(max_length=100, blank=True, null=True)
+    local_manu = models.CharField('Local manutenção', max_length=1, choices=LOCAL_MANU_CHOICES)
     pub_date = models.DateField(auto_now=True)
     autor = models.ForeignKey(User, on_delete=PROTECT)
 

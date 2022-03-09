@@ -80,6 +80,7 @@ urlpatterns = [
     path('cardusuario/<int:id>/card', views.card, name='card'),
     path(r'readnotify/<notifyid>/', views.isnotifyread, name='isnotifyread'),
     path(r'allreadnotify/<user>', views.setallread, name='setallread'),
+    path(r'vncmtnotifymanu/', views.notifymanutencaovencidos, name="notifymanutencaovencidos"),
     path('testeconn/', views.testeconn, name='testeconn'),
     path(r'modaltkt/', views.modaltkt, name='modaltkt')
 

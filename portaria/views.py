@@ -557,10 +557,6 @@ def cadtpservico(request):
 
 @login_required
 def manutencaofrota(request):
-    metrics = ManutencaoFrota.objects.all().annotate(
-        preventiva=Count('tp_manutencao', filter=Q(tp_manutencao='PREVENTIVA')),
-        corretiva=Count('tp_manutencao', filter=Q(tp_manutencao='CORRETIVA'))).aggregate(prev=Sum('preventiva'),
-                                                                                         corr=Sum('corretiva'))
     if request.method == 'GET':
         pla = request.GET.get('placa')
         if pla:
@@ -584,7 +580,7 @@ def manutencaofrota(request):
             return render(request, 'portaria/frota/manutencaofrota.html')
         else:
             return redirect('portaria:manusaida', osid=idmanu)
-    return render(request, 'portaria/frota/manutencaofrota.html', {'metrics':metrics})
+    return render(request, 'portaria/frota/manutencaofrota.html')
 
 def manupendentes(request):
     qs = ManutencaoFrota.objects.filter(status='PENDENTE').order_by('dt_entrada')
@@ -665,13 +661,15 @@ def manusaida(request, osid):
             vlpeca = request.POST.getlist('vlpeca')
             prod = request.POST.getlist('produto')
             forn = request.POST.getlist('fornecedor')
+            localmanu = request.POST.getlist('localmanu')
             if dtsaida and vlmao and vlpeca:
                 try:
                     array = []
                     date_dtsaida = datetime.datetime.strptime(dtsaida, '%d/%m/%Y').date()
                     for i in range(0, len(idsvs)):
                         array.append({'idsvs':idsvs[i], 'vlmao':vlmao[i].replace(',','.'),
-                                      'vlpeca':vlpeca[i].replace(',','.'), 'prod':prod[i], 'forn':forn[i]})
+                                      'vlpeca':vlpeca[i].replace(',','.'), 'prod':prod[i], 'forn':forn[i],
+                                      'localmanu':localmanu[i]})
 
                 except ValueError:
                     messages.error(request, 'Por favor digite uma data válida')
@@ -686,7 +684,8 @@ def manusaida(request, osid):
                         try:
                             ServJoinManu.objects.filter(pk=q['idsvs']).update(valor_maodeobra=q['vlmao'],
                                                                               valor_peca=q['vlpeca'],produto=q['prod'],
-                                                                              fornecedor=q['forn'])
+                                                                              fornecedor=q['forn'],
+                                                                              local_manu=q['localmanu'])
                         except Exception as e:
                             print(e)
                     messages.success(request, f'Saída cadastrada para OS {get_os.id}, placa {get_os.veiculo}')
@@ -702,7 +701,6 @@ class ManutencaoListView(generic.ListView):
 
     def get_queryset(self):
         qs = ManutencaoFrota.objects.filter(dt_saida=None,).order_by('dt_entrada')
-
         try:
             placa = self.request.GET.get('isplaca')
             if placa:
@@ -713,8 +711,15 @@ class ManutencaoListView(generic.ListView):
 
     def get_context_data(self, **kwargs):
         data = ServJoinManu.objects.all()
+        metrics = ManutencaoFrota.objects.all().annotate(
+        preventiva=Count('id', filter=Q(tp_manutencao='PREVENTIVA')),
+        corretiva=Count('id', filter=Q(tp_manutencao='CORRETIVA')),
+        concluido=Count('id', filter=Q(status='CONCLUIDO',dt_entrada__month=datetime.datetime.now().month,
+                                       dt_entrada__year=datetime.datetime.now().year)))\
+            .aggregate(prev=Sum('preventiva'),corr=Sum('corretiva'),conc=Sum('concluido'))
         context = super().get_context_data(**kwargs)
         context['form'] = data
+        context['metrics'] = metrics
         return context
 
 
@@ -1492,10 +1497,10 @@ def get_manu_csv(request):
         response.write(u'\ufeff'.encode('utf8'))
         writer = csv.writer(response)
         writer.writerow(['id','veiculo','tp_manutencao','local_manu','dt_ult_manutencao','dt_entrada','dt_saida',
-                            'dias_veic_parado','km_ult_troca_oleo','tp_servico','valor_maodeobra','valor_peca',
+                            'dias_veic_parado','km_atual','tp_servico','valor_maodeobra','valor_peca',
                                 'filial','socorro','prev_entrega','observacao','status','autor'])
         manutencao = ManutencaoFrota.objects.all().values_list('id','veiculo__prefixoveic','tp_manutencao','local_manu','dt_ult_manutencao','dt_entrada','dt_saida',
-                            'dias_veic_parado','km_ult_troca_oleo','servjoinmanu__id_svs','valor_maodeobra','valor_peca',
+                            'dias_veic_parado','km_atual','servjoinmanu__id_svs','servjoinmanu__valor_maodeobra','servjoinmanu__valor_peca',
                                 'filial','socorro','prev_entrega','observacao','status','autor__username').filter(dt_entrada__gte=dateparse, dt_entrada__lte=dateparse1)
         for id in manutencao:
             writer.writerow(id)
@@ -2322,6 +2327,18 @@ def dictfetchall(cursor):
         dict(zip(columns, row))
         for row in cursor.fetchall()
     ]
+
+def notifymanutencaovencidos():
+    vencidos = ManutencaoFrota.objects.filter(status='ANDAMENTO')
+    for q in vencidos:
+        if q.prev_entrega < datetime.date.today():
+            notify.send(User.objects.get(pk=1), recipient=q.autor, verb='message',
+                        description=f"OS {q.id} vencida.")
+        elif q.prev_entrega == datetime.date.today():
+            notify.send(User.objects.get(pk=1), recipient=q.autor, verb='message',
+                        description=f"OS {q.id} vence hoje!.")
+        else:
+            pass
 
 def testeconn(request):
     conndb()

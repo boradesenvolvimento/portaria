@@ -110,6 +110,7 @@ class ChecklistForm(forms.ModelForm):
             'placacarreta2',
             'kmatual',
             'horimetro',
+            'filial',
             'p1_1',
             'p1_2',
             'p2_1',
@@ -144,6 +145,7 @@ class ChecklistForm(forms.ModelForm):
             'p3_6',
             'p3_7',
             'p3_8',
+            'p3_9',
             'obs'
         ]
         widgets = {

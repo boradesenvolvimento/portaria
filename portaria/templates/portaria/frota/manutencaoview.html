@@ -20,16 +20,38 @@
             </div>
         {% endfor %}
         <div class="row">
-            <div class="col-6">
+            <div class="col-3">
                 <form method="get">
-                <h2 class="title-cad">Filtrar:<input placeholder="OS ou placa."  type="text" name="isplaca"><input type="submit" class="button"></h2>
+                <h2 class="title-cad">Filtrar:<input style="width:10rem;" placeholder="OS ou placa."  type="text" name="isplaca"><input type="submit" class="button"></h2>
                 </form>
             </div>
-            <div class="col-3"></div>
+            <div class="col-6">
+                <div class="row">
+                    <div class="container col-6 card" style="width:auto;background:#e8eef5;border:solid 3px;border-radius:10px;">
+                        <div class="card-body" style="text-align:center;">
+                            <h3 class="card-title"> &nbsp; <strong>Preventiva</strong> &nbsp; </h3>
+                            <p class="card-text">{{ metrics.prev|default_if_none:'0' }}</p>
+                        </div>
+                    </div>
+                    <div class="container col-6 card" style="width:auto;background:#e8eef5;border:solid 3px;border-radius:10px;">
+                        <div class="card-body" style="text-align:center;">
+                            <h3 class="card-title"> &nbsp; <strong>Corretiva</strong> &nbsp; </h3>
+                            <p class="card-text">{{ metrics.corr|default_if_none:'0' }}</p>
+                        </div>
+                    </div>
+                    <div class="container col-6 card" style="width:auto;background:#e8eef5;border:solid 3px;border-radius:10px;">
+                        <div class="card-body" style="text-align:center;">
+                            <h3 class="card-title"> &nbsp; <strong>Concluido</strong> &nbsp; </h3>
+                            <p class="card-text">{{ metrics.conc|default_if_none:'0' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="col-3">
                 <a style="text-decoration:none;color:white;" href="{% url 'portaria:manupendentes' %}"><button type="button">Lista pendentes</button></a>
             </div>
         </div>
+        <hr>
         <div class="row">
         <table class="table table1">
             <thead>
