@@ -142,6 +142,7 @@ def cadastrosaida(request):
             if form.is_valid():
                 s_query = upper(form.cleaned_data['search_placa'])
                 q_query = upper(form.cleaned_data['search_dest'])
+                km = form.cleaned_data['kilometragem']
                 days_back = timezone.now() - datetime.timedelta(days=30)
                 loc_placa = Cadastro.objects.filter(placa=s_query, hr_chegada__gte=days_back,
                                                     hr_saida=None).order_by('-hr_chegada').first()
@@ -151,7 +152,8 @@ def cadastrosaida(request):
                     messages.error(request, 'Não encontrado')
                     return render(request, 'portaria/portaria/cadastrosaida.html', {'form':form})
                 else:
-                    Cadastro.objects.filter(pk=loc_placa.id).update(hr_saida=timezone.now(), destino=q_query, autor=request.user)
+                    Cadastro.objects.filter(pk=loc_placa.id).update(hr_saida=timezone.now(), destino=q_query,
+                                                                    kilometragem=km, autor=request.user)
                     messages.success(request, 'Saida cadastrada com sucesso.')
                     return HttpResponseRedirect(reverse('portaria:cadastro'))
         return render(request, 'portaria/portaria/cadastrosaida.html', {'form':form})

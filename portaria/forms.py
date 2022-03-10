@@ -15,6 +15,7 @@ class DateInput(forms.DateInput):
 class isPlacaForm(forms.Form):
     search_placa = forms.CharField(max_length=20, label='Placa')
     search_dest = forms.ChoiceField(choices=TIPO_GARAGEM, label='Destino')
+    kilometragem = forms.IntegerField()
 
 class DateForm(forms.Form):
     date = forms.DateField(widget=DateInput(format=settings.DATE_FORMAT))
@@ -38,6 +39,7 @@ class CadastroForm(forms.ModelForm):
             'tipo_mot',
             'tipo_viagem',
             'notas',
+            'kilometragem',
             'hr_chegada',
             'hr_saida',
             'autor'

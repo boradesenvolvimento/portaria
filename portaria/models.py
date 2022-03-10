@@ -71,6 +71,7 @@ class Cadastro(models.Model):
     tipo_mot = models.CharField(max_length=11, choices=TIPO_MOT)
     tipo_viagem = models.CharField(max_length=10, choices=TIPO_VIAGEM)
     notas = models.IntegerField()
+    kilometragem = models.IntegerField()
     hr_chegada = models.DateTimeField(blank=True)
     hr_saida = models.DateTimeField(blank=True, null=True)
     autor = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)

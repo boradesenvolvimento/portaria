@@ -30,7 +30,7 @@
                     <td scope="col">NOTAS</td>
                     <td scope="col">ENTRADA</td>
                     <td scope="col">SAIDA</td>
-                    <td scope="col">CHANGED BY</td>
+                    <td scope="col">KM</td>
                 </tr>
                 </thead>
                 <tbody>
@@ -46,7 +46,7 @@
                         <th>{{ cadastro.notas }}</th>
                         <th>{{ cadastro.hr_chegada|date:'d/m/Y H:i' }}</th>
                         <th>{{ cadastro.hr_saida|date:'d/m/Y H:i' }}</th>
-                        <th>{{ cadastro.autor }}</th>
+                        <th>{{ cadastro.kilometragem }}</th>
                     </tr>
                     {% endfor %}
                 </tbody>
