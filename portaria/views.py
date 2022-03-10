@@ -702,7 +702,7 @@ class ManutencaoListView(generic.ListView):
     context_object_name = 'lista'
 
     def get_queryset(self):
-        qs = ManutencaoFrota.objects.filter(dt_saida=None,).order_by('dt_entrada', 'tp_manutencao')
+        qs = ManutencaoFrota.objects.filter(dt_saida=None,).order_by('tp_manutencao','dt_entrada')
         try:
             placa = self.request.GET.get('isplaca')
             if placa:
