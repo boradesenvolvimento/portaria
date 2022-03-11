@@ -1158,18 +1158,38 @@ def romaneioxml(request):
 
 def painelromaneio(request):
     context = RomXML.objects.all().order_by('-pub_date')
+    getrem = RomXML.objects.all().values_list('remetente', flat=True).distinct()
+    if request.method == 'GET':
+        dt1 = request.GET.get('data1')
+        dt2 = request.GET.get('data2')
+        rem = request.GET.get('remetente')
+        if dt1 and dt2 and rem:
+            dt1p = datetime.datetime.strptime(dt1, '%Y-%m-%d').replace(hour=00, minute=00)
+            dt2p = datetime.datetime.strptime(dt2, '%Y-%m-%d').replace(hour=23, minute=59)
+            context = RomXML.objects.filter(pub_date__gte=dt1p,pub_date__lte=dt2p,remetente=rem).order_by('-pub_date')
+
     if request.method == 'POST':
-        dt1 = datetime.datetime.strptime(request.POST.get('data1'), '%Y-%m-%d')
-        dt2 = datetime.datetime.strptime(request.POST.get('data2'), '%Y-%m-%d')
-        if dt1 and dt2:
-            romaneio = SkuRefXML.objects.filter(xmlref__pub_date__gte=dt1, xmlref__pub_date__lte=dt2).annotate(
-                nf1=F('xmlref__nota_fiscal'), municipio1=F('xmlref__municipio'), uf1=F('xmlref__uf'),codigo1=F('codigo'),
-                qnt_un1=F('qnt_un'), desc_prod1=F('desc_prod'),
-            )
-            sheet = romxmltoexcel(*romaneio)
-            if sheet:
-                return sheet
-    return render(request, 'portaria/etc/painelromaneio.html', {'context':context})
+        romidd = request.POST.getlist('romid')
+        if romidd:
+            romaneio = SkuRefXML.objects.filter(xmlref__id__in=romidd).annotate(
+                nf1=F('xmlref__nota_fiscal'),
+                municipio1=F('xmlref__municipio'), uf1=F('xmlref__uf'), codigo1=F('codigo'),
+                qnt_un1=F('qnt_un'), desc_prod1=F('desc_prod'), rem=F('xmlref__remetente'),
+                romaneio_id=F('xmlref_id'))
+            try:
+                sheet = romxmltoexcel(*romaneio)
+            except KeyError:
+                messages.error(request, f'Não encontrado valores para sua solicitação.')
+                return redirect('portaria:painelromaneio')
+            except Exception as e:
+                print(e, type(e).__name__)
+                messages.error(request, f'Algo deu errado, verifique e tente novamente.')
+                return redirect('portaria:painelromaneio')
+            else:
+                if sheet:
+                    messages.success(request, 'aaaaaaaaaaaaaaaa')
+                    return sheet
+    return render(request, 'portaria/etc/painelromaneio.html', {'context':context, 'getrem':getrem})
 
 def entradaromaneio(request):
     if request.method == 'POST':
@@ -1254,10 +1274,13 @@ def getText(nodelist):
 
 def romxmltoexcel(*romaneio):
     array = []
+    roms = []
     for q in romaneio:
         array.append({'nf':q.nf1, 'municipio':q.municipio1, 'uf':q.uf1, 'codigo':q.codigo1,
-                      'qnt_un':q.qnt_un1, 'desc':q.desc_prod1})
-
+                      'qnt_un':q.qnt_un1, 'desc':q.desc_prod1, 'remetente':q.rem, 'ref_id':q.romaneio_id})
+        if q.romaneio_id not in roms:
+            roms.extend({q.romaneio_id})
+    RomXML.objects.filter(pk__in=roms).update(printed=True)
     pdr = pd.DataFrame(array)
     dt = (pdr.pivot_table(index=['codigo','desc'],
                          columns=['uf'],
@@ -1267,7 +1290,7 @@ def romxmltoexcel(*romaneio):
                          margins=True,
                          margins_name='Total')).astype(np.int64)
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    response['Content-Disposition'] = f'attachment; filename="relatorio{datetime.datetime.today()}.xlsx"'
+    response['Content-Disposition'] = f'attachment; filename="{romaneio[0].rem}-{datetime.datetime.today()}.xlsx"'
     writer = pd.ExcelWriter(response, engine='xlsxwriter')
     dt.to_excel(writer, 'Dinamica')
     pdr.to_excel(writer, 'Relatorio')
@@ -1276,10 +1299,6 @@ def romxmltoexcel(*romaneio):
         return response
     except Exception as e:
         raise e
-
-
-
-
 #fim das views
 
 
@@ -1294,7 +1313,6 @@ def transfpalete(request):
         plc = request.POST.get('placa_veic')
         tp_p = request.POST.get('tp_palete')
         if qnt <= PaleteControl.objects.filter(loc_atual=ori,tp_palete=tp_p).count():
-            print(ori,des,qnt,plc,tp_p)
             for q in range(0,qnt):
                 x = PaleteControl.objects.filter(loc_atual=ori, tp_palete=tp_p).first()
                 MovPalete.objects.create(palete=x,data_ult_mov=timezone.now(),origem=ori,destino=des, placa_veic=plc,
@@ -1305,7 +1323,6 @@ def transfpalete(request):
         else:
             messages.error(request,'Quantidade solicitada maior que a disponível')
             return render(request,'portaria/palete/transfpaletes.html', {'form':form})
-
     return render(request,'portaria/palete/transfpaletes.html', {'form':form})
 
 

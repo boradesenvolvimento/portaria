@@ -151,7 +151,7 @@ class ChecklistForm(forms.ModelForm):
             'obs'
         ]
         widgets = {
-            'obs': Textarea(attrs={'cols': 30, 'rows': 3}),
+            'obs': Textarea(attrs={'cols': 30, 'rows': 3, 'style':'resize:none;'}),
         }
 
 class ServicoPjForm(forms.ModelForm):
@@ -182,7 +182,7 @@ class ManutencaoForm(forms.ModelForm):
             'observacao',
         ]
         widgets = {
-            'observacao': Textarea(attrs={'cols': 30, 'rows': 3}),
+            'observacao': Textarea(attrs={'cols': 30, 'rows': 3, 'style':'resize:none;'}),
             'prev_entrega': DateInput(),
         }
 

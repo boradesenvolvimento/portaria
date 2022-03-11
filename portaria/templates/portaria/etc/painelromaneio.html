@@ -3,6 +3,17 @@
 {% load static %}
 {% load groupscheck %}
 {% if request.user|has_group:"frota" %}
+<style>
+    .False{
+        background-color:#e7e7a0;
+    }
+    .True{
+        background-color:#c3e7a0;
+    }
+    th{
+        border-color:black;
+    }
+</style>
     <div class="container mt-4">
         {% for message in messages %}
             <div class="container-fluid p-0">
@@ -13,18 +24,28 @@
         {% endfor %}
         <div class="container">
             <h2>Exportar<hr></h2>
-            <form method="post">
-                {% csrf_token %}
+            <form method="get">
             <input name="data1" type="date"><input name="data2" type="date">
+            <select name="remetente">
+                <option selected disabled>Selecione...</option>
+                {% for q in getrem %}
+                <option value="{{ q }}">{{ q }}</option>
+                {% endfor %}
+            </select>
             <button type="submit">Enviar</button>
             </form>
             <hr>
         </div>
         <div class="container">
-            <h2>Painel<hr></h2>
+            <h2>Painel</h2>
+            <div style="position:relative;">
+            <button style="position:absolute; right:0;bottom:0;" id="chkall" type="button">Select all</button>
+            </div>
+            <hr>
             <table class="table table1">
                 <thead>
                     <tr>
+                        <td>#</td>
                         <td>ID</td>
                         <td>Data Emissão</td>
                         <td>Nota Fiscal</td>
@@ -35,18 +56,20 @@
                         <td>Peso</td>
                         <td>Volume</td>
                         <td>Autor</td>
-                        <td>Data Publicado</td>
+                        <td>Data Importado</td>
                     </tr>
                 </thead>
                 <tbody>
+                <form method="post">{% csrf_token %}
                     {% for q in context %}
-                    <tr>
+                    <tr class="{{q.printed}}">
+                        <th><input type="checkbox" value="{{ q.id }}" name="romid"></th>
                         <th>{{ q.id }}</th>
                         <th>{{ q.dt_emissao }}</th>
                         <th>{{ q.nota_fiscal }}</th>
                         <th>R$ {{ q.vlr_nf|floatformat:'2' }}</th>
-                        <th>{{ q.remetente }}</th>
-                        <th>{{ q.destinatario }}</th>
+                        <th style="font-size:11px;">{{ q.remetente|truncatewords:4 }}</th>
+                        <th style="font-size:11px;">{{ q.destinatario|truncatewords:4 }}</th>
                         <th>{{ q.uf }}</th>
                         <th>{{ q.peso }}</th>
                         <th>{{ q.volume }}</th>
@@ -54,9 +77,25 @@
                         <th>{{ q.pub_date|date:'d/m/Y' }}</th>
                     </tr>
                     {% endfor %}
+                    <tr><td><button type="submit">download</button></td></tr>
+                </form>
                 </tbody>
             </table>
         </div>
     </div>
 {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+<script>
+    $(document).ready(function(){
+        $('#chkall').click(function(){
+            var chkbox = $('input[name="romid"]');
+            if($(this).hasClass('allChecked')){
+                chkbox.prop('checked', false);
+                $(this).removeClass('allChecked');
+            }else{
+                chkbox.prop('checked', true);
+                $(this).toggleClass('allChecked');
+            }
+        });
+    });
+</script>
 {% endblock %}
