@@ -1187,7 +1187,6 @@ def painelromaneio(request):
                 return redirect('portaria:painelromaneio')
             else:
                 if sheet:
-                    messages.success(request, 'aaaaaaaaaaaaaaaa')
                     return sheet
     return render(request, 'portaria/etc/painelromaneio.html', {'context':context, 'getrem':getrem})
 
