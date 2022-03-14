@@ -620,7 +620,6 @@ def manuentrada(request, placa_id):
     if request.method == 'POST':
         count = request.POST.get('setcount')
         tp_sv = request.POST.get('tp_servico')
-
         form = ManutencaoForm(request.POST or None)
         if form.is_valid():
             manu = form.save(commit=False)
@@ -629,7 +628,6 @@ def manuentrada(request, placa_id):
             manu.dt_entrada = timezone.now()
             manu.status = 'ANDAMENTO'
             manu.autor = autor
-            manu.tp_servico = tp_sv
             try:
                 manu.save()
                 ServJoinManu.objects.create(id_svs_id=tp_sv, autor=autor, id_os_id=manu.id)
@@ -664,16 +662,16 @@ def manusaida(request, osid):
             prod = request.POST.getlist('produto')
             forn = request.POST.getlist('fornecedor')
             localmanu = request.POST.getlist('localmanu')
+            feito = request.POST.getlist('feitochk')
             if dtsaida and vlmao and vlpeca:
                 try:
                     array = []
-                    date_dtsaida = datetime.datetime.strptime(dtsaida, '%d/%m/%Y').date()
+                    date_dtsaida = datetime.datetime.strptime(dtsaida, '%Y-%m-%d').date()
                     for i in range(0, len(idsvs)):
                         array.append({'idsvs':idsvs[i], 'vlmao':vlmao[i].replace(',','.'),
                                       'vlpeca':vlpeca[i].replace(',','.'), 'prod':prod[i], 'forn':forn[i],
-                                      'localmanu':localmanu[i]})
-
-                except ValueError:
+                                      'localmanu':localmanu[i], 'feito':int(feito[i])})
+                except ValueError as e:
                     messages.error(request, 'Por favor digite uma data válida')
                     return render(request, 'portaria/frota/manusaida.html',{'get_os':get_os})
                 else:
@@ -687,6 +685,7 @@ def manusaida(request, osid):
                             ServJoinManu.objects.filter(pk=q['idsvs']).update(valor_maodeobra=q['vlmao'],
                                                                               valor_peca=q['vlpeca'],produto=q['prod'],
                                                                               fornecedor=q['forn'],
+                                                                              feito=q['feito'],
                                                                               local_manu=q['localmanu'])
                         except Exception as e:
                             print(e)
@@ -696,6 +695,84 @@ def manusaida(request, osid):
     else:
         messages.error(request, 'Saída já cadastrada para OS')
         return redirect('portaria:manutencaofrota')
+
+def agendamentomanu(request):
+    array = []
+    autor = request.user
+    gp_servs = TipoServicosManut.objects.values_list('grupo_servico', flat=True).distinct()
+    for q in gp_servs:
+        tp_servs = TipoServicosManut.objects.filter(grupo_servico=str(q))
+        concat = [str(q), tp_servs]
+        array.append(concat)
+    if request.method == 'POST':
+        placav = request.POST.get('placav')
+        tp_sv = request.POST.getlist('tp_servico')
+        try:
+            placa = get_object_or_404(Veiculos, prefixoveic=placav)
+        except Exception:
+            messages.error(request, 'Placa não encontrada')
+            return redirect('portaria:agendamentomanu')
+        else:
+            if placa and tp_sv:
+                try:
+                    os = ManutencaoFrota.objects.create(veiculo_id=placa.codigoveic,autor=autor, motorista=autor,
+                                                        tp_manutencao='PRE')
+                    for q in tp_sv:
+                        ServJoinManu.objects.create(id_svs_id=q, autor=autor, id_os_id=os.id)
+                except Exception as e:
+                    print(e)
+                else:
+                    return redirect('portaria:manutencaoprint', osid=os.id)
+    return render(request, 'portaria/frota/agendamentomanu.html', {'array':array})
+
+def updatemanu(request, osid):
+    os = get_object_or_404(ManutencaoFrota, pk=osid)
+    form = ManutencaoForm
+    autor = request.user
+    motorista = os.motorista
+    ult_manu = Veiculos.objects.filter(pk=os.veiculo.codigoveic).values_list('manutencaofrota__dt_saida', flat=True) \
+        .order_by('-manutencaofrota__dt_saida').first()
+    if ult_manu == None: ult_manu = timezone.now()
+    if request.method == 'POST':
+        form = ManutencaoForm(request.POST or None, instance=os)
+        if form.is_valid():
+            try:
+                manu = form.save(commit=False)
+                manu.veiculo_id = os.veiculo.codigoveic
+                manu.motorista = motorista
+                manu.dt_ult_manutencao = ult_manu
+                manu.dt_entrada = timezone.now()
+                manu.status = 'ANDAMENTO'
+                manu.autor = autor
+                manu.save()
+            except Exception as e:
+                print(e)
+            else:
+                messages.success(request, 'Atualizado com sucesso.')
+                return redirect('portaria:manutencaoview')
+    return render(request, 'portaria/frota/updatemanu.html', {'os':os, 'form':form})
+
+def addservico(request, osid):
+    os = get_object_or_404(ManutencaoFrota, pk=osid)
+    array = []
+    autor = request.user
+    gp_servs = TipoServicosManut.objects.values_list('grupo_servico', flat=True).distinct()
+    for q in gp_servs:
+        tp_servs = TipoServicosManut.objects.filter(grupo_servico=str(q))
+        concat = [str(q), tp_servs]
+        array.append(concat)
+    if request.method == 'POST':
+        tp_sv = request.POST.getlist('tp_servico')
+        if tp_sv:
+            try:
+                for q in tp_sv:
+                    ServJoinManu.objects.create(id_svs_id=q, autor=autor, id_os_id=os.id)
+            except Exception as e:
+                print(e)
+            else:
+                messages.success(request, 'Serviços cadastrados com sucesso.')
+                return redirect('portaria:manutencaoview')
+    return render(request, 'portaria/frota/addservico.html', {'array':array, 'os':os})
 
 class ManutencaoListView(generic.ListView):
     template_name = 'portaria/frota/manutencaoview.html'
@@ -1231,31 +1308,30 @@ def entradaromaneio(request):
     return render(request, 'portaria/etc/romaneiomanual.html')
 
 def entradaxml(request):
-    file = request.FILES.get('getxml')
-    mydoc = minidom.parse(file)
-    nf = mydoc.getElementsByTagName('nNF')[0].firstChild.nodeValue
-    dhEmi = dateformat.format(datetime.datetime.strptime(mydoc.getElementsByTagName('dhEmi')[0].firstChild.nodeValue, '%Y-%m-%dT%H:%M:%S%z'), 'Y-m-d H:i')
-    rem = mydoc.getElementsByTagName('emit')[0].getElementsByTagName('xFant')[0].firstChild.nodeValue
-    dest = mydoc.getElementsByTagName('dest')[0].getElementsByTagName('xNome')[0].firstChild.nodeValue
-    dest_mun = mydoc.getElementsByTagName('dest')[0].getElementsByTagName('xMun')[0].firstChild.nodeValue
-    dest_uf = mydoc.getElementsByTagName('dest')[0].getElementsByTagName('UF')[0].firstChild.nodeValue
-    peso = mydoc.getElementsByTagName('transp')[0].getElementsByTagName('pesoB')[0].firstChild.nodeValue
-    volume = mydoc.getElementsByTagName('transp')[0].getElementsByTagName('qVol')[0].firstChild.nodeValue
-    vlr_nf = mydoc.getElementsByTagName('total')[0].getElementsByTagName('vNF')[0].firstChild.nodeValue
-    skus = getText(mydoc)
-    if skus:
-        try:
-            rom = RomXML.objects.create(dt_emissao=dhEmi, nota_fiscal=nf, remetente=rem, destinatario=dest,
-            peso=peso, volume=volume, vlr_nf=vlr_nf, municipio=dest_mun, uf=dest_uf, autor=request.user)
-        except Exception as e:
-            print(f'Error: {e}, error_type: {type(e).__name__}')
-        else:
-            for q in skus:
-                SkuRefXML.objects.create(codigo=q['sku'],desc_prod=q['descprod'],tp_un=q['un'], qnt_un=int(q['qnt']),
-                                         xmlref=rom)
+    files = request.FILES.getlist('getxml')
+    for file in files:
+        mydoc = minidom.parse(file)
+        nf = mydoc.getElementsByTagName('nNF')[0].firstChild.nodeValue
+        dhEmi = dateformat.format(datetime.datetime.strptime(mydoc.getElementsByTagName('dhEmi')[0].firstChild.nodeValue, '%Y-%m-%dT%H:%M:%S%z'), 'Y-m-d H:i')
+        rem = mydoc.getElementsByTagName('emit')[0].getElementsByTagName('xFant')[0].firstChild.nodeValue
+        dest = mydoc.getElementsByTagName('dest')[0].getElementsByTagName('xNome')[0].firstChild.nodeValue
+        dest_mun = mydoc.getElementsByTagName('dest')[0].getElementsByTagName('xMun')[0].firstChild.nodeValue
+        dest_uf = mydoc.getElementsByTagName('dest')[0].getElementsByTagName('UF')[0].firstChild.nodeValue
+        peso = mydoc.getElementsByTagName('transp')[0].getElementsByTagName('pesoB')[0].firstChild.nodeValue
+        volume = mydoc.getElementsByTagName('transp')[0].getElementsByTagName('qVol')[0].firstChild.nodeValue
+        vlr_nf = mydoc.getElementsByTagName('total')[0].getElementsByTagName('vNF')[0].firstChild.nodeValue
+        skus = getText(mydoc)
+        if skus:
+            try:
+                rom = RomXML.objects.create(dt_emissao=dhEmi, nota_fiscal=nf, remetente=rem, destinatario=dest,
+                peso=peso, volume=volume, vlr_nf=vlr_nf, municipio=dest_mun, uf=dest_uf, autor=request.user)
+            except Exception as e:
+                print(f'Error: {e}, error_type: {type(e).__name__}')
+            else:
+                for q in skus:
+                    SkuRefXML.objects.create(codigo=q['sku'],desc_prod=q['descprod'],tp_un=q['un'], qnt_un=int(q['qnt']),
+                                             xmlref=rom)
     return redirect('portaria:romaneioxml')
-
-
 
 def getText(nodelist):
     doc = nodelist.getElementsByTagName('det')

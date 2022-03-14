@@ -19,7 +19,7 @@
                 {% csrf_token %}
                 <table>
                     <tr>
-                        <td>Data de saída:</td><td><input autocomplete="off" type="text" name="dtsaida"></td>
+                        <td>Data de saída:</td><td><input autocomplete="off" type="date" name="dtsaida"></td>
                     </tr>
                     <tr><td><hr></td><td><hr></td></tr>
                     {% for q in svsss %}
@@ -44,6 +44,12 @@
                     </tr>
                     <tr>
                         <td>Fornecedor:</td><td><input type="text" name="fornecedor"></td>
+                    </tr>
+                    <tr>
+                        <td>Feito:</td><td><select name="feitochk">
+                            <option value="1">Sim</option>
+                            <option value="0">Nao</option>
+                        </select></td>
                     </tr>
                     <tr><td><hr></td><td><hr></td></tr>
                     {% endfor %}

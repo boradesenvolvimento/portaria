@@ -10,6 +10,9 @@
     .CORRETIVA{
         background-color:#FFFACD;
     }
+    .PRE{
+        background-color: #b7dd74;
+    }
 </style>
     <div class="container mt-4">
         {% for message in messages %}
@@ -78,7 +81,20 @@
                 <th>{{ c.prev_entrega|date:'d/m/Y' }}</th>
                 {% now 'd/m/Y' as hoje %}
                 <th>{% if c.prev_entrega|date:'d/m/Y' >= hoje %}NORMAL{% elif c.prev_entrega|date:'d/m/Y' < hoje %}ATRASADO{% endif %}</th>
-                <th><a style="text-decoration:none;font-size:20px;" href="{% url 'portaria:manutencaoprint' c.id %}"><ion-icon name="print"></ion-icon></a> | <a style="text-decoration:none;font-size:20px;" href="{% url 'portaria:manusaida' c.id %}"><ion-icon name="exit-outline"></ion-icon></a></th>
+                <th>{% if c.tp_manutencao != 'PRE' %}
+                    <a style="text-decoration:none;font-size:20px;" href="{% url 'portaria:manutencaoprint' c.id %}">
+                        <ion-icon name="print"></ion-icon></a> |
+                    <a style="text-decoration:none;font-size:20px;" href="{% url 'portaria:manusaida' c.id %}">
+                        <ion-icon name="exit-outline"></ion-icon></a> |
+                    <a style="text-decoration:none;font-size:20px;" href="{% url 'portaria:addservico' osid=c.id %}">
+                        <ion-icon name="add-circle-outline">
+                    </ion-icon></a>
+                    {% else %}
+                        <a href="{% url 'portaria:updatemanu' osid=c.id %}"><button type="button">
+                            Atualizar
+                        </button></a>
+                    {% endif %}
+                </th>
             </tr>
             {% endfor %}
             </tbody>

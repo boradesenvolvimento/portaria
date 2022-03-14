@@ -17,7 +17,7 @@
                 <form method="post" enctype="multipart/form-data" action="{% url 'portaria:entradaxml' %}">
                     {% csrf_token %}
                 <h3 style="display:inline;">Entrada XML:</h3>
-                <input style="display:inline;border-radius:0;" id="getxml" name="getxml" type="file" accept="application/xml"/>
+                <input style="display:inline;border-radius:0;" id="getxml" name="getxml" type="file" accept="application/xml" multiple/>
                     <button type="submit">Enviar</button>
                 </form>
                 <!--<a href="{% url 'portaria:entradaxml' %}" style="color:white;text-decoration:none;font-size:20px;"></a>-->

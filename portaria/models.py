@@ -364,7 +364,8 @@ class feriaspj(models.Model):
 class ManutencaoFrota(models.Model):
     TIPO_MANUTENCAO_CHOICES = [
         ('PREVENTIVA', 'PREVENTIVA'),
-        ('CORRETIVA', 'CORRETIVA')
+        ('CORRETIVA', 'CORRETIVA'),
+        ('PRE','PRE')
     ]
     FILIAL_CHOICES = [
         ('SPO', 'SPO'),
@@ -382,19 +383,20 @@ class ManutencaoFrota(models.Model):
 
     id = models.BigAutoField(primary_key=True)
     veiculo = models.ForeignKey(Veiculos, on_delete=PROTECT)
-    tp_manutencao = models.CharField('Tipo manutenção',max_length=10,choices=TIPO_MANUTENCAO_CHOICES)
-    local_manu = models.CharField('Local manutenção',max_length=1, choices=LOCAL_MANU_CHOICES)
+    motorista = models.CharField(max_length=50, blank=True, null=True)
+    tp_manutencao = models.CharField('Tipo manutenção',max_length=10,choices=TIPO_MANUTENCAO_CHOICES,blank=True, null=True)
+    local_manu = models.CharField('Local manutenção',max_length=1, choices=LOCAL_MANU_CHOICES,blank=True, null=True)
     dt_ult_manutencao = models.DateField('Data da última manutenção', blank=True, null=True)
-    dt_entrada = models.DateField()
+    dt_entrada = models.DateField(blank=True, null=True)
+    dt_ini_manu = models.DateField('Inicio Manutencao',blank=True, null=True)
     dt_saida = models.DateField(blank=True, null=True)
     dias_veic_parado = models.CharField(max_length=20, blank=True, null=True)
-    km_atual = models.IntegerField('Kilometragem atual')
-    tp_servico = models.CharField('Tipo serviço', max_length=10)
-    filial = models.CharField(max_length=3, choices=FILIAL_CHOICES)
-    socorro = models.BooleanField()
-    prev_entrega = models.DateField()
-    observacao = models.TextField(blank=True)
-    status = models.CharField(max_length=30, choices=STATUS_CHOICES)
+    km_atual = models.IntegerField('Kilometragem atual',blank=True, null=True)
+    filial = models.CharField(max_length=3, choices=FILIAL_CHOICES,blank=True, null=True)
+    socorro = models.BooleanField(default=False)
+    prev_entrega = models.DateField(blank=True, null=True)
+    observacao = models.TextField(blank=True, null=True)
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES,blank=True, null=True)
     autor = models.ForeignKey(User, on_delete=models.PROTECT)
 
     class Meta:
@@ -417,6 +419,7 @@ class ServJoinManu(models.Model):
     produto = models.CharField(max_length=100, blank=True, null=True)
     fornecedor = models.CharField(max_length=100, blank=True, null=True)
     local_manu = models.CharField('Local manutenção', max_length=1, choices=LOCAL_MANU_CHOICES)
+    feito = models.BooleanField(null=True)
     pub_date = models.DateField(auto_now=True)
     autor = models.ForeignKey(User, on_delete=PROTECT)
 

@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+{% load groupscheck %}
+{% if request.user|has_group:"frota" %}
+    <div class="container mt-4">
+        {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+        {% endfor %}
+        <div class="row">
+            <h2 class="title-cad">Atualizar OS nº{{ os }}</h2>
+        </div>
+        <hr>
+        <div class="row">
+            <div class="col-8">
+                <form method="post">
+                    {% csrf_token %}
+                    <table>
+                    <tr><th>Socorro:</th><th>{{ form.socorro }}</th></tr>
+                    <tr><th>Filial:</th><th>{{ form.filial }}</th></tr>
+                    <tr><th>Local Manutenção:</th><th>{{ form.local_manu }}</th></tr>
+                    <tr><th>Tipo manutenção:</th><th>{{ form.tp_manutencao }}</th></tr>
+                    <tr><th>Inicio Manutencao:</th><th>{{ form.dt_ini_manu }}</th></tr>
+                    <tr><th>Previsão de entrega:</th><th>{{ form.prev_entrega }}</th></tr>
+                    <tr><th>Kilometragem atual:</th><th>{{ form.km_atual }}</th></tr>
+                    <tr><th>Observacao:</th><th>{{ form.observacao }}</th></tr>
+                    </table>
+                    <button type="submit">Enviar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+{% endblock %}

@@ -174,16 +174,19 @@ class ManutencaoForm(forms.ModelForm):
         model = ManutencaoFrota
         fields = [
             'socorro',
+            'motorista',
             'tp_manutencao',
             'local_manu',
             'km_atual',
             'filial',
+            'dt_ini_manu',
             'prev_entrega',
             'observacao',
         ]
         widgets = {
             'observacao': Textarea(attrs={'cols': 30, 'rows': 3, 'style':'resize:none;'}),
             'prev_entrega': DateInput(),
+            'dt_ini_manu': DateInput(),
         }
 
 class ServJoinManuForm(forms.ModelForm):

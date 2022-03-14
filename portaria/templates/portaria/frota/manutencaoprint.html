@@ -20,18 +20,29 @@
         {% endfor %}
         <div class="row mt-4 linha-baixo">
             <h2 class="title-cad col-8">OS: {{ os }} - Placa veículo: {{ os.veiculo }}</h2>
-            <input class="button col-3" type="submit" id="printbutton" value="Imprimir" onclick="window.print();">
+            {% if os.status == 'PENDENTE' %}
+            <div class="col-2">
+                <form method="post" action="{% url 'portaria:manupendentes' %}">{% csrf_token %}
+                    <input type="hidden" name="os" value="{{ os.id }}">
+                    <button type="submit">Concluir OS</button>
+                </form>
+            </div>
+            {% endif %}
+            <div class="col-2">
+                <input class="button" type="submit" id="printbutton" value="Imprimir" onclick="window.print();">
+            </div>
         </div>
         <div class="row printing mt-4">
-            <p>Socorro: {% if os.socorro == True %}SIM{% else %}NÃO{% endif %}</p>
+            <p>Socorro: {% if os.socorro == True %}SIM{% elif os.socorro == False %}NÃO{% else %}{% endif %}</p>
+            <p>Motorista: {{ os.motorista }}</p>
             <p>Tipo manutenção: {{ os.tp_manutencao }}</p>
-            <p>Local: {% if os.local_manu == 'E' %}EXTERNO{% else %}INTERNO{% endif %}</p>
+            <p>Local: {% if os.local_manu == 'E' %}EXTERNO{% elif os.local_manu == 'I' %}INTERNO{% else %}{% endif %}</p>
             <p>Última manutenção: {{ os.dt_ult_manutencao|date:'d/m/Y' }}</p>
-            <p>Km atual: {{ os.km_atual }}km</p>
+            <p>Km atual: {{ os.km_atual|default_if_none:"0" }}km</p>
             <p>Tipo de serviço: {% for b in aa %}{{ b.grp }} - {{ b.svs }} || {% endfor %}</p>
-            <p>Filial: {{ os.filial }}</p>
+            <p>Filial: {{ os.filial|default_if_none:"" }}</p>
             <p>Previsão entrega: {{ os.prev_entrega|date:'d/m/Y' }}</p>
-            <p>Observação: {{ os.observacao }}</p>
+            <p>Observação: {{ os.observacao|default_if_none:"" }}</p>
         </div>
         <div class="row">
             <div class="col-7"></div>
