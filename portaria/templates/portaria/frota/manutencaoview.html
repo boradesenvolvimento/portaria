@@ -80,7 +80,7 @@
                 <th>{{ c.dt_entrada|date:'d/m/Y' }}</th>
                 <th>{{ c.prev_entrega|date:'d/m/Y' }}</th>
                 {% now 'd/m/Y' as hoje %}
-                <th>{% if c.prev_entrega|date:'d/m/Y' >= hoje %}NORMAL{% elif c.prev_entrega|date:'d/m/Y' < hoje %}ATRASADO{% else %}{% endif %}</th>
+                <th>{% if c.prev_entrega|date:'d/m/Y' >= hoje %}NORMAL{% elif not c.prev_entrega %}-{% elif c.prev_entrega|date:'d/m/Y' < hoje %}ATRASADO{% endif %}</th>
                 <th>{% if c.tp_manutencao != 'PRE' %}
                     <a style="text-decoration:none;font-size:20px;" href="{% url 'portaria:manutencaoprint' c.id %}">
                         <ion-icon name="print"></ion-icon></a> |
