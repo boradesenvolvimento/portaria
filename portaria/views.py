@@ -5,6 +5,7 @@ import datetime
 import email, smtplib
 import os
 import re
+import socket
 import tempfile
 import textwrap
 import poplib
@@ -1224,7 +1225,60 @@ def etiquetas(request):
 
 def createetiquetas(request):
     lista = request.session['dict']
+    array = []
+    for j in lista:
+        for i in range(0, j['VOLUMES']):
+            if i % 2 == 0:
+                a = (str(i+1)+j['NOTA_FISCAL'])
+                b = (str(i+2)+j['NOTA_FISCAL'])
+                array.append(f'''
+                    CT~~CD,~CC^~CT~
+                    ^XA
+                    ~TA000
+                    ~JSN
+                    ^LT0
+                    ^MNW
+                    ^MTD
+                    ^PON
+                    ^PMN
+                    ^LH0,0
+                    ^JMA
+                    ^PR4,4
+                    ~SD15
+                    ^JUS
+                    ^LRN
+                    ^CI27
+                    ^PA0,1,1,0
+                    ^XZ
+                    ^XA
+                    ^MMT
+                    ^PW799
+                    ^LL240
+                    ^LS0
+                    ^FO20,11^GFA,1017,1720,8,:Z64:eJytlM1q20AQx0crLxg5CAWkUy9LchGSWXI0zmULzd0B6x1Kn2JpLyGHPsPSXoIMORv7kkfZYwhFz9D52HyV0lMFZvh59uM//xkJAB8P/GROYh4k6o3E8lHirJY47yRWOnEhB1QgG1oV3vEcWtkPdeIu8Sxx+Y4LyBNncj8o/5YLUK95zJQe806Yrqb9GV6tie9kf1Zx3qk57w/ENfF3f4NLotbbAbc4tRh3e4Cgs2GgO6wfRwzhVLypVlKaqaS0qn1k90K1TdwfiS+qbCMMN7x+liwrJL5wKdaF5H2lDiPdEKAZtmxhMU7McEVMqzrhZBbAEn8xMeXblIc3/Ld89Uf+mVf/zN+l/VXiR/yH8p+42Q7Gfs/1XDVy/9MTxZixfOSfLC2A1Ou6yDFuE68PI/t5XZ0CTeSXcSKOHwfHfE7dgNxfs70ZfObjlJd2zOCCYwHPLJPXsljAfzsl9s5ouHF87C3qKwJoajfOszr0Qa357OFUDrmfwquZdNkI//ExRmKVeJ24SbcVMSVcWmG6IOsbltcay69ngxNDW4pweTwAld7wBC+NvZ8eaNhrTQs60y12gWqtNd1xFm15G+m8WtMQrmC9+JbyxIW35ddI1icO/Y7yjdPDR2QbymlijWghsgG1p1egwleQ2Hq4sXi/dqQR3QuLoFiv5hesBTtRAXXSf5n0Z070m2BLHgFcQQvOQwcLT+fVfKaNFtSDfFxIX2vW/AGrE8+N5CGxMZ2XvN5kvL+cqL6ZE/1g8uMx8MeC+cQA+4d3sX95aKH34jg91r/4z/3oUT83CPVvuL/FJPqlwM5Ax/47qMn/MsLynvxDJj04eyvS10C2zThvfynW12ylnn4v+oVtsKxfu6ahfqhgPogA0YsKyonrr577r3ae9XIFRbSRP2FO9IO5lN3p898aNUl92SD15Xx8hkwLzoLi/iHzK35u8h9H3p857p9Rkfuf/Dzz+U7qb5iXqJ/mh+eV5s9g/6U+Vn9i7Cj2vXt+A5Em3hQ=:E991
+                    ^FO96,111^GB294,0,2^FS
+                    ^FO96,15^GB294,87,2^FS
+                    ^FO98,57^GB292,0,2^FS
+                    ^BY2,3,71^FT97,204^BCN,,Y,N
+                    ^FH\^FD>;{a}^FS
+                    ^FT103,46^A0N,23,23^FH\^CI28^FDNota: {j['NOTA_FISCAL']}^FS^CI27
+                    ^FT103,89^A0N,23,23^FH\^CI28^FDVolume: {i+1} de {(j['VOLUMES'])}^FS^CI27
+                    ^FO420,11^GFA,1017,1720,8,:Z64:eJytlM1q20AQx0crLxg5CAWkUy9LchGSWXI0zmULzd0B6x1Kn2JpLyGHPsPSXoIMORv7kkfZYwhFz9D52HyV0lMFZvh59uM//xkJAB8P/GROYh4k6o3E8lHirJY47yRWOnEhB1QgG1oV3vEcWtkPdeIu8Sxx+Y4LyBNncj8o/5YLUK95zJQe806Yrqb9GV6tie9kf1Zx3qk57w/ENfF3f4NLotbbAbc4tRh3e4Cgs2GgO6wfRwzhVLypVlKaqaS0qn1k90K1TdwfiS+qbCMMN7x+liwrJL5wKdaF5H2lDiPdEKAZtmxhMU7McEVMqzrhZBbAEn8xMeXblIc3/Ld89Uf+mVf/zN+l/VXiR/yH8p+42Q7Gfs/1XDVy/9MTxZixfOSfLC2A1Ou6yDFuE68PI/t5XZ0CTeSXcSKOHwfHfE7dgNxfs70ZfObjlJd2zOCCYwHPLJPXsljAfzsl9s5ouHF87C3qKwJoajfOszr0Qa357OFUDrmfwquZdNkI//ExRmKVeJ24SbcVMSVcWmG6IOsbltcay69ngxNDW4pweTwAld7wBC+NvZ8eaNhrTQs60y12gWqtNd1xFm15G+m8WtMQrmC9+JbyxIW35ddI1icO/Y7yjdPDR2QbymlijWghsgG1p1egwleQ2Hq4sXi/dqQR3QuLoFiv5hesBTtRAXXSf5n0Z070m2BLHgFcQQvOQwcLT+fVfKaNFtSDfFxIX2vW/AGrE8+N5CGxMZ2XvN5kvL+cqL6ZE/1g8uMx8MeC+cQA+4d3sX95aKH34jg91r/4z/3oUT83CPVvuL/FJPqlwM5Ax/47qMn/MsLynvxDJj04eyvS10C2zThvfynW12ylnn4v+oVtsKxfu6ahfqhgPogA0YsKyonrr577r3ae9XIFRbSRP2FO9IO5lN3p898aNUl92SD15Xx8hkwLzoLi/iHzK35u8h9H3p857p9Rkfuf/Dzz+U7qb5iXqJ/mh+eV5s9g/6U+Vn9i7Cj2vXt+A5Em3hQ=:E991
+                    ^FO496,111^GB294,0,2^FS
+                    ^FO496,15^GB294,87,2^FS
+                    ^FO498,57^GB292,0,2^FS
+                    ^BY2,3,71^FT497,204^BCN,,Y,N
+                    ^FH\^FD>;{b}^FS
+                    ^FT503,46^A0N,23,23^FH\^CI28^FDNota: {j['NOTA_FISCAL']}^FS^CI27
+                    ^FT503,89^A0N,23,23^FH\^CI28^FDVolume: {i+2} de {(j['VOLUMES'])}^FS^CI27
+                    ^PQ1,0,1,Y
+                    ^XZ
+                    '''.encode('utf-8'))
     if lista:
+        if request.POST.get('getbtnprint') and request.POST.get('getbtnprint') == 'Click':
+            printetiquetas(array)
+            messages.success(request, 'Impressões iniciadas')
+            return redirect('portaria:etiquetas')
         return render(request, 'portaria/etiquetas/generate_pdf.html', {'lista':lista})
     else:
         messages.error(request, 'Não encontrado para este romaneio')
@@ -2433,6 +2487,23 @@ def notifymanutencaovencidos():
                         description=f"OS {q.id} vence hoje!.")
         else:
             pass
+
+def printetiquetas(array):
+    print('iniciando impressao')
+    if array:
+        mysocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        host = get_secret('HOST_PRINT')
+        port = int(get_secret('PORT_PRINT'))
+        try:
+            mysocket.connect((host, port))  # connecting to host
+            for q in array:
+                mysocket.send(q)  # using bytes
+                break
+            mysocket.close()  # closing connection
+        except Exception as e:
+            print(f"Error:{e}, error_type:{type(e).__name__}")
+        else:
+            print('finalizou sem "erros"')
 
 def testeconn(request):
     conndb()

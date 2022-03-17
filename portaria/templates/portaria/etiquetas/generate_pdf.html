@@ -9,10 +9,45 @@
     <style type="text/css">
         @media print{
             #etiquetable{
-                zoom: 1.5;
+                width:auto;
+                height:auto;
+                border-collapse: collapse;
+                border-spacing:0;
+            }
+            #rot {
+                position:absolute;
+                transform: rotate(90deg);
+                margin-top:0.2rem;
+                left: 5px;
+            }
+            #rot img{
+                width: 22px;
+            }
+            #infosum{
+                border: solid 1px;
+                margin-top:0.045rem;
+                margin-left:1.36rem;
+                margin-right:0.045rem;
+                width:auto;
+                float:left;
+                font-weight: bold;
+                padding: 1px;
+            }
+            #infosum p{
+                font-family: Arial, Helvetica, sans-serif;
+                font-size:3px;
+                margin: 0 0 0 0;
+            }
+            #barcode{
+                font-family:LibBarcodeFont;
+                font-size: 13px;
+                margin: 0 0.01rem 0 0.8rem;
+            }
+            hr{
+                display:none;
             }
             @page{
-                size: 140mm 80mm;
+                size: 40mm 33mm;
             }
         }
             @font-face {
@@ -47,6 +82,10 @@
                 font-size:9px;
                 margin: 0.2rem 1rem 0.2rem 1rem;
             }
+            .separator{
+                margin-left:3rem;
+                margin-right: 1rem;
+            }
             .barcode{
                 font-family:LibBarcodeFont;
                 font-size: 50px;
@@ -56,23 +95,29 @@
     </style>
 </head>
 <body>
+<div class="container" style="margin-bottom:10px;">
+    <form method="post">{% csrf_token %}
+        <label for="getbtnprint">Imprimir etiquetas: </label>
+        <input id="getbtnprint" type="submit" value="Click" name="getbtnprint">
+    </form>
+</div>
 {% for q in lista %}
 {% for i in q.VOLUMES|rangeloop %}
 <div class="container">
-<table class="etiquetable" id="etiquetable" cellspacing="1" cellpadding="1">
+<table class="etiquetable" id="etiquetable">
     <tr>
-        <td class="rot">
+        <td id="rot" class="rot">
             <img width="100" src="{% static 'images/logo.png' %}">
         </td>
         <td>
-            <div class="infosum">
+            <div id="infosum" class="infosum">
                 <p>Nota: {{ q.NOTA_FISCAL }}</p>
                 <hr>
                 <p>Volumes: {{ forloop.counter }} de {{ q.VOLUMES }}</p>
             </div>
         </td>
     </tr>
-    <tr><td></td><td><hr style="margin-left:3rem;margin-right: 1rem;"><p class="barcode">{{ q.NOTA_FISCAL }}{{ forloop.counter }}</p></td></tr>
+    <tr><td></td><td><hr id="separator" class="separator"><p id="barcode" class="barcode">{{ q.NOTA_FISCAL }}{{ forloop.counter }}</p></td></tr>
 </table>
 </div><br>
 {% endfor %}

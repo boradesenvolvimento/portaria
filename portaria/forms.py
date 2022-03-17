@@ -139,6 +139,17 @@ class ChecklistForm(forms.ModelForm):
             'p2_22',
             'p2_23',
             'p2_24',
+            'p2_25',
+            'p2_26',
+            'p2_27',
+            'p2_28',
+            'p2_29',
+            'p2_30',
+            'p2_31',
+            'p2_32',
+            'p2_33',
+            'p2_34',
+            'obs_cavalo',
             'p3_1',
             'p3_2',
             'p3_3',
@@ -148,10 +159,21 @@ class ChecklistForm(forms.ModelForm):
             'p3_7',
             'p3_8',
             'p3_9',
-            'obs'
+            'p3_10',
+            'p3_11',
+            'p3_12',
+            'p3_13',
+            'p3_14',
+            'p3_15',
+            'p3_16',
+            'p3_17',
+            'p3_18',
+            'p3_19',
+            'obs_carreta'
         ]
         widgets = {
-            'obs': Textarea(attrs={'cols': 30, 'rows': 3, 'style':'resize:none;'}),
+            'obs_cavalo': Textarea(attrs={'cols': 30, 'rows': 3, 'style':'resize:none;'}),
+            'obs_carreta': Textarea(attrs={'cols': 30, 'rows': 3, 'style':'resize:none;'}),
         }
 
 class ServicoPjForm(forms.ModelForm):

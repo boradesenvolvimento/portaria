@@ -3,16 +3,109 @@
 {% load static %}
 {% load groupscheck %}
 {% if request.user|has_group:"frota" %}
-<div class="container">
+<style>
+    .contorno{
+        border: solid 1px;
+    }
+    .contorno td{
+        padding: 0 0.5rem 0 0.5rem;
+    }
+</style>
+<div class="container mt-4">
             <form method="post">
                 {% csrf_token %}
-                <h2 class="title-cad">Placa: {{ pla }}</h2>
+                <h2 class="title-cad">Placa: {{ pla }} - {{ pla.modeloveic }} - {{ pla.get_codigotpveic_display }}</h2>
                 <h2 class="title-cad">Motorista: {{ mot }}</h2>
+                <label for="id_kmatual">Km Atual:</label>
+                {{ form.kmatual }}
+                <label for="id_filial">Filial:</label>
+                {{ form.filial }}
+                <div class="contorno">
                 <table>
+                    <thead>
+                    <tr><h2 style="border:solid 1px;background-color:grey;text-align:center;">Uniforme</h2></tr>
+                    </thead>
                     <tbody>
-                        {{ form }}
+                    <tr><td>{{ form.p1_1.label }}</td><td>{{ form.p1_1 }}</td></tr>
+                    <tr><td>{{ form.p1_2.label }}</td><td>{{ form.p1_2 }}</td></tr>
                     </tbody>
                 </table>
+                </div>
+                <div class="contorno">
+                <table>
+                    <thead>
+                    <tr><h2 style="border:solid 1px;background-color:grey;text-align:center;">Cavalo</h2></tr>
+                    </thead>
+                    <tbody>
+                    <tr><td>{{ form.horimetro.label }}</td><td>{{ form.horimetro }}</td></tr>
+                    <tr><td>{{ form.p2_1.label }}</td><td>{{ form.p2_1 }}</td></tr>
+                    <tr><td>{{ form.p2_2.label }}</td><td>{{ form.p2_2 }}</td></tr>
+                    <tr><td>{{ form.p2_3.label }}</td><td>{{ form.p2_3 }}</td></tr>
+                    <tr><td>{{ form.p2_4.label }}</td><td>{{ form.p2_4 }}</td></tr>
+                    <tr><td>{{ form.p2_5.label }}</td><td>{{ form.p2_5 }}</td></tr>
+                    <tr><td>{{ form.p2_6.label }}</td><td>{{ form.p2_6 }}</td></tr>
+                    <tr><td>{{ form.p2_7.label }}</td><td>{{ form.p2_7 }}</td></tr>
+                    <tr><td>{{ form.p2_8.label }}</td><td>{{ form.p2_8 }}</td></tr>
+                    <tr><td>{{ form.p2_9.label }}</td><td>{{ form.p2_9 }}</td></tr>
+                    <tr><td>{{ form.p2_10.label }}</td><td>{{ form.p2_10 }}</td></tr>
+                    <tr><td>{{ form.p2_11.label }}</td><td>{{ form.p2_11 }}</td></tr>
+                    <tr><td>{{ form.p2_12.label }}</td><td>{{ form.p2_12 }}</td></tr>
+                    <tr><td>{{ form.p2_13.label }}</td><td>{{ form.p2_13 }}</td></tr>
+                    <tr><td>{{ form.p2_14.label }}</td><td>{{ form.p2_14 }}</td></tr>
+                    <tr><td>{{ form.p2_15.label }}</td><td>{{ form.p2_15 }}</td></tr>
+                    <tr><td>{{ form.p2_16.label }}</td><td>{{ form.p2_16 }}</td></tr>
+                    <tr><td>{{ form.p2_17.label }}</td><td>{{ form.p2_17 }}</td></tr>
+                    <tr><td>{{ form.p2_18.label }}</td><td>{{ form.p2_18 }}</td></tr>
+                    <tr><td>{{ form.p2_19.label }}</td><td>{{ form.p2_19 }}</td></tr>
+                    <tr><td>{{ form.p2_20.label }}</td><td>{{ form.p2_20 }}</td></tr>
+                    <tr><td>{{ form.p2_21.label }}</td><td>{{ form.p2_21 }}</td></tr>
+                    <tr><td>{{ form.p2_22.label }}</td><td>{{ form.p2_22 }}</td></tr>
+                    <tr><td>{{ form.p2_23.label }}</td><td>{{ form.p2_23 }}</td></tr>
+                    <tr><td>{{ form.p2_24.label }}</td><td>{{ form.p2_24 }}</td></tr>
+                    <tr><td>{{ form.p2_25.label }}</td><td>{{ form.p2_25 }}</td></tr>
+                    <tr><td>{{ form.p2_26.label }}</td><td>{{ form.p2_26 }}</td></tr>
+                    <tr><td>{{ form.p2_27.label }}</td><td>{{ form.p2_27 }}</td></tr>
+                    <tr><td>{{ form.p2_28.label }}</td><td>{{ form.p2_28 }}</td></tr>
+                    <tr><td>{{ form.p2_29.label }}</td><td>{{ form.p2_29 }}</td></tr>
+                    <tr><td>{{ form.p2_30.label }}</td><td>{{ form.p2_30 }}</td></tr>
+                    <tr><td>{{ form.p2_31.label }}</td><td>{{ form.p2_31 }}</td></tr>
+                    <tr><td>{{ form.p2_32.label }}</td><td>{{ form.p2_32 }}</td></tr>
+                    <tr><td>{{ form.p2_33.label }}</td><td>{{ form.p2_33 }}</td></tr>
+                    <tr><td>{{ form.p2_34.label }}</td><td>{{ form.p2_34 }}</td></tr>
+                    <tr><td>{{ form.obs_cavalo.label }}</td><td>{{ form.obs_cavalo }}</td></tr>
+                    </tbody>
+                </table>
+                </div>
+                <div class="contorno">
+                <table>
+                    <thead>
+                    <tr><h2 style="border:solid 1px;background-color:grey;text-align:center;">Carreta</h2></tr>
+                    </thead>
+                    <tbody>
+                    <tr><td>Placa carreta: </td><td>{{ form.placacarreta }}</td></tr>
+                    <tr><td>{{ form.p3_1.label }}</td><td>{{ form.p3_1 }}</td></tr>
+                    <tr><td>{{ form.p3_2.label }}</td><td>{{ form.p3_2 }}</td></tr>
+                    <tr><td>{{ form.p3_3.label }}</td><td>{{ form.p3_3 }}</td></tr>
+                    <tr><td>{{ form.p3_4.label }}</td><td>{{ form.p3_4 }}</td></tr>
+                    <tr><td>{{ form.p3_5.label }}</td><td>{{ form.p3_5 }}</td></tr>
+                    <tr><td>{{ form.p3_6.label }}</td><td>{{ form.p3_6 }}</td></tr>
+                    <tr><td>{{ form.p3_7.label }}</td><td>{{ form.p3_7 }}</td></tr>
+                    <tr><td>{{ form.p3_8.label }}</td><td>{{ form.p3_8 }}</td></tr>
+                    <tr><td>{{ form.p3_9.label }}</td><td>{{ form.p3_9 }}</td></tr>
+                    <tr><td>{{ form.p3_10.label }}</td><td>{{ form.p3_10 }}</td></tr>
+                    <tr><td>{{ form.p3_11.label }}</td><td>{{ form.p3_11 }}</td></tr>
+                    <tr><td>{{ form.p3_12.label }}</td><td>{{ form.p3_12 }}</td></tr>
+                    <tr><td>{{ form.p3_13.label }}</td><td>{{ form.p3_13 }}</td></tr>
+                    <tr><td>{{ form.p3_14.label }}</td><td>{{ form.p3_14 }}</td></tr>
+                    <tr><td>{{ form.p3_15.label }}</td><td>{{ form.p3_15 }}</td></tr>
+                    <tr><td>{{ form.p3_16.label }}</td><td>{{ form.p3_16 }}</td></tr>
+                    <tr><td>{{ form.p3_17.label }}</td><td>{{ form.p3_17 }}</td></tr>
+                    <tr><td>{{ form.p3_18.label }}</td><td>{{ form.p3_18 }}</td></tr>
+                    <tr><td>{{ form.p3_19.label }}</td><td>{{ form.p3_19 }}</td></tr>
+                    <tr><td>{{ form.obs_carreta.label }}</td><td>{{ form.obs_carreta }}</td></tr>
+                    </tbody>
+                </table>
+                </div>
             <input type="submit" class="button">
             </form>
         </div>
