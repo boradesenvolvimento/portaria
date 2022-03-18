@@ -114,7 +114,16 @@ class RomXMLAdmin(admin.ModelAdmin):
     pass
 admin.site.register(RomXML,RomXMLAdmin)
 
-class SkuRefXMLdmin(admin.ModelAdmin):
+class SkuRefXMLAdmin(admin.ModelAdmin):
     pass
-admin.site.register(SkuRefXML,SkuRefXMLdmin)
+admin.site.register(SkuRefXML,SkuRefXMLAdmin)
+
+class EtiquetasRomaneioAdmin(admin.ModelAdmin):
+    pass
+admin.site.register(EtiquetasRomaneio, EtiquetasRomaneioAdmin)
+
+class BipagemEtiquetaAdmin(admin.ModelAdmin):
+    pass
+admin.site.register(BipagemEtiqueta, BipagemEtiquetaAdmin)
+
 

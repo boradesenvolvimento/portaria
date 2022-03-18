@@ -57,6 +57,30 @@ TIPO_DOCTO_CHOICES = (
     ('8', 'NFS'),
     ('57', 'CTE')
 )
+GARAGEM_CHOICES = [
+        ('1', 'SPO'),
+        ('2', 'REC'),
+        ('3', 'SSA'),
+        ('4', 'FOR'),
+        ('5', 'MCZ'),
+        ('6', 'NAT'),
+        ('7', 'JPA'),
+        ('8', 'AJU'),
+        ('9', 'VDC'),
+        ('10', 'MG'),
+        ('20', 'CTG'),
+        ('21', 'TCO'),
+        ('22', 'UDI'),
+        ('23', 'TMA'),
+        ('24', 'VIX'),
+        ('30', 'BMA'),
+        ('31', 'BPE'),
+        ('32', 'BEL'),
+        ('33', 'BPB'),
+        ('34', 'SLZ'),
+        ('35', 'BAL'),
+        ('36', 'THE')
+    ]
 # Create your models here.
 
 
@@ -622,3 +646,27 @@ class SkuRefXML(models.Model):
     tp_un = models.CharField(max_length=10)
     qnt_un = models.IntegerField()
     xmlref = models.ForeignKey(RomXML, on_delete=models.CASCADE)
+
+class EtiquetasRomaneio(models.Model):
+    TIPO_DOCTO_CHOICES = (
+        ('4', 'ROMANEIO'),
+        ('58', 'MDFE')
+    )
+    id = models.BigAutoField(primary_key=True)
+    garagem = models.CharField(max_length=3, choices=GARAGEM_CHOICES)
+    tp_doc = models.CharField(max_length=3, choices=TIPO_DOCTO_CHOICES)
+    nr_doc = models.CharField(max_length=20)
+    nota = models.CharField(max_length=10)
+    volume = models.PositiveSmallIntegerField()
+    pub_date = models.DateField(timezone.now)
+
+    def __str__(self):
+        return str(self.id)
+
+class BipagemEtiqueta(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    cod_barras = models.CharField(max_length=20)
+    nota = models.CharField(max_length=10)
+    rom_ref = models.ForeignKey(EtiquetasRomaneio, on_delete=models.CASCADE)
+    autor = models.ForeignKey(User, on_delete=models.CASCADE)
+    pub_date = models.DateField(timezone.now)

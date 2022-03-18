@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load groupscheck %}
+{% load static %}
+<div class="container mt-5">
+{% if auth_message %}
+    <p><strong>{{ auth_message }}</strong></p>
+{% else %}
+{% if request.user|has_group:"etiquetas" %}
+        {% for message in messages %}
+        <div class="container-fluid p-0">
+            <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                {{ message }}
+            </div>
+        </div>
+        {% endfor %}
+        <section>
+            <div class="container">
+                <div class="row">
+                <h2>Contagem etiquetas</h2>
+                </div><hr>
+                <div class="row">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="container">
+                            <h2>Romaneio: {{ nrdoc }} - Volumes:{{ cont }}</h2>
+                            {% for i in cont|rangeloop %}
+                            <table>
+                                    <tr><td>
+                                    <label for="{{ forloop.counter }}">Código {{ forloop.counter }}: </label>
+                                    <input type="text" name="getbarcode" id="{{ forloop.counter }}">
+                                    </td></tr>
+                            </table>
+                            {% endfor %}
+                        </div>
+                        <input type="submit" class="button">
+                    </form>
+                </div>
+            </div>
+        </section>
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+</div>
+{% endif %}
+{% endblock %}

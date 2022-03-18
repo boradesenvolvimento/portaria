@@ -1195,7 +1195,7 @@ def etiquetas(request):
             conn = settings.CONNECTION
             cur = conn.cursor()
             cur.execute(f"""
-                        SELECT F4.NOTA_FISCAL, F4.VOLUMES
+                        SELECT F4.NOTA_FISCAL, F4.VOLUMES, E26.COD_MANIFESTO
                         FROM
                             FTA004 F4,
                             EXA026 E26,
@@ -1219,6 +1219,14 @@ def etiquetas(request):
         except Exception as e:
             raise e
         else:
+            for i in res:
+                try:
+                    check = EtiquetasRomaneio.objects.filter(garagem=ga,nr_doc=i['COD_MANIFESTO'])
+                    if not check:
+                        EtiquetasRomaneio.objects.create(garagem=ga, tp_doc=doc, nr_doc=i['COD_MANIFESTO'],
+                                                         nota=i['NOTA_FISCAL'], volume=i['VOLUMES'])
+                except Exception as e:
+                    print(f'Error: {e}, error_type:{type(e).__name__}')
             request.session['dict'] = res
             return redirect('portaria:createetiquetas')
     return render(request, 'portaria/etiquetas/etiquetas.html', {'gachoices':gachoices, 'docchoices':docchoices})
@@ -1260,7 +1268,7 @@ def createetiquetas(request):
                     ^FO96,15^GB294,87,2^FS
                     ^FO98,57^GB292,0,2^FS
                     ^BY2,3,71^FT97,204^BCN,,Y,N
-                    ^FH\^FD>;{a}^FS
+                    ^FH\^FD>:{ a }^FS
                     ^FT103,46^A0N,23,23^FH\^CI28^FDNota: {j['NOTA_FISCAL']}^FS^CI27
                     ^FT103,89^A0N,23,23^FH\^CI28^FDVolume: {i+1} de {(j['VOLUMES'])}^FS^CI27
                     ^FO420,11^GFA,1017,1720,8,:Z64:eJytlM1q20AQx0crLxg5CAWkUy9LchGSWXI0zmULzd0B6x1Kn2JpLyGHPsPSXoIMORv7kkfZYwhFz9D52HyV0lMFZvh59uM//xkJAB8P/GROYh4k6o3E8lHirJY47yRWOnEhB1QgG1oV3vEcWtkPdeIu8Sxx+Y4LyBNncj8o/5YLUK95zJQe806Yrqb9GV6tie9kf1Zx3qk57w/ENfF3f4NLotbbAbc4tRh3e4Cgs2GgO6wfRwzhVLypVlKaqaS0qn1k90K1TdwfiS+qbCMMN7x+liwrJL5wKdaF5H2lDiPdEKAZtmxhMU7McEVMqzrhZBbAEn8xMeXblIc3/Ld89Uf+mVf/zN+l/VXiR/yH8p+42Q7Gfs/1XDVy/9MTxZixfOSfLC2A1Ou6yDFuE68PI/t5XZ0CTeSXcSKOHwfHfE7dgNxfs70ZfObjlJd2zOCCYwHPLJPXsljAfzsl9s5ouHF87C3qKwJoajfOszr0Qa357OFUDrmfwquZdNkI//ExRmKVeJ24SbcVMSVcWmG6IOsbltcay69ngxNDW4pweTwAld7wBC+NvZ8eaNhrTQs60y12gWqtNd1xFm15G+m8WtMQrmC9+JbyxIW35ddI1icO/Y7yjdPDR2QbymlijWghsgG1p1egwleQ2Hq4sXi/dqQR3QuLoFiv5hesBTtRAXXSf5n0Z070m2BLHgFcQQvOQwcLT+fVfKaNFtSDfFxIX2vW/AGrE8+N5CGxMZ2XvN5kvL+cqL6ZE/1g8uMx8MeC+cQA+4d3sX95aKH34jg91r/4z/3oUT83CPVvuL/FJPqlwM5Ax/47qMn/MsLynvxDJj04eyvS10C2zThvfynW12ylnn4v+oVtsKxfu6ahfqhgPogA0YsKyonrr577r3ae9XIFRbSRP2FO9IO5lN3p898aNUl92SD15Xx8hkwLzoLi/iHzK35u8h9H3p857p9Rkfuf/Dzz+U7qb5iXqJ/mh+eV5s9g/6U+Vn9i7Cj2vXt+A5Em3hQ=:E991
@@ -1268,7 +1276,7 @@ def createetiquetas(request):
                     ^FO496,15^GB294,87,2^FS
                     ^FO498,57^GB292,0,2^FS
                     ^BY2,3,71^FT497,204^BCN,,Y,N
-                    ^FH\^FD>;{b}^FS
+                    ^FH\^FD>:{ b }^FS
                     ^FT503,46^A0N,23,23^FH\^CI28^FDNota: {j['NOTA_FISCAL']}^FS^CI27
                     ^FT503,89^A0N,23,23^FH\^CI28^FDVolume: {i+2} de {(j['VOLUMES'])}^FS^CI27
                     ^PQ1,0,1,Y
@@ -1283,6 +1291,46 @@ def createetiquetas(request):
     else:
         messages.error(request, 'Não encontrado para este romaneio')
         return redirect('portaria:etiquetas')
+
+def contagemetiquetas(request):
+    gachoices = GARAGEM_CHOICES
+    if request.method == 'POST':
+        rom = request.POST.get('getrom')
+        ga = request.POST.get('getga')
+        if rom and ga:
+            dict = {'rom':rom, 'ga':ga}
+            return redirect('portaria:bipagemetiquetas', **dict)
+    return render(request,'portaria/etiquetas/contagemetiquetas.html', {'gachoices':gachoices})
+
+def bipagemetiquetas(request, **dict):
+    roms = EtiquetasRomaneio.objects.filter(nr_doc=dict['rom'], garagem=dict['ga'])
+    cont = 0
+    for k in roms:
+        cont += k.volume
+    if request.method == 'POST':
+        test = request.POST.getlist('getbarcode')
+        request.session['test_sess'] = test
+        try:
+            test = ' '.join(test).split()
+        except:
+            pass
+        if len(test) == cont:
+            for i in test:
+                if not BipagemEtiqueta.objects.filter(cod_barras=i):
+                    try:
+                        check = roms.filter(nota=i[1:])
+                        if check:
+                            print('achou')
+                            BipagemEtiqueta.objects.create(cod_barras=i,nota=i[1:],rom_ref=roms[0],autor=request.user)
+                    except:
+                        print('nao achoi')
+                        pass
+                else:
+                    pass
+        else:
+            messages.error(request, 'está faltando camops')
+
+    return render(request, 'portaria/etiquetas/bipagemetiquetas.html', {'roms':roms, 'nrdoc':dict['rom'], 'cont':cont})
 
 def romaneioxml(request):
     return render(request, 'portaria/etc/romaneioindex.html')
@@ -2491,6 +2539,7 @@ def notifymanutencaovencidos():
 def printetiquetas(array):
     print('iniciando impressao')
     if array:
+        print(array[0])
         mysocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         host = get_secret('HOST_PRINT')
         port = int(get_secret('PORT_PRINT'))
