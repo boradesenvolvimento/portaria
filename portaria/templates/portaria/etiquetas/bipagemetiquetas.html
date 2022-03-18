@@ -33,7 +33,7 @@
                             </table>
                             {% endfor %}
                         </div>
-                        <input type="submit" class="button">
+                        <input type="submit" id="submiterrr" onclick="validate(event)" class="button">
                     </form>
                 </div>
             </div>
@@ -41,28 +41,4 @@
 {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
 </div>
 {% endif %}
- <script>
-
-      $(document).on('submit', '#post-form', function(e){
-
-      });
-      $(function () {
-
-        $('form').on('submit', function (e) {
-
-          e.preventDefault();
-
-          $.ajax({
-            type: 'post',
-            url: '{% url 'portaria:bipagemetiquetas' %}',
-            data: $('form').serialize(),
-            success: function () {
-              alert('form was submitted');
-            }
-          });
-
-        });
-
-      });
-    </script>
 {% endblock %}
