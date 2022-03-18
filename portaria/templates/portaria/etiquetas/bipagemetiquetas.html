@@ -20,7 +20,7 @@
                 <h2>Contagem etiquetas</h2>
                 </div><hr>
                 <div class="row">
-                    <form method="post">
+                    <form method="post" id="post-form">
                         {% csrf_token %}
                         <div class="container">
                             <h2>Romaneio: {{ nrdoc }} - Volumes:{{ cont }}</h2>
@@ -41,4 +41,28 @@
 {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
 </div>
 {% endif %}
+ <script>
+
+      $(document).on('submit', '#post-form', function(e){
+
+      });
+      $(function () {
+
+        $('form').on('submit', function (e) {
+
+          e.preventDefault();
+
+          $.ajax({
+            type: 'post',
+            url: '{% url 'portaria:bipagemetiquetas' %}',
+            data: $('form').serialize(),
+            success: function () {
+              alert('form was submitted');
+            }
+          });
+
+        });
+
+      });
+    </script>
 {% endblock %}

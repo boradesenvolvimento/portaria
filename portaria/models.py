@@ -658,7 +658,7 @@ class EtiquetasRomaneio(models.Model):
     nr_doc = models.CharField(max_length=20)
     nota = models.CharField(max_length=10)
     volume = models.PositiveSmallIntegerField()
-    pub_date = models.DateField(timezone.now)
+    pub_date = models.DateField(default=timezone.now)
 
     def __str__(self):
         return str(self.id)
@@ -669,4 +669,4 @@ class BipagemEtiqueta(models.Model):
     nota = models.CharField(max_length=10)
     rom_ref = models.ForeignKey(EtiquetasRomaneio, on_delete=models.CASCADE)
     autor = models.ForeignKey(User, on_delete=models.CASCADE)
-    pub_date = models.DateField(timezone.now)
+    pub_date = models.DateField(default=timezone.now)
