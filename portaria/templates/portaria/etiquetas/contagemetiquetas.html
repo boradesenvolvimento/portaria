@@ -32,6 +32,13 @@
                                     <option value="{{ q }}">{{ v }}</option>
                                     {% endfor %}
                                 </select>
+                                <label for="tp_doc" style="font-weight:bold;">Tipo Doc:</label>
+                                <select id="tp_doc" name="tp_doc" >
+                                    <option hidden>Selecione...</option>
+                                    {% for q,v in docchoices %}
+                                    <option value="{{ q }}">{{ v }}</option>
+                                    {% endfor %}
+                                </select>
                                 <label for="getrom" style="font-weight:bold;">Romaneio:</label>
                                 <input type="text" name="getrom" id="getrom">
                             </td>

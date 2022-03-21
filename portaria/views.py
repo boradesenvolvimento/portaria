@@ -1294,48 +1294,54 @@ def createetiquetas(request):
 
 def contagemetiquetas(request):
     gachoices = GARAGEM_CHOICES
+    docchoices = EtiquetasRomaneio.TIPO_DOCTO_CHOICES
     if request.method == 'POST':
         rom = request.POST.get('getrom')
         ga = request.POST.get('getga')
+        tp_doc = request.POST.get('tp_doc')
         if rom and ga:
-            dict = {'rom':rom, 'ga':ga}
+            dict = {'rom':rom, 'ga':ga, 'tp_doc':tp_doc}
             return redirect('portaria:bipagemetiquetas', **dict)
-    return render(request,'portaria/etiquetas/contagemetiquetas.html', {'gachoices':gachoices})
+    return render(request,'portaria/etiquetas/contagemetiquetas.html', {'gachoices':gachoices, 'docchoices':docchoices})
 
 def bipagemetiquetas(request, **dict):
-    roms = EtiquetasRomaneio.objects.filter(nr_doc=dict['rom'], garagem=dict['ga'])
+    roms = EtiquetasRomaneio.objects.filter(nr_doc=dict['rom'], garagem=dict['ga'], tp_doc=dict['tp_doc'])
     cont = 0
     for k in roms:
         cont += k.volume
-
-    print(BipagemEtiqueta.objects.filter(rom_ref=roms[0]).count())
-    if BipagemEtiqueta.objects.filter(rom_ref=roms[0]).count() < cont:
-        if request.method == 'POST':
-            test = request.POST.getlist('getbarcode')
-            try:
-                test = ' '.join(test).split()
-            except:
-                pass
-            if len(test) == cont:
-                for i in test:
-                    if not BipagemEtiqueta.objects.filter(cod_barras=i):
-                        check = roms.filter(nota=i[-10:])
-                        if check:
-                            BipagemEtiqueta.objects.create(cod_barras=i,nota=i[-10:],rom_ref=roms[0],autor=request.user)
-                        else:
-                            messages.error(request, f'{i} não pertence ao romaneio, gentileza verificar.')
-                            return HttpResponse('<script>window.history.back()</script>')
-                    else:
-                        messages.error(request, f'{i} já cadastrado, gentileza verificar.')
-                        return HttpResponse('<script>window.history.back()</script>')
-                messages.success(request, 'Bipagem cadastrada com sucesso')
-                return redirect('portaria:contagemetiquetas')
-            else:
-                messages.error(request, 'Quantidade de notas enviadas inválida, gentileza verificar.')
-                return HttpResponse('<script>window.history.back()</script>')
-    else:
-        messages.error(request, 'Contagem já atingiu a quantidade de volumes')
+    try:
+        qnt = BipagemEtiqueta.objects.filter(rom_ref=roms[0]).count()
+    except IndexError:
+        messages.error(request, 'Não encontrado, verifique os valores inseridos')
         return redirect('portaria:contagemetiquetas')
+    else:
+        if qnt < cont:
+            if request.method == 'POST':
+                test = request.POST.getlist('getbarcode')
+                try:
+                    test = ' '.join(test).split()
+                except:
+                    pass
+                if len(test) == cont:
+                    for i in test:
+                        if not BipagemEtiqueta.objects.filter(cod_barras=i):
+                            check = roms.filter(nota=i[-10:])
+                            if check:
+                                BipagemEtiqueta.objects.create(cod_barras=i,nota=i[-10:],rom_ref=roms[0],autor=request.user)
+                            else:
+                                messages.error(request, f'{i} não pertence ao romaneio, gentileza verificar.')
+                                return HttpResponse('<script>window.history.back()</script>')
+                        else:
+                            messages.error(request, f'{i} já cadastrado, gentileza verificar.')
+                            return HttpResponse('<script>window.history.back()</script>')
+                    messages.success(request, 'Bipagem cadastrada com sucesso')
+                    return redirect('portaria:contagemetiquetas')
+                else:
+                    messages.error(request, 'Quantidade de notas enviadas inválida, gentileza verificar.')
+                    return HttpResponse('<script>window.history.back()</script>')
+        else:
+            messages.error(request, 'Contagem já atingiu a quantidade de volumes')
+            return redirect('portaria:contagemetiquetas')
     return render(request, 'portaria/etiquetas/bipagemetiquetas.html', {'roms':roms, 'nrdoc':dict['rom'], 'cont':cont})
 
 def romaneioxml(request):
