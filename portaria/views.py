@@ -1344,6 +1344,22 @@ def bipagemetiquetas(request, **dict):
             return redirect('portaria:contagemetiquetas')
     return render(request, 'portaria/etiquetas/bipagemetiquetas.html', {'roms':roms, 'nrdoc':dict['rom'], 'cont':cont})
 
+def retornoetiqueta(request):
+    gachoices = GARAGEM_CHOICES
+    if request.method == 'POST':
+        nflist = request.POST.getlist('getnf')
+        for q in nflist:
+            if EtiquetasRomaneio.objects.filter(nota=q[-10:]) and \
+                    RetornoEtiqueta.objects.filter(nota_fiscal=q,
+                    saida__month=datetime.datetime.now().month,saida__year=datetime.datetime.now().year
+                                                   ).exists() == False:
+                RetornoEtiqueta.objects.create(nota_fiscal=q)
+            else:
+                pass
+        messages.warning(request, 'Cadastros finalizados.')
+        return redirect('portaria:retornoetiqueta')
+    return render(request, 'portaria/etiquetas/retornoetiqueta.html', {'gachoices':gachoices})
+
 def romaneioxml(request):
     return render(request, 'portaria/etc/romaneioindex.html')
 
@@ -1361,14 +1377,23 @@ def painelromaneio(request):
 
     if request.method == 'POST':
         romidd = request.POST.getlist('romid')
+        tp_dld = request.POST.get('tp_dld')
         if romidd:
-            romaneio = SkuRefXML.objects.filter(xmlref__id__in=romidd).annotate(
-                nf1=F('xmlref__nota_fiscal'),
-                municipio1=F('xmlref__municipio'), uf1=F('xmlref__uf'), codigo1=F('codigo'),
-                qnt_un1=F('qnt_un'), desc_prod1=F('desc_prod'), rem=F('xmlref__remetente'),
-                romaneio_id=F('xmlref_id'))
+            if tp_dld == 'Completo':
+                romaneio = SkuRefXML.objects.filter(xmlref__id__in=romidd).annotate(
+                    nf1=F('xmlref__nota_fiscal'),
+                    municipio1=F('xmlref__municipio'), uf1=F('xmlref__uf'), codigo1=F('codigo'),
+                    qnt_un1=F('qnt_un'), desc_prod1=F('desc_prod'), rem=F('xmlref__remetente'),
+                    romaneio_id=F('xmlref_id'), volume=F('xmlref__volume'))
+            elif tp_dld == 'Simples':
+                romaneio = RomXML.objects.filter(id__in=romidd).annotate(
+                    nf1=F('nota_fiscal'),volume1=F('volume'),uf1=F('uf'), rem=F('remetente')
+                )
+            else:
+                messages.error(request, f'Selecione o tipo de download.')
+                return redirect('portaria:painelromaneio')
             try:
-                sheet = romxmltoexcel(*romaneio)
+                sheet = romxmltoexcel(*romaneio, tp_dld=tp_dld)
             except KeyError:
                 messages.error(request, f'Não encontrado valores para sua solicitação.')
                 return redirect('portaria:painelromaneio')
@@ -1460,24 +1485,38 @@ def getText(nodelist):
         rc.append(all)
     return rc
 
-
-def romxmltoexcel(*romaneio):
+def romxmltoexcel(*romaneio, tp_dld):
     array = []
     roms = []
     for q in romaneio:
-        array.append({'nf':q.nf1, 'municipio':q.municipio1, 'uf':q.uf1, 'codigo':q.codigo1,
-                      'qnt_un':q.qnt_un1, 'desc':q.desc_prod1, 'remetente':q.rem, 'ref_id':q.romaneio_id})
-        if q.romaneio_id not in roms:
-            roms.extend({q.romaneio_id})
+        if tp_dld == 'Completo':
+            array.append({'nf':q.nf1, 'municipio':q.municipio1, 'uf':q.uf1, 'codigo':q.codigo1,
+                          'qnt_un':q.qnt_un1, 'desc':q.desc_prod1, 'remetente':q.rem, 'ref_id':q.romaneio_id,
+                          'volume':q.volume})
+            if q.romaneio_id not in roms:
+                roms.extend({q.romaneio_id})
+        else:
+            array.append({'nf': q.nf1, 'uf': q.uf1, 'volume': q.volume})
+            if q.id not in roms:
+                roms.extend({q.id})
     RomXML.objects.filter(pk__in=roms).update(printed=True)
     pdr = pd.DataFrame(array)
-    dt = (pdr.pivot_table(index=['codigo','desc'],
-                         columns=['uf'],
-                         values=['qnt_un'],
-                         aggfunc=np.sum,
-                         fill_value='0',
-                         margins=True,
-                         margins_name='Total')).astype(np.int64)
+    if tp_dld == 'Completo':
+        dt = (pdr.pivot_table(index=['codigo','desc'],
+                             columns=['uf'],
+                             values=['qnt_un'],
+                             aggfunc=np.sum,
+                             fill_value='0',
+                             margins=True,
+                             margins_name='Total')).astype(np.int64)
+    else:
+        dt = (pdr.pivot_table(index=['nf'],
+                              columns=['uf'],
+                              values=['volume'],
+                              aggfunc=np.sum,
+                              fill_value='0',
+                              margins=True,
+                              margins_name='Total')).astype(np.int64)
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = f'attachment; filename="{romaneio[0].rem}-{datetime.datetime.today()}.xlsx"'
     writer = pd.ExcelWriter(response, engine='xlsxwriter')
@@ -1712,6 +1751,24 @@ def get_manu_csv(request):
                                 'filial','socorro','prev_entrega','observacao','status','autor__username').filter(dt_entrada__gte=dateparse, dt_entrada__lte=dateparse1)
         for id in manutencao:
             writer.writerow(id)
+        return response
+
+def retornoromcsv(request):
+    array = []
+    if request.method == 'POST':
+        date1 = request.POST.get('date1')
+        date2 = request.POST.get('date2')
+
+        getnfs = RetornoEtiqueta.objects.filter(saida__gte=date1, saida__lte=date2)
+        for q in getnfs:
+            array.append({'nf':q.nota_fiscal, 'saida':q.saida})
+        pdr = pd.DataFrame(array)
+        pdr.set_index('nf', inplace=True)
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = f'attachment; filename="{datetime.datetime.today()}.xlsx"'
+        writer = pd.ExcelWriter(response, engine='xlsxwriter')
+        pdr.to_excel(writer, 'sheet1')
+        writer.save()
         return response
 
 def mailferias(request,idfpj):
@@ -2529,7 +2586,7 @@ def setallread(request, user):
     return redirect(next)
 
 def dictfetchall(cursor):
-    "Return all rows from a cursor as a dict"
+    #Return all rows from a cursor as a dict
     columns = [col[0] for col in cursor.description]
     return [
         dict(zip(columns, row))
@@ -2551,7 +2608,6 @@ def notifymanutencaovencidos():
 def printetiquetas(array):
     print('iniciando impressao')
     if array:
-        print(array[0])
         mysocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         host = get_secret('HOST_PRINT')
         port = int(get_secret('PORT_PRINT'))

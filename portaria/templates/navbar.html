@@ -124,6 +124,9 @@
               <li class="nav-item">
                 <a class="nav-link1" href="{% url 'portaria:contagemetiquetas' %}">Contagem Etiquetas</a>
               </li>
+              <li class="nav-item">
+                <a class="nav-link1" href="{% url 'portaria:retornoetiqueta' %}">Retorno Etiquetas</a>
+              </li>
               {% endif %}
               {% if request.user|has_group:"adm_rh" %}
               <li class="nav-item"><a class="nav-link1" href="{% url 'portaria:cardusuario' %}">Cards</a></li>

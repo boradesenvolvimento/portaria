@@ -639,6 +639,9 @@ class RomXML(models.Model):
     printed = models.BooleanField(default=False)
     pub_date = models.DateTimeField(default=timezone.now)
 
+    def __str__(self):
+        return str(self.id)
+
 class SkuRefXML(models.Model):
     id = models.BigAutoField(primary_key=True)
     codigo = models.IntegerField()
@@ -646,6 +649,9 @@ class SkuRefXML(models.Model):
     tp_un = models.CharField(max_length=10)
     qnt_un = models.IntegerField()
     xmlref = models.ForeignKey(RomXML, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return str(self.xmlref_id)
 
 class EtiquetasRomaneio(models.Model):
     TIPO_DOCTO_CHOICES = (
@@ -670,3 +676,8 @@ class BipagemEtiqueta(models.Model):
     rom_ref = models.ForeignKey(EtiquetasRomaneio, on_delete=models.CASCADE)
     autor = models.ForeignKey(User, on_delete=models.CASCADE)
     pub_date = models.DateField(default=timezone.now)
+
+class RetornoEtiqueta(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    nota_fiscal = models.CharField(max_length=15, unique=True)
+    saida = models.DateField(default=timezone.now)

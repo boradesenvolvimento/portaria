@@ -126,4 +126,8 @@ class BipagemEtiquetaAdmin(admin.ModelAdmin):
     pass
 admin.site.register(BipagemEtiqueta, BipagemEtiquetaAdmin)
 
+class RetornoEtiquetaAdmin(admin.ModelAdmin):
+    pass
+admin.site.register(RetornoEtiqueta,RetornoEtiquetaAdmin)
+
 
