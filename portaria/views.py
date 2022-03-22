@@ -1300,11 +1300,12 @@ def contagemetiquetas(request):
         ga = request.POST.get('getga')
         tp_doc = request.POST.get('tp_doc')
         if rom and ga:
-            dict = {'rom':rom, 'ga':ga, 'tp_doc':tp_doc}
-            return redirect('portaria:bipagemetiquetas', **dict)
+            request.session['dict'] = {'rom':rom, 'ga':ga, 'tp_doc':tp_doc}
+            return redirect('portaria:bipagemetiquetas')
     return render(request,'portaria/etiquetas/contagemetiquetas.html', {'gachoices':gachoices, 'docchoices':docchoices})
 
-def bipagemetiquetas(request, **dict):
+def bipagemetiquetas(request):
+    dict = request.session['dict']
     roms = EtiquetasRomaneio.objects.filter(nr_doc=dict['rom'], garagem=dict['ga'], tp_doc=dict['tp_doc'])
     cont = 0
     for k in roms:
