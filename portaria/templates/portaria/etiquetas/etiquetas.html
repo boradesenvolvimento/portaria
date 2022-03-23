@@ -35,10 +35,10 @@
                                     <label for="getdoc" style="font-weight:bold;">Tipo doc:</label>
                                     <select id="getdoc" name="getdoc">
                                         <option hidden>Selecione...</option>
-                                        <option value="04">Romaneio</option>
-                                        <option value="58">MDFE</option>
+                                        <option value="8">NFS</option>
+                                        <option value="57">CTE</option>
                                     </select>
-                                    <label for="getcte" style="font-weight:bold;">Romaneio:</label>
+                                    <label for="getcte" style="font-weight:bold;">CTE:</label>
                                     <input type="text" name="getcte" id="getcte">
                                 </td>
                                 <td><a href="#" id="btnAdiciona" class="button">Add+</a></td>
@@ -77,7 +77,7 @@
 			var idNum = idContador;
 
 			var html = "";
-			html += "<tr id='"+idNum+"'><td><label for='getcte"+idNum+"'>Romaneio "+idContador+"</label>"
+			html += "<tr id='"+idNum+"'><td><label for='getcte"+idNum+"'>CTE "+idContador+"</label>"
 			html += "<input type='text' name='getcte' id='getcte"+idNum+"'>"
 			html += "</td>"
 			html += "<td><button class='btn' onclick='exclui("+idNum+")' type='button'>Excluir</button></td></tr>";

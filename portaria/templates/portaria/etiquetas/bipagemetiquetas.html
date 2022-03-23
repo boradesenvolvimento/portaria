@@ -23,7 +23,7 @@
                     <form method="post" id="post-form">
                         {% csrf_token %}
                         <div class="container">
-                            <h2>Romaneio: {{ nrdoc }} - Volumes:{{ cont }}</h2>
+                            <h2>CTE: {{ nrdoc }} - Volumes:{{ cont }}</h2>
                             {% for i in cont|rangeloop %}
                             <table>
                                     <tr><td>

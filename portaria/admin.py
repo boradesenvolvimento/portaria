@@ -118,9 +118,9 @@ class SkuRefXMLAdmin(admin.ModelAdmin):
     pass
 admin.site.register(SkuRefXML,SkuRefXMLAdmin)
 
-class EtiquetasRomaneioAdmin(admin.ModelAdmin):
+class EtiquetasDocumentoAdmin(admin.ModelAdmin):
     pass
-admin.site.register(EtiquetasRomaneio, EtiquetasRomaneioAdmin)
+admin.site.register(EtiquetasDocumento, EtiquetasDocumentoAdmin)
 
 class BipagemEtiquetaAdmin(admin.ModelAdmin):
     pass

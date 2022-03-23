@@ -1195,24 +1195,22 @@ def etiquetas(request):
             conn = settings.CONNECTION
             cur = conn.cursor()
             cur.execute(f"""
-                        SELECT F4.NOTA_FISCAL, F4.VOLUMES, E26.COD_MANIFESTO
+                        SELECT F4.NOTA_FISCAL, F4.VOLUMES, F1.CONHECIMENTO
                         FROM
-                            FTA004 F4,
-                            EXA026 E26,
-                            EXA025 E25
+                            FTA001 F1,
+                            FTA004 F4
                         WHERE
-                             F4.EMPRESA = E26.EMPRESA AND
-                             F4.FILIAL = E26.FILIAL   AND
-                             F4.GARAGEM = E26.GARAGEM AND
-                             F4.SERIE = E26.SERIE_CTRC     AND
-                             F4.CONHECIMENTO = E26.NUMERO_CTRC AND
-                             F4.TIPO_DOCTO = E26.TIPO_DOCTO    AND
-                             E26.RECNUM_EXA025 = E25.RECNUM    AND
-                             
-                             E26.COD_MANIFESTO IN {lista}      AND
-                             E26.GAR_MANIFESTO = {ga}                   AND
-                             E25.TIPO_DOCTO = {doc}            AND
-                             E26.DATA_CADASTRO BETWEEN ((SYSDATE) - 90) AND (SYSDATE)
+                            F1.EMPRESA = F4.EMPRESA			AND
+                            F1.FILIAL = F4.FILIAL			AND
+                            F1.GARAGEM = F4.GARAGEM			AND
+                            F1.CONHECIMENTO = F4.CONHECIMENTO	AND
+                            F1.SERIE = F4.SERIE			AND
+                            F1.TIPO_DOCTO = F4.TIPO_DOCTO		AND
+                        
+                            F1.CONHECIMENTO IN {lista}			AND
+                            F1.GARAGEM = {ga}			AND
+                            F1.TIPO_DOCTO = {doc}       AND
+                            F1.DATA_EMISSAO BETWEEN ((SYSDATE)-90) 	AND (SYSDATE)
                         """)
             res = dictfetchall(cur)
             cur.close()
@@ -1221,9 +1219,10 @@ def etiquetas(request):
         else:
             for i in res:
                 try:
-                    check = EtiquetasRomaneio.objects.filter(garagem=ga,nr_doc=i['COD_MANIFESTO'])
+                    check = EtiquetasDocumento.objects.filter(garagem=ga, tp_doc=doc, nr_doc=i['CONHECIMENTO'],
+                                                         nota=i['NOTA_FISCAL'], volume=i['VOLUMES'])
                     if not check:
-                        EtiquetasRomaneio.objects.create(garagem=ga, tp_doc=doc, nr_doc=i['COD_MANIFESTO'],
+                        EtiquetasDocumento.objects.create(garagem=ga, tp_doc=doc, nr_doc=i['CONHECIMENTO'],
                                                          nota=i['NOTA_FISCAL'], volume=i['VOLUMES'])
                 except Exception as e:
                     print(f'Error: {e}, error_type:{type(e).__name__}')
@@ -1294,24 +1293,24 @@ def createetiquetas(request):
 
 def contagemetiquetas(request):
     gachoices = GARAGEM_CHOICES
-    docchoices = EtiquetasRomaneio.TIPO_DOCTO_CHOICES
+    docchoices = EtiquetasDocumento.TIPO_DOCTO_CHOICES
     if request.method == 'POST':
-        rom = request.POST.get('getrom')
+        cte = request.POST.get('getcte')
         ga = request.POST.get('getga')
         tp_doc = request.POST.get('tp_doc')
-        if rom and ga:
-            request.session['dict'] = {'rom':rom, 'ga':ga, 'tp_doc':tp_doc}
+        if cte and ga:
+            request.session['dict'] = {'cte':cte, 'ga':ga, 'tp_doc':tp_doc}
             return redirect('portaria:bipagemetiquetas')
     return render(request,'portaria/etiquetas/contagemetiquetas.html', {'gachoices':gachoices, 'docchoices':docchoices})
 
 def bipagemetiquetas(request):
     dict = request.session['dict']
-    roms = EtiquetasRomaneio.objects.filter(nr_doc=dict['rom'], garagem=dict['ga'], tp_doc=dict['tp_doc'])
+    docs = EtiquetasDocumento.objects.filter(nr_doc=dict['cte'], garagem=dict['ga'], tp_doc=dict['tp_doc'])
     cont = 0
-    for k in roms:
+    for k in docs:
         cont += k.volume
     try:
-        qnt = BipagemEtiqueta.objects.filter(rom_ref=roms[0]).count()
+        qnt = BipagemEtiqueta.objects.filter(doc_ref=docs[0]).count()
     except IndexError:
         messages.error(request, 'Não encontrado, verifique os valores inseridos')
         return redirect('portaria:contagemetiquetas')
@@ -1326,9 +1325,9 @@ def bipagemetiquetas(request):
                 if len(test) == cont:
                     for i in test:
                         if not BipagemEtiqueta.objects.filter(cod_barras=i):
-                            check = roms.filter(nota=i[-10:])
+                            check = docs.filter(nota=i[-10:])
                             if check:
-                                BipagemEtiqueta.objects.create(cod_barras=i,nota=i[-10:],rom_ref=roms[0],autor=request.user)
+                                BipagemEtiqueta.objects.create(cod_barras=i,nota=i[-10:],doc_ref=docs[0],autor=request.user)
                             else:
                                 messages.error(request, f'{i} não pertence ao romaneio, gentileza verificar.')
                                 return HttpResponse('<script>window.history.back()</script>')
@@ -1343,14 +1342,14 @@ def bipagemetiquetas(request):
         else:
             messages.error(request, 'Contagem já atingiu a quantidade de volumes')
             return redirect('portaria:contagemetiquetas')
-    return render(request, 'portaria/etiquetas/bipagemetiquetas.html', {'roms':roms, 'nrdoc':dict['rom'], 'cont':cont})
+    return render(request, 'portaria/etiquetas/bipagemetiquetas.html', {'docs':docs, 'nrdoc':dict['cte'], 'cont':cont})
 
 def retornoetiqueta(request):
     gachoices = GARAGEM_CHOICES
     if request.method == 'POST':
         nflist = request.POST.getlist('getnf')
         for q in nflist:
-            if EtiquetasRomaneio.objects.filter(nota=q[-10:]) and \
+            if EtiquetasDocumento.objects.filter(nota=q[-10:]) and \
                     RetornoEtiqueta.objects.filter(nota_fiscal=q,
                     saida__month=datetime.datetime.now().month,saida__year=datetime.datetime.now().year
                                                    ).exists() == False:

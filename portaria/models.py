@@ -653,10 +653,10 @@ class SkuRefXML(models.Model):
     def __str__(self):
         return str(self.xmlref_id)
 
-class EtiquetasRomaneio(models.Model):
+class EtiquetasDocumento(models.Model):
     TIPO_DOCTO_CHOICES = (
-        ('4', 'ROMANEIO'),
-        ('58', 'MDFE')
+        ('8', 'NFS'),
+        ('57', 'CTE')
     )
     id = models.BigAutoField(primary_key=True)
     garagem = models.CharField(max_length=3, choices=GARAGEM_CHOICES)
@@ -673,7 +673,7 @@ class BipagemEtiqueta(models.Model):
     id = models.BigAutoField(primary_key=True)
     cod_barras = models.CharField(max_length=20)
     nota = models.CharField(max_length=10)
-    rom_ref = models.ForeignKey(EtiquetasRomaneio, on_delete=models.CASCADE)
+    doc_ref = models.ForeignKey(EtiquetasDocumento, on_delete=models.CASCADE)
     autor = models.ForeignKey(User, on_delete=models.CASCADE)
     pub_date = models.DateField(default=timezone.now)
 
