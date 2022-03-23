@@ -2620,7 +2620,6 @@ def printetiquetas(array):
             mysocket.connect((host, port))  # connecting to host
             for q in array:
                 mysocket.send(q)  # using bytes
-                break
             mysocket.close()  # closing connection
         except Exception as e:
             print(f"Error:{e}, error_type:{type(e).__name__}")
