@@ -1298,14 +1298,19 @@ def contagemetiquetas(request):
         cte = request.POST.get('getcte')
         ga = request.POST.get('getga')
         tp_doc = request.POST.get('tp_doc')
-        if cte and ga:
-            request.session['dict'] = {'cte':cte, 'ga':ga, 'tp_doc':tp_doc}
+        nf = request.POST.get('getnf')
+        if cte and ga and nf:
+            if len(nf) < 10:
+                nf = ('0'*(10-len(nf))) + nf
+            else: pass
+            request.session['dict'] = {'cte':cte, 'nf':nf, 'ga':ga, 'tp_doc':tp_doc}
             return redirect('portaria:bipagemetiquetas')
     return render(request,'portaria/etiquetas/contagemetiquetas.html', {'gachoices':gachoices, 'docchoices':docchoices})
 
 def bipagemetiquetas(request):
     dict = request.session['dict']
-    docs = EtiquetasDocumento.objects.filter(nr_doc=dict['cte'], garagem=dict['ga'], tp_doc=dict['tp_doc'])
+    docs = EtiquetasDocumento.objects.filter(nr_doc=dict['cte'], nota=dict['nf'],
+                                             garagem=dict['ga'], tp_doc=dict['tp_doc'])
     cont = 0
     for k in docs:
         cont += k.volume
