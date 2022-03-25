@@ -24,8 +24,16 @@
                         {% csrf_token %}
                         <div class="container">
                             <h2>Bipagem Paletes</h2>
-                            <label for="idbarcode">Código de barras:</label>
-                            <input type="text" name="idbarcode" id="idbarcode">
+                            <table>
+                                <tr><td>
+                                    <label for="idbarcode">Código de barras:</label>
+                                    <input type="text" name="idbarcode" id="idbarcode">
+                                </td></tr>
+                                <tr><td>
+                                    <label for="volume">Volume:</label>
+                                    <input type="text" name="volume" id="volume">
+                                </td></tr>
+                            </table>
                         </div>
                         <input type="submit" id="submiterrr" class="button">
                     </form>

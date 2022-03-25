@@ -1429,6 +1429,7 @@ def etiquetas_palete(request):
 def bipagem_palete(request):
     if request.method == 'POST':
         code = request.POST.get('idbarcode')
+        vol = request.POST.get('volume')
         if code:
             try:
                 getobj = get_object_or_404(EtiquetasPalete, pk=code)
@@ -1436,7 +1437,8 @@ def bipagem_palete(request):
                 print(f'Error:{e}, error_type:{type(e).__name__}')
                 messages.error(request, 'Não encontrado etiqueta com essa numeração')
             else:
-                EtiquetasPalete.objects.filter(pk=getobj.id).update(bipado=True, bip_date=timezone.now())
+                EtiquetasPalete.objects.filter(pk=getobj.id).update(bipado=True, bip_date=timezone.now(),
+                                                                    volume_conf=vol)
                 messages.success(request, 'Bipado com sucesso.')
 
     return render(request, 'portaria/etiquetas/bipagem_palete.html')

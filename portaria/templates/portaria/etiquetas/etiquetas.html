@@ -32,17 +32,26 @@
                                         <option value="{{ q }}">{{ v }}</option>
                                         {% endfor %}
                                     </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
                                     <label for="getdoc" style="font-weight:bold;">Tipo doc:</label>
                                     <select id="getdoc" name="getdoc">
                                         <option hidden>Selecione...</option>
                                         <option value="8">NFS</option>
                                         <option value="57">CTE</option>
                                     </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
                                     <label for="getcte" style="font-weight:bold;">CTE:</label>
                                     <input type="text" name="getcte" id="getcte">
                                 </td>
-                                <td><a href="#" id="btnAdiciona" class="button">Add+</a></td>
                             </tr>
+                                <td><a href="#" id="btnAdiciona" class="button">Add+</a></td>
+
                         </table>
                     <input type="submit" class="button">
                     <input type="hidden" id="setCount" name="setcount">

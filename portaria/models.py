@@ -690,4 +690,5 @@ class EtiquetasPalete(models.Model):
     volumes = models.IntegerField()
     pub_date = models.DateTimeField(default=timezone.now)
     bipado = models.BooleanField(default=False)
-    bip_date = models.DateField(null=True, blank=True)
+    bip_date = models.DateTimeField(null=True, blank=True)
+    volume_conf = models.IntegerField(null=True, blank=True)
