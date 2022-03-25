@@ -1372,15 +1372,57 @@ def retornoetiqueta(request):
 def etiquetas_palete(request):
     gachoices = TicketMonitoramento.GARAGEM_CHOICES
     ac = Cliente.objects.all()
+    array = []
     if request.method == 'POST':
         ga = request.POST.get('getga')
         vol = request.POST.get('getvol')
         cli = request.POST.get('getcli')
         isprint = request.POST.get('isprint')
         if ga and vol and cli:
-            EtiquetasPalete.objects.create(filial=ga, volumes=vol, cliente=cli)
-        if isprint == 'on':
-            print('starting printing')
+            etq = EtiquetasPalete.objects.create(filial=ga, volumes=vol, cliente=cli)
+            if isprint == 'on':
+                array.append(f'''
+                                CT~~CD,~CC^~CT~
+                                ^XA
+                                ~TA000
+                                ~JSN
+                                ^LT0
+                                ^MNW
+                                ^MTD
+                                ^PON
+                                ^PMN
+                                ^LH0,0
+                                ^JMA
+                                ^PR4,4
+                                ~SD15
+                                ^JUS
+                                ^LRN
+                                ^CI27
+                                ^PA0,1,1,0
+                                ^XZ
+                                ^XA
+                                ^MMT
+                                ^PW799
+                                ^LL240
+                                ^LS0
+                                ^FO21,111^GB355,0,2^FS
+                                ^FO21,15^GB355,87,2^FS
+                                ^FO23,57^GB353,0,2^FS
+                                ^BY2,3,76^FT22,209^BCN,,Y,N
+                                ^FH\^FD>:{etq.id}^FS
+                                ^FT41,46^A0N,23,23^FH\^CI28^FDNota: {etq.id}^FS^CI27
+                                ^FT41,89^A0N,23,23^FH\^CI28^FDVolume: {etq.volumes}^FS^CI27
+                                ^FO421,111^GB355,0,2^FS
+                                ^FO421,15^GB355,87,2^FS
+                                ^FO423,57^GB353,0,2^FS
+                                ^BY2,3,76^FT422,209^BCN,,Y,N
+                                ^FH\^FD>:{etq.id}^FS
+                                ^FT441,46^A0N,23,23^FH\^CI28^FDNota: {etq.id}^FS^CI27
+                                ^FT441,89^A0N,23,23^FH\^CI28^FDVolume: {etq.volumes}^FS^CI27
+                                ^PQ1,0,1,Y
+                                ^XZ
+                            ''')
+                #printetiquetas(array)
     return render(request, 'portaria/etiquetas/etiquetas_palete.html',{
         'gachoices':gachoices,'ac':ac})
 
@@ -1394,7 +1436,7 @@ def bipagem_palete(request):
                 print(f'Error:{e}, error_type:{type(e).__name__}')
                 messages.error(request, 'Não encontrado etiqueta com essa numeração')
             else:
-                ## criar linha no banco
+                EtiquetasPalete.objects.filter(pk=getobj.id).update(bipado=True, bip_date=timezone.now())
                 messages.success(request, 'Bipado com sucesso.')
 
     return render(request, 'portaria/etiquetas/bipagem_palete.html')
