@@ -1321,7 +1321,6 @@ def bipagemetiquetas(request):
         messages.error(request, 'Não encontrado, verifique os valores inseridos')
         return redirect('portaria:contagemetiquetas')
     else:
-        ncount = cont - qnt
         if qnt < cont:
             if request.method == 'POST':
                 test = request.POST.getlist('getbarcode')
@@ -1329,8 +1328,9 @@ def bipagemetiquetas(request):
                     test = ' '.join(test).split()
                 except:
                     pass
-                if len(test) == ncount:
+                if len(test) == cont:
                     for i in test:
+
                         if not BipagemEtiqueta.objects.filter(cod_barras=i):
                             check = docs.filter(nota=i[-10:])
                             if check:
@@ -1339,8 +1339,9 @@ def bipagemetiquetas(request):
                                 messages.error(request, f'{i} não pertence ao romaneio, gentileza verificar.')
                                 return HttpResponse('<script>window.history.back()</script>')
                         else:
-                            messages.error(request, f'{i} já cadastrado, gentileza verificar.')
-                            return HttpResponse('<script>window.history.back()</script>')
+                            check = docs.filter(nota=i[-10:])
+                            if check:
+                                BipagemEtiqueta.objects.filter(cod_barras=i).update(pub_date=timezone.now())
                     messages.success(request, 'Bipagem cadastrada com sucesso')
                     return redirect('portaria:contagemetiquetas')
                 else:
@@ -1350,7 +1351,7 @@ def bipagemetiquetas(request):
             messages.error(request, 'Contagem já atingiu a quantidade de volumes')
             return redirect('portaria:contagemetiquetas')
     return render(request, 'portaria/etiquetas/bipagemetiquetas.html', {'docs':docs, 'nrdoc':dict['cte'],
-                                                                        'cont':cont,'ncount':ncount})
+                                                                        'cont':cont})
 
 def retornoetiqueta(request):
     gachoices = GARAGEM_CHOICES

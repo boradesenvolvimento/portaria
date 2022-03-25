@@ -24,7 +24,7 @@
                         {% csrf_token %}
                         <div class="container">
                             <h2>CTE: {{ nrdoc }} - Volumes:{{ cont }}</h2>
-                            {% for i in ncount|rangeloop %}
+                            {% for i in cont|rangeloop %}
                             <table>
                                     <tr><td>
                                     <label for="{{ forloop.counter }}">Código {{ forloop.counter }}: </label>
