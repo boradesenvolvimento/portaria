@@ -1422,7 +1422,7 @@ def etiquetas_palete(request):
                                 ^PQ1,0,1,Y
                                 ^XZ
                             ''')
-                #printetiquetas(array)
+                printetiquetas(array)
     return render(request, 'portaria/etiquetas/etiquetas_palete.html',{
         'gachoices':gachoices,'ac':ac})
 
