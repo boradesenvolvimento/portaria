@@ -17,7 +17,7 @@
             <section>
                 <div class="container">
                     <div class="row">
-                    <h2>Lançar etiquetas</h2>
+                    <h2>Lançar etiquetas por palete</h2>
                     </div><hr>
                     <div class="row">
                         <form method="post">
@@ -32,20 +32,16 @@
                                         <option value="{{ q }}">{{ v }}</option>
                                         {% endfor %}
                                     </select>
-                                    <label for="getdoc" style="font-weight:bold;">Tipo doc:</label>
-                                    <select id="getdoc" name="getdoc">
-                                        <option hidden>Selecione...</option>
-                                        <option value="8">NFS</option>
-                                        <option value="57">CTE</option>
-                                    </select>
-                                    <label for="getcte" style="font-weight:bold;">CTE:</label>
-                                    <input type="text" name="getcte" id="getcte">
+                                    <label for="getvol" style="font-weight:bold;">Volumes:</label>
+                                    <input type="text" name="getvol" id="getvol">
+                                    <label for="getcli" style="font-weight:bold;">Cliente:</label>
+                                    <input type="text" name="getcli" id="getcli">
+                                    <label for="isprint" style="font-weight:bold;">Imprimir?</label>
+                                    <input type="checkbox" name="isprint" id="isprint">
                                 </td>
-                                <td><a href="#" id="btnAdiciona" class="button">Add+</a></td>
                             </tr>
                         </table>
                     <input type="submit" class="button">
-                    <input type="hidden" id="setCount" name="setcount">
                     </form>
                 </div>
                 </div>
@@ -54,37 +50,13 @@
     </div>
     {% endif %}
     <script>
-
-	var idContador = 0;
-
-	function exclui(id){
-		var campo = $("#"+id);
-		campo.remove();
-	}
-
-	$( document ).ready(function() {
-		$("#btnAdiciona").click(function(e){
-			e.preventDefault();
-			adicionaCampo();
-		})
-
-		function adicionaCampo(){
-
-			idContador++;
-			var idCampo = "campoExtra"+idContador;
-			var idForm = "formExtra"+idContador;
-			var idNum = idContador;
-
-			var html = "";
-			html += "<tr id='"+idNum+"'><td><label for='getcte"+idNum+"'>CTE "+idContador+"</label>"
-			html += "<input type='text' name='getcte' id='getcte"+idNum+"'>"
-			html += "</td>"
-			html += "<td><button class='btn' onclick='exclui("+idNum+")' type='button'>Excluir</button></td></tr>";
-
-			$("#addHTML").append(html);
-			document.getElementById('setCount').value = idContador;
-		}
-    });
+        $(function(){
+            var availableTags = [
+                {% for q in ac %}
+                    "{{ q }}",
+                {% endfor %}
+            ];
+            $('#getcli').autocomplete({source: availableTags});
+        });
     </script>
-
     {% endblock %}

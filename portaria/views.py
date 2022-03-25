@@ -9,6 +9,7 @@ import socket
 import tempfile
 import textwrap
 import poplib
+from collections import Counter
 from io import BytesIO
 
 import numpy as np
@@ -21,6 +22,7 @@ from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from email.utils import make_msgid
 
+from django.utils.crypto import get_random_string
 from notifications.models import Notification
 from notifications.signals import notify
 #imports django built-ins
@@ -1184,6 +1186,7 @@ def etiquetas(request):
     gachoices = TicketMonitoramento.GARAGEM_CHOICES
     docchoices = TIPO_DOCTO_CHOICES
     if request.method == 'POST':
+
         lista = request.POST.getlist('getcte')
         ga = int(request.POST.get('getga'))
         doc = int(request.POST.get('getdoc'))
@@ -1208,7 +1211,7 @@ def etiquetas(request):
                             F1.TIPO_DOCTO = F4.TIPO_DOCTO		AND
                         
                             F1.CONHECIMENTO IN {lista}			AND
-                            F1.GARAGEM = {ga}			AND
+                            F1.ID_GARAGEM = {ga}			AND
                             F1.TIPO_DOCTO = {doc}       AND
                             F1.DATA_EMISSAO BETWEEN ((SYSDATE)-90) 	AND (SYSDATE)
                         """)
@@ -1262,22 +1265,20 @@ def createetiquetas(request):
                     ^PW799
                     ^LL240
                     ^LS0
-                    ^FO20,11^GFA,1017,1720,8,:Z64:eJytlM1q20AQx0crLxg5CAWkUy9LchGSWXI0zmULzd0B6x1Kn2JpLyGHPsPSXoIMORv7kkfZYwhFz9D52HyV0lMFZvh59uM//xkJAB8P/GROYh4k6o3E8lHirJY47yRWOnEhB1QgG1oV3vEcWtkPdeIu8Sxx+Y4LyBNncj8o/5YLUK95zJQe806Yrqb9GV6tie9kf1Zx3qk57w/ENfF3f4NLotbbAbc4tRh3e4Cgs2GgO6wfRwzhVLypVlKaqaS0qn1k90K1TdwfiS+qbCMMN7x+liwrJL5wKdaF5H2lDiPdEKAZtmxhMU7McEVMqzrhZBbAEn8xMeXblIc3/Ld89Uf+mVf/zN+l/VXiR/yH8p+42Q7Gfs/1XDVy/9MTxZixfOSfLC2A1Ou6yDFuE68PI/t5XZ0CTeSXcSKOHwfHfE7dgNxfs70ZfObjlJd2zOCCYwHPLJPXsljAfzsl9s5ouHF87C3qKwJoajfOszr0Qa357OFUDrmfwquZdNkI//ExRmKVeJ24SbcVMSVcWmG6IOsbltcay69ngxNDW4pweTwAld7wBC+NvZ8eaNhrTQs60y12gWqtNd1xFm15G+m8WtMQrmC9+JbyxIW35ddI1icO/Y7yjdPDR2QbymlijWghsgG1p1egwleQ2Hq4sXi/dqQR3QuLoFiv5hesBTtRAXXSf5n0Z070m2BLHgFcQQvOQwcLT+fVfKaNFtSDfFxIX2vW/AGrE8+N5CGxMZ2XvN5kvL+cqL6ZE/1g8uMx8MeC+cQA+4d3sX95aKH34jg91r/4z/3oUT83CPVvuL/FJPqlwM5Ax/47qMn/MsLynvxDJj04eyvS10C2zThvfynW12ylnn4v+oVtsKxfu6ahfqhgPogA0YsKyonrr577r3ae9XIFRbSRP2FO9IO5lN3p898aNUl92SD15Xx8hkwLzoLi/iHzK35u8h9H3p857p9Rkfuf/Dzz+U7qb5iXqJ/mh+eV5s9g/6U+Vn9i7Cj2vXt+A5Em3hQ=:E991
-                    ^FO96,111^GB294,0,2^FS
-                    ^FO96,15^GB294,87,2^FS
-                    ^FO98,57^GB292,0,2^FS
-                    ^BY2,3,71^FT97,204^BCN,,Y,N
+                    ^FO21,111^GB355,0,2^FS
+                    ^FO21,15^GB355,87,2^FS
+                    ^FO23,57^GB353,0,2^FS
+                    ^BY2,3,76^FT22,209^BCN,,Y,N
                     ^FH\^FD>:{ a }^FS
-                    ^FT103,46^A0N,23,23^FH\^CI28^FDNota: {j['NOTA_FISCAL']}^FS^CI27
-                    ^FT103,89^A0N,23,23^FH\^CI28^FDVolume: {i+1} de {(j['VOLUMES'])}^FS^CI27
-                    ^FO420,11^GFA,1017,1720,8,:Z64:eJytlM1q20AQx0crLxg5CAWkUy9LchGSWXI0zmULzd0B6x1Kn2JpLyGHPsPSXoIMORv7kkfZYwhFz9D52HyV0lMFZvh59uM//xkJAB8P/GROYh4k6o3E8lHirJY47yRWOnEhB1QgG1oV3vEcWtkPdeIu8Sxx+Y4LyBNncj8o/5YLUK95zJQe806Yrqb9GV6tie9kf1Zx3qk57w/ENfF3f4NLotbbAbc4tRh3e4Cgs2GgO6wfRwzhVLypVlKaqaS0qn1k90K1TdwfiS+qbCMMN7x+liwrJL5wKdaF5H2lDiPdEKAZtmxhMU7McEVMqzrhZBbAEn8xMeXblIc3/Ld89Uf+mVf/zN+l/VXiR/yH8p+42Q7Gfs/1XDVy/9MTxZixfOSfLC2A1Ou6yDFuE68PI/t5XZ0CTeSXcSKOHwfHfE7dgNxfs70ZfObjlJd2zOCCYwHPLJPXsljAfzsl9s5ouHF87C3qKwJoajfOszr0Qa357OFUDrmfwquZdNkI//ExRmKVeJ24SbcVMSVcWmG6IOsbltcay69ngxNDW4pweTwAld7wBC+NvZ8eaNhrTQs60y12gWqtNd1xFm15G+m8WtMQrmC9+JbyxIW35ddI1icO/Y7yjdPDR2QbymlijWghsgG1p1egwleQ2Hq4sXi/dqQR3QuLoFiv5hesBTtRAXXSf5n0Z070m2BLHgFcQQvOQwcLT+fVfKaNFtSDfFxIX2vW/AGrE8+N5CGxMZ2XvN5kvL+cqL6ZE/1g8uMx8MeC+cQA+4d3sX95aKH34jg91r/4z/3oUT83CPVvuL/FJPqlwM5Ax/47qMn/MsLynvxDJj04eyvS10C2zThvfynW12ylnn4v+oVtsKxfu6ahfqhgPogA0YsKyonrr577r3ae9XIFRbSRP2FO9IO5lN3p898aNUl92SD15Xx8hkwLzoLi/iHzK35u8h9H3p857p9Rkfuf/Dzz+U7qb5iXqJ/mh+eV5s9g/6U+Vn9i7Cj2vXt+A5Em3hQ=:E991
-                    ^FO496,111^GB294,0,2^FS
-                    ^FO496,15^GB294,87,2^FS
-                    ^FO498,57^GB292,0,2^FS
-                    ^BY2,3,71^FT497,204^BCN,,Y,N
+                    ^FT41,46^A0N,23,23^FH\^CI28^FDNota: {j['NOTA_FISCAL']}^FS^CI27
+                    ^FT41,89^A0N,23,23^FH\^CI28^FDVolume: {i+1} de {(j['VOLUMES'])}^FS^CI27
+                    ^FO421,111^GB355,0,2^FS
+                    ^FO421,15^GB355,87,2^FS
+                    ^FO423,57^GB353,0,2^FS
+                    ^BY2,3,76^FT422,209^BCN,,Y,N
                     ^FH\^FD>:{ b }^FS
-                    ^FT503,46^A0N,23,23^FH\^CI28^FDNota: {j['NOTA_FISCAL']}^FS^CI27
-                    ^FT503,89^A0N,23,23^FH\^CI28^FDVolume: {i+2} de {(j['VOLUMES'])}^FS^CI27
+                    ^FT441,46^A0N,23,23^FH\^CI28^FDNota: {j['NOTA_FISCAL']}^FS^CI27
+                    ^FT441,89^A0N,23,23^FH\^CI28^FDVolume: {i+2} de {(j['VOLUMES'])}^FS^CI27
                     ^PQ1,0,1,Y
                     ^XZ
                     '''.encode('utf-8'))
@@ -1320,6 +1321,7 @@ def bipagemetiquetas(request):
         messages.error(request, 'Não encontrado, verifique os valores inseridos')
         return redirect('portaria:contagemetiquetas')
     else:
+        ncount = cont - qnt
         if qnt < cont:
             if request.method == 'POST':
                 test = request.POST.getlist('getbarcode')
@@ -1327,7 +1329,7 @@ def bipagemetiquetas(request):
                     test = ' '.join(test).split()
                 except:
                     pass
-                if len(test) == cont:
+                if len(test) == ncount:
                     for i in test:
                         if not BipagemEtiqueta.objects.filter(cod_barras=i):
                             check = docs.filter(nota=i[-10:])
@@ -1347,7 +1349,8 @@ def bipagemetiquetas(request):
         else:
             messages.error(request, 'Contagem já atingiu a quantidade de volumes')
             return redirect('portaria:contagemetiquetas')
-    return render(request, 'portaria/etiquetas/bipagemetiquetas.html', {'docs':docs, 'nrdoc':dict['cte'], 'cont':cont})
+    return render(request, 'portaria/etiquetas/bipagemetiquetas.html', {'docs':docs, 'nrdoc':dict['cte'],
+                                                                        'cont':cont,'ncount':ncount})
 
 def retornoetiqueta(request):
     gachoices = GARAGEM_CHOICES
@@ -1364,6 +1367,36 @@ def retornoetiqueta(request):
         messages.warning(request, 'Cadastros finalizados.')
         return redirect('portaria:retornoetiqueta')
     return render(request, 'portaria/etiquetas/retornoetiqueta.html', {'gachoices':gachoices})
+
+def etiquetas_palete(request):
+    gachoices = TicketMonitoramento.GARAGEM_CHOICES
+    ac = Cliente.objects.all()
+    if request.method == 'POST':
+        ga = request.POST.get('getga')
+        vol = request.POST.get('getvol')
+        cli = request.POST.get('getcli')
+        isprint = request.POST.get('isprint')
+        if ga and vol and cli:
+            EtiquetasPalete.objects.create(filial=ga, volumes=vol, cliente=cli)
+        if isprint == 'on':
+            print('starting printing')
+    return render(request, 'portaria/etiquetas/etiquetas_palete.html',{
+        'gachoices':gachoices,'ac':ac})
+
+def bipagem_palete(request):
+    if request.method == 'POST':
+        code = request.POST.get('idbarcode')
+        if code:
+            try:
+                getobj = get_object_or_404(EtiquetasPalete, pk=code)
+            except Exception as e:
+                print(f'Error:{e}, error_type:{type(e).__name__}')
+                messages.error(request, 'Não encontrado etiqueta com essa numeração')
+            else:
+                ## criar linha no banco
+                messages.success(request, 'Bipado com sucesso.')
+
+    return render(request, 'portaria/etiquetas/bipagem_palete.html')
 
 def romaneioxml(request):
     return render(request, 'portaria/etc/romaneioindex.html')
@@ -2628,3 +2661,60 @@ def printetiquetas(array):
 
 def testeconn(request):
     conndb()
+
+def testezzz():
+    try:
+        conn = settings.CONNECTION
+        cur = conn.cursor()
+        cur.execute('''
+                    SELECT F4.NOTA_FISCAL, F4.VOLUMES, E26.COD_MANIFESTO, E26.DATA_CADASTRO, 
+                        CASE
+                              WHEN E25.ID_EMPRESA = '1' AND E25.ID_GARAGEM = '1'  THEN 'SPO'
+                              WHEN E25.ID_EMPRESA = '1' AND E25.ID_GARAGEM = '2'  THEN 'REC'
+                              WHEN E25.ID_EMPRESA = '1' AND E25.ID_GARAGEM = '3'  THEN 'SSA'
+                              WHEN E25.ID_EMPRESA = '1' AND E25.ID_GARAGEM = '4'  THEN 'FOR'
+                              WHEN E25.ID_EMPRESA = '1' AND E25.ID_GARAGEM = '5'  THEN 'MCZ'
+                              WHEN E25.ID_EMPRESA = '1' AND E25.ID_GARAGEM = '6'  THEN 'NAT'
+                              WHEN E25.ID_EMPRESA = '1' AND E25.ID_GARAGEM = '7'  THEN 'JPA'
+                              WHEN E25.ID_EMPRESA = '1' AND E25.ID_GARAGEM = '8'  THEN 'AJU'
+                              WHEN E25.ID_EMPRESA = '1' AND E25.ID_GARAGEM = '9'  THEN 'VDC'
+                              WHEN E25.ID_EMPRESA = '1' AND E25.ID_GARAGEM = '10' THEN 'MG'
+                              WHEN E25.ID_EMPRESA = '1' AND E25.ID_GARAGEM = '50' THEN 'SPO'
+                              WHEN E25.ID_EMPRESA = '1' AND E25.ID_GARAGEM = '20' THEN 'SPO'
+                              WHEN E25.ID_EMPRESA = '1' AND E25.ID_GARAGEM = '21' THEN 'SPO'
+                              WHEN E25.ID_EMPRESA = '2' AND E25.ID_GARAGEM = '20' THEN 'CTG'
+                              WHEN E25.ID_EMPRESA = '2' AND E25.ID_GARAGEM = '21' THEN 'TCO'
+                              WHEN E25.ID_EMPRESA = '2' AND E25.ID_GARAGEM = '22' THEN 'UDI'
+                              WHEN E25.ID_EMPRESA = '2' AND E25.ID_GARAGEM = '23' THEN 'TMA'
+                              WHEN E25.ID_EMPRESA = '2' AND E25.ID_GARAGEM = '24' THEN 'VIX'  
+                              WHEN E25.ID_EMPRESA = '2' AND E25.ID_GARAGEM = '50' THEN 'VIX'
+                              WHEN E25.ID_EMPRESA = '3' AND E25.ID_GARAGEM = '30' THEN 'BMA'
+                              WHEN E25.ID_EMPRESA = '3' AND E25.ID_GARAGEM = '31' THEN 'BPE'
+                              WHEN E25.ID_EMPRESA = '3' AND E25.ID_GARAGEM = '32' THEN 'BEL'    
+                              WHEN E25.ID_EMPRESA = '3' AND E25.ID_GARAGEM = '33' THEN 'BPB'
+                              WHEN E25.ID_EMPRESA = '3' AND E25.ID_GARAGEM = '34' THEN 'SLZ'
+                              WHEN E25.ID_EMPRESA = '3' AND E25.ID_GARAGEM = '35' THEN 'BAL'
+                              WHEN E25.ID_EMPRESA = '3' AND E25.ID_GARAGEM = '36' THEN 'THE'  
+                          END GARAGEM
+                        FROM
+                            FTA004 F4,
+                            EXA026 E26,
+                            EXA025 E25
+                        WHERE
+                             F4.EMPRESA = E26.EMPRESA AND
+                             F4.FILIAL = E26.FILIAL   AND
+                             F4.GARAGEM = E26.GARAGEM AND
+                             F4.SERIE = E26.SERIE_CTRC     AND
+                             F4.CONHECIMENTO = E26.NUMERO_CTRC AND
+                             F4.TIPO_DOCTO = E26.TIPO_DOCTO    AND
+                             E26.RECNUM_EXA025 = E25.RECNUM    AND
+
+                             E26.DATA_CADASTRO = '20-mar-2022'
+                    ''')
+        res = cur
+        #cur.close()
+
+    except Exception as e:
+        raise e
+    else:
+        return res

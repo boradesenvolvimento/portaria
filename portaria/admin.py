@@ -130,4 +130,8 @@ class RetornoEtiquetaAdmin(admin.ModelAdmin):
     pass
 admin.site.register(RetornoEtiqueta,RetornoEtiquetaAdmin)
 
+class EtiquetasPaleteAdmin(admin.ModelAdmin):
+    pass
+admin.site.register(EtiquetasPalete,EtiquetasPaleteAdmin)
+
 

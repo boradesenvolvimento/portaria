@@ -3,10 +3,11 @@ import datetime
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-from django.core.validators import MaxLengthValidator, DecimalValidator
+from django.core.validators import MaxLengthValidator, DecimalValidator, MinLengthValidator
 from django.db import models
 from django.db.models import PROTECT, Sum, F
 from django.utils import timezone
+from django.utils.crypto import get_random_string
 
 MAIL_CHOICES = [
         ('1', '1'),
@@ -681,3 +682,10 @@ class RetornoEtiqueta(models.Model):
     id = models.BigAutoField(primary_key=True)
     nota_fiscal = models.CharField(max_length=15, unique=True)
     saida = models.DateField(default=timezone.now)
+
+class EtiquetasPalete(models.Model):
+    id = models.BigAutoField(primary_key=True, validators=[MinLengthValidator(10)])
+    filial = models.CharField(max_length=3, choices=GARAGEM_CHOICES)
+    cliente = models.CharField(max_length=200)
+    volumes = models.IntegerField()
+    pub_date = models.DateTimeField(default=timezone.now)

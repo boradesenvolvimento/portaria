@@ -23,15 +23,9 @@
                     <form method="post" id="post-form">
                         {% csrf_token %}
                         <div class="container">
-                            <h2>CTE: {{ nrdoc }} - Volumes:{{ cont }}</h2>
-                            {% for i in ncount|rangeloop %}
-                            <table>
-                                    <tr><td>
-                                    <label for="{{ forloop.counter }}">Código {{ forloop.counter }}: </label>
-                                    <input type="text" name="getbarcode" id="{{ forloop.counter }}">
-                                    </td></tr>
-                            </table>
-                            {% endfor %}
+                            <h2>Bipagem Paletes</h2>
+                            <label for="idbarcode">Código de barras:</label>
+                            <input type="text" name="idbarcode" id="idbarcode">
                         </div>
                         <input type="submit" id="submiterrr" class="button">
                     </form>

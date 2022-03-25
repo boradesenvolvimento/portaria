@@ -117,7 +117,21 @@
               Ferramentas
             </button>
             <ul class="dropdown-menu" style="background-color: #3188E8;" aria-labelledby="dropdownMenuButton1">
-              {% if request.user|has_group:"etiquetas" %}
+              {% if request.user|has_group:"adm_rh" %}
+              <li class="nav-item"><a class="nav-link1" href="{% url 'portaria:cardusuario' %}">Cards</a></li>
+              {% endif %}
+              {% if request.user|has_group:"romaneioxml" %}
+              <li class="nav-item"><a class="nav-link1" href="{% url 'portaria:romaneioxml' %}">XMLS</a></li>
+              {% endif %}
+            </ul>
+          </div>
+          {% endif %}
+          {% if request.user|has_group:"etiquetas" %}
+          <div class="dropdown">
+            <button class="dropdown-toggle menutext-navbar nav-link1" type="button" style="background-color: #3188E8;" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+              Etiquetas
+            </button>
+            <ul class="dropdown-menu" style="background-color: #3188E8;" aria-labelledby="dropdownMenuButton1">
               <li class="nav-item">
                 <a class="nav-link1" href="{% url 'portaria:etiquetas' %}">Lançar Etiquetas</a>
               </li>
@@ -127,14 +141,14 @@
               <li class="nav-item">
                 <a class="nav-link1" href="{% url 'portaria:retornoetiqueta' %}">Retorno Etiquetas</a>
               </li>
-              {% endif %}
-              {% if request.user|has_group:"adm_rh" %}
-              <li class="nav-item"><a class="nav-link1" href="{% url 'portaria:cardusuario' %}">Cards</a></li>
-              {% endif %}
-              {% if request.user|has_group:"romaneioxml" %}
-              <li class="nav-item"><a class="nav-link1" href="{% url 'portaria:romaneioxml' %}">XMLS</a></li>
-              {% endif %}
-            </ul>
+              <hr>
+              <li class="nav-item">
+                <a class="nav-link1" href="{% url 'portaria:etiquetas_palete' %}">Etiquetas Palete</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link1" href="{% url 'portaria:bipagem_palete' %}">Bipagem Palete</a>
+              </li>
+              </ul>
           </div>
           {% endif %}
           {% if request.user|has_group:"chamado" %}
