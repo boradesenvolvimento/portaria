@@ -1421,7 +1421,7 @@ def etiquetas_palete(request):
                                 ^FT441,89^A0N,23,23^FH\^CI28^FDVolume: {etq.volumes}^FS^CI27
                                 ^PQ1,0,1,Y
                                 ^XZ
-                            ''')
+                            '''.encode('utf-8'))
                 printetiquetas(array)
     return render(request, 'portaria/etiquetas/etiquetas_palete.html',{
         'gachoices':gachoices,'ac':ac})
