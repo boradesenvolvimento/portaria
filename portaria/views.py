@@ -1383,7 +1383,7 @@ def etiquetas_palete(request):
         man = request.POST.get('getmanifesto')
         isprint = request.POST.get('isprint')
         if ga and vol and cli:
-            etq = EtiquetasPalete.objects.create(cod_barras=new,filial=ga, volumes=vol, cliente=cli)
+            etq = EtiquetasPalete.objects.create(cod_barras=new,filial=ga, volumes=vol, cliente=cli, autor=request.user)
             if man:
                 etq.manifesto = man
                 etq.save()
@@ -1450,6 +1450,7 @@ def bipagem_palete(request):
                 getobj.volume_conf = vol
                 getobj.bipado = True
                 getobj.bip_date = timezone.now()
+                getobj.autor = request.user
                 if man:
                     getobj.manifesto = man
                 getobj.save()

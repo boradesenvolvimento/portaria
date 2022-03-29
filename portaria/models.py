@@ -694,4 +694,5 @@ class EtiquetasPalete(models.Model):
     bip_date = models.DateTimeField(null=True, blank=True)
     volume_conf = models.IntegerField(blank=True, null=True)
     manifesto = models.IntegerField(blank=True, null=True)
+    autor = models.ForeignKey(User, on_delete=models.CASCADE)
 
