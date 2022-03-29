@@ -684,11 +684,14 @@ class RetornoEtiqueta(models.Model):
     saida = models.DateField(default=timezone.now)
 
 class EtiquetasPalete(models.Model):
-    id = models.BigAutoField(primary_key=True, validators=[MinLengthValidator(10)])
+    id = models.BigAutoField(primary_key=True)
+    cod_barras = models.CharField(max_length=20)
     filial = models.CharField(max_length=3, choices=GARAGEM_CHOICES)
     cliente = models.CharField(max_length=200)
     volumes = models.IntegerField()
     pub_date = models.DateTimeField(default=timezone.now)
     bipado = models.BooleanField(default=False)
     bip_date = models.DateTimeField(null=True, blank=True)
-    volume_conf = models.IntegerField(null=True, blank=True)
+    volume_conf = models.IntegerField(blank=True, null=True)
+    manifesto = models.IntegerField(blank=True, null=True)
+

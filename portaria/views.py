@@ -43,6 +43,7 @@ from django.urls import reverse
 from django.utils import timezone, dateformat
 from django.views import generic
 from xml.dom import minidom
+
 from xlsxwriter import Workbook
 
 #imports django projeto
@@ -1265,20 +1266,20 @@ def createetiquetas(request):
                     ^PW799
                     ^LL240
                     ^LS0
-                    ^FO21,111^GB355,0,2^FS
-                    ^FO21,15^GB355,87,2^FS
-                    ^FO23,57^GB353,0,2^FS
-                    ^BY2,3,76^FT22,209^BCN,,Y,N
+                    ^FO4,111^GB385,0,2^FS
+                    ^FO73,15^GB250,87,2^FS
+                    ^FO74,56^GB248,0,2^FS
+                    ^FT165,46^A0N,23,23^FH\^CI28^FDNota: {j['NOTA_FISCAL']}^FS^CI27
+                    ^FT131,87^A0N,23,23^FH\^CI28^FDVolume: {i+1} de {(j['VOLUMES'])}^FS^CI27
+                    ^BY2,3,82^FT73,211^BCN,,N,N
                     ^FH\^FD>:{ a }^FS
-                    ^FT41,46^A0N,23,23^FH\^CI28^FDNota: {j['NOTA_FISCAL']}^FS^CI27
-                    ^FT41,89^A0N,23,23^FH\^CI28^FDVolume: {i+1} de {(j['VOLUMES'])}^FS^CI27
-                    ^FO421,111^GB355,0,2^FS
-                    ^FO421,15^GB355,87,2^FS
-                    ^FO423,57^GB353,0,2^FS
-                    ^BY2,3,76^FT422,209^BCN,,Y,N
+                    ^FO404,111^GB385,0,2^FS
+                    ^FO473,15^GB250,87,2^FS
+                    ^FO474,56^GB248,0,2^FS
+                    ^FT565,46^A0N,23,23^FH\^CI28^FDNota: {j['NOTA_FISCAL']}^FS^CI27
+                    ^FT531,87^A0N,23,23^FH\^CI28^FDVolume: {i+2} de {(j['VOLUMES'])}^FS^CI27
+                    ^BY2,3,82^FT473,211^BCN,,N,N
                     ^FH\^FD>:{ b }^FS
-                    ^FT441,46^A0N,23,23^FH\^CI28^FDNota: {j['NOTA_FISCAL']}^FS^CI27
-                    ^FT441,89^A0N,23,23^FH\^CI28^FDVolume: {i+2} de {(j['VOLUMES'])}^FS^CI27
                     ^PQ1,0,1,Y
                     ^XZ
                     '''.encode('utf-8'))
@@ -1372,14 +1373,20 @@ def retornoetiqueta(request):
 def etiquetas_palete(request):
     gachoices = TicketMonitoramento.GARAGEM_CHOICES
     ac = Cliente.objects.all()
+    last = EtiquetasPalete.objects.all().order_by('-id').values_list('cod_barras', flat=True).first()
+    new = str(int(last) + 1).zfill(10)
     array = []
     if request.method == 'POST':
         ga = request.POST.get('getga')
         vol = request.POST.get('getvol')
         cli = request.POST.get('getcli')
+        man = request.POST.get('getmanifesto')
         isprint = request.POST.get('isprint')
         if ga and vol and cli:
-            etq = EtiquetasPalete.objects.create(filial=ga, volumes=vol, cliente=cli)
+            etq = EtiquetasPalete.objects.create(cod_barras=new,filial=ga, volumes=vol, cliente=cli)
+            if man:
+                etq.manifesto = man
+                etq.save()
             if isprint == 'on':
                 array.append(f'''
                                 CT~~CD,~CC^~CT~
@@ -1405,24 +1412,26 @@ def etiquetas_palete(request):
                                 ^PW799
                                 ^LL240
                                 ^LS0
-                                ^FO21,111^GB355,0,2^FS
-                                ^FO21,15^GB355,87,2^FS
-                                ^FO23,57^GB353,0,2^FS
-                                ^BY2,3,76^FT22,209^BCN,,Y,N
-                                ^FH\^FD>:{etq.id}^FS
-                                ^FT41,46^A0N,23,23^FH\^CI28^FDNota: {etq.id}^FS^CI27
-                                ^FT41,89^A0N,23,23^FH\^CI28^FDVolume: {etq.volumes}^FS^CI27
-                                ^FO421,111^GB355,0,2^FS
-                                ^FO421,15^GB355,87,2^FS
-                                ^FO423,57^GB353,0,2^FS
-                                ^BY2,3,76^FT422,209^BCN,,Y,N
-                                ^FH\^FD>:{etq.id}^FS
-                                ^FT441,46^A0N,23,23^FH\^CI28^FDNota: {etq.id}^FS^CI27
-                                ^FT441,89^A0N,23,23^FH\^CI28^FDVolume: {etq.volumes}^FS^CI27
+                                ^FO4,111^GB385,0,2^FS
+                                ^FO73,15^GB250,87,2^FS
+                                ^FO74,56^GB248,0,2^FS
+                                ^FT165,46^A0N,23,23^FH\^CI28^FDPalete^FS^CI27
+                                ^FT131,87^A0N,23,23^FH\^CI28^FDVolume: {etq.volumes}^FS^CI27
+                                ^BY2,3,82^FT73,211^BCN,,N,N
+                                ^FH\^FD>:{etq.cod_barras}^FS
+                                ^FO404,111^GB385,0,2^FS
+                                ^FO473,15^GB250,87,2^FS
+                                ^FO474,56^GB248,0,2^FS
+                                ^FT565,46^A0N,23,23^FH\^CI28^FDPalete^FS^CI27
+                                ^FT531,87^A0N,23,23^FH\^CI28^FDVolume: {etq.volumes}^FS^CI27
+                                ^BY2,3,82^FT473,211^BCN,,N,N
+                                ^FH\^FD>:{etq.cod_barras}^FS
                                 ^PQ1,0,1,Y
                                 ^XZ
                             '''.encode('utf-8'))
                 printetiquetas(array)
+            messages.success(request, 'Etiqueta Palete gerado com sucesso.')
+            return redirect('portaria:etiquetas_palete')
     return render(request, 'portaria/etiquetas/etiquetas_palete.html',{
         'gachoices':gachoices,'ac':ac})
 
@@ -1430,17 +1439,21 @@ def bipagem_palete(request):
     if request.method == 'POST':
         code = request.POST.get('idbarcode')
         vol = request.POST.get('volume')
+        man = request.POST.get('manifesto')
         if code:
             try:
-                getobj = get_object_or_404(EtiquetasPalete, pk=code)
+                getobj = get_object_or_404(EtiquetasPalete, cod_barras=code)
             except Exception as e:
                 print(f'Error:{e}, error_type:{type(e).__name__}')
                 messages.error(request, 'Não encontrado etiqueta com essa numeração')
             else:
-                EtiquetasPalete.objects.filter(pk=getobj.id).update(bipado=True, bip_date=timezone.now(),
-                                                                    volume_conf=vol)
+                getobj.volume_conf = vol
+                getobj.bipado = True
+                getobj.bip_date = timezone.now()
+                if man:
+                    getobj.manifesto = man
+                getobj.save()
                 messages.success(request, 'Bipado com sucesso.')
-
     return render(request, 'portaria/etiquetas/bipagem_palete.html')
 
 def romaneioxml(request):
