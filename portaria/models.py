@@ -645,7 +645,7 @@ class RomXML(models.Model):
 
 class SkuRefXML(models.Model):
     id = models.BigAutoField(primary_key=True)
-    codigo = models.IntegerField()
+    codigo = models.CharField(max_length=30)
     desc_prod = models.CharField(max_length=200)
     tp_un = models.CharField(max_length=10)
     qnt_un = models.IntegerField()
@@ -690,9 +690,15 @@ class EtiquetasPalete(models.Model):
     cliente = models.CharField(max_length=200)
     volumes = models.IntegerField()
     pub_date = models.DateTimeField(default=timezone.now)
-    bipado = models.BooleanField(default=False)
-    bip_date = models.DateTimeField(null=True, blank=True)
+    autor = models.ForeignKey(User, on_delete=models.CASCADE)
+
+class BipagemPalete(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    filial = models.CharField(max_length=3, choices=GARAGEM_CHOICES)
+    bip_date = models.DateTimeField(default=timezone.now)
+    cod_barras = models.CharField(max_length=20)
     volume_conf = models.IntegerField(blank=True, null=True)
     manifesto = models.IntegerField(blank=True, null=True)
     autor = models.ForeignKey(User, on_delete=models.CASCADE)
+    etq_ref = models.ForeignKey(EtiquetasPalete, on_delete=models.CASCADE)
 

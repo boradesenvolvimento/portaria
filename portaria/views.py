@@ -1,4 +1,5 @@
 #imports geral
+import io
 import random
 import csv
 import datetime
@@ -10,11 +11,12 @@ import tempfile
 import textwrap
 import poplib
 from collections import Counter
+from email.mime.base import MIMEBase
 from io import BytesIO
 
 import numpy as np
 import pandas as pd
-from email import policy
+from email import policy, encoders
 from email.header import decode_header
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
@@ -1144,7 +1146,6 @@ def chamadonovo(request):
     return render(request, 'portaria/chamado/chamadonovo.html', {'editor':editor,'stts':stts,'dp':dp,'fil':fil,
                                                                  'resp':resp,'svs':svs})
 
-
 def chamadodetail(request, tktid):
     stts = TicketChamado.STATUS_CHOICES
     dp = TicketChamado.DEPARTAMENTO_CHOICES
@@ -1187,10 +1188,10 @@ def etiquetas(request):
     gachoices = TicketMonitoramento.GARAGEM_CHOICES
     docchoices = TIPO_DOCTO_CHOICES
     if request.method == 'POST':
-
         lista = request.POST.getlist('getcte')
         ga = int(request.POST.get('getga'))
         doc = int(request.POST.get('getdoc'))
+        nota = int(request.POST.get('getnota'))
         if len(lista) == 1:
             lista = lista[0]
         else:
@@ -1214,6 +1215,7 @@ def etiquetas(request):
                             F1.CONHECIMENTO IN {lista}			AND
                             F1.ID_GARAGEM = {ga}			AND
                             F1.TIPO_DOCTO = {doc}       AND
+                            F4.NOTA_FISCAL = {nota}     AND
                             F1.DATA_EMISSAO BETWEEN ((SYSDATE)-90) 	AND (SYSDATE)
                         """)
             res = dictfetchall(cur)
@@ -1331,7 +1333,6 @@ def bipagemetiquetas(request):
                     pass
                 if len(test) == cont:
                     for i in test:
-
                         if not BipagemEtiqueta.objects.filter(cod_barras=i):
                             check = docs.filter(nota=i[-10:])
                             if check:
@@ -1383,7 +1384,7 @@ def etiquetas_palete(request):
         man = request.POST.get('getmanifesto')
         isprint = request.POST.get('isprint')
         if ga and vol and cli:
-            etq = EtiquetasPalete.objects.create(cod_barras=new,filial=ga, volumes=vol, cliente=cli, autor=request.user)
+            etq = EtiquetasPalete.objects.create(cod_barras=new, filial=ga, volumes=vol, cliente=cli, autor=request.user)
             if man:
                 etq.manifesto = man
                 etq.save()
@@ -1436,10 +1437,12 @@ def etiquetas_palete(request):
         'gachoices':gachoices,'ac':ac})
 
 def bipagem_palete(request):
+    gachoices = TicketMonitoramento.GARAGEM_CHOICES
     if request.method == 'POST':
         code = request.POST.get('idbarcode')
         vol = request.POST.get('volume')
         man = request.POST.get('manifesto')
+        ga = request.POST.get('getga')
         if code:
             try:
                 getobj = get_object_or_404(EtiquetasPalete, cod_barras=code)
@@ -1447,15 +1450,13 @@ def bipagem_palete(request):
                 print(f'Error:{e}, error_type:{type(e).__name__}')
                 messages.error(request, 'Não encontrado etiqueta com essa numeração')
             else:
-                getobj.volume_conf = vol
-                getobj.bipado = True
-                getobj.bip_date = timezone.now()
-                getobj.autor = request.user
+                bip = BipagemPalete.objects.create(filial=ga, cod_barras=code, volume_conf=vol, autor=request.user,
+                                                    etq_ref=getobj)
                 if man:
-                    getobj.manifesto = man
-                getobj.save()
+                    bip.manifesto = man
+                    bip.save()
                 messages.success(request, 'Bipado com sucesso.')
-    return render(request, 'portaria/etiquetas/bipagem_palete.html')
+    return render(request, 'portaria/etiquetas/bipagem_palete.html', {'gachoices':gachoices})
 
 def romaneioxml(request):
     return render(request, 'portaria/etc/romaneioindex.html')
@@ -1549,7 +1550,10 @@ def entradaxml(request):
         mydoc = minidom.parse(file)
         nf = mydoc.getElementsByTagName('nNF')[0].firstChild.nodeValue
         dhEmi = dateformat.format(datetime.datetime.strptime(mydoc.getElementsByTagName('dhEmi')[0].firstChild.nodeValue, '%Y-%m-%dT%H:%M:%S%z'), 'Y-m-d H:i')
-        rem = mydoc.getElementsByTagName('emit')[0].getElementsByTagName('xFant')[0].firstChild.nodeValue
+        try:
+            rem = mydoc.getElementsByTagName('emit')[0].getElementsByTagName('xFant')[0].firstChild.nodeValue
+        except IndexError:
+            rem = mydoc.getElementsByTagName('emit')[0].getElementsByTagName('xNome')[0].firstChild.nodeValue
         dest = mydoc.getElementsByTagName('dest')[0].getElementsByTagName('xNome')[0].firstChild.nodeValue
         dest_mun = mydoc.getElementsByTagName('dest')[0].getElementsByTagName('xMun')[0].firstChild.nodeValue
         dest_uf = mydoc.getElementsByTagName('dest')[0].getElementsByTagName('UF')[0].firstChild.nodeValue
@@ -2721,59 +2725,134 @@ def printetiquetas(array):
 def testeconn(request):
     conndb()
 
-def testezzz():
-    try:
+def mdfeporfilial(request):
+    hoje = datetime.date.today()
+    gachoices = TicketMonitoramento.GARAGEM_CHOICES
+    mailchoices = {'TCO': ['juliano.oliveira@borexpress.com.br', 'lino.loureiro@borexpress.com.br'],
+                   'VIX': ['mauricio@bora.com.br', 'ocorrenciavix@bora.com.br'],
+                   'CTG': ['Silvana.dily@borexpress.com.br', 'Ygor.henrique@borexpress.com.br',
+                           'Fausto@borexpress.com.br'],
+                   'MCZ': ['mcz@bora.com.br', 'Elicarlos.santos@bora.com.br'],
+                   'SSA': ['raphael.oliveira@bora.com.br', 'fernando.malaquias@bora.com.br'],
+                   'NAT': ['ronnielly@bora.com.br', 'lindalva@bora.com.br', 'lidianne@bora.com.br'],
+                   'SLZ': ['felipe@bora.com.br', 'eliana.lopes@transbono.com.br'],
+                   'THE': ['felipe@bora.com.br', 'ricardo.moura@transbono.com.br'],
+                   'BEL': ['felipe@bora.com.br', 'leonardo.gomes@transbono.com.br'],
+                   'VDC': ['jose.sousa@bora.com.br', 'fernando.sousa@bora.com.br'],
+                   'REC': ['geane.mendes@bora.com.br'],
+                   'AJU': ['Victor.hugo@bora.com.br'],
+                   'JPB': ['Patrícia.lima@bora.com.br'],
+                   'FOR': ['luciano@bora.com.br']
+                   }
+    for k, v in gachoices:
+        result = mailchoices.get(v, '')
+        send = ['renan.amarantes@bora.com.br','alan@bora.com.br']
         conn = settings.CONNECTION
         cur = conn.cursor()
-        cur.execute('''
-                    SELECT F4.NOTA_FISCAL, F4.VOLUMES, E26.COD_MANIFESTO, E26.DATA_CADASTRO, 
+        cur.execute(f"""
+                    SELECT       
+                        E5.CODIGO,
+                        E5.GARAGEM,
+                        E5.DATA_SAIDA,
                         CASE
-                              WHEN E25.ID_EMPRESA = '1' AND E25.ID_GARAGEM = '1'  THEN 'SPO'
-                              WHEN E25.ID_EMPRESA = '1' AND E25.ID_GARAGEM = '2'  THEN 'REC'
-                              WHEN E25.ID_EMPRESA = '1' AND E25.ID_GARAGEM = '3'  THEN 'SSA'
-                              WHEN E25.ID_EMPRESA = '1' AND E25.ID_GARAGEM = '4'  THEN 'FOR'
-                              WHEN E25.ID_EMPRESA = '1' AND E25.ID_GARAGEM = '5'  THEN 'MCZ'
-                              WHEN E25.ID_EMPRESA = '1' AND E25.ID_GARAGEM = '6'  THEN 'NAT'
-                              WHEN E25.ID_EMPRESA = '1' AND E25.ID_GARAGEM = '7'  THEN 'JPA'
-                              WHEN E25.ID_EMPRESA = '1' AND E25.ID_GARAGEM = '8'  THEN 'AJU'
-                              WHEN E25.ID_EMPRESA = '1' AND E25.ID_GARAGEM = '9'  THEN 'VDC'
-                              WHEN E25.ID_EMPRESA = '1' AND E25.ID_GARAGEM = '10' THEN 'MG'
-                              WHEN E25.ID_EMPRESA = '1' AND E25.ID_GARAGEM = '50' THEN 'SPO'
-                              WHEN E25.ID_EMPRESA = '1' AND E25.ID_GARAGEM = '20' THEN 'SPO'
-                              WHEN E25.ID_EMPRESA = '1' AND E25.ID_GARAGEM = '21' THEN 'SPO'
-                              WHEN E25.ID_EMPRESA = '2' AND E25.ID_GARAGEM = '20' THEN 'CTG'
-                              WHEN E25.ID_EMPRESA = '2' AND E25.ID_GARAGEM = '21' THEN 'TCO'
-                              WHEN E25.ID_EMPRESA = '2' AND E25.ID_GARAGEM = '22' THEN 'UDI'
-                              WHEN E25.ID_EMPRESA = '2' AND E25.ID_GARAGEM = '23' THEN 'TMA'
-                              WHEN E25.ID_EMPRESA = '2' AND E25.ID_GARAGEM = '24' THEN 'VIX'  
-                              WHEN E25.ID_EMPRESA = '2' AND E25.ID_GARAGEM = '50' THEN 'VIX'
-                              WHEN E25.ID_EMPRESA = '3' AND E25.ID_GARAGEM = '30' THEN 'BMA'
-                              WHEN E25.ID_EMPRESA = '3' AND E25.ID_GARAGEM = '31' THEN 'BPE'
-                              WHEN E25.ID_EMPRESA = '3' AND E25.ID_GARAGEM = '32' THEN 'BEL'    
-                              WHEN E25.ID_EMPRESA = '3' AND E25.ID_GARAGEM = '33' THEN 'BPB'
-                              WHEN E25.ID_EMPRESA = '3' AND E25.ID_GARAGEM = '34' THEN 'SLZ'
-                              WHEN E25.ID_EMPRESA = '3' AND E25.ID_GARAGEM = '35' THEN 'BAL'
-                              WHEN E25.ID_EMPRESA = '3' AND E25.ID_GARAGEM = '36' THEN 'THE'  
-                          END GARAGEM
-                        FROM
-                            FTA004 F4,
-                            EXA026 E26,
-                            EXA025 E25
-                        WHERE
-                             F4.EMPRESA = E26.EMPRESA AND
-                             F4.FILIAL = E26.FILIAL   AND
-                             F4.GARAGEM = E26.GARAGEM AND
-                             F4.SERIE = E26.SERIE_CTRC     AND
-                             F4.CONHECIMENTO = E26.NUMERO_CTRC AND
-                             F4.TIPO_DOCTO = E26.TIPO_DOCTO    AND
-                             E26.RECNUM_EXA025 = E25.RECNUM    AND
+                            WHEN E5.DATA_CHEGADA <> '30/12/1899' THEN (TO_DATE(E5.DATA_CHEGADA,'DD-MM-YY HH24:MI:SS'))
+                            WHEN E5.DATA_CHEGADA IS NULL THEN (TO_DATE(E5.DT_PREVISAO,'DD-MM-YY HH24:MI:SS'))
+                        END DATA_CHEGADA,
+                        CASE
+                            WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '1' THEN 'SPO'
+                            WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '2'  THEN 'REC'
+                            WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '3'  THEN 'SSA'
+                            WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '4'  THEN 'FOR'
+                            WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '5'  THEN 'MCZ'
+                            WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '6'  THEN 'NAT'
+                            WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '7'  THEN 'JPA'
+                            WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '8'  THEN 'AJU'
+                            WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '9'  THEN 'VDC'
+                            WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '10' THEN 'MG'
+                            WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '50' THEN 'SPO'
+                            WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '20' THEN 'SPO'
+                            WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '21' THEN 'SPO'
+                            WHEN E5.ID_EMPRESA = '2' AND E5.ID_GARAGEM = '20' THEN 'CTG'
+                            WHEN E5.ID_EMPRESA = '2' AND E5.ID_GARAGEM = '21' THEN 'TCO'
+                            WHEN E5.ID_EMPRESA = '2' AND E5.ID_GARAGEM = '22' THEN 'UDI'
+                            WHEN E5.ID_EMPRESA = '2' AND E5.ID_GARAGEM = '23' THEN 'TMA'
+                            WHEN E5.ID_EMPRESA = '2' AND E5.ID_GARAGEM = '24' THEN 'VIX'  
+                            WHEN E5.ID_EMPRESA = '2' AND E5.ID_GARAGEM = '50' THEN 'VIX'
+                            WHEN E5.ID_EMPRESA = '3' AND E5.ID_GARAGEM = '30' THEN 'BMA'
+                            WHEN E5.ID_EMPRESA = '3' AND E5.ID_GARAGEM = '31' THEN 'BPE'
+                            WHEN E5.ID_EMPRESA = '3' AND E5.ID_GARAGEM = '32' THEN 'BEL'    
+                            WHEN E5.ID_EMPRESA = '3' AND E5.ID_GARAGEM = '33' THEN 'BPB'
+                            WHEN E5.ID_EMPRESA = '3' AND E5.ID_GARAGEM = '34' THEN 'SLZ'
+                            WHEN E5.ID_EMPRESA = '3' AND E5.ID_GARAGEM = '35' THEN 'BAL'
+                            WHEN E5.ID_EMPRESA = '3' AND E5.ID_GARAGEM = '36' THEN 'THE'        
+                        END FILIAL,
+                        F1.CONHECIMENTO,
+                        F1.DATA_EMISSAO,
+                        F0.DT_PREV_ENTREGA,
+                        E2.DESC_LOCALIDADE CIDADE,
+                        E2.COD_UF UF,
+                        F1.DEST_RZ_SOCIAL DESTINATARIO,
+                        F1.VOLUMES,
+                        F1.PESO      
+                    FROM
+                        EXA025 E5,
+                        EXA026 E6,
+                        EXA002 E2,      
+                        FTA001 F1,
+                        FTA011 F0      
+                    WHERE
+                        E5.RECNUM = E6.RECNUM_EXA025              AND      
+                        E6.EMPRESA = F1.EMPRESA                   AND
+                        E6.FILIAL = F1.FILIAL                     AND
+                        E6.GARAGEM = F1.GARAGEM                   AND
+                        E6.SERIE_CTRC = F1.SERIE                  AND
+                        E6.NUMERO_CTRC = F1.CONHECIMENTO          AND
 
-                             E26.DATA_CADASTRO = '20-mar-2022'
-                    ''')
-        res = cur
-        #cur.close()
+                        F1.EMPRESA = F0.EMPRESA                   AND
+                        F1.FILIAL = F0.FILIAL                     AND
+                        F1.GARAGEM = F0.GARAGEM                   AND
+                        F1.SERIE = F0.SERIE                       AND
+                        F1.CONHECIMENTO = F0.CONHECIMENTO         AND
 
-    except Exception as e:
-        raise e
-    else:
-        return res
+                        F1.LOCALID_ENTREGA = E2.COD_LOCALIDADE    AND
+
+                        E5.ID_GARAGEM = {k}                       AND
+                        E5.GARAGEM IN (1,10,23,30)                AND
+                        E5.ENTREGA_TRANSF = 'T'                   AND
+                        E5.TIPO_DOCTO = '58'                      AND
+
+                        E5.DATA_CANCELADO IS NULL                 AND
+                        E5.DATA_BAIXA IS NULL                     AND
+
+                        E5.DATA_EMISSAO = TO_DATE('{hoje}', 'yyyy/mm/dd')
+                    """)
+        res = dictfetchall(cur)
+        cur.close()
+        pdr = pd.DataFrame(res)
+        if not pdr.empty:
+            msg = MIMEMultipart('related')
+            msg['From'] = get_secret('EUSER_MN')
+            msg['To'] = '; '.join(send)
+            msg['Subject'] = f'MDFEs por Filial: {v}'
+            text = f'''Prezados,
+                       Segue relação de MDFEs gerado pela matriz a caminho da filial {v}. 
+                       
+                       --- para setor de desenvolvimento ---
+                       lista de emails para serem enviados após subir sistema online.
+                       {'; '.join(result)} 
+                    '''
+            msg.attach(MIMEText(text, 'html', 'utf-8'))
+
+            buffer = io.BytesIO(pdr.to_string().encode('utf-8'))
+            pdr.to_excel(buffer, engine='xlsxwriter', index=False)
+            part = MIMEApplication(buffer.getvalue(), name=v)
+            part['Content-Disposition'] = 'attachment; filename=%s.xlsx' % v
+
+            msg.attach(part)
+            try:
+                sm = smtplib.SMTP('smtp.bora.com.br', '587')
+                sm.set_debuglevel(1)
+                sm.login(get_secret('EUSER_MN'), get_secret('EPASS_MN'))
+                sm.sendmail(get_secret('EUSER_MN'), send, msg.as_string())
+            except Exception as e:
+                raise e

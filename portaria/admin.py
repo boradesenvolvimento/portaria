@@ -134,4 +134,7 @@ class EtiquetasPaleteAdmin(admin.ModelAdmin):
     pass
 admin.site.register(EtiquetasPalete,EtiquetasPaleteAdmin)
 
+class BipagemPaleteAdmin(admin.ModelAdmin):
+    pass
+admin.site.register(BipagemPalete, BipagemPaleteAdmin)
 

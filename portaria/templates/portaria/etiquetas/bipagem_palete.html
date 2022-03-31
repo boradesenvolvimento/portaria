@@ -26,6 +26,15 @@
                             <h2>Bipagem Paletes</h2>
                             <table>
                                 <tr><td>
+                                    <label for="getga">Garagem:</label>
+                                    <select id="getga" name="getga" >
+                                        <option hidden>Selecione...</option>
+                                        {% for q,v in gachoices %}
+                                        <option value="{{ q }}">{{ v }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </td></tr>
+                                <tr><td>
                                     <label for="volume">Volume:</label>
                                     <input type="text" name="volume" id="volume">
                                 </td></tr>
