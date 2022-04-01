@@ -550,7 +550,7 @@ def cadveiculo(request):
     return render(request, 'portaria/frota/cadveiculo.html', {'form': form})
 
 def cadtpservico(request):
-    grps = TipoServicosManut.objects.values_list('grupo_servico', flat=True)
+    grps = TipoServicosManut.objects.values_list('grupo_servico', flat=True).distinct()
     if request.method == 'POST':
         grp = request.POST.get('grp')
         tp_sv = request.POST.get('tp_sv')
@@ -2727,7 +2727,7 @@ def testeconn(request):
 
 def mdfeporfilial(request):
     hoje = datetime.date.today()
-    gachoices = TicketMonitoramento.GARAGEM_CHOICES
+    gachoices = GARAGEM_CHOICES
     mailchoices = {'TCO': ['juliano.oliveira@borexpress.com.br', 'lino.loureiro@borexpress.com.br'],
                    'VIX': ['mauricio@bora.com.br', 'ocorrenciavix@bora.com.br'],
                    'CTG': ['Silvana.dily@borexpress.com.br', 'Ygor.henrique@borexpress.com.br',
@@ -2746,7 +2746,7 @@ def mdfeporfilial(request):
                    }
     for k, v in gachoices:
         result = mailchoices.get(v, '')
-        send = ['renan.amarantes@bora.com.br','alan@bora.com.br']
+        send = ['renan.amarantes@bora.com.br']
         conn = settings.CONNECTION
         cur = conn.cursor()
         cur.execute(f"""
