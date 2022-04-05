@@ -1,3 +1,5 @@
+from datetime import date
+
 from django import template
 from notifications.models import Notification
 
@@ -30,3 +32,8 @@ def get_field2(obj,field_name):
 @register.filter(name='rangeloop')
 def rangeloop(value):
     return range(value)
+
+@register.filter(name='is_past')
+def is_past(value):
+    if value:
+        return date.today() > value

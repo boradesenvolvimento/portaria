@@ -30,7 +30,7 @@
             <h2 class="title-cad">Painel veículos em manutenção<button type="submit"><a href="{% url 'portaria:manutencaoview' %}" style="color:white;">Acessar</a></button></h2>
         </div>
 
-        <!--<div class="row mb-3 linha-baixo">
+        <div class="row mb-3 linha-baixo">
             <h2 class="title-cad">Exportar por data csv</h2>
             <form method="post" action="{% url 'portaria:get_manu_csv' %}">
                 {% csrf_token %}
@@ -38,7 +38,7 @@
                 <input type="date" placeholder="Data final" name="dataFin">
                 <button type="submit" style="height:3.4rem;"><ion-icon style="font-size:2.4rem;" name="download-outline"></ion-icon></button>
             </form>
-        </div>-->
+        </div>
 
     </div>
 {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}

@@ -1831,27 +1831,32 @@ def get_palete_csv(request):
     return response
 
 def get_manu_csv(request):
+    array = []
+    data1 = request.POST.get('dataIni')
+    data2 = request.POST.get('dataFin')
     try:
-        data1 = request.POST.get('dataIni')
-        data2 = request.POST.get('dataFin')
         dateparse = datetime.datetime.strptime(data1, '%Y-%m-%d')
         dateparse1 = datetime.datetime.strptime(data2, '%Y-%m-%d')
     except ValueError:
         messages.error(request,'Por favor digite uma data válida')
         return redirect('portaria:manutencaofrota')
     else:
-        response = HttpResponse(content_type='text/csv',
-                                headers={'Content-Disposition':f'attatchment; filename="manutencao{dateparse}-{dateparse1}.csv"'})
-        response.write(u'\ufeff'.encode('utf8'))
-        writer = csv.writer(response)
-        writer.writerow(['id','veiculo','tp_manutencao','local_manu','dt_ult_manutencao','dt_entrada','dt_saida',
-                            'dias_veic_parado','km_atual','tp_servico','valor_maodeobra','valor_peca',
-                                'filial','socorro','prev_entrega','observacao','status','autor'])
-        manutencao = ManutencaoFrota.objects.all().values_list('id','veiculo__prefixoveic','tp_manutencao','local_manu','dt_ult_manutencao','dt_entrada','dt_saida',
-                            'dias_veic_parado','km_atual','servjoinmanu__id_svs','servjoinmanu__valor_maodeobra','servjoinmanu__valor_peca',
-                                'filial','socorro','prev_entrega','observacao','status','autor__username').filter(dt_entrada__gte=dateparse, dt_entrada__lte=dateparse1)
-        for id in manutencao:
-            writer.writerow(id)
+
+        manutencao = ManutencaoFrota.objects.all().filter(dt_entrada__gte=dateparse, dt_entrada__lte=dateparse1)
+        for q in manutencao:
+            array.append({'id':q.id,'veiculo':q.veiculo.prefixoveic,'motorista':q.motorista, 'tp_manu':q.tp_manutencao,
+                          'local_manu':q.local_manu,'ult_manu':q.dt_ult_manutencao,'entrada':q.dt_entrada,
+                          'inicio':q.dt_ini_manu,'saida':q.dt_saida,'dias_parado':q.dias_veic_parado, 'km':q.km_atual,
+                          'filial':q.filial,'socorro':q.socorro,'prev_entrega':q.prev_entrega,'status':q.status,
+                          'autor':q.autor.username})
+        df = pd.DataFrame(array)
+        buffer = io.BytesIO(df.to_string().encode('utf-8'))
+        df.to_excel(buffer, engine='xlsxwriter', index=False)
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = f'attachment; filename="{dateparse}-{dateparse1}.xlsx"'
+        writer = pd.ExcelWriter(response, engine='xlsxwriter')
+        df.to_excel(writer, 'sheet1', index=False)
+        writer.save()
         return response
 
 def retornoromcsv(request):
@@ -1929,6 +1934,7 @@ def get_nfpj_csv(request):
     return response
 
 def get_checklist_csv(request):
+    array = []
     try:
         ini = datetime.datetime.strptime(request.POST.get('dataini'), '%Y-%m-%d').date()
         fim = datetime.datetime.strptime(request.POST.get('datafim'), '%Y-%m-%d').date()
@@ -1936,28 +1942,21 @@ def get_checklist_csv(request):
         messages.error(request, 'Por favor digite uma data válida')
         return redirect('portaria:frota')
     else:
-        response = HttpResponse(content_type='text/csv',
-                                headers={'Content-Disposition':'attachment; filename="servicospj.csv"'})
-        response.write(u'\ufeff'.encode('utf8'))
-        writer = csv.writer(response)
-        writer.writerow(['data','placa','motorista','placa carreta','km anterior','km atual','horimetro','uniforme da empresa',
-                         'motorista identificado por crachá','lanterna do farol dianteiro funcionando?','farol baixo funcionando?',
-                         'farol alto funcionando?','lanterna direita funcionando?','lanterna esquerda funcionando?','lanternas traseiras funcionando?',
-                         'luz de ré funcionando?','retrovisores estão em perfeito estado?','água no radiador está no nível','óleo de freio está no nível',
-                         'óleo de motor está no nivel?','verificado todas as luzes de advertências?','verificado o freio de emergência?','verificado o alarme sonoro da ré?',
-                         'verificado se existe vazamentos de óleo de motor?','verificado se existe vazamento de ar','verificado se existe vazamento de óleo hidráulico?',
-                         'verificado se existe vazamento de água no radiador?','verificado se as mangueiras estão em condições boas?',
-                         'pneus em boas condições?','as lonas de freio estão em boas condições?','os estepes estão bons?','a suspensão está em condições perfeitas?',
-                         'o carro está limpo e higienizado?','foi verificado as luzes de advertência das laterais?','foi verificado o lacre da placa?',
-                         'foi verificado se o aparelho thermoking apresenta falhas?','foi verificado a carroceria assoalho e bau?',
-                         'foi verificado a luz de freio?','foi verificado a luz de ré?','foi verificado se as luzes da lanterna traseira direita funciona?',
-                         'foi verificado se as luzes da lanterna traseira esquerda funciona','autor'])
-        checklist = ChecklistFrota.objects.all().values_list('datachecklist','placaveic','motoristaveic','placacarreta','kmanterior','kmatual','horimetro','p1_1','p1_2','p2_1','p2_2','p2_3','p2_4','p2_5','p2_6','p2_7',
-                                                            'p2_8','p2_9','p2_10','p2_11','p2_12','p2_13','p2_14','p2_15','p2_16','p2_17','p2_18','p2_19','p2_20','p2_21','p2_22','p2_23','p2_24','p3_1',
-                                                            'p3_2','p3_3','p3_4','p3_5','p3_6','p3_7','p3_8','obs','autor__username').filter(datachecklist__gte=ini,datachecklist__lte=fim)
-        for c in checklist:
-            writer.writerow(c)
-        return response
+        query = ChecklistFrota.objects.filter(datachecklist__lte=fim,datachecklist__gte=ini)
+        if query:
+            for q in query:
+                array.append({'id':q.idchecklist, 'emissao':q.datachecklist, 'placa':q.placaveic.prefixoveic,
+                              'motorista':q.motoristaveic.nome,'filial':q.get_filial_display(), 'km anterior':q.kmanterior,
+                              'km atual':q.kmatual,'horimetro':q.horimetro, 'autor':q.autor.username})
+            df = pd.DataFrame(array)
+            buffer = io.BytesIO(df.to_string().encode('utf-8'))
+            df.to_excel(buffer, engine='xlsxwriter', index=False)
+            response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = f'attachment; filename="{ini}-{fim}.xlsx"'
+            writer = pd.ExcelWriter(response, engine='xlsxwriter')
+            df.to_excel(writer, 'sheet1', index=False)
+            writer.save()
+            return response
 
 def get_ferias_csv(request):
     try:
@@ -2856,3 +2855,66 @@ def mdfeporfilial(request):
                 sm.sendmail(get_secret('EUSER_MN'), send, msg.as_string())
             except Exception as e:
                 raise e
+
+def bipagemdocrel(request):
+    array = []
+    if request.method == 'POST':
+        date1 = request.POST.get('date1')
+        date2 = request.POST.get('date2')
+        fil = request.POST.get('fil')
+        if date1 and date2 and fil:
+            date1 = datetime.datetime.strptime(request.POST.get('date1'), '%Y-%m-%d')
+            date2 = datetime.datetime.strptime(request.POST.get('date2'), '%Y-%m-%d')
+            query = EtiquetasDocumento.objects.filter(pub_date__lte=date2, pub_date__gte=date1, garagem=fil).annotate(
+                total=Count('bipagemetiqueta'),user=F('bipagemetiqueta__autor__username'),
+                pub=F('bipagemetiqueta__pub_date')
+            )
+            if query:
+                for q in query:
+                    array.append({'NR_DOC':q.nr_doc, 'GARAGEM':q.get_garagem_display(),
+                                  'TP_DOC':q.get_tp_doc_display(), 'VOLUME':q.volume ,'NOTA':q.nota,
+                                  'USER':q.user, 'DATA BIPAGEM':q.pub,'total':q.total})
+                df = pd.DataFrame(array)
+                buffer = io.BytesIO(df.to_string().encode('utf-8'))
+                df.to_excel(buffer, engine='xlsxwriter', index=False)
+                response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+                response['Content-Disposition'] = f'attachment; filename="{date1}-{date2}.xlsx"'
+                writer = pd.ExcelWriter(response, engine='xlsxwriter')
+                df.to_excel(writer, 'sheet1', index=False)
+                writer.save()
+                return response
+            else:
+                messages.error(request, 'Nao encontrado valores para esta data.')
+        else:
+            messages.error(request, 'Valores faltando, por favor verifique.')
+    return redirect('portaria:contagemetiquetas')
+
+def bipagempalrel(request):
+    array = []
+    if request.method == 'POST':
+        date1 = request.POST.get('date1')
+        date2 = request.POST.get('date2')
+        if date1 and date2:
+            date1 = datetime.datetime.strptime(request.POST.get('date1'), '%Y-%m-%d').replace(hour=00, minute=00)
+            date2 = datetime.datetime.strptime(request.POST.get('date2'), '%Y-%m-%d').replace(hour=23, minute=59)
+            print(date1, date2)
+            query = BipagemPalete.objects.filter(etq_ref__pub_date__lte=date2,etq_ref__pub_date__gte=date1)
+            if query:
+                for q in query:
+                    array.append({'cliente':q.etq_ref.cliente, 'codigo':q.cod_barras, 'filial':q.get_filial_display(),
+                                  'bip_date':q.bip_date, 'volume':q.volume_conf, 'autor':q.autor.username})
+                df = pd.DataFrame(array)
+                buffer = io.BytesIO(df.to_string().encode('utf-8'))
+                df.to_excel(buffer, engine='xlsxwriter', index=False)
+                response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+                response['Content-Disposition'] = f'attachment; filename="{date1}-{date2}.xlsx"'
+                writer = pd.ExcelWriter(response, engine='xlsxwriter')
+                df.to_excel(writer, 'sheet1', index=False)
+                writer.save()
+                return response
+            else:
+                messages.error(request, 'Nao encontrado valores para esta data.')
+        else:
+            messages.error(request, 'Valores faltando, por favor verifique.')
+    return redirect('portaria:contagemetiquetas')
+

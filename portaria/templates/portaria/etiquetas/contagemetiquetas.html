@@ -17,7 +17,20 @@
         <section>
             <div class="container">
                 <div class="row">
-                <h2>Contagem etiquetas</h2>
+                <h2 class="col">Contagem etiquetas</h2>
+                <h3 class="col">Exportar excel:
+                    <form method="post" action="{% url 'portaria:bipagemdocrel' %}">{% csrf_token %}
+                        <select id="fil" name="fil">
+                                    <option hidden>Selecione...</option>
+                                    {% for q,v in gachoices %}
+                                    <option value="{{ q }}">{{ v }}</option>
+                                    {% endfor %}
+                                </select>
+                        <input type="date" id="date1" name="date1">
+                        <input type="date" id="date2" name="date2">
+                        <button type="submit">Botao</button>
+                    </form>
+                </h3>
                 </div><hr>
                 <div class="row">
                     <form method="post">
