@@ -60,6 +60,7 @@ urlpatterns = [
     path(r'pdf/', views.createetiquetas, name='createetiquetas'),
     path('etiquetas_palete/', views.etiquetas_palete, name='etiquetas_palete'),
     path('bipagem_palete/', views.bipagem_palete, name='bipagem_palete'),
+    path('etiqueta_relatorio/', views.etqrelatorio, name='etqrelatorio'),
     path('romaneioop/', views.romaneioxml, name='romaneioxml'),
     path('romaneioop/painel/', views.painelromaneio, name='painelromaneio'),
     path('romanieoop/xml-manual', views.entradaromaneio, name='entradaromaneio'),

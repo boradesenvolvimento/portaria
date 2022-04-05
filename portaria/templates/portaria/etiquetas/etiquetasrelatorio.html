@@ -1,0 +1,49 @@
+    {% extends 'base.html' %}
+    {% block content %}
+    {% load groupscheck %}
+    {% load static %}
+    <div class="container mt-5">
+    {% if auth_message %}
+        <p><strong>{{ auth_message }}</strong></p>
+    {% else %}
+    {% if request.user|has_group:"etiquetas" %}
+            {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+            {% endfor %}
+            <section>
+                <div class="container">
+                    <div class="row">
+                    <h2>Relatórios Etiquetas</h2>
+                    </div><hr>
+                    <div class="row linha-baixo">
+                        <label for="docrel"><strong>Exportar Relatório Documentos:</strong></label>
+                        <form method="post" id="docrel" action="{% url 'portaria:bipagemdocrel' %}">{% csrf_token %}
+                            <select name="fil">
+                                <option hidden>Selecione...</option>
+                                {% for q,v in gachoices %}
+                                <option value="{{ q }}">{{ v }}</option>
+                                {% endfor %}
+                            </select>
+                            <input type="date" name="date1">
+                            <input type="date" name="date2">
+                            <button type="submit">download</button>
+                        </form>
+                    </div>
+                    <div class="row linha-baixo">
+                        <label for="palrel"><strong>Exportar Relatório Paletes:</strong></label>
+                        <form method="post" id="palrel" action="{% url 'portaria:bipagempalrel' %}">{% csrf_token %}
+                            <input type="date" id="date1" name="date1">
+                            <input type="date" id="date2" name="date2">
+                            <button type="submit">download</button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+    {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+    </div>
+    {% endif %}
+    {% endblock %}

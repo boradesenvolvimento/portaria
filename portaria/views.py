@@ -1458,6 +1458,10 @@ def bipagem_palete(request):
                 messages.success(request, 'Bipado com sucesso.')
     return render(request, 'portaria/etiquetas/bipagem_palete.html', {'gachoices':gachoices})
 
+def etqrelatorio(request):
+    gachoices = TicketMonitoramento.GARAGEM_CHOICES
+    return render(request, 'portaria/etiquetas/etiquetasrelatorio.html', {'gachoices':gachoices})
+
 def romaneioxml(request):
     return render(request, 'portaria/etc/romaneioindex.html')
 
@@ -2887,7 +2891,7 @@ def bipagemdocrel(request):
                 messages.error(request, 'Nao encontrado valores para esta data.')
         else:
             messages.error(request, 'Valores faltando, por favor verifique.')
-    return redirect('portaria:contagemetiquetas')
+    return redirect('portaria:etqrelatorio')
 
 def bipagempalrel(request):
     array = []
@@ -2897,7 +2901,6 @@ def bipagempalrel(request):
         if date1 and date2:
             date1 = datetime.datetime.strptime(request.POST.get('date1'), '%Y-%m-%d').replace(hour=00, minute=00)
             date2 = datetime.datetime.strptime(request.POST.get('date2'), '%Y-%m-%d').replace(hour=23, minute=59)
-            print(date1, date2)
             query = BipagemPalete.objects.filter(etq_ref__pub_date__lte=date2,etq_ref__pub_date__gte=date1)
             if query:
                 for q in query:
@@ -2916,5 +2919,5 @@ def bipagempalrel(request):
                 messages.error(request, 'Nao encontrado valores para esta data.')
         else:
             messages.error(request, 'Valores faltando, por favor verifique.')
-    return redirect('portaria:contagemetiquetas')
+    return redirect('portaria:etqrelatorio')
 
