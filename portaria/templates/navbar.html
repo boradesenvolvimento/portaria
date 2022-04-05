@@ -148,10 +148,12 @@
               <li class="nav-item">
                 <a class="nav-link1" href="{% url 'portaria:bipagem_palete' %}">Bipagem Etq Palete</a>
               </li>
+              {% if request.user|has_group:'etiquetas-staff' %}
               <hr>
               <li class="nav-item">
                 <a class="nav-link1" href="{% url 'portaria:etqrelatorio' %}">Relatorios</a>
               </li>
+              {% endif %}
               </ul>
           </div>
           {% endif %}
