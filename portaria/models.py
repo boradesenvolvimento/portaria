@@ -51,7 +51,7 @@ TIPO_GARAGEM = (
     ('CTG','CTG'),
     ('TCO','TCO'),
     ('UDI','UDI'),
-    ('TNA','TNA'),
+    ('TMA','TMA'),
     ('VIX','VIX'),
 )
 TIPO_DOCTO_CHOICES = (
