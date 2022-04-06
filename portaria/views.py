@@ -1455,6 +1455,7 @@ def bipagem_palete(request):
                 if man:
                     bip.manifesto = man
                     bip.save()
+                print(f'salvo no banco de dados bipagem nº{bip.id}')
                 messages.success(request, 'Bipado com sucesso.')
     return render(request, 'portaria/etiquetas/bipagem_palete.html', {'gachoices':gachoices})
 
