@@ -2753,81 +2753,90 @@ def mdfeporfilial(request):
         conn = settings.CONNECTION
         cur = conn.cursor()
         cur.execute(f"""
-                    SELECT       
-                        E5.CODIGO,
-                        E5.GARAGEM,
-                        E5.DATA_SAIDA,
-                        CASE
-                            WHEN E5.DATA_CHEGADA <> '30/12/1899' THEN (TO_DATE(E5.DATA_CHEGADA,'DD-MM-YY HH24:MI:SS'))
-                            WHEN E5.DATA_CHEGADA IS NULL THEN (TO_DATE(E5.DT_PREVISAO,'DD-MM-YY HH24:MI:SS'))
-                        END DATA_CHEGADA,
-                        CASE
-                            WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '1' THEN 'SPO'
-                            WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '2'  THEN 'REC'
-                            WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '3'  THEN 'SSA'
-                            WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '4'  THEN 'FOR'
-                            WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '5'  THEN 'MCZ'
-                            WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '6'  THEN 'NAT'
-                            WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '7'  THEN 'JPA'
-                            WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '8'  THEN 'AJU'
-                            WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '9'  THEN 'VDC'
-                            WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '10' THEN 'MG'
-                            WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '50' THEN 'SPO'
-                            WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '20' THEN 'SPO'
-                            WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '21' THEN 'SPO'
-                            WHEN E5.ID_EMPRESA = '2' AND E5.ID_GARAGEM = '20' THEN 'CTG'
-                            WHEN E5.ID_EMPRESA = '2' AND E5.ID_GARAGEM = '21' THEN 'TCO'
-                            WHEN E5.ID_EMPRESA = '2' AND E5.ID_GARAGEM = '22' THEN 'UDI'
-                            WHEN E5.ID_EMPRESA = '2' AND E5.ID_GARAGEM = '23' THEN 'TMA'
-                            WHEN E5.ID_EMPRESA = '2' AND E5.ID_GARAGEM = '24' THEN 'VIX'  
-                            WHEN E5.ID_EMPRESA = '2' AND E5.ID_GARAGEM = '50' THEN 'VIX'
-                            WHEN E5.ID_EMPRESA = '3' AND E5.ID_GARAGEM = '30' THEN 'BMA'
-                            WHEN E5.ID_EMPRESA = '3' AND E5.ID_GARAGEM = '31' THEN 'BPE'
-                            WHEN E5.ID_EMPRESA = '3' AND E5.ID_GARAGEM = '32' THEN 'BEL'    
-                            WHEN E5.ID_EMPRESA = '3' AND E5.ID_GARAGEM = '33' THEN 'BPB'
-                            WHEN E5.ID_EMPRESA = '3' AND E5.ID_GARAGEM = '34' THEN 'SLZ'
-                            WHEN E5.ID_EMPRESA = '3' AND E5.ID_GARAGEM = '35' THEN 'BAL'
-                            WHEN E5.ID_EMPRESA = '3' AND E5.ID_GARAGEM = '36' THEN 'THE'        
-                        END FILIAL,
-                        F1.CONHECIMENTO,
-                        F1.DATA_EMISSAO,
-                        F0.DT_PREV_ENTREGA,
-                        E2.DESC_LOCALIDADE CIDADE,
-                        E2.COD_UF UF,
-                        F1.DEST_RZ_SOCIAL DESTINATARIO,
-                        F1.VOLUMES,
-                        F1.PESO      
+                    SELECT 
+                           E5.CODIGO,
+                           E5.DATA_SAIDA,
+                           CASE
+                               WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '1' THEN 'SPO'
+                               WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '2'  THEN 'REC'
+                               WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '3'  THEN 'SSA'
+                               WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '4'  THEN 'FOR'
+                               WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '5'  THEN 'MCZ'
+                               WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '6'  THEN 'NAT'
+                               WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '7'  THEN 'JPA'
+                               WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '8'  THEN 'AJU'
+                               WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '9'  THEN 'VDC'
+                               WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '10' THEN 'MG'
+                               WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '50' THEN 'SPO'
+                               WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '20' THEN 'SPO'
+                               WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '21' THEN 'SPO'
+                               WHEN E5.ID_EMPRESA = '2' AND E5.ID_GARAGEM = '20' THEN 'CTG'
+                               WHEN E5.ID_EMPRESA = '2' AND E5.ID_GARAGEM = '21' THEN 'TCO'
+                               WHEN E5.ID_EMPRESA = '2' AND E5.ID_GARAGEM = '22' THEN 'UDI'
+                               WHEN E5.ID_EMPRESA = '2' AND E5.ID_GARAGEM = '23' THEN 'TMA'
+                               WHEN E5.ID_EMPRESA = '2' AND E5.ID_GARAGEM = '24' THEN 'VIX'  
+                               WHEN E5.ID_EMPRESA = '2' AND E5.ID_GARAGEM = '50' THEN 'VIX'
+                               WHEN E5.ID_EMPRESA = '3' AND E5.ID_GARAGEM = '30' THEN 'BMA'
+                               WHEN E5.ID_EMPRESA = '3' AND E5.ID_GARAGEM = '31' THEN 'BPE'
+                               WHEN E5.ID_EMPRESA = '3' AND E5.ID_GARAGEM = '32' THEN 'BEL'    
+                               WHEN E5.ID_EMPRESA = '3' AND E5.ID_GARAGEM = '33' THEN 'BPB'
+                               WHEN E5.ID_EMPRESA = '3' AND E5.ID_GARAGEM = '34' THEN 'SLZ'
+                               WHEN E5.ID_EMPRESA = '3' AND E5.ID_GARAGEM = '35' THEN 'BAL'
+                               WHEN E5.ID_EMPRESA = '3' AND E5.ID_GARAGEM = '36' THEN 'THE'        
+                           END FILIAL,
+                           MO.NOME,
+                           VE.PREFIXOVEIC,
+                           F1.CONHECIMENTO,
+                           F1.DATA_EMISSAO,
+                           F0.DT_PREV_ENTREGA,
+                           E2.DESC_LOCALIDADE CIDADE,
+                           E2.COD_UF UF,
+                           F1.REM_RZ_SOCIAL REMETENTE,       
+                           F1.DEST_RZ_SOCIAL DESTINATARIO,
+                           F1.VOLUMES,
+                           F1.PESO
                     FROM
-                        EXA025 E5,
-                        EXA026 E6,
-                        EXA002 E2,      
-                        FTA001 F1,
-                        FTA011 F0      
-                    WHERE
-                        E5.RECNUM = E6.RECNUM_EXA025              AND      
-                        E6.EMPRESA = F1.EMPRESA                   AND
-                        E6.FILIAL = F1.FILIAL                     AND
-                        E6.GARAGEM = F1.GARAGEM                   AND
-                        E6.SERIE_CTRC = F1.SERIE                  AND
-                        E6.NUMERO_CTRC = F1.CONHECIMENTO          AND
-
-                        F1.EMPRESA = F0.EMPRESA                   AND
-                        F1.FILIAL = F0.FILIAL                     AND
-                        F1.GARAGEM = F0.GARAGEM                   AND
-                        F1.SERIE = F0.SERIE                       AND
-                        F1.CONHECIMENTO = F0.CONHECIMENTO         AND
-
-                        F1.LOCALID_ENTREGA = E2.COD_LOCALIDADE    AND
-
-                        E5.ID_GARAGEM = {k}                       AND
-                        E5.GARAGEM IN (1,10,23,30)                AND
-                        E5.ENTREGA_TRANSF = 'T'                   AND
-                        E5.TIPO_DOCTO = '58'                      AND
-
-                        E5.DATA_CANCELADO IS NULL                 AND
-                        E5.DATA_BAIXA IS NULL                     AND
-
-                        E5.DATA_EMISSAO = TO_DATE('{hoje}', 'yyyy/mm/dd')
+                           EXA025 E5,       
+                           EXA026 E6,
+                           FTA001 F1,
+                           FTA011 F0,
+                           EXA002 E2,
+                           
+                           BGM_MDF_ELETRONICO BG,
+                           VWCGS_FUNCIONARIOSCOMAGREGADO MO,
+                           FRT_CADVEICULOS VE
+                           
+                    WHERE 
+                           E5.RECNUM = BG.RECNUM_EXA025                     AND
+                           
+                           E5.RECNUM = E6.RECNUM_EXA025                     AND
+                           
+                           F1.EMPRESA = F0.EMPRESA                          AND
+                           F1.FILIAL = F0.FILIAL                            AND
+                           F1.GARAGEM = F0.GARAGEM                          AND
+                           F1.SERIE = F0.SERIE                              AND
+                           F1.CONHECIMENTO = F0.CONHECIMENTO                AND
+                           
+                           E6.EMPRESA = F1.EMPRESA                          AND
+                           E6.FILIAL = F1.FILIAL                            AND
+                           E6.GARAGEM = F1.GARAGEM                          AND
+                           E6.SERIE_CTRC = F1.SERIE                         AND
+                           E6.NUMERO_CTRC = F1.CONHECIMENTO                 AND
+                           
+                           F1.LOCALID_ENTREGA = E2.COD_LOCALIDADE           AND
+                           
+                           E5.ID_MOTORISTA = MO.IDENTIFICACAO               AND
+                           E5.MOTORISTA = MO.CODINTFUNC                     AND
+                           E5.VEICULO = VE.CODIGOVEIC                       AND
+                           
+                           E5.GARAGEM IN (1,10,23,30)                       AND 
+                           E5.ENTREGA_TRANSF = 'T'                          AND
+                           E5.TIPO_DOCTO = '58'                             AND
+                           
+                           E5.ID_GARAGEM = {k}                              AND
+                           BG.STATUS = 'A'                                  AND
+                           
+                           BG.DATA_ENVIO BETWEEN ((SYSDATE)-1) AND (SYSDATE)
                     """)
         res = dictfetchall(cur)
         cur.close()
@@ -2859,6 +2868,7 @@ def mdfeporfilial(request):
                 sm.sendmail(get_secret('EUSER_MN'), send, msg.as_string())
             except Exception as e:
                 raise e
+    return HttpResponse('<h3>Job finalizado!</h3>')
 
 def bipagemdocrel(request):
     array = []
