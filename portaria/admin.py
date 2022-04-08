@@ -138,3 +138,7 @@ class BipagemPaleteAdmin(admin.ModelAdmin):
     pass
 admin.site.register(BipagemPalete, BipagemPaleteAdmin)
 
+class AuthBipagemEtiquetaAdmin(admin.ModelAdmin):
+    pass
+admin.site.register(AuthBipagemEtiqueta, AuthBipagemEtiquetaAdmin)
+

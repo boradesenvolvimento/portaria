@@ -676,12 +676,12 @@ class BipagemEtiqueta(models.Model):
     nota = models.CharField(max_length=10)
     doc_ref = models.ForeignKey(EtiquetasDocumento, on_delete=models.CASCADE)
     autor = models.ForeignKey(User, on_delete=models.CASCADE)
-    pub_date = models.DateField(default=timezone.now)
+    pub_date = models.DateTimeField(default=timezone.now)
 
 class RetornoEtiqueta(models.Model):
     id = models.BigAutoField(primary_key=True)
-    nota_fiscal = models.CharField(max_length=15, unique=True)
-    saida = models.DateField(default=timezone.now)
+    nota_fiscal = models.CharField(max_length=15)
+    saida = models.DateTimeField(default=timezone.now)
 
 class EtiquetasPalete(models.Model):
     id = models.BigAutoField(primary_key=True)
@@ -702,3 +702,9 @@ class BipagemPalete(models.Model):
     autor = models.ForeignKey(User, on_delete=models.CASCADE)
     etq_ref = models.ForeignKey(EtiquetasPalete, on_delete=models.CASCADE)
 
+class AuthBipagemEtiqueta(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    supervisor = models.ForeignKey(User, on_delete=models.CASCADE)
+    etq_ref = models.ForeignKey(EtiquetasDocumento, on_delete=models.CASCADE)
+    obs = models.TextField()
+    pub_date = models.DateTimeField(default=timezone.now)

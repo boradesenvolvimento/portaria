@@ -2,6 +2,13 @@
 {% block content %}
 {% load groupscheck %}
 {% load static %}
+<style>
+    @media only screen and (max-width: 768px){
+        .modal-content{
+            width: 100%;
+        }
+    }
+</style>
 <div class="container mt-5">
 {% if auth_message %}
     <p><strong>{{ auth_message }}</strong></p>
@@ -28,17 +35,104 @@
                             <table>
                                     <tr><td>
                                     <label for="{{ forloop.counter }}">Código {{ forloop.counter }}: </label>
-                                    <input type="text" name="getbarcode" id="{{ forloop.counter }}">
+                                    <input type="text" class="getbarcode" name="getbarcode" id="{{ forloop.counter }}">
                                     </td></tr>
                             </table>
                             {% endfor %}
                         </div>
-                        <input type="submit" id="submiterrr" class="button">
+                        <input type="hidden" name="textfield" id="posttextfield">
+                        <input type="hidden" name="user" id="postuser">
+                        <input type="button" id="submiterrr" class="button" value="Enviar">
                     </form>
                 </div>
             </div>
         </section>
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <div>
+                <span class="title-cad">Confirmar lançamento bipagens</span>
+                <span class="close col">&times;</span>
+            </div>
+            <form action="" method="post">
+                {% csrf_token %}
+            <div class="container tktcontainer">
+                <label for="user">Usuário: </label>
+                <input autocomplete="off" type="text" id="user"><br>
+                <label for="passw">Senha: </label>
+                <input autocomplete="off" type="password" id="passw">
+                <hr>
+                <h3>Observação: </h3>
+                <center><textarea id="textfield" name="textfield" style="resize: none;" rows="5" cols="40"></textarea></center>
+            </div>
+            <div class="container">
+                <div class="row">
+                    <div class="col">
+                        <center><button id="add" name="add" type="button" style="background-color:green;">Confirmar</button></center>
+                    </div>
+                </div>
+            </div>
+            </form>
+        </div>
+
+    </div>
 {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
 </div>
 {% endif %}
+<script>
+    var modal = document.getElementById("myModal");
+    var span = document.getElementsByClassName("close")[0];
+
+    span.onclick = function() {
+        modal.style.display = "none";
+    };
+
+    window.onclick = function(event) {
+        if (event.target == modal){
+            modal.style.display = "none";
+        }
+    };
+    $(document).ready(function(){
+
+        $("#submiterrr").click(function(){
+            cont = 0
+            var objs = document.getElementsByClassName('getbarcode');
+            for(i = 0; i < objs.length; i++){
+                if(objs[i].value){
+                    cont += 1
+                }
+            }
+            if(cont == {{cont}}){
+                document.getElementById('post-form').submit()
+            }else{
+                modal.style.display = "block";
+                botao = document.getElementById('add');
+                $(botao).click(function(){
+                    user = document.getElementById('user').value
+                    pass = document.getElementById('passw').value
+                    text = document.getElementById('textfield').value
+                    $.ajax({
+                        type: 'post',
+                        url: "{% url 'portaria:supervisorauth' %}",
+                        headers: {
+                            "Content-Type": "application/x-www-form-urlencoded",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                        data: {'user':user,'pass':pass},
+                        async: false,
+                        success:function(response){
+                            if(response['check'] == true){
+                                document.getElementById('postuser').value = user;
+                                document.getElementById('posttextfield').value = text;
+                                document.getElementById('post-form').submit();
+                            }else{
+                                alert('Usuário ou senha inválidos, gentileza verificar.');
+                                window.location.reload();
+                            }
+                        }
+                    });
+                });
+            };
+        });
+    });
+</script>
 {% endblock %}

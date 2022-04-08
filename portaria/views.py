@@ -38,7 +38,7 @@ from django.db import IntegrityError
 from django.db.models import Count, Sum, F, Q, Value, Subquery, CharField, ExpressionWrapper, IntegerField, \
     DateTimeField
 from django.db.models.functions import Coalesce, TruncDate, Cast, TruncMinute
-from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, Http404, FileResponse
+from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, Http404, FileResponse, JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.template.defaultfilters import upper
 from django.urls import reverse
@@ -1326,29 +1326,31 @@ def bipagemetiquetas(request):
     else:
         if qnt < cont:
             if request.method == 'POST':
+                print(request.POST)
                 test = request.POST.getlist('getbarcode')
                 try:
                     test = ' '.join(test).split()
                 except:
                     pass
-                if len(test) == cont:
-                    for i in test:
-                        if not BipagemEtiqueta.objects.filter(cod_barras=i):
-                            check = docs.filter(nota=i[-10:])
-                            if check:
-                                BipagemEtiqueta.objects.create(cod_barras=i,nota=i[-10:],doc_ref=docs[0],autor=request.user)
-                            else:
-                                messages.error(request, f'{i} não pertence ao romaneio, gentileza verificar.')
-                                return HttpResponse('<script>window.history.back()</script>')
+                if len(test) != cont and len(test) > 0:
+                    user = request.POST.get('user')
+                    obs = request.POST.get('textfield')
+                    AuthBipagemEtiqueta.objects.create(supervisor=User.objects.get(username=user),etq_ref=docs[0],
+                                                       obs=obs)
+                for i in test:
+                    if not BipagemEtiqueta.objects.filter(cod_barras=i):
+                        check = docs.filter(nota=i[-10:])
+                        if check:
+                            BipagemEtiqueta.objects.create(cod_barras=i,nota=i[-10:],doc_ref=docs[0],autor=request.user)
                         else:
-                            check = docs.filter(nota=i[-10:])
-                            if check:
-                                BipagemEtiqueta.objects.filter(cod_barras=i).update(pub_date=timezone.now())
-                    messages.success(request, 'Bipagem cadastrada com sucesso')
-                    return redirect('portaria:contagemetiquetas')
-                else:
-                    messages.error(request, 'Quantidade de notas enviadas inválida, gentileza verificar.')
-                    return HttpResponse('<script>window.history.back()</script>')
+                            messages.error(request, f'{i} não pertence ao romaneio, gentileza verificar.')
+                            return HttpResponse('<script>window.history.back()</script>')
+                    else:
+                        check = docs.filter(nota=i[-10:])
+                        if check:
+                            BipagemEtiqueta.objects.filter(cod_barras=i).update(pub_date=timezone.now())
+                messages.success(request, 'Bipagem cadastrada com sucesso')
+                return redirect('portaria:contagemetiquetas')
         else:
             messages.error(request, 'Contagem já atingiu a quantidade de volumes')
             return redirect('portaria:contagemetiquetas')
@@ -2932,3 +2934,13 @@ def bipagempalrel(request):
             messages.error(request, 'Valores faltando, por favor verifique.')
     return redirect('portaria:etqrelatorio')
 
+def supervisorauth(request):
+    data = request.POST
+    try:
+        check = User.objects.get(username=data['user'], groups__name='admauth')
+        print(check)
+        isok = check.check_password(data['pass'])
+    except Exception as e:
+        print(e)
+        isok = False
+    return JsonResponse({'check':isok})
