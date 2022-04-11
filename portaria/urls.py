@@ -93,7 +93,6 @@ urlpatterns = [
     path(r'readnotify/<notifyid>/', views.isnotifyread, name='isnotifyread'),
     path(r'allreadnotify/<user>', views.setallread, name='setallread'),
     path(r'vncmtnotifymanu/', views.notifymanutencaovencidos, name='notifymanutencaovencidos'),
-    path('testeconn/', views.testeconn, name='testeconn'),
     path('mdfeporfilial/', views.mdfeporfilial, name='mdfeporfilial'),
     path(r'modaltkt/', views.modaltkt, name='modaltkt')
 

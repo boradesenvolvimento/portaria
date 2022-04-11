@@ -2726,9 +2726,6 @@ def printetiquetas(array):
         else:
             print('finalizou sem "erros"')
 
-def testeconn(request):
-    conndb()
-
 def mdfeporfilial(request):
     hoje = datetime.date.today()
     gachoices = GARAGEM_CHOICES
@@ -2750,13 +2747,17 @@ def mdfeporfilial(request):
                    }
     for k, v in gachoices:
         result = mailchoices.get(v, '')
-        send = ['renan.amarantes@bora.com.br']
+        send = ['renan.amarantes@bora.com.br', 'alan@bora.com.br']
         conn = settings.CONNECTION
         cur = conn.cursor()
         cur.execute(f"""
                     SELECT 
-                           E5.CODIGO,
-                           E5.DATA_SAIDA,
+                           E5.CODIGO MDFE,
+                           E5.DATA_SAIDA SAIDA_VEIC,
+                           CASE
+                               WHEN E5.DATA_CHEGADA <> '30/12/1899' THEN (TO_DATE(E5.DATA_CHEGADA,'DD-MM-YY HH24:MI:SS'))
+                               WHEN E5.DATA_CHEGADA IS NULL THEN (TO_DATE(E5.DT_PREVISAO,'DD-MM-YY HH24:MI:SS'))
+                           END CHEGADA_VEIC,
                            CASE
                                WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '1' THEN 'SPO'
                                WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '2'  THEN 'REC'
@@ -2785,17 +2786,17 @@ def mdfeporfilial(request):
                                WHEN E5.ID_EMPRESA = '3' AND E5.ID_GARAGEM = '35' THEN 'BAL'
                                WHEN E5.ID_EMPRESA = '3' AND E5.ID_GARAGEM = '36' THEN 'THE'        
                            END FILIAL,
-                           MO.NOME,
-                           VE.PREFIXOVEIC,
-                           F1.CONHECIMENTO,
-                           F1.DATA_EMISSAO,
-                           F0.DT_PREV_ENTREGA,
+                           MO.NOME MOTORISTA,
+                           VE.PREFIXOVEIC PLACA,
+                           F1.CONHECIMENTO CTE,
+                           F0.DT_PREV_ENTREGA LEADTIME,
                            E2.DESC_LOCALIDADE CIDADE,
                            E2.COD_UF UF,
                            F1.REM_RZ_SOCIAL REMETENTE,       
                            F1.DEST_RZ_SOCIAL DESTINATARIO,
                            F1.VOLUMES,
-                           F1.PESO
+                           F1.PESO,
+                           F1.OBSERVACAO
                     FROM
                            EXA025 E5,       
                            EXA026 E6,
@@ -2837,7 +2838,7 @@ def mdfeporfilial(request):
                            E5.ID_GARAGEM = {k}                              AND
                            BG.STATUS = 'A'                                  AND
                            
-                           BG.DATA_ENVIO BETWEEN ((SYSDATE)-1) AND (SYSDATE)
+                           BG.DATA_ENVIO BETWEEN ((SYSDATE)-2) AND (SYSDATE)
                     """)
         res = dictfetchall(cur)
         cur.close()
@@ -2856,7 +2857,11 @@ def mdfeporfilial(request):
                     '''
             msg.attach(MIMEText(text, 'html', 'utf-8'))
 
-            buffer = io.BytesIO(pdr.to_string().encode('utf-8'))
+            buffer = io.BytesIO()
+            pd.ExcelWriter(buffer)
+            pdr['SAIDA_VEIC'] = pd.to_datetime(pdr['SAIDA_VEIC'], format='%d/%m/%Y').dt.strftime('%d/%m/%Y')
+            pdr['CHEGADA_VEIC'] = pd.to_datetime(pdr['CHEGADA_VEIC'], format='%d/%m/%Y').dt.strftime('%d/%m/%Y')
+            pdr['LEADTIME'] = pd.to_datetime(pdr['LEADTIME'], format='%d/%m/%Y').dt.strftime('%d/%m/%Y')
             pdr.to_excel(buffer, engine='xlsxwriter', index=False)
             part = MIMEApplication(buffer.getvalue(), name=v)
             part['Content-Disposition'] = 'attachment; filename=%s.xlsx' % v
@@ -2869,6 +2874,7 @@ def mdfeporfilial(request):
                 sm.sendmail(get_secret('EUSER_MN'), send, msg.as_string())
             except Exception as e:
                 raise e
+            break
     return HttpResponse('<h3>Job finalizado!</h3>')
 
 def bipagemdocrel(request):
