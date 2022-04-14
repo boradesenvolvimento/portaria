@@ -1467,7 +1467,8 @@ def romaneioxml(request):
     return render(request, 'portaria/etc/romaneioindex.html')
 
 def painelromaneio(request):
-    context = RomXML.objects.all().order_by('-pub_date')
+    context = RomXML.objects.all().filter(pub_date__month=datetime.datetime.now().month,
+                                          pub_date__year=datetime.datetime.now().year).order_by('-pub_date')
     getrem = RomXML.objects.all().values_list('remetente', flat=True).distinct()
     if request.method == 'GET':
         dt1 = request.GET.get('data1')
@@ -2729,25 +2730,35 @@ def printetiquetas(array):
 def mdfeporfilial(request):
     hoje = datetime.date.today()
     gachoices = GARAGEM_CHOICES
-    mailchoices = {'TCO': ['juliano.oliveira@borexpress.com.br', 'lino.loureiro@borexpress.com.br'],
+    mailchoices = {'SPO': [''],
+                   'MG':  [''],
+                   'TMA': [''],
+                   'BMA': [''],
+                   'BPE': [''],
+                   'BPB': [''],
+                   'BAL': [''],
+                   'TCO': ['juliano.oliveira@borexpress.com.br', 'lino.loureiro@borexpress.com.br',
+                           'rogeria.loureiro@borexpress.com.br'],
                    'VIX': ['mauricio@bora.com.br', 'ocorrenciavix@bora.com.br'],
-                   'CTG': ['Silvana.dily@borexpress.com.br', 'Ygor.henrique@borexpress.com.br',
-                           'Fausto@borexpress.com.br'],
-                   'MCZ': ['mcz@bora.com.br', 'Elicarlos.santos@bora.com.br'],
-                   'SSA': ['raphael.oliveira@bora.com.br', 'fernando.malaquias@bora.com.br'],
+                   'UDI': ['marcus.silva@borexpress.com.br', 'tulio.pereira@borexpress.com.br'],
+                   'CTG': ['silvana.dily@borexpress.com.br', 'ygor.henrique@borexpress.com.br',
+                           'fausto@borexpress.com.br'],
+                   'MCZ': ['rafael@bora.com.br', 'elicarlos.santos@bora.com.br','valmir.silva@bora.com.br'],
+                   'SSA': ['raphael.oliveira@bora.com.br', 'fernando.malaquias@bora.com.br'
+                           'brandao.alan@bora.com.br'],
                    'NAT': ['ronnielly@bora.com.br', 'lindalva@bora.com.br', 'lidianne@bora.com.br'],
-                   'SLZ': ['felipe@bora.com.br', 'eliana.lopes@transbono.com.br'],
-                   'THE': ['felipe@bora.com.br', 'ricardo.moura@transbono.com.br'],
-                   'BEL': ['felipe@bora.com.br', 'leonardo.gomes@transbono.com.br'],
+                   'SLZ': ['felipe@bora.com.br'],
+                   'THE': ['felipe@bora.com.br'],
+                   'BEL': ['felipe@bora.com.br'],
                    'VDC': ['jose.sousa@bora.com.br', 'fernando.sousa@bora.com.br'],
-                   'REC': ['geane.mendes@bora.com.br'],
-                   'AJU': ['Victor.hugo@bora.com.br'],
-                   'JPB': ['Patrícia.lima@bora.com.br'],
-                   'FOR': ['luciano@bora.com.br']
+                   'REC': ['glauercio.neto@bora.com.br','marlon.goncalves@bora.com.br'],
+                   'AJU': ['victor.hugo@bora.com.br'],
+                   'JPA': ['patricia.lima@bora.com.br'],
+                   'FOR': ['luciano@bora.com.br', 'erlandia@bora.com.br']
                    }
     for k, v in gachoices:
         result = mailchoices.get(v, '')
-        send = ['renan.amarantes@bora.com.br', 'alan@bora.com.br']
+        send = ['renan.amarantes@bora.com.br'] + result
         conn = settings.CONNECTION
         cur = conn.cursor()
         cur.execute(f"""
@@ -2756,6 +2767,7 @@ def mdfeporfilial(request):
                            E5.DATA_SAIDA SAIDA_VEIC,
                            CASE
                                WHEN E5.DATA_CHEGADA <> '30/12/1899' THEN (TO_DATE(E5.DATA_CHEGADA,'DD-MM-YY HH24:MI:SS'))
+                               WHEN E5.DATA_CHEGADA IS NULL AND E5.DT_PREVISAO = '30-12-1899' THEN NULL
                                WHEN E5.DATA_CHEGADA IS NULL THEN (TO_DATE(E5.DT_PREVISAO,'DD-MM-YY HH24:MI:SS'))
                            END CHEGADA_VEIC,
                            CASE
@@ -2838,7 +2850,7 @@ def mdfeporfilial(request):
                            E5.ID_GARAGEM = {k}                              AND
                            BG.STATUS = 'A'                                  AND
                            
-                           BG.DATA_ENVIO BETWEEN ((SYSDATE)-2) AND (SYSDATE)
+                           BG.DATA_ENVIO BETWEEN ((SYSDATE)-1) AND (SYSDATE)
                     """)
         res = dictfetchall(cur)
         cur.close()
@@ -2848,12 +2860,15 @@ def mdfeporfilial(request):
             msg['From'] = get_secret('EUSER_MN')
             msg['To'] = '; '.join(send)
             msg['Subject'] = f'MDFEs por Filial: {v}'
-            text = f'''Prezados,
-                       Segue relação de MDFEs gerado pela matriz a caminho da filial {v}. 
-                       
-                       --- para setor de desenvolvimento ---
-                       lista de emails para serem enviados após subir sistema online.
-                       {'; '.join(result)} 
+            text = f'''Prezados,\n
+                       Segue relação de MDFEs gerado pela matriz a caminho da filial {v}.
+                       \n
+                       Lembrando que estamos em período de teste até 30/04, dúvidas e sugestões gentileza entrar 
+                       em contato,
+                       \n
+                       Atenciosamente,\n
+                       Bora Desenvolvimento.
+                       {'; '.join(result)}
                     '''
             msg.attach(MIMEText(text, 'html', 'utf-8'))
 
@@ -2874,7 +2889,8 @@ def mdfeporfilial(request):
                 sm.sendmail(get_secret('EUSER_MN'), send, msg.as_string())
             except Exception as e:
                 raise e
-            break
+
+
     return HttpResponse('<h3>Job finalizado!</h3>')
 
 def bipagemdocrel(request):
