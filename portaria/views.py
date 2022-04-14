@@ -2758,7 +2758,7 @@ def mdfeporfilial(request):
                    }
     for k, v in gachoices:
         result = mailchoices.get(v, '')
-        send = ['renan.amarantes@bora.com.br'] + result
+        send = ['renan.amarantes@bora.com.br', 'alan@bora.com.br', 'thiago@bora.com.br'] + result
         conn = settings.CONNECTION
         cur = conn.cursor()
         cur.execute(f"""
