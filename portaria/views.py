@@ -11,7 +11,6 @@ import socket
 import tempfile
 import textwrap
 import poplib
-import requests
 from collections import Counter
 from email.mime.base import MIMEBase
 from io import BytesIO
