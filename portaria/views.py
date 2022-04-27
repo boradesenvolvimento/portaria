@@ -1,5 +1,6 @@
 #imports geral
 import io
+import json
 import random
 import csv
 import datetime
@@ -10,6 +11,7 @@ import socket
 import tempfile
 import textwrap
 import poplib
+import requests
 from collections import Counter
 from email.mime.base import MIMEBase
 from io import BytesIO
@@ -205,7 +207,7 @@ def paleteview(request):
 
 def cadpaletes(request):
     tp_fil = TIPO_GARAGEM
-    tp_emp = Cliente.objects.all()
+    tp_emp = Cliente.objects.all().order_by('razao_social')
     if request.method == 'POST':
         qnt = request.POST.get('qnt')
         fil = request.POST.get('fil')
@@ -229,7 +231,7 @@ def cadpaletes(request):
     return render(request, 'portaria/palete/cadpaletes.html', {'tp_fil':tp_fil, 'tp_emp':tp_emp})
 
 def paletecliente(request):
-    form = Cliente.objects.filter(intex='CLIENTE')
+    form = Cliente.objects.filter(~Q(saldo=0), intex='CLIENTE').order_by('razao_social')
     tcount = form.aggregate(total=Sum('saldo'))
     return render(request, 'portaria/palete/paletecliente.html', {'form':form,'tcount':tcount})
 
@@ -1824,17 +1826,27 @@ def get_portaria_csv(request):
     return response
 
 def get_palete_csv(request):
-    response = HttpResponse(content_type='text/csv',
-                            headers={'Content-Disposition':'attachment; filename="paletes.csv"'})
-    response.write(u'\ufeff'.encode('utf8'))
-    writer = csv.writer(response)
-    writer.writerow(['id','loc_atual','empresa','ultima_viagem','origem','destino','placa_veic','autor'])
-    palete = PaleteControl.objects.all().values_list(
-        'id', 'loc_atual', 'empresa__razao_social','movpalete__data_ult_mov', 'movpalete__origem', 'movpalete__destino', 'movpalete__placa_veic','movpalete__autor__username'
-    )
-    for id in palete:
-        writer.writerow(id)
-    return response
+    array = []
+    date1 = request.POST.get('date1')
+    date2 = request.POST.get('date2')
+    palete = MovPalete.objects.filter(data_ult_mov__lte=date2, data_ult_mov__gte=date1)
+    if palete:
+        for q in palete:
+            array.append({'origem':q.origem, 'destino':q.destino, 'data_ult_mov':q.data_ult_mov, 'placa':q.placa_veic,
+                          'autor':q.autor, 'tipo':q.palete.tp_palete})
+        df = pd.DataFrame(array)
+        buffer = io.BytesIO(df.to_string().encode('utf-8'))
+        df.to_excel(buffer, engine='xlsxwriter', index=False)
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = f'attachment; filename="teste.xlsx"'
+        writer = pd.ExcelWriter(response, engine='xlsxwriter')
+        df.to_excel(writer, 'sheet1', index=False)
+        writer.save()
+        return response
+    else:
+        messages.error(request, 'Não encontrado valores para esta data')
+        return redirect('portaria:paleteview')
+
 
 def get_manu_csv(request):
     array = []
@@ -2744,7 +2756,7 @@ def mdfeporfilial(request):
                    'CTG': ['silvana.dily@borexpress.com.br', 'ygor.henrique@borexpress.com.br',
                            'fausto@borexpress.com.br'],
                    'MCZ': ['rafael@bora.com.br', 'elicarlos.santos@bora.com.br','valmir.silva@bora.com.br'],
-                   'SSA': ['raphael.oliveira@bora.com.br', 'fernando.malaquias@bora.com.br'
+                   'SSA': ['raphael.oliveira@bora.com.br', 'fernando.malaquias@bora.com.br',
                            'brandao.alan@bora.com.br'],
                    'NAT': ['ronnielly@bora.com.br', 'lindalva@bora.com.br', 'lidianne@bora.com.br'],
                    'SLZ': ['felipe@bora.com.br'],
