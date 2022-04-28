@@ -2769,16 +2769,15 @@ def mdfeporfilial(request):
                    }
     for k, v in gachoices:
         result = mailchoices.get(v, '')
-        send = ['renan.amarantes@bora.com.br', 'alan@bora.com.br', 'thiago@bora.com.br'] + result
         conn = settings.CONNECTION
         cur = conn.cursor()
         cur.execute(f"""
-                    SELECT 
+                    SELECT DISTINCT
                            E5.CODIGO MDFE,
                            E5.DATA_SAIDA SAIDA_VEIC,
                            CASE
-                               WHEN E5.DATA_CHEGADA <> '30/DEC/1899' THEN (TO_DATE(E5.DATA_CHEGADA,'DD-MM-YY HH24:MI:SS'))
-                               WHEN E5.DATA_CHEGADA IS NULL AND E5.DT_PREVISAO = '30-DEC-1899' THEN NULL
+                               WHEN E5.DATA_CHEGADA <> '30/12/1899' THEN (TO_DATE(E5.DATA_CHEGADA,'DD-MM-YY HH24:MI:SS'))
+                               WHEN E5.DATA_CHEGADA IS NULL AND E5.DT_PREVISAO = '30-12-1899' THEN NULL
                                WHEN E5.DATA_CHEGADA IS NULL THEN (TO_DATE(E5.DT_PREVISAO,'DD-MM-YY HH24:MI:SS'))
                            END CHEGADA_VEIC,
                            CASE
@@ -2819,18 +2818,20 @@ def mdfeporfilial(request):
                            F1.DEST_RZ_SOCIAL DESTINATARIO,
                            F1.VOLUMES,
                            F1.PESO,
-                           F1.OBSERVACAO
+                           F1.OBSERVACAO,
+                           C1.DESCRICAO_PROD
                     FROM
                            EXA025 E5,       
                            EXA026 E6,
                            FTA001 F1,
                            FTA011 F0,
+                           FTA014 F4,
                            EXA002 E2,
+                           CMA041 C1,
                            
                            BGM_MDF_ELETRONICO BG,
                            VWCGS_FUNCIONARIOSCOMAGREGADO MO,
                            FRT_CADVEICULOS VE
-                           
                     WHERE 
                            E5.RECNUM = BG.RECNUM_EXA025                     AND
                            
@@ -2846,7 +2847,15 @@ def mdfeporfilial(request):
                            E6.FILIAL = F1.FILIAL                            AND
                            E6.GARAGEM = F1.GARAGEM                          AND
                            E6.SERIE_CTRC = F1.SERIE                         AND
-                           E6.NUMERO_CTRC = F1.CONHECIMENTO                 AND
+                           E6.NUMERO_CTRC = F1.CONHECIMENTO                 AND                           
+                                                      
+                           F1.EMPRESA = F4.EMPRESA                          AND
+                           F1.FILIAL = F4.FILIAL                            AND
+                           F1.GARAGEM = F4.GARAGEM                          AND
+                           F1.SERIE = F4.SERIE                              AND
+                           F1.CONHECIMENTO = F4.CONHECIMENTO                AND
+                           
+                           F4.ITEM_GRUPO = C1.CODIGO                        AND 
                            
                            F1.LOCALID_ENTREGA = E2.COD_LOCALIDADE           AND
                            
@@ -2867,6 +2876,54 @@ def mdfeporfilial(request):
         cur.close()
         pdr = pd.DataFrame(res)
         if not pdr.empty:
+            send = ['renan.amarantes@bora.com.br', 'alan@bora.com.br', 'thiago@bora.com.br'] + result
+            #Separa congelado inicio
+            if k in ('6','7'):
+                resultrec = mailchoices.get('REC', '')
+                try:
+                    row = pdr.loc[pdr['DESCRICAO_PROD'] == 'CONGELADO']
+                except Exception as e:
+                    print(f'Error:{e}, error_type:{type(e).__name__}')
+                else:
+                    pdr = pdr.drop(row.index)
+                    if not row.empty:
+                        send2 = ['renan.amarantes@bora.com.br', 'alan@bora.com.br', 'thiago@bora.com.br'] + resultrec
+                        msg = MIMEMultipart('related')
+                        msg['From'] = get_secret('EUSER_MN')
+                        msg['To'] = '; '.join(send2)
+                        msg['Subject'] = f'MDFEs por Filial: {v}'
+                        text = f'''Prezados,\n
+                               Segue relação de MDFEs gerado pela matriz a caminho da filial {v}.
+                               \n
+                               Lembrando que estamos em período de teste até 30/04, dúvidas e sugestões gentileza entrar
+                               em contato,
+                               \n
+                               Atenciosamente,\n
+                               Bora Desenvolvimento.
+                               {'; '.join(resultrec)}
+                            '''
+                        msg.attach(MIMEText(text, 'html', 'utf-8'))
+
+                        buffer = io.BytesIO()
+                        pd.ExcelWriter(buffer)
+                        row['SAIDA_VEIC'] = pd.to_datetime(row['SAIDA_VEIC'], format='%d/%m/%Y').dt.strftime('%d/%m/%Y')
+                        row['CHEGADA_VEIC'] = pd.to_datetime(row['CHEGADA_VEIC'], format='%d/%m/%Y').dt.strftime(
+                            '%d/%m/%Y')
+                        row['LEADTIME'] = pd.to_datetime(row['LEADTIME'], format='%d/%m/%Y').dt.strftime('%d/%m/%Y')
+                        row.to_excel(buffer, engine='xlsxwriter', index=False)
+                        part = MIMEApplication(buffer.getvalue(), name=v)
+                        part['Content-Disposition'] = 'attachment; filename=%s.xlsx' % v
+
+                        msg.attach(part)
+                        try:
+                            sm = smtplib.SMTP('smtp.bora.com.br', '587')
+                            sm.set_debuglevel(1)
+                            sm.login(get_secret('EUSER_MN'), get_secret('EPASS_MN'))
+                            sm.sendmail(get_secret('EUSER_MN'), send2, msg.as_string())
+                        except Exception as e:
+                            raise e
+                        # Separa congelado fim
+
             msg = MIMEMultipart('related')
             msg['From'] = get_secret('EUSER_MN')
             msg['To'] = '; '.join(send)
