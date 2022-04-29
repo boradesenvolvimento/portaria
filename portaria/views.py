@@ -2776,8 +2776,8 @@ def mdfeporfilial(request):
                            E5.CODIGO MDFE,
                            E5.DATA_SAIDA SAIDA_VEIC,
                            CASE
-                               WHEN E5.DATA_CHEGADA <> '30/12/1899' THEN (TO_DATE(E5.DATA_CHEGADA,'DD-MM-YY HH24:MI:SS'))
-                               WHEN E5.DATA_CHEGADA IS NULL AND E5.DT_PREVISAO = '30-12-1899' THEN NULL
+                               WHEN E5.DATA_CHEGADA <> '30/DEC/1899' THEN (TO_DATE(E5.DATA_CHEGADA,'DD-MM-YY HH24:MI:SS'))
+                               WHEN E5.DATA_CHEGADA IS NULL AND E5.DT_PREVISAO = '30-DEC-1899' THEN NULL
                                WHEN E5.DATA_CHEGADA IS NULL THEN (TO_DATE(E5.DT_PREVISAO,'DD-MM-YY HH24:MI:SS'))
                            END CHEGADA_VEIC,
                            CASE
