@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load groupscheck %}
+{% if request.user|has_group:"paletes" %}
+<style>
+    .smallcap td{
+        font-size:11px;
+    }
+</style>
+        <div class="container mt-5">
+            {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+            {% endfor %}
+            <div class="row linha-baixo">
+                <h2 class="title-cad col-6">Relatórios Justificativas</h2>
+
+            </div>
+            <div class="container">
+                <div class="row linha-baixo">
+                    <h2>Porcentagem entregas</h2>
+                    <form method="post" id="pivot_rel_just" enctype='multipart/form-data'>{% csrf_token %}
+                        <input type="hidden" name="pivot_rel_just" value="pivot_rel_just">
+                        <label for="periodo">Período:</label>
+                        <input type="date" name="date1" id="periodo">
+                        <input type="date" name="date2">
+                        <label for="filial">Filial:</label>
+                        <select id="filial" name="filial">
+                            <option></option>
+                            {% for k,v in gachoices %}
+                                <option value="{{ k }}">{{ v }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit">Download</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+{% endblock %}

@@ -13,7 +13,7 @@
             <div class="row linha-baixo">
                 <h2 class="title-cad col-9">Quantidade de Paletes por garagem</h2>
                 <div class="col-9">
-                    <h2 class="title-cad">Total: {{ ttcount.total_amount }}</h2>
+                    <h2 class="title-cad">Total: {{ ttcount.total_amount|default_if_none:'0' }}</h2>
                 </div>
                 <div class="col-3">
                     <form method="get">

@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load groupscheck %}
+{% if request.user|has_group:"paletes" %}
+<style>
+    .smallcap td{
+        font-size:11px;
+    }
+</style>
+        <div class="container mt-5">
+            {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+            {% endfor %}
+            <div class="row linha-baixo">
+                <h2 class="title-cad col-6">Quantidade</h2>
+                <div class="col-6">
+                    <form method="get">
+                    <label for="dates">Período:</label>
+                    <input type="date" name="data1" id="dates">
+                    <input type="date" name="data2">
+                    <label for="filial">Filial:</label>
+                    <select name="filial" id="filial">
+                        <option></option>
+                        {% for t,p in gachoices %}
+                            <option value="{{ t }}">{{ p }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit">Filtrar</button>
+                    </form>
+                </div>
+            </div>
+            <div class="row" style="margin-left: 6rem;">
+            <form method="post" id="formgroup">{% csrf_token %}
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>CTE</th>
+                    <th>Emissão</th>
+                    <th>Remetente</th>
+                    <th>Destinatário</th>
+                    <th>Peso</th>
+                    <th>LeadTime</th>
+                    <th>Em Aberto</th>
+                    <th>Entrega</th>
+                    <th>Nota Fiscal</th>
+                    <th>Justificativa</th>
+                </tr>
+                </thead>
+                <tbody>
+
+                {% for f in form %}
+                    <tr class="smallcap">
+                        <td>{{ f.conhecimento }}</td>
+                        <td>{{ f.data_emissao }}</td>
+                        <td>{{ f.remetente }}</td>
+                        <td>{{ f.destinatario }}</td>
+                        <td>{{ f.peso }}</td>
+                        <td>{{ f.lead_time }}</td>
+                        <td>{{ f.em_aberto }}</td>
+                        <td>{{ f.local_entreg }}</td>
+                        <td>{{ f.nota_fiscal }}</td>
+                        <td><select name="ocor" style="font-size:10px;">
+                            {% for k,v in justchoices %}
+                            <option value="{{ k }}">{{ v }}</option>
+                            {% endfor %}
+                            </select>
+                            <input type="hidden" name="idobj" value="{{ f.id }}">
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            </form>
+                <button class="col-1" type="button" id="bot">Lançar</button>
+            </div>
+        </div>
+
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+<script>
+    $(document).ready(function(){
+        var array = []
+        var botao = document.getElementById('bot');
+        $(botao).click(function (){
+            var data = document.getElementsByName('ocor');
+            var data2 = document.getElementsByName('idobj');
+            if(data.length == data2.length){
+                for(i=0; data[i]; i++){
+                    var toinsert = {'id':data2[i].value,'ocorr':data[i].value}
+                    array.push(toinsert)
+                }
+                console.log(array)
+                $.ajax({
+                    type: "POST",
+                    url: "{% url 'portaria:justificativa' %}",
+                    headers: {
+                        "X-CSRFToken": "{{ csrf_token }}"
+                    },
+                    data: {'vals':JSON.stringify(array)},
+                    success: function (msg){
+                             if(msg == 200){
+                                location.reload();
+                             }},
+                    error: function (err)
+                            { alert(err.responseText)}
+                });
+            }else{
+                console.log('erro dados diferem');
+            };
+        });
+    });
+</script>
+{% endblock %}

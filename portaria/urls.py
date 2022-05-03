@@ -72,6 +72,8 @@ urlpatterns = [
     path('chamados/chamadoreadmail', views.chamadoreadmail, name='chamadoreadmail'),
     path('replymail_monitoramento/<tktid>', views.replymail_monitoramento, name='replymail_monitoramento'),
     path(r'mailferias/<int:idfpj>', views.mailferias, name='mailferias'),
+    path('justificativa/', views.justificativa, name='justificativa'),
+    path('relatorios-just/', views.rel_justificativa, name='rel_justificativa'),
     path('outputs/', views.outputs, name='outputs'),
     path(r'edibuilder/', views.ediexceltosd1, name='ediexceltosd1'),
     path(r'ediexample/', views.exedicorreios, name='exedicorreios'),
@@ -94,6 +96,8 @@ urlpatterns = [
     path(r'allreadnotify/<user>', views.setallread, name='setallread'),
     path(r'vncmtnotifymanu/', views.notifymanutencaovencidos, name='notifymanutencaovencidos'),
     path('mdfeporfilial/', views.mdfeporfilial, name='mdfeporfilial'),
-    path(r'modaltkt/', views.modaltkt, name='modaltkt')
+    path(r'modaltkt/', views.modaltkt, name='modaltkt'),
+    path('testezito/', views.testezito, name='testezito'),
+    path('testapi/', views.TestApi.conn, name='testapi')
 
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

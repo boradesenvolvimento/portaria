@@ -80,7 +80,8 @@ GARAGEM_CHOICES = [
         ('33', 'BPB'),
         ('34', 'SLZ'),
         ('35', 'BAL'),
-        ('36', 'THE')
+        ('36', 'THE'),
+        ('40', 'FMA')
     ]
 # Create your models here.
 
@@ -701,4 +702,37 @@ class BipagemPalete(models.Model):
     manifesto = models.IntegerField(blank=True, null=True)
     autor = models.ForeignKey(User, on_delete=models.CASCADE)
     etq_ref = models.ForeignKey(EtiquetasPalete, on_delete=models.CASCADE)
+
+class JustificativaEntrega(models.Model):
+    JUSTIFICATIVA_CHOICES = (
+        ('143', 'FERIADO NACIONAL'),
+        ('144', 'FERIADOS MUNICIPAIS / ESTADUAIS'),
+        ('145', 'ENTREGA AGENDADA'),
+        ('146', 'CLIENTE COM RETENÇÃO FISCAL'),
+        ('147', 'DESTINATARIO NÃO RECEBEU O XML'),
+        ('148', 'NF SEM PEDIDO'),
+        ('149', 'PEDIDO EXPIRADO'),
+        ('150', 'EXCESSO DE VEICULOS'),
+        ('151', 'GRADE FIXA'),
+        ('152', 'DEVOLUÇÃO TOTAL '),
+        ('153', 'ATRASO NA TRANSFERENCIA'),
+        ('154', 'CUSTO'),
+        ('155', 'OCORRENCIA OPERACIONAL INTERNA')
+    )
+    empresa = models.CharField(max_length=5)
+    filial = models.CharField(max_length=5)
+    garagem = models.CharField(max_length=5)
+    id_garagem = models.CharField(max_length=5)
+    conhecimento = models.CharField(max_length=15)
+    data_emissao = models.DateField()
+    destinatario = models.CharField(max_length=200)
+    remetente = models.CharField(max_length=200)
+    peso = models.FloatField()
+    lead_time = models.DateField()
+    em_aberto = models.SmallIntegerField()
+    local_entreg = models.CharField(max_length=100)
+    nota_fiscal = models.CharField(max_length=200)
+    cod_just = models.CharField(max_length=3, blank=True, null=True)
+    desc_just = models.CharField(max_length=100, blank=True, null=True)
+    autor = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
 

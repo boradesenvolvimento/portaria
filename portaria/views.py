@@ -1,4 +1,5 @@
 #imports geral
+import asyncio
 import io
 import json
 import random
@@ -25,6 +26,8 @@ from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from email.utils import make_msgid
 
+import requests
+from asgiref.sync import sync_to_async
 from django.utils.crypto import get_random_string
 from notifications.models import Notification
 from notifications.signals import notify
@@ -2762,7 +2765,7 @@ def mdfeporfilial(request):
                    'THE': ['felipe@bora.com.br'],
                    'BEL': ['felipe@bora.com.br'],
                    'VDC': ['jose.sousa@bora.com.br', 'fernando.sousa@bora.com.br'],
-                   'REC': ['glauercio.neto@bora.com.br','marlon.goncalves@bora.com.br'],
+                   'REC': ['cinthya.souza@bora.com.br', 'patricia.santos@bora.com.br', 'edvanio.silva@bora.com.br'],
                    'AJU': ['victor.hugo@bora.com.br'],
                    'JPA': ['patricia.lima@bora.com.br'],
                    'FOR': ['luciano@bora.com.br', 'erlandia@bora.com.br']
@@ -2818,8 +2821,8 @@ def mdfeporfilial(request):
                            F1.DEST_RZ_SOCIAL DESTINATARIO,
                            F1.VOLUMES,
                            F1.PESO,
-                           F1.OBSERVACAO,
-                           C1.DESCRICAO_PROD
+                           C1.DESCRICAO_PROD,
+                           F1.OBSERVACAO
                     FROM
                            EXA025 E5,       
                            EXA026 E6,
@@ -2891,16 +2894,13 @@ def mdfeporfilial(request):
                         msg = MIMEMultipart('related')
                         msg['From'] = get_secret('EUSER_MN')
                         msg['To'] = '; '.join(send2)
-                        msg['Subject'] = f'MDFEs por Filial: {v}'
+                        msg['Subject'] = f'MDFEs por Filial: REC'
                         text = f'''Prezados,\n
-                               Segue relação de MDFEs gerado pela matriz a caminho da filial {v}.
+                               Segue relação de MDFEs gerado pela matriz a caminho da filial REC.
                                \n
-                               Lembrando que estamos em período de teste até 30/04, dúvidas e sugestões gentileza entrar
-                               em contato,
                                \n
                                Atenciosamente,\n
                                Bora Desenvolvimento.
-                               {'; '.join(resultrec)}
                             '''
                         msg.attach(MIMEText(text, 'html', 'utf-8'))
 
@@ -2931,12 +2931,9 @@ def mdfeporfilial(request):
             text = f'''Prezados,\n
                        Segue relação de MDFEs gerado pela matriz a caminho da filial {v}.
                        \n
-                       Lembrando que estamos em período de teste até 30/04, dúvidas e sugestões gentileza entrar 
-                       em contato,
                        \n
                        Atenciosamente,\n
                        Bora Desenvolvimento.
-                       {'; '.join(result)}
                     '''
             msg.attach(MIMEText(text, 'html', 'utf-8'))
 
@@ -3020,3 +3017,141 @@ def bipagempalrel(request):
             messages.error(request, 'Valores faltando, por favor verifique.')
     return redirect('portaria:etqrelatorio')
 
+def justificativa(request):
+    gachoices = GARAGEM_CHOICES
+    justchoices = JustificativaEntrega.JUSTIFICATIVA_CHOICES
+    if request.method == 'GET':
+        date1 = request.GET.get('data1')
+        date2 = request.GET.get('data2')
+        filial = request.GET.get('filial')
+        if date1 and date2 and filial:
+            form = JustificativaEntrega.objects.filter(id_garagem=filial, data_emissao__lte=date2, data_emissao__gte=date1,
+                                                       cod_just__isnull=True, desc_just__isnull=True)
+            return render(request,'portaria/etc/justificativa.html', {'form':form,'gachoices':gachoices,
+                                                                      'justchoices':justchoices})
+    if request.method == 'POST':
+        lista = json.loads(request.POST.get('vals'))
+        for q in lista:
+            result = dict(justchoices).get(q['ocorr'])
+            try:
+                obj = get_object_or_404(JustificativaEntrega, pk=q['id'])
+            except Exception as e:
+                print(f'Error:{e}, error_type:{type(e).__name__}')
+            else:
+                JustificativaEntrega.objects.filter(pk=obj.id).update(cod_just=q['ocorr'], desc_just=result,
+                                                                      autor=request.user)
+        messages.success(request, 'Justificativas cadastradas')
+        return HttpResponse('200')
+    return render(request, 'portaria/etc/justificativa.html', {'gachoices': gachoices})
+
+def rel_justificativa(request):
+    gachoices = GARAGEM_CHOICES
+
+    if request.method == 'POST':
+        if 'pivot_rel_just' in request.POST:
+            date1 = request.POST.get('date1')
+            date2 = request.POST.get('date2')
+            fil = request.POST.get('filial')
+            pivot_rel_just(date1=date1, date2=date2, fil=fil)
+    return render(request, 'portaria/etc/rel_justificativa.html', {'gachoices': gachoices})
+
+async def testezito(request):
+    print('iniciando')
+    conn = settings.CONNECTION
+    cur = conn.cursor()
+    print('conectado')
+    cur.execute(f"""
+                    SELECT 
+                           F1.EMPRESA,
+                           F1.FILIAL,
+                           F1.GARAGEM,
+                           F1.ID_GARAGEM, 
+                           F1.CONHECIMENTO,
+                           F1.DATA_EMISSAO,
+                           F1.REM_RZ_SOCIAL,
+                           F1.DEST_RZ_SOCIAL,
+                           F1.PESO,
+                           CASE
+                               WHEN F11.DT_PREV_ENTREGA IS NULL THEN '01-JAN-0001'
+                               WHEN F11.DT_PREV_ENTREGA IS NOT NULL THEN TO_CHAR(F11.DT_PREV_ENTREGA, 'DD-MM-YYYY') 
+                           END DT_PREV_ENTREGA,
+                           CASE 
+                                WHEN (TRUNC((MIN(F11.DT_PREV_ENTREGA))-(SYSDATE))*-1) >= 0 THEN (TRUNC((MIN(F11.DT_PREV_ENTREGA))-(SYSDATE))*-1)
+                                WHEN (TRUNC((MIN(F11.DT_PREV_ENTREGA))-(SYSDATE))*-1) < 0 THEN 0
+                           END EM_ABERTO_APOS_LEAD_TIME,
+                           E2.DESC_LOCALIDADE || '-' || E2.COD_UF DESTINO,
+                           LISTAGG ((LTRIM (F4.NOTA_FISCAL,0)), ' / ') WITHIN GROUP (ORDER BY F1.CONHECIMENTO) NF
+                           
+                    FROM 
+                         FTA001 F1,
+                         FTA011 F11,
+                         EXA002 E2,
+                         FTA004 F4
+                         
+                    WHERE
+                         F1.LOCALID_ENTREGA = E2.COD_LOCALIDADE AND
+                         
+                         F1.EMPRESA = F11.EMPRESA               AND
+                         F1.FILIAL = F11.FILIAL                 AND
+                         F1.GARAGEM = F11.GARAGEM               AND
+                         F1.SERIE = F11.SERIE                   AND
+                         F1.CONHECIMENTO = F11.CONHECIMENTO     AND
+                         
+                         F1.EMPRESA = F4.EMPRESA                AND
+                         F1.FILIAL = F4.FILIAL                  AND
+                         F1.GARAGEM = F4.GARAGEM                AND
+                         F1.CONHECIMENTO = F4.CONHECIMENTO      AND
+                         F1.SERIE = F4.SERIE                    AND
+                         
+                         F1.DATA_EMISSAO BETWEEN ((SYSDATE)-3) AND (SYSDATE)
+                         
+                    GROUP BY
+                           F1.EMPRESA,
+                           F1.FILIAL,
+                           F1.GARAGEM,
+                           F1.ID_GARAGEM,  
+                           F1.CONHECIMENTO,
+                           F1.DATA_EMISSAO,
+                           F1.REM_RZ_SOCIAL,
+                           F1.DEST_RZ_SOCIAL,
+                           F1.PESO,
+                           F11.DT_PREV_ENTREGA,
+                           E2.DESC_LOCALIDADE,
+                           E2.COD_UF                           
+                    """)
+    res = dictfetchall(cur)
+    print('query feita')
+    cur.close()
+    for i in res:
+        try:
+            await insert_to_justificativa(i)
+        except Exception as e:
+            print(f'Error:{e}, error_type:{type(e).__name__}')
+            continue
+    return HttpResponse('job done')
+
+@sync_to_async
+def insert_to_justificativa(obj):
+    print(obj)
+    nobj = JustificativaEntrega.objects.get_or_create(
+        empresa=obj['EMPRESA'], filial=obj['FILIAL'], garagem=obj['GARAGEM'], id_garagem=obj['ID_GARAGEM'],
+        conhecimento=obj['CONHECIMENTO'], data_emissao=obj['DATA_EMISSAO'], destinatario=obj['DEST_RZ_SOCIAL'],
+        remetente=obj['REM_RZ_SOCIAL'], peso=obj['PESO'],
+        lead_time=datetime.datetime.strptime(obj['DT_PREV_ENTREGA'], '%d-%m-%Y'),
+        em_aberto=obj['EM_ABERTO_APOS_LEAD_TIME'], local_entreg=obj['DESTINO'], nota_fiscal=obj['NF']
+    )
+
+def pivot_rel_just(date1, date2, fil):
+    print(date1, date2, fil)
+
+class TestApi:
+    def __init__(self):
+        self.__token = 'Bearer eyJhbGciOiJodHRwOi8vd3d3LnczLm9yZy8yMDAxLzA0L3htbGRzaWctbW9yZSNobWFjLXNoYTUxMiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3VzZXJkYXRhIjoiYnd1T3Q2RnRXN0p5L3lKQnh3QUhENXhQK2tJRk1BalpJWDFYQjRNQ1FUU2g4cjM0QU9rN2Jhd2hvVXJwSVhObyROYkUwcjh1dmZ1bmJLWm1XQVVsdWR3PT0iLCJpc3MiOiJBdXRoQVBJIiwiYXVkIjoiSW50ZWdyYXdheSJ9.u3Ikt1Tn-8j-zJuarsBE7zcHz9DRfQ6GGe7m_y5Olp4nPl8dMaft4V8qL5ptoLO220aCX_b2hcwNdwgElQMC8Q'
+        self.url = f'https://wayds.net:8081/integraway/api/v1/pedido/status?pedido=0000008780&entrega=11099025'
+
+    def conn(self):
+        url = self.url
+        token = self.__token
+        response = requests.get(url, headers={'Authorization':token})
+
+        return HttpResponse(response.json())

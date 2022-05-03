@@ -138,3 +138,6 @@ class BipagemPaleteAdmin(admin.ModelAdmin):
     pass
 admin.site.register(BipagemPalete, BipagemPaleteAdmin)
 
+class JustificativaEntregaAdmin(admin.ModelAdmin):
+    pass
+admin.site.register(JustificativaEntrega, JustificativaEntregaAdmin)
