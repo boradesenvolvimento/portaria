@@ -97,7 +97,6 @@ urlpatterns = [
     path(r'vncmtnotifymanu/', views.notifymanutencaovencidos, name='notifymanutencaovencidos'),
     path('mdfeporfilial/', views.mdfeporfilial, name='mdfeporfilial'),
     path(r'modaltkt/', views.modaltkt, name='modaltkt'),
-    path('testezito/', views.testezito, name='testezito'),
+    path('get_justificativas/', views.get_justificativas, name='get_justificativas'),
     path('testapi/', views.TestApi.conn, name='testapi')
-
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

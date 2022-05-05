@@ -3046,16 +3046,19 @@ def justificativa(request):
 
 def rel_justificativa(request):
     gachoices = GARAGEM_CHOICES
-
     if request.method == 'POST':
         if 'pivot_rel_just' in request.POST:
             date1 = request.POST.get('date1')
             date2 = request.POST.get('date2')
-            fil = request.POST.get('filial')
-            pivot_rel_just(date1=date1, date2=date2, fil=fil)
+            try:
+                response = pivot_rel_just(date1=date1, date2=date2)
+            except Exception as e:
+                print(f'Error: {e}, error_type:{type(e).__name__}')
+            else:
+                return response
     return render(request, 'portaria/etc/rel_justificativa.html', {'gachoices': gachoices})
 
-async def testezito(request):
+async def get_justificativas(request):
     print('iniciando')
     conn = settings.CONNECTION
     cur = conn.cursor()
@@ -3141,17 +3144,23 @@ def insert_to_justificativa(obj):
         em_aberto=obj['EM_ABERTO_APOS_LEAD_TIME'], local_entreg=obj['DESTINO'], nota_fiscal=obj['NF']
     )
 
-def pivot_rel_just(date1, date2, fil):
-    print(date1, date2, fil)
-
-class TestApi:
-    def __init__(self):
-        self.__token = 'Bearer eyJhbGciOiJodHRwOi8vd3d3LnczLm9yZy8yMDAxLzA0L3htbGRzaWctbW9yZSNobWFjLXNoYTUxMiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3VzZXJkYXRhIjoiYnd1T3Q2RnRXN0p5L3lKQnh3QUhENXhQK2tJRk1BalpJWDFYQjRNQ1FUU2g4cjM0QU9rN2Jhd2hvVXJwSVhObyROYkUwcjh1dmZ1bmJLWm1XQVVsdWR3PT0iLCJpc3MiOiJBdXRoQVBJIiwiYXVkIjoiSW50ZWdyYXdheSJ9.u3Ikt1Tn-8j-zJuarsBE7zcHz9DRfQ6GGe7m_y5Olp4nPl8dMaft4V8qL5ptoLO220aCX_b2hcwNdwgElQMC8Q'
-        self.url = f'https://wayds.net:8081/integraway/api/v1/pedido/status?pedido=0000008780&entrega=11099025'
-
-    def conn(self):
-        url = self.url
-        token = self.__token
-        response = requests.get(url, headers={'Authorization':token})
-
-        return HttpResponse(response.json())
+def pivot_rel_just(date1, date2):
+    array = []
+    gachoices = GARAGEM_CHOICES
+    dictga = {k:v for k,v in gachoices}
+    qs = JustificativaEntrega.objects.filter(data_emissao__lte=date2, data_emissao__gte=date1,
+                                             cod_just__isnull=False, desc_just__isnull=False).exclude(garagem=1)
+    for q in qs:
+        array.append({'ID_GARAGEM':dictga[q.id_garagem],'CONHECIMENTO':q.conhecimento, 'DATA_EMISSAO':q.data_emissao,
+                      'REMETENTE':q.remetente,'PESO':q.peso, 'LEAD_TIME':q.lead_time, 'EM_ABERTO':q.em_aberto,
+                      'LOCAL_ENTREGA':q.local_entreg,'NOTA_FISCAL':q.nota_fiscal, 'COD_JUST':q.cod_just,
+                      'DESC_JUST':q.desc_just, 'AUTOR':q.autor})
+    pdr = pd.DataFrame(array)
+    buffer = io.BytesIO(pdr.to_string().encode('utf-8'))
+    pdr.to_excel(buffer, engine='xlsxwriter', index=False)
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = f'attachment; filename=relatorio-justificativa{datetime.date.today()}.xlsx'
+    writer = pd.ExcelWriter(response, engine='xlsxwriter')
+    pdr.to_excel(writer, 'sheet1', index=False)
+    writer.save()
+    return response
