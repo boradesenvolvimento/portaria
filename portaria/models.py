@@ -732,7 +732,19 @@ class JustificativaEntrega(models.Model):
     em_aberto = models.SmallIntegerField()
     local_entreg = models.CharField(max_length=100)
     nota_fiscal = models.CharField(max_length=200)
+    tipo_doc = models.CharField(max_length=5)
     cod_just = models.CharField(max_length=3, blank=True, null=True)
     desc_just = models.CharField(max_length=100, blank=True, null=True)
     autor = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
+
+class OcorrenciaEntrega(models.Model):
+    empresa = models.CharField(max_length=5)
+    filial = models.CharField(max_length=5)
+    garagem = models.CharField(max_length=5)
+    conhecimento = models.CharField(max_length=15)
+    tp_doc = models.CharField(max_length=5)
+    cod_ocor = models.CharField(max_length=5)
+    desc_ocor = models.CharField(max_length=200)
+    data_ocorrencia = models.DateField()
+    entrega = models.ForeignKey(JustificativaEntrega, on_delete=models.CASCADE, blank=True, null=True)
 

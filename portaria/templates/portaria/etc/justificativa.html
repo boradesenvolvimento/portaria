@@ -54,6 +54,7 @@
 
                 {% for f in form %}
                     <tr class="smallcap">
+
                         <td>{{ f.conhecimento }}</td>
                         <td>{{ f.data_emissao }}</td>
                         <td>{{ f.remetente }}</td>
@@ -70,7 +71,28 @@
                             </select>
                             <input type="hidden" name="idobj" value="{{ f.id }}">
                         </td>
+                        <td><button type="button" id="myBtn" value="{{ forloop.counter }}"><ion-icon name="list"></ion-icon></button></td>
                     </tr>
+                        <div id="myModal{{ forloop.counter }}" class="modal">
+                            <div class="modal-content">
+                                <div>
+                                    <span class="title-cad">Ocorrências</span>
+                                    <span class="close col">&times;</span>
+                                </div>
+                                <div class="container tktcontainer">
+                                    {% if f.ocorrenciaentrega_set.all %}
+                                    <ul>
+                                    {% for q in f.ocorrenciaentrega_set.all %}
+                                        <li><p style="margin: 0 0 0 0;">Descrição: <strong>{{ q.desc_ocor }}</strong> -
+                                            Data:<strong>{{ q.data_ocorrencia }}</strong></p></li>
+                                    {% endfor %}
+                                    </ul>
+                                    {% else %}
+                                        <p style="margin: 0 0 0 0;">Nenhuma ocorrencia encontrada.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
                 {% endfor %}
                 </tbody>
             </table>
@@ -78,8 +100,29 @@
                 <button class="col-1" type="button" id="bot">Lançar</button>
             </div>
         </div>
-
 {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+<script>
+    $(document).ready(function(){
+        $("button").click(function(){
+            var btn = $(this);
+            var but = $(this).val();
+            console.log(but)
+            console.log(btn)
+            var modal = document.getElementById("myModal"+but);
+            var span = modal.getElementsByClassName("close")[0];
+            modal.style.display = "block";
+
+            span.onclick = function() {
+                modal.style.display = "none";
+            };
+            window.onclick = function(event) {
+                if (event.target == modal){
+                    modal.style.display = "none";
+                }
+            };
+        });
+    });
+</script>
 <script>
     $(document).ready(function(){
         var array = []

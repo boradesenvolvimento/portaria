@@ -3059,20 +3059,25 @@ def rel_justificativa(request):
     return render(request, 'portaria/etc/rel_justificativa.html', {'gachoices': gachoices})
 
 async def get_justificativas(request):
-    print('iniciando')
     conn = settings.CONNECTION
     cur = conn.cursor()
-    print('conectado')
     cur.execute(f"""
                     SELECT 
                            F1.EMPRESA,
                            F1.FILIAL,
                            F1.GARAGEM,
                            F1.ID_GARAGEM, 
+                           DECODE(F1.TIPO_DOCTO, 8, 'NFS', 'CTE') TP_DOC,
                            F1.CONHECIMENTO,
                            F1.DATA_EMISSAO,
-                           F1.REM_RZ_SOCIAL,
-                           F1.DEST_RZ_SOCIAL,
+                           CASE
+                               WHEN F1.TIPO_DOCTO = 8 THEN TO_CHAR(BC.NFANTASIACLI)
+                               WHEN F1.TIPO_DOCTO = 57 THEN F1.REM_RZ_SOCIAL
+                           END REMETENTE,
+                           CASE 
+                                WHEN F1.TIPO_DOCTO = 8 THEN F11.REC_RZ_SOCIAL
+                                WHEN F1.TIPO_DOCTO = 57 THEN F1.DEST_RZ_SOCIAL
+                           END DESTINATARIO,
                            F1.PESO,
                            CASE
                                WHEN F11.DT_PREV_ENTREGA IS NULL THEN '01-JAN-0001'
@@ -3083,16 +3088,16 @@ async def get_justificativas(request):
                                 WHEN (TRUNC((MIN(F11.DT_PREV_ENTREGA))-(SYSDATE))*-1) < 0 THEN 0
                            END EM_ABERTO_APOS_LEAD_TIME,
                            E2.DESC_LOCALIDADE || '-' || E2.COD_UF DESTINO,
-                           LISTAGG ((LTRIM (F4.NOTA_FISCAL,0)), ' / ') WITHIN GROUP (ORDER BY F1.CONHECIMENTO) NF
-                           
+                           LISTAGG ((LTRIM (F4.NOTA_FISCAL,0)), ' / ') NF                           
                     FROM 
                          FTA001 F1,
                          FTA011 F11,
                          EXA002 E2,
-                         FTA004 F4
-                         
+                         FTA004 F4,
+                         BGM_CLIENTE BC               
                     WHERE
                          F1.LOCALID_ENTREGA = E2.COD_LOCALIDADE AND
+                         F1.CLIENTE_FAT = BC.CODCLI             AND
                          
                          F1.EMPRESA = F11.EMPRESA               AND
                          F1.FILIAL = F11.FILIAL                 AND
@@ -3105,14 +3110,16 @@ async def get_justificativas(request):
                          F1.GARAGEM = F4.GARAGEM                AND
                          F1.CONHECIMENTO = F4.CONHECIMENTO      AND
                          F1.SERIE = F4.SERIE                    AND
-                         
-                         F1.DATA_EMISSAO BETWEEN ((SYSDATE)-3) AND (SYSDATE)
-                         
+                                                                           
+                         F1.DATA_EMISSAO BETWEEN ((SYSDATE)-3) AND (SYSDATE)                         
                     GROUP BY
                            F1.EMPRESA,
                            F1.FILIAL,
                            F1.GARAGEM,
-                           F1.ID_GARAGEM,  
+                           F1.ID_GARAGEM,
+                           F1.TIPO_DOCTO,
+                           BC.NFANTASIACLI,
+                           F11.REC_RZ_SOCIAL,  
                            F1.CONHECIMENTO,
                            F1.DATA_EMISSAO,
                            F1.REM_RZ_SOCIAL,
@@ -3120,7 +3127,7 @@ async def get_justificativas(request):
                            F1.PESO,
                            F11.DT_PREV_ENTREGA,
                            E2.DESC_LOCALIDADE,
-                           E2.COD_UF                           
+                           E2.COD_UF                         
                     """)
     res = dictfetchall(cur)
     print('query feita')
@@ -3138,12 +3145,54 @@ def insert_to_justificativa(obj):
     print(obj)
     nobj = JustificativaEntrega.objects.get_or_create(
         empresa=obj['EMPRESA'], filial=obj['FILIAL'], garagem=obj['GARAGEM'], id_garagem=obj['ID_GARAGEM'],
-        conhecimento=obj['CONHECIMENTO'], data_emissao=obj['DATA_EMISSAO'], destinatario=obj['DEST_RZ_SOCIAL'],
-        remetente=obj['REM_RZ_SOCIAL'], peso=obj['PESO'],
+        conhecimento=obj['CONHECIMENTO'], data_emissao=obj['DATA_EMISSAO'], destinatario=obj['DESTINATARIO'],
+        remetente=obj['REMETENTE'], peso=obj['PESO'], tipo_doc=obj['TP_DOC'],
         lead_time=datetime.datetime.strptime(obj['DT_PREV_ENTREGA'], '%d-%m-%Y'),
         em_aberto=obj['EM_ABERTO_APOS_LEAD_TIME'], local_entreg=obj['DESTINO'], nota_fiscal=obj['NF']
     )
 
+async def get_ocorrencias(request):
+    conn = settings.CONNECTION
+    cur = conn.cursor()
+    cur.execute(f"""
+                    SELECT 
+                           A1.EMPRESA,
+                           A1.FILIAL,
+                           A1.GARAGEM,
+                           A1.NUMERO_CTRC,
+                           A1.TIPO_DOCTO,
+                           A2.CODIGO,
+                           A2.DESCRICAO,
+                           A1.DATA_OCORRENCIA      
+                    FROM 
+                         ACA001 A1,
+                         ACA002 A2
+                    WHERE
+                         A1.COD_OCORRENCIA = A2.CODIGO                    AND
+                         A1.DATA_CADASTRO BETWEEN ((SYSDATE)-3) AND (SYSDATE)                        
+                    """)
+    res = dictfetchall(cur)
+    print('query feita')
+    cur.close()
+    for i in res:
+        try:
+            await insert_to_ocorrencias(i)
+        except Exception as e:
+            print(f'Error:{e}, error_type:{type(e).__name__}')
+            continue
+
+@sync_to_async
+def insert_to_ocorrencias(obj):
+    print(obj)
+    just = JustificativaEntrega.objects.filter(empresa=obj['EMPRESA'], filial=obj['FILIAL'], garagem=obj['GARAGEM'],
+                                               conhecimento=obj['NUMERO_CTRC'])
+    if just:
+        nobj = OcorrenciaEntrega.objects.get_or_create(
+            empresa=obj['EMPRESA'], filial=obj['FILIAL'], garagem=obj['GARAGEM'], conhecimento=obj['NUMERO_CTRC'],
+            tp_doc=obj['TIPO_DOCTO'], cod_ocor=obj['CODIGO'], desc_ocor=obj['DESCRICAO'],
+            data_ocorrencia=obj['DATA_OCORRENCIA'], entrega=just[0]
+        )
+    
 def pivot_rel_just(date1, date2):
     array = []
     gachoices = GARAGEM_CHOICES
@@ -3156,6 +3205,7 @@ def pivot_rel_just(date1, date2):
                       'LOCAL_ENTREGA':q.local_entreg,'NOTA_FISCAL':q.nota_fiscal, 'COD_JUST':q.cod_just,
                       'DESC_JUST':q.desc_just, 'AUTOR':q.autor})
     pdr = pd.DataFrame(array)
+
     buffer = io.BytesIO(pdr.to_string().encode('utf-8'))
     pdr.to_excel(buffer, engine='xlsxwriter', index=False)
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
@@ -3164,3 +3214,15 @@ def pivot_rel_just(date1, date2):
     pdr.to_excel(writer, 'sheet1', index=False)
     writer.save()
     return response
+
+class TestApi:
+    def __init__(self):
+        self.__token = 'Bearer eyJhbGciOiJodHRwOi8vd3d3LnczLm9yZy8yMDAxLzA0L3htbGRzaWctbW9yZSNobWFjLXNoYTUxMiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3VzZXJkYXRhIjoiYnd1T3Q2RnRXN0p5L3lKQnh3QUhENXhQK2tJRk1BalpJWDFYQjRNQ1FUU2g4cjM0QU9rN2Jhd2hvVXJwSVhObyROYkUwcjh1dmZ1bmJLWm1XQVVsdWR3PT0iLCJpc3MiOiJBdXRoQVBJIiwiYXVkIjoiSW50ZWdyYXdheSJ9.u3Ikt1Tn-8j-zJuarsBE7zcHz9DRfQ6GGe7m_y5Olp4nPl8dMaft4V8qL5ptoLO220aCX_b2hcwNdwgElQMC8Q'
+        self.url = f'https://wayds.net:8081/integraway/api/v1/pedido/status?pedido=0000008780&entrega=11099025'
+
+    def conn(self):
+        url = self.url
+        token = self.__token
+        response = requests.get(url, headers={'Authorization':token})
+
+        return HttpResponse(response.json())
