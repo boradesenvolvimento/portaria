@@ -183,6 +183,7 @@ class ServicoPjForm(forms.ModelForm):
             'faculdade',
             'cred_convenio',
             'outros_cred',
+            'aux_moradia',
             'desc_convenio',
             'outros_desc',
             'data_pagamento'

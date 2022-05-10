@@ -128,7 +128,7 @@ class PaleteControl(models.Model):
 
 class MovPalete(models.Model):
     id = models.BigAutoField(primary_key=True)
-    palete = models.ForeignKey(PaleteControl, on_delete=PROTECT)
+    palete = models.ForeignKey(PaleteControl, on_delete=models.CASCADE)
     data_ult_mov = models.DateField(default=timezone.now)
     origem = models.CharField(max_length=3, choices=TIPO_GARAGEM)
     destino = models.CharField(max_length=3, choices=TIPO_GARAGEM)
@@ -353,6 +353,7 @@ class NfServicoPj(models.Model):
     funcionario = models.ForeignKey(FuncPj, on_delete=PROTECT)
     faculdade = models.FloatField()
     cred_convenio = models.FloatField()
+    aux_moradia = models.FloatField()
     outros_cred = models.FloatField()
     desc_convenio = models.FloatField()
     outros_desc = models.FloatField()

@@ -367,10 +367,11 @@ def consultanfpj(request):
             .annotate(faculdade=Coalesce(Sum('nfservicopj__faculdade', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)),Value(0.0)),
             cred_convenio=Coalesce(Sum('nfservicopj__cred_convenio', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)),Value(0.0)),
             outros_cred=Coalesce(Sum('nfservicopj__outros_cred', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)),Value(0.0)),
+            aux_moradia=Coalesce(Sum('nfservicopj__aux_moradia',filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)),Value(0.0)),
             desc_convenio=Coalesce(Sum('nfservicopj__desc_convenio', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)),Value(0.0)),
             outros_desc=Coalesce(Sum('nfservicopj__outros_desc', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)),Value(0.0)),
             ) \
-            .annotate(total=((F('salario') + F('ajuda_custo') + F('faculdade') + F('cred_convenio') + F('outros_cred')) - (F('adiantamento') + F('desc_convenio') + F('outros_desc'))))
+            .annotate(total=((F('salario') + F('ajuda_custo') + F('faculdade') + F('cred_convenio') + F('outros_cred') + F('aux_moradia')) - (F('adiantamento') + F('desc_convenio') + F('outros_desc'))))
         arrya.extend(query)
     return render(request, 'portaria/pj/consultanfpj.html', {'arrya': arrya})
 
@@ -1684,6 +1685,7 @@ def get_nfpj_mail(request):
                 Valor do Serviço: R$ {2:.2f}
                 Prêmios: R$ {6:.2f}
                 Ajuda de custo: R$ {4:.2f}
+                Auxilio moradia: R$ {19:.2f}
                 Forma de Pagamento: R$ {10:.2f}
                 Data de pagamento {18}
                 Serviço Prestado no {0}
@@ -1711,10 +1713,11 @@ def get_nfpj_mail(request):
             .annotate(
              faculdade=Coalesce(Sum('nfservicopj__faculdade',filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)), Value(0.0)),
              cred_convenio=Coalesce(Sum('nfservicopj__cred_convenio', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)), Value(0.0)),
+             aux_moradia=Coalesce(Sum('nfservicopj__aux_moradia', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)), Value(0.0)),
              outros_cred=Coalesce(Sum('nfservicopj__outros_cred', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)), Value(0.0)),
              desc_convenio=Coalesce(Sum('nfservicopj__desc_convenio', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)), Value(0.0)),
              outros_desc=Coalesce(Sum('nfservicopj__outros_desc',filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)), Value(0.0)),
-             ).annotate(total=(F('salario') + F('ajuda_custo') + F('faculdade') + F('cred_convenio') + F('outros_cred') ) - (F('adiantamento') + F('desc_convenio') + F('outros_desc')))
+             ).annotate(total=(F('salario') + F('ajuda_custo') + F('faculdade') + F('cred_convenio') + F('outros_cred') + F('aux_moradia') ) - (F('adiantamento') + F('desc_convenio') + F('outros_desc')))
         arrya.extend(query)
     for q in arrya:
         try:
@@ -1723,7 +1726,7 @@ def get_nfpj_mail(request):
                 message=text.format(
                     q.filial, q.nome, q.salario, q.faculdade, q.ajuda_custo, q.cred_convenio,
                     q.outros_cred, q.adiantamento, q.desc_convenio, q.outros_desc, q.total,
-                    q.cpf_cnpj, q.banco, q.ag, q.conta, q.op, dt_1, dt_2, dt_pgmt,
+                    q.cpf_cnpj, q.banco, q.ag, q.conta, q.op, dt_1, dt_2, dt_pgmt, q.aux_moradia
                 ),
                 from_email=settings.EMAIL_HOST_USER,
                 recipient_list=[q.email]
@@ -1732,7 +1735,7 @@ def get_nfpj_mail(request):
                                    mensagem=text.format(
                     q.filial, q.nome, q.salario, q.faculdade, q.ajuda_custo, q.cred_convenio,
                     q.outros_cred, q.adiantamento, q.desc_convenio, q.outros_desc, q.total,
-                    q.cpf_cnpj, q.banco, q.ag, q.conta, q.op, dt_1, dt_2, dt_pgmt,
+                    q.cpf_cnpj, q.banco, q.ag, q.conta, q.op, dt_1, dt_2, dt_pgmt, q.aux_moradia
                 ))
         except Exception as e:
             print(e)
@@ -2871,6 +2874,7 @@ def mdfeporfilial(request):
                            E5.TIPO_DOCTO = '58'                             AND
                            
                            E5.ID_GARAGEM = {k}                              AND
+                           E5.ID_GARAGEM <> 1                               AND
                            BG.STATUS = 'A'                                  AND
                            
                            BG.DATA_ENVIO BETWEEN ((SYSDATE)-1) AND (SYSDATE)
