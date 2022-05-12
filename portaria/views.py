@@ -2768,7 +2768,8 @@ def mdfeporfilial(request):
                    'THE': ['felipe@bora.com.br'],
                    'BEL': ['felipe@bora.com.br'],
                    'VDC': ['jose.sousa@bora.com.br', 'fernando.sousa@bora.com.br'],
-                   'REC': ['cinthya.souza@bora.com.br', 'patricia.santos@bora.com.br', 'edvanio.silva@bora.com.br'],
+                   'REC': ['cinthya.souza@bora.com.br', 'patricia.santos@bora.com.br', 'edvanio.silva@bora.com.br',
+                           'expedicao_rec@bora.com.br'],
                    'AJU': ['victor.hugo@bora.com.br'],
                    'JPA': ['patricia.lima@bora.com.br'],
                    'FOR': ['luciano@bora.com.br', 'erlandia@bora.com.br']
