@@ -691,6 +691,8 @@ class EtiquetasPalete(models.Model):
     filial = models.CharField(max_length=3, choices=GARAGEM_CHOICES)
     cliente = models.CharField(max_length=200)
     volumes = models.IntegerField()
+    nota_fiscal = models.CharField(max_length=10, null=True, blank=True)
+    localizacao = models.CharField(max_length=20, null=True, blank=True)
     pub_date = models.DateTimeField(default=timezone.now)
     autor = models.ForeignKey(User, on_delete=models.CASCADE)
 
