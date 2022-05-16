@@ -3120,7 +3120,7 @@ async def get_justificativas(request):
                          F1.CONHECIMENTO = F4.CONHECIMENTO      AND
                          F1.SERIE = F4.SERIE                    AND
                                                                            
-                         F1.DATA_EMISSAO BETWEEN ((SYSDATE)-15) AND (SYSDATE)                         
+                         F1.DATA_EMISSAO BETWEEN ((SYSDATE)-3) AND (SYSDATE)                         
                     GROUP BY
                            F1.EMPRESA,
                            F1.FILIAL,
