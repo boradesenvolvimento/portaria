@@ -733,6 +733,7 @@ class JustificativaEntrega(models.Model):
     peso = models.FloatField()
     lead_time = models.DateField()
     em_aberto = models.SmallIntegerField()
+    data_entrega = models.DateField(blank=True, null=True)
     local_entreg = models.CharField(max_length=100)
     nota_fiscal = models.CharField(max_length=200)
     tipo_doc = models.CharField(max_length=5)

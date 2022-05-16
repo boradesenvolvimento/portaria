@@ -3078,6 +3078,7 @@ async def get_justificativas(request):
                            DECODE(F1.TIPO_DOCTO, 8, 'NFS', 'CTE') TP_DOC,
                            F1.CONHECIMENTO,
                            F1.DATA_EMISSAO,
+                           F1.DATA_ENTREGA,
                            CASE
                                WHEN F1.TIPO_DOCTO = 8 THEN TO_CHAR(BC.NFANTASIACLI)
                                WHEN F1.TIPO_DOCTO = 57 THEN F1.REM_RZ_SOCIAL
@@ -3119,7 +3120,7 @@ async def get_justificativas(request):
                          F1.CONHECIMENTO = F4.CONHECIMENTO      AND
                          F1.SERIE = F4.SERIE                    AND
                                                                            
-                         F1.DATA_EMISSAO BETWEEN ((SYSDATE)-3) AND (SYSDATE)                         
+                         F1.DATA_EMISSAO BETWEEN ((SYSDATE)-15) AND (SYSDATE)                         
                     GROUP BY
                            F1.EMPRESA,
                            F1.FILIAL,
@@ -3130,6 +3131,7 @@ async def get_justificativas(request):
                            F11.REC_RZ_SOCIAL,  
                            F1.CONHECIMENTO,
                            F1.DATA_EMISSAO,
+                           F1.DATA_ENTREGA,
                            F1.REM_RZ_SOCIAL,
                            F1.DEST_RZ_SOCIAL,
                            F1.PESO,
@@ -3154,7 +3156,7 @@ def insert_to_justificativa(obj):
     nobj = JustificativaEntrega.objects.get_or_create(
         empresa=obj['EMPRESA'], filial=obj['FILIAL'], garagem=obj['GARAGEM'], id_garagem=obj['ID_GARAGEM'],
         conhecimento=obj['CONHECIMENTO'], data_emissao=obj['DATA_EMISSAO'], destinatario=obj['DESTINATARIO'],
-        remetente=obj['REMETENTE'], peso=obj['PESO'], tipo_doc=obj['TP_DOC'],
+        remetente=obj['REMETENTE'], peso=obj['PESO'], tipo_doc=obj['TP_DOC'],data_entrega=obj['DATA_ENTREGA'],
         lead_time=datetime.datetime.strptime(obj['DT_PREV_ENTREGA'], '%d-%m-%Y'),
         em_aberto=obj['EM_ABERTO_APOS_LEAD_TIME'], local_entreg=obj['DESTINO'], nota_fiscal=obj['NF']
     )
@@ -3205,15 +3207,16 @@ def pivot_rel_just(date1, date2):
     array = []
     gachoices = GARAGEM_CHOICES
     dictga = {k:v for k,v in gachoices}
-    qs = JustificativaEntrega.objects.filter(data_emissao__lte=date2, data_emissao__gte=date1,
-                                             cod_just__isnull=False, desc_just__isnull=False).exclude(garagem=1)
+    compare_date = datetime.datetime.strptime('0001-01-01', '%Y-%m-%d')
+    qs = JustificativaEntrega.objects.filter(data_emissao__lte=date2, data_emissao__gte=date1).exclude(garagem=1)
     for q in qs:
         array.append({'ID_GARAGEM':dictga[q.id_garagem],'CONHECIMENTO':q.conhecimento, 'DATA_EMISSAO':q.data_emissao,
                       'REMETENTE':q.remetente,'PESO':q.peso, 'LEAD_TIME':q.lead_time, 'EM_ABERTO':q.em_aberto,
                       'LOCAL_ENTREGA':q.local_entreg,'NOTA_FISCAL':q.nota_fiscal, 'COD_JUST':q.cod_just,
-                      'DESC_JUST':q.desc_just, 'AUTOR':q.autor})
+                      'DESC_JUST':q.desc_just, 'AUTOR':q.autor,
+                      'DATA_ENTREGA': 'NAO ENTREGUE' if q.data_entrega == compare_date.date() else q.data_entrega
+                      })
     pdr = pd.DataFrame(array)
-
     buffer = io.BytesIO(pdr.to_string().encode('utf-8'))
     pdr.to_excel(buffer, engine='xlsxwriter', index=False)
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
