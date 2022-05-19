@@ -3067,11 +3067,12 @@ def bipagempalrel(request):
         if date1 and date2:
             date1 = datetime.datetime.strptime(request.POST.get('date1'), '%Y-%m-%d').replace(hour=00, minute=00)
             date2 = datetime.datetime.strptime(request.POST.get('date2'), '%Y-%m-%d').replace(hour=23, minute=59)
-            query = BipagemPalete.objects.filter(etq_ref__pub_date__lte=date2,etq_ref__pub_date__gte=date1)
+            query = BipagemPalete.objects.filter(etq_ref__pub_date__lte=date2,etq_ref__pub_date__gte=date1).annotate(
+                total=Count('cod_barras'))
             if query:
                 for q in query:
                     array.append({'cliente':q.etq_ref.cliente, 'codigo':q.cod_barras, 'filial':q.get_filial_display(),
-                                  'bip_date':q.bip_date, 'volume':q.volume_conf, 'autor':q.autor.username})
+                                  'data_bipagem':q.bip_date, 'volume':q.volume_conf, 'autor':q.autor.username})
                 df = pd.DataFrame(array)
                 buffer = io.BytesIO(df.to_string().encode('utf-8'))
                 df.to_excel(buffer, engine='xlsxwriter', index=False)
