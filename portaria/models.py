@@ -641,6 +641,7 @@ class RomXML(models.Model):
     autor = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
     printed = models.BooleanField(default=False)
     pub_date = models.DateTimeField(default=timezone.now)
+    xmlfile = models.FileField(upload_to='xmls/%Y/%m/%d')
 
     def __str__(self):
         return str(self.id)

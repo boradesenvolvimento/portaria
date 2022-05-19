@@ -15,6 +15,7 @@ import poplib
 from collections import Counter
 from email.mime.base import MIMEBase
 from io import BytesIO
+from zipfile import ZipFile
 
 import numpy as np
 import pandas as pd
@@ -1482,10 +1483,14 @@ def painelromaneio(request):
         dt1 = request.GET.get('data1')
         dt2 = request.GET.get('data2')
         rem = request.GET.get('remetente')
-        if dt1 and dt2 and rem:
+        if dt1 and dt2:
             dt1p = datetime.datetime.strptime(dt1, '%Y-%m-%d').replace(hour=00, minute=00)
             dt2p = datetime.datetime.strptime(dt2, '%Y-%m-%d').replace(hour=23, minute=59)
-            context = RomXML.objects.filter(pub_date__gte=dt1p,pub_date__lte=dt2p,remetente=rem).order_by('-pub_date')
+            if rem:
+                context = RomXML.objects.filter(pub_date__gte=dt1p,pub_date__lte=dt2p,
+                                                remetente=rem).order_by('-pub_date')
+            else:
+                context = RomXML.objects.filter(pub_date__gte=dt1p, pub_date__lte=dt2p).order_by('-pub_date')
 
     if request.method == 'POST':
         romidd = request.POST.getlist('romid')
@@ -1501,11 +1506,31 @@ def painelromaneio(request):
                 romaneio = RomXML.objects.filter(id__in=romidd).annotate(
                     nf1=F('nota_fiscal'),volume1=F('volume'),uf1=F('uf'), rem=F('remetente')
                 )
+            elif tp_dld == 'Remetente':
+                romaneio = SkuRefXML.objects.filter(xmlref__id__in=romidd).annotate(
+                    municipio1=F('xmlref__municipio'), uf1=F('xmlref__uf'), codigo1=F('codigo'),
+                    qnt_un1=F('qnt_un'), desc_prod1=F('desc_prod'), rem=F('xmlref__remetente'),
+                    romaneio_id=F('xmlref__nota_fiscal'), volume=F('xmlref__volume'), valor=F('xmlref__vlr_nf'),
+                    tp_un1=F('tp_un'), peso=F('xmlref__peso')
+                )
+            elif tp_dld == 'Destinatario':
+                romaneio = SkuRefXML.objects.filter(xmlref__id__in=romidd).annotate(
+                    municipio1=F('xmlref__municipio'), uf1=F('xmlref__uf'), codigo1=F('codigo'),qnt_un1=F('qnt_un'),
+                    desc_prod1=F('desc_prod'), dest=F('xmlref__destinatario'), romaneio_id=F('xmlref__nota_fiscal'),
+                    volume=F('xmlref__volume'), valor=F('xmlref__vlr_nf'), tp_un1=F('tp_un'), peso=F('xmlref__peso'),
+                )
+            elif tp_dld == 'XMLS':
+                rar = getFiles(*romidd)
+                if rar:
+                    return rar
             else:
                 messages.error(request, f'Selecione o tipo de download.')
                 return redirect('portaria:painelromaneio')
             try:
-                sheet = romxmltoexcel(*romaneio, tp_dld=tp_dld)
+                if romaneio:
+                    sheet = romxmltoexcel(*romaneio, tp_dld=tp_dld)
+                else:
+                    pass
             except KeyError:
                 messages.error(request, f'Não encontrado valores para sua solicitação.')
                 return redirect('portaria:painelromaneio')
@@ -1578,7 +1603,8 @@ def entradaxml(request):
         if skus:
             try:
                 rom = RomXML.objects.create(dt_emissao=dhEmi, nota_fiscal=nf, remetente=rem, destinatario=dest,
-                peso=peso, volume=volume, vlr_nf=vlr_nf, municipio=dest_mun, uf=dest_uf, autor=request.user)
+                peso=peso, volume=volume, vlr_nf=vlr_nf, municipio=dest_mun, uf=dest_uf, autor=request.user,
+                                            xmlfile=file)
             except Exception as e:
                 print(f'Error: {e}, error_type: {type(e).__name__}')
             else:
@@ -1600,6 +1626,22 @@ def getText(nodelist):
         rc.append(all)
     return rc
 
+def getFiles(*args):
+    s = BytesIO()
+
+    zf = ZipFile(s, 'w')
+    for q in args:
+        obj = get_object_or_404(RomXML, pk=q)
+        file = os.path.join(settings.MEDIA_ROOT, str(obj.xmlfile))
+        fdir, fname = os.path.split(file)
+        zf.write(file, fname)
+    zf.close()
+
+    resp = HttpResponse(s.getvalue(), content_type="application/x-zip-compressed")
+    resp['Content-Disposition'] = f'attachment; filename={datetime.datetime.today()}.rar'
+
+    return resp
+
 def romxmltoexcel(*romaneio, tp_dld):
     array = []
     roms = []
@@ -1610,11 +1652,23 @@ def romxmltoexcel(*romaneio, tp_dld):
                           'volume':q.volume})
             if q.romaneio_id not in roms:
                 roms.extend({q.romaneio_id})
-        else:
+        elif tp_dld == 'Simples':
             array.append({'nf': q.nf1, 'uf': q.uf1, 'volume': q.volume})
             if q.id not in roms:
                 roms.extend({q.id})
-    RomXML.objects.filter(pk__in=roms).update(printed=True)
+        elif tp_dld == 'Remetente':
+            array.append({'municipio': q.municipio1, 'uf': q.uf1, 'codigo': q.codigo1,
+                          'qnt_un': q.qnt_un1, 'desc': q.desc_prod1, 'remetente': q.rem, 'nota': q.romaneio_id,
+                          'volume': q.volume, 'valor': q.valor, 'tp_un':q.tp_un1, 'peso':q.peso})
+            if q.romaneio_id not in roms:
+                roms.extend({q.romaneio_id})
+        elif tp_dld == 'Destinatario':
+            array.append({'municipio': q.municipio1, 'uf': q.uf1, 'codigo': q.codigo1,
+                          'qnt_un': q.qnt_un1, 'desc': q.desc_prod1, 'destinatario': q.dest, 'nota': q.romaneio_id,
+                          'volume': q.volume, 'valor': q.valor, 'tp_un': q.tp_un1, 'peso': q.peso})
+            if q.romaneio_id not in roms:
+                roms.extend({q.romaneio_id})
+    #RomXML.objects.filter(pk__in=roms).update(printed=True)
     pdr = pd.DataFrame(array)
     if tp_dld == 'Completo':
         dt = (pdr.pivot_table(index=['codigo','desc'],
@@ -1624,7 +1678,7 @@ def romxmltoexcel(*romaneio, tp_dld):
                              fill_value='0',
                              margins=True,
                              margins_name='Total')).astype(np.int64)
-    else:
+    elif tp_dld == 'Simples':
         dt = (pdr.pivot_table(index=['nf'],
                               columns=['uf'],
                               values=['volume'],
@@ -1632,8 +1686,16 @@ def romxmltoexcel(*romaneio, tp_dld):
                               fill_value='0',
                               margins=True,
                               margins_name='Total')).astype(np.int64)
+    elif tp_dld == 'Remetente':
+        dt = (pdr.pivot_table(index=['remetente','nota','valor','peso','desc','tp_un',],
+                              values=['qnt_un',],
+                              fill_value='0')).astype(np.float)
+    elif tp_dld == 'Destinatario':
+        dt = (pdr.pivot_table(index=['destinatario', 'nota', 'volume', 'valor', 'peso', 'desc', 'tp_un', ],
+                              values=['qnt_un', ],
+                              fill_value='0')).astype(np.float)
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    response['Content-Disposition'] = f'attachment; filename="{romaneio[0].rem}-{datetime.datetime.today()}.xlsx"'
+    response['Content-Disposition'] = f'attachment; filename="{datetime.datetime.today()}.xlsx"'
     writer = pd.ExcelWriter(response, engine='xlsxwriter')
     dt.to_excel(writer, 'Dinamica')
     pdr.to_excel(writer, 'Relatorio')
@@ -2970,7 +3032,7 @@ def bipagemdocrel(request):
         date1 = request.POST.get('date1')
         date2 = request.POST.get('date2')
         fil = request.POST.get('fil')
-        if date1 and date2 and fil:
+        if date1 and date2 and fil and fil != 'Selecione...':
             date1 = datetime.datetime.strptime(request.POST.get('date1'), '%Y-%m-%d')
             date2 = datetime.datetime.strptime(request.POST.get('date2'), '%Y-%m-%d')
             query = EtiquetasDocumento.objects.filter(pub_date__lte=date2, pub_date__gte=date1, garagem=fil).annotate(

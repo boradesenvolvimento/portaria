@@ -124,9 +124,9 @@
               <li class="nav-item"><a class="nav-link1" href="{% url 'portaria:romaneioxml' %}">XMLS</a></li>
               {% endif %}
               {% if request.user|has_group:"justificativas" %}
-              <li class="nav-item"><a class="nav-link1" href="{% url 'portaria:justificativa' %}">Just</a></li>
+              <li class="nav-item"><a class="nav-link1" href="{% url 'portaria:justificativa' %}">Justificativas</a></li>
                 {% if request.user|has_group:"justificativas_adm" %}
-                <li class="nav-item"><a class="nav-link1" href="{% url 'portaria:rel_justificativa' %}">Rel Just</a></li>
+                <li class="nav-item"><a class="nav-link1" href="{% url 'portaria:rel_justificativa' %}">Rel Justificativas</a></li>
                 {% endif %}
               {% endif %}
             </ul>
