@@ -1617,6 +1617,7 @@ def entradaxml(request, args=None):
                 content_type="text/xml",
                 size=len(xml.getvalue()),
                 charset='UTF-8')
+        autor = 1 if request.user not in User.objects.all() else request.user
         dest_cnpj = mydoc.getElementsByTagName('dest')[0].getElementsByTagName('CNPJ')[0].firstChild.nodeValue
         if dest_cnpj not in cnpjs:
             nf = mydoc.getElementsByTagName('nNF')[0].firstChild.nodeValue
@@ -1635,7 +1636,7 @@ def entradaxml(request, args=None):
             if skus:
                 try:
                     rom = RomXML.objects.create(dt_emissao=dhEmi, nota_fiscal=nf, remetente=rem, destinatario=dest,
-                    peso=peso, volume=volume, vlr_nf=vlr_nf, municipio=dest_mun, uf=dest_uf, autor=request.user,
+                    peso=peso, volume=volume, vlr_nf=vlr_nf, municipio=dest_mun, uf=dest_uf, autor=autor,
                                                 xmlfile=file)
                 except Exception as e:
                     print(f'Error: {e}, error_type: {type(e).__name__}')
@@ -3326,9 +3327,9 @@ def pivot_rel_just(date1, date2):
     return response
 
 async def get_xmls_api(request):
-    host = get_secret('EHOST_XML')
-    user = get_secret('ESEND_XML')
-    pasw = get_secret('EPASS_XML')
+    host = get_secret('EHOST_MN')
+    user = get_secret('ESEND_MN')
+    pasw = get_secret('EPASS_MN')
     
     pp = poplib.POP3(host)
     pp.set_debuglevel(1)
@@ -3344,8 +3345,8 @@ async def get_xmls_api(request):
                 filename = part.get_filename()
                 if re.findall(re.compile(r'\w+(?i:.xml|.XML)'), str(filename)):
                     xmlsarray.extend({part.get_payload(decode=True)})
-        pp.dele(i+1)
-    pp.quit()
+        #pp.dele(i+1)
+    #pp.quit()
     await entradaxml(request, args=xmlsarray)
     return HttpResponse('done')
 
