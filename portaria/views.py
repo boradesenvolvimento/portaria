@@ -3327,9 +3327,9 @@ def pivot_rel_just(date1, date2):
     return response
 
 async def get_xmls_api(request):
-    host = get_secret('EHOST_MN')
-    user = get_secret('ESEND_MN')
-    pasw = get_secret('EPASS_MN')
+    host = get_secret('EHOST_XML')
+    user = get_secret('ESEND_XML')
+    pasw = get_secret('EPASS_XML')
     
     pp = poplib.POP3(host)
     pp.set_debuglevel(1)
