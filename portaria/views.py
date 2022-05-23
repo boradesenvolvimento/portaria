@@ -29,6 +29,7 @@ from email.utils import make_msgid
 
 import requests
 from asgiref.sync import sync_to_async
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.utils.crypto import get_random_string
 from notifications.models import Notification
 from notifications.signals import notify
@@ -1520,7 +1521,10 @@ def painelromaneio(request):
                     volume=F('xmlref__volume'), valor=F('xmlref__vlr_nf'), tp_un1=F('tp_un'), peso=F('xmlref__peso'),
                 )
             elif tp_dld == 'XMLS':
-                rar = getFiles(*romidd)
+                try:
+                    rar = getFiles(*romidd)
+                except Exception as e:
+                    raise e
                 if rar:
                     return rar
             else:
@@ -1583,10 +1587,30 @@ def entradaromaneio(request):
                                                      xmlref=rom)
     return render(request, 'portaria/etc/romaneiomanual.html')
 
-def entradaxml(request):
-    files = request.FILES.getlist('getxml')
+@sync_to_async
+def entradaxml(request, args=None):
+    if request.method == 'POST':
+        files = request.FILES.getlist('getxml')
+    else:
+        print('recebeu o arquivo')
+        files = args
     for file in files:
-        mydoc = minidom.parse(file)
+        try:
+            mydoc = minidom.parse(file)
+        except AttributeError:
+            s = io.BytesIO()
+            s.write(file)
+            s.seek(0)
+
+            xml = s
+            mydoc = minidom.parseString(xml.getvalue())
+            file = InMemoryUploadedFile(
+                xml,
+                field_name='xml',
+                name=f'{datetime.date.today()}.xml',
+                content_type="text/xml",
+                size=len(xml.getvalue()),
+                charset='UTF-8')
         nf = mydoc.getElementsByTagName('nNF')[0].firstChild.nodeValue
         dhEmi = dateformat.format(datetime.datetime.strptime(mydoc.getElementsByTagName('dhEmi')[0].firstChild.nodeValue, '%Y-%m-%dT%H:%M:%S%z'), 'Y-m-d H:i')
         try:
@@ -1607,10 +1631,12 @@ def entradaxml(request):
                                             xmlfile=file)
             except Exception as e:
                 print(f'Error: {e}, error_type: {type(e).__name__}')
+                raise e
             else:
                 for q in skus:
                     SkuRefXML.objects.create(codigo=q['sku'],desc_prod=q['descprod'],tp_un=q['un'], qnt_un=int(q['qnt']),
                                              xmlref=rom)
+        print('finalizado')
     return redirect('portaria:romaneioxml')
 
 def getText(nodelist):
@@ -1668,7 +1694,7 @@ def romxmltoexcel(*romaneio, tp_dld):
                           'volume': q.volume, 'valor': q.valor, 'tp_un': q.tp_un1, 'peso': q.peso})
             if q.romaneio_id not in roms:
                 roms.extend({q.romaneio_id})
-    #RomXML.objects.filter(pk__in=roms).update(printed=True)
+    RomXML.objects.filter(pk__in=roms).update(printed=True)
     pdr = pd.DataFrame(array)
     if tp_dld == 'Completo':
         dt = (pdr.pivot_table(index=['codigo','desc'],
@@ -3288,6 +3314,31 @@ def pivot_rel_just(date1, date2):
     pdr.to_excel(writer, 'sheet1', index=False)
     writer.save()
     return response
+
+async def get_xmls_api(request):
+    host = 'smtp.bora.com.br'
+    user = 'teste@bora.com.br'
+    pasw = 'Bor@413247'
+    
+    pp = poplib.POP3(host)
+    pp.set_debuglevel(1)
+    pp.user(user)
+    pp.pass_(pasw)
+    xmlsarray = []
+    num_messages = len(pp.list()[1])
+    for i in range(num_messages):
+        raw_email = b'\n'.join(pp.retr(i+1)[1])
+        parsed_mail = email.message_from_bytes(raw_email)
+        if parsed_mail.is_multipart():
+            for part in parsed_mail.walk():
+                filename = part.get_filename()
+                if re.findall(re.compile(r'\w+(.xml)'), str(filename)):
+                    xmlsarray.extend({part.get_payload(decode=True)})
+
+        pp.dele(i+1)
+    pp.quit()
+    await entradaxml(request, args=xmlsarray)
+    return HttpResponse('done')
 
 class TestApi:
     def __init__(self):

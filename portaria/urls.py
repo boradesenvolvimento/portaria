@@ -99,5 +99,6 @@ urlpatterns = [
     path(r'modaltkt/', views.modaltkt, name='modaltkt'),
     path('get_justificativas/', views.get_justificativas, name='get_justificativas'),
     path('get_ocorrencias/', views.get_ocorrencias, name='get_ocorrencias'),
+    path('getxmlsapi/', views.get_xmls_api, name='getxmlsapi'),
     #path('testapi/', views.TestApi.conn, name='testapi')
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
