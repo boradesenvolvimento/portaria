@@ -188,7 +188,7 @@ def outputs(request):
 
 
 def paleteview(request):
-    tp_fil = TIPO_GARAGEM
+    tp_fil = GARAGEM_CHOICES
     tp_emp = Cliente.objects.values_list('razao_social', flat=True)
     form = PaleteControl.objects.values('loc_atual').annotate(pbr=Count('id', filter=Q(tp_palete='PBR')),chep=Count('id', filter=Q(tp_palete='CHEP'))).annotate(total=ExpressionWrapper(Count('id'), output_field=IntegerField()))
     ttcount = form.aggregate(total_amount=Sum('total'))
@@ -241,7 +241,7 @@ def paletecliente(request):
 
 def saidapalete(request):
     tp_fil = TIPO_GARAGEM
-    tp_emp = Cliente.objects.all()
+    tp_emp = Cliente.objects.all().order_by('razao_social')
     if request.method == 'POST':
         qnt = int(request.POST.get('qnt'))
         fil = request.POST.get('fil')
@@ -1589,6 +1589,12 @@ def entradaromaneio(request):
 
 @sync_to_async
 def entradaxml(request, args=None):
+    cnpjs = ["05504835000100","05504835000283","05504835000526","05504835000364","05504835000607","05504835000445",
+             "05504835000798","05504835000879","05504835000950","05504835001093","14059252000109","14059252000281",
+             "14059252000443","14059252000362","14059252000524","44536137000130","44536137000211","44536137000300",
+             "44536137000483","44536137000564","44536137000645","44536137000726","44536137000807","44329445000195",
+             "44326860000195","44307910000197","44307936000135","36995897000188"]
+
     if request.method == 'POST':
         files = request.FILES.getlist('getxml')
     else:
@@ -1611,32 +1617,36 @@ def entradaxml(request, args=None):
                 content_type="text/xml",
                 size=len(xml.getvalue()),
                 charset='UTF-8')
-        nf = mydoc.getElementsByTagName('nNF')[0].firstChild.nodeValue
-        dhEmi = dateformat.format(datetime.datetime.strptime(mydoc.getElementsByTagName('dhEmi')[0].firstChild.nodeValue, '%Y-%m-%dT%H:%M:%S%z'), 'Y-m-d H:i')
-        try:
-            rem = mydoc.getElementsByTagName('emit')[0].getElementsByTagName('xFant')[0].firstChild.nodeValue
-        except IndexError:
-            rem = mydoc.getElementsByTagName('emit')[0].getElementsByTagName('xNome')[0].firstChild.nodeValue
-        dest = mydoc.getElementsByTagName('dest')[0].getElementsByTagName('xNome')[0].firstChild.nodeValue
-        dest_mun = mydoc.getElementsByTagName('dest')[0].getElementsByTagName('xMun')[0].firstChild.nodeValue
-        dest_uf = mydoc.getElementsByTagName('dest')[0].getElementsByTagName('UF')[0].firstChild.nodeValue
-        peso = mydoc.getElementsByTagName('transp')[0].getElementsByTagName('pesoB')[0].firstChild.nodeValue
-        volume = mydoc.getElementsByTagName('transp')[0].getElementsByTagName('qVol')[0].firstChild.nodeValue
-        vlr_nf = mydoc.getElementsByTagName('total')[0].getElementsByTagName('vNF')[0].firstChild.nodeValue
-        skus = getText(mydoc)
-        if skus:
+        dest_cnpj = mydoc.getElementsByTagName('dest')[0].getElementsByTagName('CNPJ')[0].firstChild.nodeValue
+        if dest_cnpj not in cnpjs:
+            nf = mydoc.getElementsByTagName('nNF')[0].firstChild.nodeValue
+            dhEmi = dateformat.format(datetime.datetime.strptime(mydoc.getElementsByTagName('dhEmi')[0].firstChild.nodeValue, '%Y-%m-%dT%H:%M:%S%z'), 'Y-m-d H:i')
             try:
-                rom = RomXML.objects.create(dt_emissao=dhEmi, nota_fiscal=nf, remetente=rem, destinatario=dest,
-                peso=peso, volume=volume, vlr_nf=vlr_nf, municipio=dest_mun, uf=dest_uf, autor=request.user,
-                                            xmlfile=file)
-            except Exception as e:
-                print(f'Error: {e}, error_type: {type(e).__name__}')
-                raise e
-            else:
-                for q in skus:
-                    SkuRefXML.objects.create(codigo=q['sku'],desc_prod=q['descprod'],tp_un=q['un'], qnt_un=int(q['qnt']),
-                                             xmlref=rom)
-        print('finalizado')
+                rem = mydoc.getElementsByTagName('emit')[0].getElementsByTagName('xFant')[0].firstChild.nodeValue
+            except IndexError:
+                rem = mydoc.getElementsByTagName('emit')[0].getElementsByTagName('xNome')[0].firstChild.nodeValue
+            dest = mydoc.getElementsByTagName('dest')[0].getElementsByTagName('xNome')[0].firstChild.nodeValue
+            dest_mun = mydoc.getElementsByTagName('dest')[0].getElementsByTagName('xMun')[0].firstChild.nodeValue
+            dest_uf = mydoc.getElementsByTagName('dest')[0].getElementsByTagName('UF')[0].firstChild.nodeValue
+            peso = mydoc.getElementsByTagName('transp')[0].getElementsByTagName('pesoB')[0].firstChild.nodeValue
+            volume = mydoc.getElementsByTagName('transp')[0].getElementsByTagName('qVol')[0].firstChild.nodeValue
+            vlr_nf = mydoc.getElementsByTagName('total')[0].getElementsByTagName('vNF')[0].firstChild.nodeValue
+            skus = getText(mydoc)
+            if skus:
+                try:
+                    rom = RomXML.objects.create(dt_emissao=dhEmi, nota_fiscal=nf, remetente=rem, destinatario=dest,
+                    peso=peso, volume=volume, vlr_nf=vlr_nf, municipio=dest_mun, uf=dest_uf, autor=request.user,
+                                                xmlfile=file)
+                except Exception as e:
+                    print(f'Error: {e}, error_type: {type(e).__name__}')
+                    raise e
+                else:
+                    for q in skus:
+                        SkuRefXML.objects.create(codigo=q['sku'],desc_prod=q['descprod'],tp_un=q['un'], qnt_un=int(q['qnt']),
+                                                 xmlref=rom)
+            print('finalizado')
+        else:
+            pass
     return redirect('portaria:romaneioxml')
 
 def getText(nodelist):
@@ -3316,9 +3326,9 @@ def pivot_rel_just(date1, date2):
     return response
 
 async def get_xmls_api(request):
-    host = get_secret('EHOST_XML')
-    user = get_secret('ESEND_XML')
-    pasw = get_secret('EPASS_XML')
+    host = get_secret('EHOST_MN')
+    user = get_secret('EUSER_MN')
+    pasw = get_secret('EPASS_MN')
     
     pp = poplib.POP3(host)
     pp.set_debuglevel(1)
@@ -3332,7 +3342,7 @@ async def get_xmls_api(request):
         if parsed_mail.is_multipart():
             for part in parsed_mail.walk():
                 filename = part.get_filename()
-                if re.findall(re.compile(r'\w+(.xml)'), str(filename)):
+                if re.findall(re.compile(r'\w+(?i:.xml|.XML)'), str(filename)):
                     xmlsarray.extend({part.get_payload(decode=True)})
 
         pp.dele(i+1)
