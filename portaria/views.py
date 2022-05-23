@@ -3345,8 +3345,8 @@ async def get_xmls_api(request):
                 filename = part.get_filename()
                 if re.findall(re.compile(r'\w+(?i:.xml|.XML)'), str(filename)):
                     xmlsarray.extend({part.get_payload(decode=True)})
-        #pp.dele(i+1)
-    #pp.quit()
+        pp.dele(i+1)
+    pp.quit()
     await entradaxml(request, args=xmlsarray)
     return HttpResponse('done')
 
