@@ -3326,9 +3326,9 @@ def pivot_rel_just(date1, date2):
     return response
 
 async def get_xmls_api(request):
-    host = get_secret('EHOST_MN')
-    user = get_secret('EUSER_MN')
-    pasw = get_secret('EPASS_MN')
+    host = get_secret('EHOST_XML')
+    user = get_secret('ESEND_XML')
+    pasw = get_secret('EPASS_XML')
     
     pp = poplib.POP3(host)
     pp.set_debuglevel(1)
@@ -3344,7 +3344,6 @@ async def get_xmls_api(request):
                 filename = part.get_filename()
                 if re.findall(re.compile(r'\w+(?i:.xml|.XML)'), str(filename)):
                     xmlsarray.extend({part.get_payload(decode=True)})
-
         pp.dele(i+1)
     pp.quit()
     await entradaxml(request, args=xmlsarray)
