@@ -100,5 +100,9 @@ urlpatterns = [
     path('get_justificativas/', views.get_justificativas, name='get_justificativas'),
     path('get_ocorrencias/', views.get_ocorrencias, name='get_ocorrencias'),
     path('getxmlsapi/', views.get_xmls_api, name='getxmlsapi'),
+    path('compras/', views.compras_index, name='compras_index'),
+    path('compras/lancar_pedido/', views.compras_lancar_pedido, name='compras_lancar_pedido'),
+    path('compras/painel/', views.painel_compras, name='painel_compras'),
+    path('compras/painel/<id>/edit', views.edit_compras, name='edit_compras'),
     #path('testapi/', views.TestApi.conn, name='testapi')
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

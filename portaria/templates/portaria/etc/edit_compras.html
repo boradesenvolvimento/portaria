@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+{% load groupscheck %}
+{% if request.user|has_group:"frota" %}
+    <div class="container mt-4">
+        {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+        {% endfor %}
+        <h1>Funções<hr></h1>
+        <div class="container viewmonit">
+            <div class="tktcontainer">
+                <h2>Solicitação nº {{ obj.nr_solic }}</h2>
+                <ul>
+                    <li>Status: {{ obj.status }}</li>
+                    <li>Filial: {{ obj.get_filial_display }}</li>
+                    <li>Solicitante: {{ obj.solicitante }}</li>
+                </ul>
+                <hr>
+                <ul>
+                    {% for q in obj.produtossolicitacoes_set.all %}
+                        <li>{{ q.produto }} - {{ q.qnt_itens }} - </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        <div class="container viewmonit">
+            <div class="tktcontainer">
+                <h2>aaa</h2>
+                <textarea style="resize:none;height:10rem;width:40rem;border:solid 1px;" placeholder="aaaaaaaaa."></textarea>
+                <button type="button">Botão</button>
+            </div>
+        </div>
+    </div>
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+{% endblock %}

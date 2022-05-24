@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+{% load groupscheck %}
+{% if request.user|has_group:"frota" %}
+    <div class="container mt-4">
+        {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+        {% endfor %}
+        <div class="container">
+            <table class="table table1">
+                <thead>
+                    <tr>
+                        <th>Nº Solicitação</th>
+                        <th>Data</th>
+                        <th>Status</th>
+                        <th>Filial</th>
+                        <th>Solicitante</th>
+                        <th>Itens cad.</th>
+                        <th>Editar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for q in form %}
+                    <tr>
+                        <td>{{ q.nr_solic }}</td>
+                        <td>{{ q.data }}</td>
+                        <td>{{ q.status }}</td>
+                        <td>{{ q.get_filial_display }}</td>
+                        <td>{{ q.solicitante }}</td>
+                        <td><button type="button" id="myBtn" value="{{ forloop.counter }}"><ion-icon name="list"></ion-icon></button></td>
+                        <td><a href="{% url 'portaria:edit_compras' q.id %}"><button type="button"><ion-icon name="create"></ion-icon></button></a></td>
+                    </tr>
+                        <div id="myModal{{ forloop.counter }}" class="modal">
+                            <div class="modal-content">
+                                <div>
+                                    <span class="title-cad">Itens do pedido</span>
+                                    <span class="close col">&times;</span>
+                                </div>
+                                <div class="container tktcontainer">
+                                    {% if q.produtossolicitacoes_set.all %}
+                                        <ul>
+                                        {% for i in q.produtossolicitacoes_set.all %}
+                                            <li><p style="margin: 0 0 0 0;">Item {{ forloop.counter }}: <strong>{{ i.produto }}</strong>
+                                        {% endfor %}
+                                        </ul>
+                                    {% else %}
+                                        <p style="margin: 0 0 0 0;">Nenhuma ocorrencia encontrada.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+<script>
+    $(document).ready(function(){
+        $("button").click(function(){
+            var btn = $(this);
+            var but = $(this).val();
+            console.log(but)
+            console.log(btn)
+            var modal = document.getElementById("myModal"+but);
+            var span = modal.getElementsByClassName("close")[0];
+            modal.style.display = "block";
+
+            span.onclick = function() {
+                modal.style.display = "none";
+            };
+            window.onclick = function(event) {
+                if (event.target == modal){
+                    modal.style.display = "none";
+                }
+            };
+        });
+    });
+</script>
+{% endblock %}

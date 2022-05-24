@@ -53,7 +53,7 @@ from django.views import generic
 from xml.dom import minidom
 
 from xlsxwriter import Workbook
-
+from cx_Oracle import DatabaseError as cxerr
 #imports django projeto
 from .dbtest import conndb
 from .models import * #Cadastro, PaletControl, ChecklistFrota, Veiculos, NfServicoPj
@@ -1453,7 +1453,7 @@ def bipagem_palete(request):
         vol = request.POST.get('volume')
         man = request.POST.get('manifesto')
         ga = request.POST.get('getga')
-        if code:
+        if code and ga != 'Selecione...':
             try:
                 getobj = get_object_or_404(EtiquetasPalete, cod_barras=code)
             except Exception as e:
@@ -1467,6 +1467,9 @@ def bipagem_palete(request):
                     bip.save()
                 print(f'salvo no banco de dados bipagem nº{bip.id}')
                 messages.success(request, 'Bipado com sucesso.')
+        else:
+            messages.error(request, 'Informações faltando, gentileza verificar')
+            return redirect('portaria:bipagem_palete')
     return render(request, 'portaria/etiquetas/bipagem_palete.html', {'gachoices':gachoices})
 
 def etqrelatorio(request):
@@ -1617,7 +1620,7 @@ def entradaxml(request, args=None):
                 content_type="text/xml",
                 size=len(xml.getvalue()),
                 charset='UTF-8')
-        autor = 1 if request.user not in User.objects.all() else request.user
+        autor = User.objects.get(id=1) if request.user not in User.objects.all() else request.user
         dest_cnpj = mydoc.getElementsByTagName('dest')[0].getElementsByTagName('CNPJ')[0].firstChild.nodeValue
         if dest_cnpj not in cnpjs:
             nf = mydoc.getElementsByTagName('nNF')[0].firstChild.nodeValue
@@ -3219,6 +3222,9 @@ async def get_justificativas(request):
                          F1.GARAGEM = F4.GARAGEM                AND
                          F1.CONHECIMENTO = F4.CONHECIMENTO      AND
                          F1.SERIE = F4.SERIE                    AND
+                         
+                         F1.CARGA_ENCOMENDA IN ('CARGA DIRETA','RODOVIARIO')    AND
+                         F1.ID_GARAGEM <> 1                                     AND
                                                                            
                          F1.DATA_EMISSAO BETWEEN ((SYSDATE)-3) AND (SYSDATE)                         
                     GROUP BY
@@ -3290,10 +3296,10 @@ async def get_ocorrencias(request):
         except Exception as e:
             print(f'Error:{e}, error_type:{type(e).__name__}')
             continue
+    return HttpResponse('job done')
 
 @sync_to_async
 def insert_to_ocorrencias(obj):
-    print(obj)
     just = JustificativaEntrega.objects.filter(empresa=obj['EMPRESA'], filial=obj['FILIAL'], garagem=obj['GARAGEM'],
                                                conhecimento=obj['NUMERO_CTRC'])
     if just:
@@ -3311,9 +3317,9 @@ def pivot_rel_just(date1, date2):
     qs = JustificativaEntrega.objects.filter(data_emissao__lte=date2, data_emissao__gte=date1).exclude(garagem=1)
     for q in qs:
         array.append({'ID_GARAGEM':dictga[q.id_garagem],'CONHECIMENTO':q.conhecimento, 'DATA_EMISSAO':q.data_emissao,
-                      'REMETENTE':q.remetente,'PESO':q.peso, 'LEAD_TIME':q.lead_time, 'EM_ABERTO':q.em_aberto,
-                      'LOCAL_ENTREGA':q.local_entreg,'NOTA_FISCAL':q.nota_fiscal, 'COD_JUST':q.cod_just,
-                      'DESC_JUST':q.desc_just, 'AUTOR':q.autor,
+                      'REMETENTE':q.remetente,'DESTINATARIO':q.destinatario,'PESO':q.peso, 'LEAD_TIME':q.lead_time,
+                      'EM_ABERTO':q.em_aberto,'LOCAL_ENTREGA':q.local_entreg,'NOTA_FISCAL':q.nota_fiscal,
+                      'COD_JUST':q.cod_just,'DESC_JUST':q.desc_just, 'AUTOR':q.autor,
                       'DATA_ENTREGA': 'NAO ENTREGUE' if q.data_entrega == compare_date.date() else q.data_entrega
                       })
     pdr = pd.DataFrame(array)
@@ -3327,9 +3333,9 @@ def pivot_rel_just(date1, date2):
     return response
 
 async def get_xmls_api(request):
-    host = get_secret('EHOST_XML')
-    user = get_secret('ESEND_XML')
-    pasw = get_secret('EPASS_XML')
+    host = get_secret('EHOST_MN')
+    user = get_secret('ESEND_MN')
+    pasw = get_secret('EPASS_MN')
     
     pp = poplib.POP3(host)
     pp.set_debuglevel(1)
@@ -3349,6 +3355,143 @@ async def get_xmls_api(request):
     pp.quit()
     await entradaxml(request, args=xmlsarray)
     return HttpResponse('done')
+
+def compras_index(request):
+    gachoices = GARAGEM_CHOICES
+    return render(request, 'portaria/etc/compras.html', {'gachoices':gachoices})
+
+def compras_lancar_pedido(request):
+    keyga = {v: k for k, v in GARAGEM_CHOICES}
+    if request.method == 'POST':
+        idsolic = request.POST.get('getid')
+        fil = request.POST.get('filial')
+        if idsolic:
+            conn = settings.CONNECTION
+            cur = conn.cursor()
+            try:
+                cur.execute(f"""
+                            SELECT 
+                                   SO.NUMEROSOLIC NR_SOLICITACAO,
+                                   CM.DESCRICAOMAT PRODUTO,
+                                   SO.DATASOLIC DATA,
+                                   CIS.QTDEITSOLIC QTD_ITENS,
+                                   CASE
+                                       WHEN SO.STATUSSOLIC = 'A' THEN 'ABERTO'
+                                       WHEN SO.STATUSSOLIC = 'P' THEN 'APROVADO'
+                                       WHEN SO.STATUSSOLIC = 'F' THEN 'FECHADO'
+                                   END STATUS,
+                                   CASE
+                                       WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '1' THEN 'SPO'
+                                       WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '2' THEN 'REC'
+                                       WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '3' THEN 'SSA'
+                                       WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '4' THEN 'FOR'
+                                       WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '5' THEN 'MCZ'
+                                       WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '6' THEN 'NAT'
+                                       WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '7' THEN 'JPA'
+                                       WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '8' THEN 'AJU'
+                                       WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '9' THEN 'VDC'
+                                       WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '10' THEN 'MG'
+                                       WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '1' THEN 'CTG'
+                                       WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '2' THEN 'TCO'
+                                       WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '3' THEN 'UDI'
+                                       WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '4' THEN 'TMA'
+                                       WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '5' THEN 'VIX'
+                                       WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '1' THEN 'BMA'
+                                       WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '2' THEN 'BPE'
+                                       WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '3' THEN 'BEL'
+                                       WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '4' THEN 'BPB'
+                                       WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '5' THEN 'SLZ'
+                                       WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '6' THEN 'BAL'
+                                       WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '7' THEN 'THE'
+                                       WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '8' THEN 'BMG'
+                                       WHEN SO.CODIGOEMPRESA = '4' AND SO.CODIGOFL = '1' THEN 'FMA'
+                                   END FILIAL,
+                                   SO.USUARIO SOLICITANTE     
+                            FROM
+                                CPR_SOLICITACAO SO, 
+                                CPR_ITENSSOLICITADOS CIS,
+                                EST_CADMATERIAL CM
+                            WHERE
+                                SO.NUMEROSOLIC = CIS.NUMEROSOLIC AND
+                                SO.STATUSSOLIC = 'P'                      AND    
+                                SO.DATASOLIC BETWEEN ((SYSDATE)-30) AND (SYSDATE) AND    
+                                CM.CODIGOMATINT = CIS.CODIGOMATINT                 AND
+                                SO.NUMEROSOLIC = {idsolic}                         
+                            UNION ALL                        
+                            SELECT 
+                                   SO.NUMEROSOLIC NR_SOLICITACAO,
+                                   SCO.DESCRICAOSOLOUTROS PRODUTO,
+                                   SO.DATASOLIC DATA,
+                                   SCO.QTDESOLOUTROS QTD_ITENS,
+                                   CASE
+                                       WHEN SO.STATUSSOLIC = 'A' THEN 'ABERTO'
+                                       WHEN SO.STATUSSOLIC = 'P' THEN 'APROVADO'
+                                       WHEN SO.STATUSSOLIC = 'F' THEN 'FECHADO'
+                                   END STATUS,
+                                   CASE
+                                       WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '1' THEN 'SPO'
+                                       WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '2' THEN 'REC'
+                                       WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '3' THEN 'SSA'
+                                       WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '4' THEN 'FOR'
+                                       WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '5' THEN 'MCZ'
+                                       WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '6' THEN 'NAT'
+                                       WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '7' THEN 'JPA'
+                                       WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '8' THEN 'AJU'
+                                       WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '9' THEN 'VDC'
+                                       WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '10' THEN 'MG'
+                                       WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '1' THEN 'CTG'
+                                       WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '2' THEN 'TCO'
+                                       WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '3' THEN 'UDI'
+                                       WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '4' THEN 'TMA'
+                                       WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '5' THEN 'VIX'
+                                       WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '1' THEN 'BMA'
+                                       WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '2' THEN 'BPE'
+                                       WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '3' THEN 'BEL'
+                                       WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '4' THEN 'BPB'
+                                       WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '5' THEN 'SLZ'
+                                       WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '6' THEN 'BAL'
+                                       WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '7' THEN 'THE'
+                                       WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '8' THEN 'BMG'
+                                       WHEN SO.CODIGOEMPRESA = '4' AND SO.CODIGOFL = '1' THEN 'FMA'
+                                   END FILIAL,
+                                   SO.USUARIO SOLICITANTE
+                            FROM
+                                CPR_SOLICITACAO SO,
+                                CPR_SOLICOUTROS SCO
+                            WHERE
+                                SO.NUMEROSOLIC = SCO.NUMEROSOLIC    AND
+                                SO.STATUSSOLIC = 'P'                      AND    
+                                SO.DATASOLIC BETWEEN ((SYSDATE)-30) AND (SYSDATE) AND
+                                SO.NUMEROSOLIC = {idsolic}
+                            """)
+            except cxerr:
+                messages.error(request, 'Não encontrado solicitação com este número.')
+            except Exception as e:
+                print(f'Error:{e}, error_type:{type(e).__name__}')
+            else:
+                res = dictfetchall(cur)
+                cur.close()
+                if res:
+                    for q in res:
+                        obj = SolicitacoesCompras.objects.get_or_create(
+                            nr_solic=q['NR_SOLICITACAO'], data=q['DATA'], status=q['STATUS'], filial=keyga[q['FILIAL']],
+                            solicitante=q['SOLICITANTE'], autor=request.user
+                        )
+                        prod = ProdutosSolicitacoes.objects.get_or_create(produto=q['PRODUTO'],
+                                                                      qnt_itens=int(q['QTD_ITENS']),solic_ref=obj[0])
+                    messages.success(request, f'Solicitação nº{idsolic} cadastrada com sucesso!')
+                else:
+                    messages.error(request, 'Não encontrado solicitação com este número.')
+        return redirect('portaria:compras_index')
+
+def painel_compras(request):
+    form = SolicitacoesCompras.objects.all()
+    return render(request, 'portaria/etc/painelcompras.html', {'form':form})
+
+def edit_compras(request, id):
+    obj = get_object_or_404(SolicitacoesCompras, pk=id)
+    print(obj)
+    return render(request, 'portaria/etc/edit_compras.html', {'obj':obj})
 
 class TestApi:
     def __init__(self):

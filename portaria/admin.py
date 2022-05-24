@@ -145,3 +145,11 @@ admin.site.register(JustificativaEntrega, JustificativaEntregaAdmin)
 class OcorrenciaEntregaAdmin(admin.ModelAdmin):
     pass
 admin.site.register(OcorrenciaEntrega, OcorrenciaEntregaAdmin)
+
+class SolicitacoesComprasAdmin(admin.ModelAdmin):
+    pass
+admin.site.register(SolicitacoesCompras, SolicitacoesComprasAdmin)
+
+class ProdutosSolicitacoesAdmin(admin.ModelAdmin):
+    pass
+admin.site.register(ProdutosSolicitacoes, ProdutosSolicitacoesAdmin)

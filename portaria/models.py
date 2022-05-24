@@ -753,3 +753,19 @@ class OcorrenciaEntrega(models.Model):
     data_ocorrencia = models.DateField()
     entrega = models.ForeignKey(JustificativaEntrega, on_delete=models.CASCADE, blank=True, null=True)
 
+class SolicitacoesCompras(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    nr_solic = models.CharField(max_length=10)
+    data = models.DateTimeField()
+    status = models.CharField(max_length=1)
+    filial = models.CharField(max_length=3, choices=GARAGEM_CHOICES)
+    solicitante = models.CharField(max_length=100)
+    pub_date = models.DateTimeField(default=timezone.now)
+    autor = models.ForeignKey(User, on_delete=models.CASCADE)
+
+class ProdutosSolicitacoes(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    produto = models.CharField(max_length=200)
+    qnt_itens = models.IntegerField()
+    solic_ref = models.ForeignKey(SolicitacoesCompras, on_delete=models.CASCADE)
+

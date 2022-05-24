@@ -63,8 +63,9 @@
                         <td>{{ f.lead_time }}</td>
                         <td>{{ f.em_aberto }}</td>
                         <td>{{ f.local_entreg }}</td>
-                        <td>{{ f.nota_fiscal }}</td>
+                        <td>{{ f.nota_fiscal|truncatechars:'100' }}</td>
                         <td><select name="ocor" style="font-size:10px;">
+                            <option selected disabled value="">--</option>
                             {% for k,v in justchoices %}
                             <option value="{{ k }}">{{ v }}</option>
                             {% endfor %}
@@ -103,37 +104,19 @@
 {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
 <script>
     $(document).ready(function(){
-        $("button").click(function(){
-            var btn = $(this);
-            var but = $(this).val();
-            console.log(but)
-            console.log(btn)
-            var modal = document.getElementById("myModal"+but);
-            var span = modal.getElementsByClassName("close")[0];
-            modal.style.display = "block";
-
-            span.onclick = function() {
-                modal.style.display = "none";
-            };
-            window.onclick = function(event) {
-                if (event.target == modal){
-                    modal.style.display = "none";
-                }
-            };
-        });
-    });
-</script>
-<script>
-    $(document).ready(function(){
         var array = []
         var botao = document.getElementById('bot');
         $(botao).click(function (){
+            console.log('started');
             var data = document.getElementsByName('ocor');
             var data2 = document.getElementsByName('idobj');
             if(data.length == data2.length){
                 for(i=0; data[i]; i++){
                     var toinsert = {'id':data2[i].value,'ocorr':data[i].value}
-                    array.push(toinsert)
+                    if(data[i].value != ''){
+                        console.log(data[i].value)
+                        array.push(toinsert)
+                    }
                 }
                 console.log(array)
                 $.ajax({
@@ -152,6 +135,28 @@
                 });
             }else{
                 console.log('erro dados diferem');
+            };
+        });
+    });
+</script>
+
+<script>
+    $(document).ready(function(){
+        $("button").click(function(){
+            console.log($(this));
+            var btn = $(this);
+            var but = $(this).val();
+            var modal = document.getElementById("myModal"+but);
+            var span = modal.getElementsByClassName("close")[0];
+            modal.style.display = "block";
+
+            span.onclick = function() {
+                modal.style.display = "none";
+            };
+            window.onclick = function(event) {
+                if (event.target == modal){
+                    modal.style.display = "none";
+                }
             };
         });
     });

@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+{% load groupscheck %}
+{% if request.user|has_group:"frota" %}
+    <div class="container mt-4">
+        {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+        {% endfor %}
+        <h1>Funções<hr></h1>
+        <div class="container">
+            <div class="row linha-baixo">
+                <form method="post" action="{% url 'portaria:compras_lancar_pedido' %}">{% csrf_token %}
+                    <h3>Lançar</h3>
+                    <label for="fil">Filial:</label>
+                    <select id="fil" name="filial">
+                        <option selected disabled value="">--</option>
+                        {% for k,v in gachoices %}
+                        <option value="{{k}}">{{ v }}</option>
+                        {% endfor %}
+                    </select>
+                    <label for="getid">Código Solicitação:</label>
+                    <input type="text" name="getid" id="getid">
+                    <button type="submit">Botão</button>
+                </form>
+            </div>
+            <div class="row linha-baixo">
+                <h3>Painel</h3>
+                <a class="col-1" href="{% url 'portaria:painel_compras' %}"><button type="button">Botão</button></a>
+            </div>
+        </div>
+    </div>
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+{% endblock %}
