@@ -1620,37 +1620,40 @@ def entradaxml(request, args=None):
                 content_type="text/xml",
                 size=len(xml.getvalue()),
                 charset='UTF-8')
-        autor = User.objects.get(id=1) if request.user not in User.objects.all() else request.user
-        dest_cnpj = mydoc.getElementsByTagName('dest')[0].getElementsByTagName('CNPJ')[0].firstChild.nodeValue
-        if dest_cnpj not in cnpjs:
-            nf = mydoc.getElementsByTagName('nNF')[0].firstChild.nodeValue
-            dhEmi = dateformat.format(datetime.datetime.strptime(mydoc.getElementsByTagName('dhEmi')[0].firstChild.nodeValue, '%Y-%m-%dT%H:%M:%S%z'), 'Y-m-d H:i')
-            try:
-                rem = mydoc.getElementsByTagName('emit')[0].getElementsByTagName('xFant')[0].firstChild.nodeValue
-            except IndexError:
-                rem = mydoc.getElementsByTagName('emit')[0].getElementsByTagName('xNome')[0].firstChild.nodeValue
-            dest = mydoc.getElementsByTagName('dest')[0].getElementsByTagName('xNome')[0].firstChild.nodeValue
-            dest_mun = mydoc.getElementsByTagName('dest')[0].getElementsByTagName('xMun')[0].firstChild.nodeValue
-            dest_uf = mydoc.getElementsByTagName('dest')[0].getElementsByTagName('UF')[0].firstChild.nodeValue
-            peso = mydoc.getElementsByTagName('transp')[0].getElementsByTagName('pesoB')[0].firstChild.nodeValue
-            volume = mydoc.getElementsByTagName('transp')[0].getElementsByTagName('qVol')[0].firstChild.nodeValue
-            vlr_nf = mydoc.getElementsByTagName('total')[0].getElementsByTagName('vNF')[0].firstChild.nodeValue
-            skus = getText(mydoc)
-            if skus:
+        try:
+            autor = User.objects.get(id=1) if request.user not in User.objects.all() else request.user
+            dest_cnpj = mydoc.getElementsByTagName('dest')[0].getElementsByTagName('CNPJ')[0].firstChild.nodeValue
+            if dest_cnpj not in cnpjs:
+                nf = mydoc.getElementsByTagName('nNF')[0].firstChild.nodeValue
+                dhEmi = dateformat.format(datetime.datetime.strptime(mydoc.getElementsByTagName('dhEmi')[0].firstChild.nodeValue, '%Y-%m-%dT%H:%M:%S%z'), 'Y-m-d H:i')
                 try:
-                    rom = RomXML.objects.create(dt_emissao=dhEmi, nota_fiscal=nf, remetente=rem, destinatario=dest,
-                    peso=peso, volume=volume, vlr_nf=vlr_nf, municipio=dest_mun, uf=dest_uf, autor=autor,
-                                                xmlfile=file)
-                except Exception as e:
-                    print(f'Error: {e}, error_type: {type(e).__name__}')
-                    raise e
-                else:
-                    for q in skus:
-                        SkuRefXML.objects.create(codigo=q['sku'],desc_prod=q['descprod'],tp_un=q['un'], qnt_un=int(q['qnt']),
-                                                 xmlref=rom)
-            print('finalizado')
-        else:
-            pass
+                    rem = mydoc.getElementsByTagName('emit')[0].getElementsByTagName('xFant')[0].firstChild.nodeValue
+                except IndexError:
+                    rem = mydoc.getElementsByTagName('emit')[0].getElementsByTagName('xNome')[0].firstChild.nodeValue
+                dest = mydoc.getElementsByTagName('dest')[0].getElementsByTagName('xNome')[0].firstChild.nodeValue
+                dest_mun = mydoc.getElementsByTagName('dest')[0].getElementsByTagName('xMun')[0].firstChild.nodeValue
+                dest_uf = mydoc.getElementsByTagName('dest')[0].getElementsByTagName('UF')[0].firstChild.nodeValue
+                peso = mydoc.getElementsByTagName('transp')[0].getElementsByTagName('pesoB')[0].firstChild.nodeValue
+                volume = mydoc.getElementsByTagName('transp')[0].getElementsByTagName('qVol')[0].firstChild.nodeValue
+                vlr_nf = mydoc.getElementsByTagName('total')[0].getElementsByTagName('vNF')[0].firstChild.nodeValue
+                skus = getText(mydoc)
+                if skus:
+                    try:
+                        rom = RomXML.objects.create(dt_emissao=dhEmi, nota_fiscal=nf, remetente=rem, destinatario=dest,
+                        peso=peso, volume=volume, vlr_nf=vlr_nf, municipio=dest_mun, uf=dest_uf, autor=autor,
+                                                    xmlfile=file)
+                    except Exception as e:
+                        print(f'Error: {e}, error_type: {type(e).__name__}')
+                        raise e
+                    else:
+                        for q in skus:
+                            SkuRefXML.objects.create(codigo=q['sku'],desc_prod=q['descprod'],tp_un=q['un'], qnt_un=int(q['qnt']),
+                                                     xmlref=rom)
+                print('finalizado')
+            else:
+                pass
+        except:
+            continue
     return redirect('portaria:romaneioxml')
 
 def getText(nodelist):
