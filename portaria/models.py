@@ -754,18 +754,68 @@ class OcorrenciaEntrega(models.Model):
     entrega = models.ForeignKey(JustificativaEntrega, on_delete=models.CASCADE, blank=True, null=True)
 
 class SolicitacoesCompras(models.Model):
+    STATUS_CHOICES = [
+        ('ABERTO', 'ABERTO'),
+        ('ANDAMENTO', 'ANDAMENTO'),
+        ('CONCLUIDO', 'CONCLUIDO'),
+        ('CANCELADO', 'CANCELADO')
+    ]
+    DEPARTAMENTO_CHOICES = [
+        ('DIRETORIA', 'DIRETORIA'),
+        ('FATURAMENTO', 'FATURAMENTO'),
+        ('FINANCEIRO', 'FINANCEIRO'),
+        ('RH', 'RH'),
+        ('FISCAL', 'FISCAL'),
+        ('MONITORAMENTO', 'MONITORAMENTO'),
+        ('OPERACIONAL', 'OPERACIONAL'),
+        ('FROTA', 'FROTA'),
+        ('EXPEDICAO', 'EXPEDICAO'),
+        ('COMERCIAL', 'COMERCIAL'),
+        ('JURIDICO', 'JURIDICO'),
+        ('DESENVOLVIMENTO', 'DESENVOLVIMENTO'),
+        ('TI', 'TI'),
+        ('FILIAIS', 'FILIAIS')
+    ]
     id = models.BigAutoField(primary_key=True)
     nr_solic = models.CharField(max_length=10)
     data = models.DateTimeField()
     status = models.CharField(max_length=1)
     filial = models.CharField(max_length=3, choices=GARAGEM_CHOICES)
     solicitante = models.CharField(max_length=100)
+    departamento = models.CharField(max_length=15, choices=DEPARTAMENTO_CHOICES, blank=True, null=True)
+    responsavel = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True, related_name='responsavelcompras')
     pub_date = models.DateTimeField(default=timezone.now)
-    autor = models.ForeignKey(User, on_delete=models.CASCADE)
+    autor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='autorcompras')
 
 class ProdutosSolicitacoes(models.Model):
     id = models.BigAutoField(primary_key=True)
     produto = models.CharField(max_length=200)
     qnt_itens = models.IntegerField()
     solic_ref = models.ForeignKey(SolicitacoesCompras, on_delete=models.CASCADE)
+
+class SolicitacoesEntradas(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    obs = models.TextField()
+    file1 = models.FileField(upload_to='cpr/%Y/%m/%d', blank=True, null=True)
+    file2 = models.FileField(upload_to='cpr/%Y/%m/%d', blank=True, null=True)
+    file3 = models.FileField(upload_to='cpr/%Y/%m/%d', blank=True, null=True)
+    cpr_ref = models.ForeignKey(SolicitacoesCompras, on_delete=models.CASCADE)
+
+class RegistraTerceirizados(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    filial = models.CharField(max_length=3, choices=GARAGEM_CHOICES)
+    fornecedor = models.CharField(max_length=150)
+    nome_funcionario = models.CharField(max_length=100)
+    rg = models.CharField(max_length=15)
+    cpf = models.CharField(max_length=11, validators=[only_int])
+    data = models.DateTimeField(default=timezone.now)
+    valor = models.FloatField()
+    autor = models.ForeignKey(User, on_delete=models.CASCADE)
+
+class FornecedorTerceirizados(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    razao_social = models.CharField(max_length=200)
+    cnpj = models.CharField(max_length=14, validators=[only_int])
+    valor_p_funcionario = models.FloatField()
+
 

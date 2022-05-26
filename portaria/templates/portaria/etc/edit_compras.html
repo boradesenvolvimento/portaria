@@ -14,27 +14,98 @@
         <h1>Funções<hr></h1>
         <div class="container viewmonit">
             <div class="tktcontainer">
-                <h2>Solicitação nº {{ obj.nr_solic }}</h2>
-                <ul>
-                    <li>Status: {{ obj.status }}</li>
-                    <li>Filial: {{ obj.get_filial_display }}</li>
-                    <li>Solicitante: {{ obj.solicitante }}</li>
-                </ul>
+                <div class="row">
+
+                    <div class="col-lg col-md">
+                    <h2>Solicitação nº {{ obj.nr_solic }}</h2>
+                    <form method="post">{% csrf_token %}
+                    <ul>
+                        <li>Status:
+                        <select name="status">
+                            <option>{{ obj.status }}</option>
+                            {% for k,v in stschoices %}
+                            <option value="{{ k }}">{{ v }}</option>
+                            {% endfor %}
+                        </select></li>
+                        <li>Filial:
+                        <select name="filial">
+                            <option>{{ obj.get_filial_display }}</option>
+                            {% for k,v in gachoices %}
+                            <option value="{{ v }}">{{ v }}</option>
+                            {% endfor %}
+                        </select></li>
+                        <li>Departamento:
+                            <select name="departamento">
+                            <option>{{ obj.departamento }}</option>
+                            {% for k,v in dpchoices %}
+                            <option value="{{ k }}">{{ v }}</option>
+                            {% endfor %}
+                        </select></li>
+                        <li>Responsável:
+                        <select name="responsavel">
+                            <option>{{ obj.responsavel }}</option>
+                            {% for q in rpchoices %}
+                            <option value="{{ q.id }}">{{ q.username }}</option>
+                            {% endfor %}
+                        </select></li>
+                        <li>Solicitante: {{ obj.solicitante }} </li>
+                    </ul>
+                        <button type="submit">Atualizar</button>
+                    </form>
+                    </div>
+                </div>
+
                 <hr>
+                <h2>Lista de itens</h2>
                 <ul>
                     {% for q in obj.produtossolicitacoes_set.all %}
-                        <li>{{ q.produto }} - {{ q.qnt_itens }} - </li>
+                        <li>{{ q.produto }} - {{ q.qnt_itens }}un </li>
                     {% endfor %}
                 </ul>
             </div>
         </div>
         <div class="container viewmonit">
             <div class="tktcontainer">
-                <h2>aaa</h2>
-                <textarea style="resize:none;height:10rem;width:40rem;border:solid 1px;" placeholder="aaaaaaaaa."></textarea>
-                <button type="button">Botão</button>
+                <div class="row">
+                    <div class="container">
+                    <h2>Cadastrar entradas</h2>
+                        <form method="post" action="{% url 'portaria:insert_entradas_cpr' %}" enctype="multipart/form-data">{% csrf_token %}
+                            <input type="hidden" name="obj_id" value="{{ obj.id }}">
+                            <textarea class="col-6" rows="7" cols="50" style="resize:none;margin:3rem;" name="textarea"></textarea>
+                            <label class="col" for="id_file" style="font-size:3.2rem;cursor:pointer;"><ion-icon name="attach-outline"></ion-icon></label>
+                            <input type="file" name="file" multiple="" id="id_file">
+                            <button type="submit">Botão</button>
+                        </form>
+                    </div>
+                </div>
+                <hr>
+                <div class="row">
+                    {% if entradas %}
+                        {% for q in entradas %}
+                            <div class="container tktcontainer">
+                                <ul>
+                                    <li>ID entrada: {{ q.id }}</li>
+                                    <li>Observação: {{ q.obs }}</li>
+                                    {% if q.file1 %}<li><a href="/media/{{ q.file1 }}" download>{{ q.file1 }}</a></li>{% endif %}
+                                    {% if q.file2 %}<li><a href="/media/{{ q.file2 }}" download>Arquivo 2</a></li>{% endif %}
+                                    {% if q.file3 %}<li><a href="/media/{{ q.file3 }}" download>Arquivo 3</a></li>{% endif %}
+                                </ul>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
 {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+<script>
+    var input = document.getElementById('id_file')
+    input.addEventListener('change', (e) =>{
+        const files = input.files;
+        if(files.length > 3){
+            alert('Máximo de 3 arquivos permitidos.')
+            input.value = ''
+        }
+    });
+</script>
 {% endblock %}

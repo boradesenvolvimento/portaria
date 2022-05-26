@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+{% load groupscheck %}
+{% if request.user|has_group:"terceirizados" %}
+    <div class="container mt-4">
+        {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+        {% endfor %}
+        <div class="container">
+            <h1>Terceirizados<hr></h1>
+            <div class="row linha-baixo">
+                <form method="post">{% csrf_token %}
+                {{ form.as_p }}
+                <input class="button" type="submit">
+                </form>
+            </div>
+        </div>
+    </div>
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+<script>
+    $(function(){
+        var availableTags = [
+            {% for q in forns %}
+                "{{ q.razao_social }}",
+            {% endfor %}
+        ];
+        $('#id_fornecedor').autocomplete({source: availableTags});
+    });
+</script>
+{% endblock %}

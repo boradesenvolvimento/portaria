@@ -104,5 +104,9 @@ urlpatterns = [
     path('compras/lancar_pedido/', views.compras_lancar_pedido, name='compras_lancar_pedido'),
     path('compras/painel/', views.painel_compras, name='painel_compras'),
     path('compras/painel/<id>/edit', views.edit_compras, name='edit_compras'),
+    path('insert_entradas_cpr/', views.insert_entradas_cpr, name='insert_entradas_cpr'),
+    path('terceirizados/', views.terceirizados_index, name='terceirizadosindex'),
+    path('terceirizados/insert', views.insert_terceirizados, name='insertterceirizados'),
+    path('get_terceirizados_xls', views.get_terceirizados_xls, name='get_terceirizados_xls'),
     #path('testapi/', views.TestApi.conn, name='testapi')
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

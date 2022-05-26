@@ -4,7 +4,7 @@ from django.forms import Textarea, DateField
 from django_summernote.widgets import SummernoteWidget
 
 from .models import Cadastro, TIPO_GARAGEM, ChecklistFrota, NfServicoPj, ManutencaoFrota, ServJoinManu, feriaspj, \
-    FuncPj, Motorista, Veiculos, Cliente, PaleteControl, TipoServicosManut
+    FuncPj, Motorista, Veiculos, Cliente, PaleteControl, TipoServicosManut, RegistraTerceirizados
 
 
 #forms
@@ -238,6 +238,16 @@ class feriaspjForm(forms.ModelForm):
             'ultimas_ferias_ini': DateInput(),
             'ultimas_ferias_fim': DateInput(),
         }
+
+class InsertTerceirizados(forms.ModelForm):
+    class Meta:
+        model = RegistraTerceirizados
+        fields = [
+            'fornecedor',
+            'nome_funcionario',
+            'rg',
+            'cpf'
+        ]
 
 class UploadForm(forms.Form):
     file = forms.FileField(required=False,widget=forms.ClearableFileInput(attrs={'multiple': True}))

@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+{% load groupscheck %}
+{% if request.user|has_group:"terceirizados" %}
+    <div class="container mt-4">
+        {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+        {% endfor %}
+        <div class="container">
+            <h1>Terceirizados<hr></h1>
+            <div class="row linha-baixo">
+                <div class="col">
+                <label for="cadterceiro"><strong>Lançamento</strong></label>
+                <a href="{% url 'portaria:insertterceirizados' %}" id="cadterceiro">
+                    <button type="button">Cadastrar Terceirizados</button>
+                </a>
+                </div>
+            </div>
+            <div class="row linha-baixo">
+                <label for="relterceiro"><strong>Pegar Relatório</strong></label>
+                <div id="relterceiro">
+                    <form method="post" action="{% url 'portaria:get_terceirizados_xls' %}">{% csrf_token %}
+                        <input type="date" name="date1">
+                        <input type="date" name="date2">
+                        <button type="submit">Botão</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+{% endblock %}

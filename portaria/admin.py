@@ -153,3 +153,11 @@ admin.site.register(SolicitacoesCompras, SolicitacoesComprasAdmin)
 class ProdutosSolicitacoesAdmin(admin.ModelAdmin):
     pass
 admin.site.register(ProdutosSolicitacoes, ProdutosSolicitacoesAdmin)
+
+class RegistraTerceirizadosAdmin(admin.ModelAdmin):
+    pass
+admin.site.register(RegistraTerceirizados, RegistraTerceirizadosAdmin)
+
+class FornecedorTerceirizadosAdmin(admin.ModelAdmin):
+    pass
+admin.site.register(FornecedorTerceirizados, FornecedorTerceirizadosAdmin)

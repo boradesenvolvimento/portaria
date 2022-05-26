@@ -3115,7 +3115,8 @@ def bipagempalrel(request):
             if query:
                 for q in query:
                     array.append({'cliente':q.etq_ref.cliente, 'codigo':q.cod_barras, 'filial':q.get_filial_display(),
-                                  'data_bipagem':q.bip_date, 'volume':q.volume_conf, 'autor':q.autor.username})
+                                  'data_bipagem':q.bip_date, 'volume':q.volume_conf, 'nf':q.etq_ref.nota_fiscal,
+                                  'localizacao':q.etq_ref.localizacao, 'autor':q.autor.username})
                 df = pd.DataFrame(array)
                 buffer = io.BytesIO(df.to_string().encode('utf-8'))
                 df.to_excel(buffer, engine='xlsxwriter', index=False)
@@ -3308,7 +3309,7 @@ def insert_to_ocorrencias(obj):
     if just:
         nobj = OcorrenciaEntrega.objects.get_or_create(
             empresa=obj['EMPRESA'], filial=obj['FILIAL'], garagem=obj['GARAGEM'], conhecimento=obj['NUMERO_CTRC'],
-            tp_doc=obj['TIPO_DOCTO'], cod_ocor=obj['CODIGO'], desc_ocor=obj['DESCRICAO'],
+            tp_doc=obj['TIPO_DOCTO'], cod_ocor=obj['CODIGO'], desc_ocor=obj ['DESCRICAO'],
             data_ocorrencia=obj['DATA_OCORRENCIA'], entrega=just[0]
         )
     
@@ -3319,10 +3320,11 @@ def pivot_rel_just(date1, date2):
     compare_date = datetime.datetime.strptime('0001-01-01', '%Y-%m-%d')
     qs = JustificativaEntrega.objects.filter(data_emissao__lte=date2, data_emissao__gte=date1).exclude(garagem=1)
     for q in qs:
-        array.append({'ID_GARAGEM':dictga[q.id_garagem],'CONHECIMENTO':q.conhecimento, 'DATA_EMISSAO':q.data_emissao,
-                      'REMETENTE':q.remetente,'DESTINATARIO':q.destinatario,'PESO':q.peso, 'LEAD_TIME':q.lead_time,
-                      'EM_ABERTO':q.em_aberto,'LOCAL_ENTREGA':q.local_entreg,'NOTA_FISCAL':q.nota_fiscal,
-                      'COD_JUST':q.cod_just,'DESC_JUST':q.desc_just, 'AUTOR':q.autor,
+        array.append({'ID_GARAGEM':dictga[q.id_garagem],'CONHECIMENTO':q.conhecimento, 'TIPO_DOC': q.tipo_doc,
+                      'DATA_EMISSAO':q.data_emissao,'REMETENTE':q.remetente,'DESTINATARIO':q.destinatario,
+                      'PESO':q.peso, 'LEAD_TIME':q.lead_time,'EM_ABERTO':q.em_aberto,'LOCAL_ENTREGA':q.local_entreg,
+                      'NOTA_FISCAL':q.nota_fiscal,'COD_JUST':q.cod_just,'DESC_JUST':q.desc_just,
+                      'AUTOR':q.autor,
                       'DATA_ENTREGA': 'NAO ENTREGUE' if q.data_entrega == compare_date.date() else q.data_entrega
                       })
     pdr = pd.DataFrame(array)
@@ -3369,9 +3371,11 @@ def compras_index(request):
 
 def compras_lancar_pedido(request):
     keyga = {v: k for k, v in GARAGEM_CHOICES}
+    gakey = {k: v for k, v in GARAGEM_CHOICES}
     if request.method == 'POST':
         idsolic = request.POST.get('getid')
         fil = request.POST.get('filial')
+        newga = garagem_para_filial_praxio(gakey[fil])
         if idsolic:
             conn = settings.CONNECTION
             cur = conn.cursor()
@@ -3419,6 +3423,8 @@ def compras_lancar_pedido(request):
                                 CPR_ITENSSOLICITADOS CIS,
                                 EST_CADMATERIAL CM
                             WHERE
+                                SO.CODIGOEMPRESA = {newga['empresa']}             AND
+                                SO.CODIGOFL = {newga['filial']}                   AND 
                                 SO.NUMEROSOLIC = CIS.NUMEROSOLIC AND
                                 SO.STATUSSOLIC = 'P'                      AND    
                                 SO.DATASOLIC BETWEEN ((SYSDATE)-30) AND (SYSDATE) AND    
@@ -3466,6 +3472,8 @@ def compras_lancar_pedido(request):
                                 CPR_SOLICITACAO SO,
                                 CPR_SOLICOUTROS SCO
                             WHERE
+                                SO.CODIGOEMPRESA = {newga['empresa']}             AND
+                                SO.CODIGOFL = {newga['filial']}                   AND
                                 SO.NUMEROSOLIC = SCO.NUMEROSOLIC    AND
                                 SO.STATUSSOLIC = 'P'                      AND    
                                 SO.DATASOLIC BETWEEN ((SYSDATE)-30) AND (SYSDATE) AND
@@ -3491,14 +3499,161 @@ def compras_lancar_pedido(request):
                     messages.error(request, 'Não encontrado solicitação com este número.')
         return redirect('portaria:compras_index')
 
+def garagem_para_filial_praxio(garagem):
+    if garagem == 'SPO':
+        newga = {'empresa':'1', 'filial':'1'}
+    elif garagem == 'REC':
+        newga = {'empresa':'1', 'filial':'2'}
+    elif garagem == 'SSA':
+        newga = {'empresa':'1', 'filial':'3'}
+    elif garagem == 'FOR':
+        newga = {'empresa': '1', 'filial': '4'}
+    elif garagem == 'MCZ':
+        newga = {'empresa':'1', 'filial':'5'}
+    elif garagem == 'NAT':
+        newga = {'empresa':'1', 'filial':'6'}
+    elif garagem == 'JPA':
+        newga = {'empresa':'1', 'filial':'7'}
+    elif garagem == 'AJU':
+        newga = {'empresa':'1', 'filial':'8'}
+    elif garagem == 'VDC':
+        newga = {'empresa':'1', 'filial':'9'}
+    elif garagem == 'MG':
+        newga = {'empresa':'1', 'filial':'10'}
+    elif garagem == 'CTG':
+        newga = {'empresa':'2', 'filial':'1'}
+    elif garagem == 'TCO':
+        newga = {'empresa':'2', 'filial':'2'}
+    elif garagem == 'UDI':
+        newga = {'empresa':'2', 'filial':'3'}
+    elif garagem == 'TMA':
+        newga = {'empresa':'2', 'filial':'4'}
+    elif garagem == 'VIX':
+        newga = {'empresa':'2', 'filial':'5'}
+    elif garagem == 'BMA':
+        newga = {'empresa':'3', 'filial':'1'}
+    elif garagem == 'BPE':
+        newga = {'empresa':'3', 'filial':'2'}
+    elif garagem == 'BEL':
+        newga = {'empresa':'3', 'filial':'3'}
+    elif garagem == 'BPB':
+        newga = {'empresa':'3', 'filial':'4'}
+    elif garagem == 'SLZ':
+        newga = {'empresa':'3', 'filial':'5'}
+    elif garagem == 'BAL':
+        newga = {'empresa':'3', 'filial':'6'}
+    elif garagem == 'THE':
+        newga = {'empresa':'3', 'filial':'7'}
+    elif garagem == 'BMG':
+        newga = {'empresa':'3', 'filial':'8'}
+    elif garagem == 'FMA':
+        newga = {'empresa':'4', 'filial':'1'}
+    return newga
+
 def painel_compras(request):
     form = SolicitacoesCompras.objects.all()
     return render(request, 'portaria/etc/painelcompras.html', {'form':form})
 
 def edit_compras(request, id):
     obj = get_object_or_404(SolicitacoesCompras, pk=id)
-    print(obj)
-    return render(request, 'portaria/etc/edit_compras.html', {'obj':obj})
+    entradas = SolicitacoesEntradas.objects.filter(cpr_ref=obj)
+    gachoices = GARAGEM_CHOICES
+    keyga = {k:v for v,k in gachoices}
+    stschoices = SolicitacoesCompras.STATUS_CHOICES
+    dpchoices = SolicitacoesCompras.DEPARTAMENTO_CHOICES
+    rpchoices = User.objects.all()
+    if request.method == 'POST':
+        status = request.POST.get('status')
+        filial = keyga[request.POST.get('filial')]
+        departamento = request.POST.get('departamento')
+        responsavel = request.POST.get('responsavel')
+        try:
+            obj.status = status
+            obj.filial = filial
+            obj.departamento = departamento
+            obj.responsavel_id = responsavel
+        except Exception as e:
+            print(f'err:{e}, err_t:{type(e).__name__}')
+        else:
+            obj.save()
+
+    return render(request, 'portaria/etc/edit_compras.html', {'obj':obj, 'gachoices':gachoices, 'stschoices':stschoices,
+                                                              'dpchoices':dpchoices, 'rpchoices':rpchoices,
+                                                              'entradas':entradas})
+
+def insert_entradas_cpr(request):
+    if request.method == 'POST':
+        obj = get_object_or_404(SolicitacoesCompras, pk=request.POST.get('obj_id'))
+        textarea = request.POST.get('textarea')
+        files = request.FILES.getlist('file')
+        if obj and textarea:
+            try:
+                entrada = SolicitacoesEntradas.objects.create(obs=textarea, cpr_ref=obj)
+                if files:
+                    cont = 1
+                    for q in files:
+                        if cont == 1:
+                            entrada.file1 = q
+                        elif cont == 2:
+                            entrada.file2 = q
+                        elif cont == 3:
+                            entrada.file3 = q
+                        cont += 1
+                    entrada.save()
+            except Exception as e:
+                print(f'Error:{e}, error_type:{type(e).__name__}')
+                messages.error(request,'Whoops, something went wrong :/')
+            else:
+                messages.success(request, 'Cadastrad com sucesso')
+    return redirect('portaria:painel_compras')
+
+def terceirizados_index(request):
+    return render(request, 'portaria/etc/terceirizadosindex.html')
+
+def insert_terceirizados(request):
+    forns = FornecedorTerceirizados.objects.all()
+    form = InsertTerceirizados
+    autor = request.user
+    keyga = {v: k for k, v in GARAGEM_CHOICES}
+    if request.method == 'POST':
+        form = InsertTerceirizados(request.POST or None)
+        if form.is_valid():
+            try:
+                nome_f = form.cleaned_data['nome_funcionario']
+                forn = form.cleaned_data['fornecedor']
+                nforn = FornecedorTerceirizados.objects.get(razao_social=forn)
+                order = form.save(commit=False)
+                order.autor = autor
+                order.filial = keyga[autor.last_name]
+                order.valor = nforn.valor_p_funcionario
+                order.save()
+            except Exception as e:
+                print(f'Error: {e}, error_type: {type(e).__name__}')
+            else:
+                messages.success(request, f'{nome_f} cadastrado com sucesso')
+                return redirect('portaria:terceirizadosindex')
+
+    return render(request, 'portaria/etc/insertterceirizados.html', {'form':form, 'forns':forns})
+
+def get_terceirizados_xls(request):
+    array = []
+    if request.method == 'POST':
+        date1 = datetime.datetime.strptime(request.POST.get('date1'), '%Y-%m-%d')
+        date2 = datetime.datetime.strptime(request.POST.get('date2'), '%Y-%m-%d').replace(hour=23, minute=59)
+        qs = RegistraTerceirizados.objects.filter(data__lte=date2, data__gte=date1)
+        if qs:
+            for q in qs:
+                array.append({'FILIAL': q.get_filial_display(), 'FORNECEDOR': q.fornecedor, 'NOME': q.nome_funcionario, 'RG': q.rg,
+                              'CPF': q.cpf,'VALOR': q.valor, 'DATA': dateformat.format(q.data, 'd-m-Y'), 'AUTOR': q.autor})
+            df = pd.DataFrame(array)
+            buffer = io.BytesIO(df.to_string().encode('utf-8'))
+            df.to_excel(buffer, engine='xlsxwriter', index=False)
+            response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = f'attachment; filename=relatorio-terceirizados-{datetime.date.today()}.xlsx'
+            writer = pd.ExcelWriter(response, engine='xlsxwriter')
+            df.to_excel(writer, 'sheet1', index=False)
+            writer.save()
+            return response
 
 class TestApi:
     def __init__(self):
