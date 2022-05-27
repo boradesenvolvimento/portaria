@@ -1,3 +1,4 @@
+import os
 from datetime import date
 
 from django import template
@@ -37,3 +38,7 @@ def rangeloop(value):
 def is_past(value):
     if value:
         return date.today() > value
+
+@register.filter
+def filename(value):
+    return os.path.basename(value.file.name)

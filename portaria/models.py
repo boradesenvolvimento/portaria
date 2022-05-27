@@ -808,7 +808,9 @@ class RegistraTerceirizados(models.Model):
     nome_funcionario = models.CharField(max_length=100)
     rg = models.CharField(max_length=15)
     cpf = models.CharField(max_length=11, validators=[only_int])
-    data = models.DateTimeField(default=timezone.now)
+    data_entrada = models.DateTimeField(default=timezone.now)
+    data_saida = models.DateTimeField(null=True, blank=True)
+    foto = models.ImageField(upload_to='images/terceirizados/', null=True)
     valor = models.FloatField()
     autor = models.ForeignKey(User, on_delete=models.CASCADE)
 

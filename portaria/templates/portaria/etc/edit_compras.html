@@ -67,28 +67,31 @@
         <div class="container viewmonit">
             <div class="tktcontainer">
                 <div class="row">
-                    <div class="container">
                     <h2>Cadastrar entradas</h2>
                         <form method="post" action="{% url 'portaria:insert_entradas_cpr' %}" enctype="multipart/form-data">{% csrf_token %}
                             <input type="hidden" name="obj_id" value="{{ obj.id }}">
-                            <textarea class="col-6" rows="7" cols="50" style="resize:none;margin:3rem;" name="textarea"></textarea>
-                            <label class="col" for="id_file" style="font-size:3.2rem;cursor:pointer;"><ion-icon name="attach-outline"></ion-icon></label>
-                            <input type="file" name="file" multiple="" id="id_file">
-                            <button type="submit">Botão</button>
+                            <div class="col-8">
+                                <textarea rows="7" cols="60" style="border:solid 1px;resize:none;" name="textarea"></textarea>
+                            </div>
+                            <div class="col-2" style="margin-left:2rem;">
+                                <label for="id_file" style="font-size:3.2rem;cursor:pointer;"><ion-icon name="attach-outline"></ion-icon></label>
+                                <input type="file" name="file" multiple="" id="id_file">
+                                <button type="submit">Botão</button>
+                            </div>
                         </form>
-                    </div>
+
                 </div>
                 <hr>
                 <div class="row">
                     {% if entradas %}
                         {% for q in entradas %}
-                            <div class="container tktcontainer">
+                            <div class="container createboxes">
                                 <ul>
                                     <li>ID entrada: {{ q.id }}</li>
                                     <li>Observação: {{ q.obs }}</li>
-                                    {% if q.file1 %}<li><a href="/media/{{ q.file1 }}" download>{{ q.file1 }}</a></li>{% endif %}
-                                    {% if q.file2 %}<li><a href="/media/{{ q.file2 }}" download>Arquivo 2</a></li>{% endif %}
-                                    {% if q.file3 %}<li><a href="/media/{{ q.file3 }}" download>Arquivo 3</a></li>{% endif %}
+                                    {% if q.file1 %}<li><a href="/media/{{ q.file1 }}" download>{{ q.file1|filename }}</a></li>{% endif %}
+                                    {% if q.file2 %}<li><a href="/media/{{ q.file2 }}" download>{{ q.file2|filename }}</a></li>{% endif %}
+                                    {% if q.file3 %}<li><a href="/media/{{ q.file3 }}" download>{{ q.file3|filename }}</a></li>{% endif %}
                                 </ul>
                             </div>
                         {% endfor %}

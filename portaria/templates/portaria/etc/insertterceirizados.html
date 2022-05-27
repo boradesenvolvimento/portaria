@@ -3,6 +3,12 @@
 {% load static %}
 {% load groupscheck %}
 {% if request.user|has_group:"terceirizados" %}
+<style type="text/css">
+    input[type="file"]{
+        display: inline;
+        border-radius: 0px;
+    }
+</style>
     <div class="container mt-4">
         {% for message in messages %}
             <div class="container-fluid p-0">
@@ -14,8 +20,10 @@
         <div class="container">
             <h1>Terceirizados<hr></h1>
             <div class="row linha-baixo">
-                <form method="post">{% csrf_token %}
+                <form method="post" enctype="multipart/form-data">{% csrf_token %}
                 {{ form.as_p }}
+                <p><label for="id_foto">Foto:</label>
+                    <input type="file" name="foto" accept="image/*" id="id_foto"></p>
                 <input class="button" type="submit">
                 </form>
             </div>

@@ -22,6 +22,14 @@
                 </div>
             </div>
             <div class="row linha-baixo">
+                <div class="col">
+                <label for="saidaterceiro"><strong>Lançar saídas</strong></label>
+                <a href="{% url 'portaria:saidas_terceirizados' %}" id="saidaterceiro">
+                    <button type="button">Cadastrar Saidas Terceirizados</button>
+                </a>
+                </div>
+            </div>
+            <div class="row linha-baixo">
                 <label for="relterceiro"><strong>Pegar Relatório</strong></label>
                 <div id="relterceiro">
                     <form method="post" action="{% url 'portaria:get_terceirizados_xls' %}">{% csrf_token %}

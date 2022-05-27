@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+{% load groupscheck %}
+{% if request.user|has_group:"terceirizados" %}
+    <div class="container mt-4">
+        {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+        {% endfor %}
+        <div class="container">
+            <h1>Terceirizados - Saidas<hr></h1>
+            <div class="row linha-baixo">
+
+                <p>{{ q }}</p>
+                <table class="table table1">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>CPF</th>
+                            <th>Data Entrada</th>
+                            <th>Marcar Saída</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for q in obj %}
+                        <tr>
+                            <td>{{ q.nome_funcionario }}</td>
+                            <td>{{ q.cpf }}</td>
+                            <td>{{ q.data_entrada }}</td>
+                            <form method="post">{% csrf_token %}
+                            <td><input name="funcid" type="hidden" value="{{ q.id }}">
+                                <button>saida</button></td>
+                            </form>
+                        </tr>
+                    </tbody>
+                {% endfor %}
+                </table>
+            </div>
+        </div>
+    </div>
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+<script>
+    $(function(){
+        var availableTags = [
+            {% for q in forns %}
+                "{{ q.razao_social }}",
+            {% endfor %}
+        ];
+        $('#id_fornecedor').autocomplete({source: availableTags});
+    });
+</script>
+{% endblock %}

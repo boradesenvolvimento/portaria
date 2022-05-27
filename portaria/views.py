@@ -224,9 +224,8 @@ def cadpaletes(request):
                 messages.error(request,'Por favor digite um valor numérico para quantidade')
                 return redirect('portaria:cadpaletes')
             else:
-                nsal = Cliente.objects.filter(pk=emp).annotate(saldonew=Sum(F('saldo')+int(qnt)))
-
-                Cliente.objects.filter(pk=emp).update(saldo=nsal[0].saldonew)
+                nsal = Cliente.objects.filter(razao_social=emp).annotate(saldonew=Sum(F('saldo')+int(qnt)))
+                Cliente.objects.filter(razao_social=emp).update(saldo=nsal[0].saldonew)
                 for x in range(0,int(qnt)):
                     PaleteControl.objects.create(loc_atual=fil, tp_palete=tp_p, autor=request.user)
                     if x == 2000: break
@@ -1103,6 +1102,7 @@ def includemailtkt(request):
                     else:
                         continue
     return render(request, 'portaria/monitoramento/includemailtkt.html', {'ac':ac})
+
 def chamado(request):
     metrics = TicketChamado.objects.exclude(Q(status='CANCELADO') | Q(status='CONCLUIDO')).annotate(
         dev=Count('id', filter=Q(servico='DESENVOLVIMENTO')), praxio=Count('id', filter=Q(servico='PRAXIO')),
@@ -2627,9 +2627,9 @@ def chamadoreadmail(request):
     servico = ''
     hoje = datetime.date.today()
     attatch = ''
-    host = get_secret('EHOST_CH')
-    e_user = get_secret('EUSER_CH') ################### alterar
-    e_pass = get_secret('EPASS_CH')
+    host = "smtp.bora.com.br" #get_secret('EHOST_CH')
+    e_user = "teste@bora.com.br" #get_secret('EUSER_CH') ################### alterar
+    e_pass = "Bor@413247" #get_secret('EPASS_CH')
     pattern1 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
     pattern2 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp).\w+.\w+')
     rr = random.random()
@@ -2748,10 +2748,6 @@ def chamadoreadmail(request):
                         print(f'ErrorType: {type(e).__name__}, Error: {e}')
                     else:
                         w_body = w_body.replace(q, new_cid)
-            if e_to == 'chamado.praxio@bora.com.br':
-                servico = 'PRAXIO'
-            else:
-                servico = 'DESENVOLVIMENTO'
             try:
                 form = EmailChamado.objects.filter(email_id=e_ref)
                 tkt = TicketChamado.objects.get(Q(msg_id=e_id) | Q(msg_id=e_ref))
@@ -3619,32 +3615,51 @@ def insert_terceirizados(request):
         form = InsertTerceirizados(request.POST or None)
         if form.is_valid():
             try:
+                foto = request.FILES.get('foto')
                 nome_f = form.cleaned_data['nome_funcionario']
                 forn = form.cleaned_data['fornecedor']
                 nforn = FornecedorTerceirizados.objects.get(razao_social=forn)
                 order = form.save(commit=False)
                 order.autor = autor
+                order.foto = foto
                 order.filial = keyga[autor.last_name]
                 order.valor = nforn.valor_p_funcionario
                 order.save()
             except Exception as e:
                 print(f'Error: {e}, error_type: {type(e).__name__}')
+                raise e
             else:
                 messages.success(request, f'{nome_f} cadastrado com sucesso')
                 return redirect('portaria:terceirizadosindex')
 
     return render(request, 'portaria/etc/insertterceirizados.html', {'form':form, 'forns':forns})
 
+def saidas_terceirizados(request):
+    obj = RegistraTerceirizados.objects.filter(data_saida__isnull=True)
+    if request.method == 'POST':
+        aa = request.POST.get('funcid')
+        try:
+            RegistraTerceirizados.objects.filter(pk=aa).update(data_saida=timezone.now())
+        except Exception as e:
+            print(f'Error: {e}, error_type: {type(e).__name__}')
+            messages.error(request,'Whoops, something went wrong!')
+            return redirect('portaria:saidas_terceirizados')
+        else:
+            messages.success(request, f'inserido com sucesso')
+            return redirect('portaria:saidas_terceirizados')
+    return render(request, 'portaria/etc/saidasterceirizados.html', {'obj':obj})
+
 def get_terceirizados_xls(request):
     array = []
     if request.method == 'POST':
         date1 = datetime.datetime.strptime(request.POST.get('date1'), '%Y-%m-%d')
         date2 = datetime.datetime.strptime(request.POST.get('date2'), '%Y-%m-%d').replace(hour=23, minute=59)
-        qs = RegistraTerceirizados.objects.filter(data__lte=date2, data__gte=date1)
+        qs = RegistraTerceirizados.objects.filter(data_entrada__lte=date2, data_entrada__gte=date1)
         if qs:
             for q in qs:
-                array.append({'FILIAL': q.get_filial_display(), 'FORNECEDOR': q.fornecedor, 'NOME': q.nome_funcionario, 'RG': q.rg,
-                              'CPF': q.cpf,'VALOR': q.valor, 'DATA': dateformat.format(q.data, 'd-m-Y'), 'AUTOR': q.autor})
+                array.append({'FILIAL': q.get_filial_display(), 'FORNECEDOR': q.fornecedor, 'NOME': q.nome_funcionario,
+                              'RG': q.rg,'CPF': q.cpf,'VALOR': q.valor,'DATA_ENTRADA': dateformat.format(q.data_entrada, 'd-m-Y H:i'),
+                              'DATA_SAIDA':dateformat.format(q.data_saida, 'd-m-Y H:i'),'AUTOR': q.autor})
             df = pd.DataFrame(array)
             buffer = io.BytesIO(df.to_string().encode('utf-8'))
             df.to_excel(buffer, engine='xlsxwriter', index=False)

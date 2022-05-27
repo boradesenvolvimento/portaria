@@ -1,5 +1,6 @@
 from django import forms
 from django.conf import settings
+from django.db.models import ImageField
 from django.forms import Textarea, DateField
 from django_summernote.widgets import SummernoteWidget
 
@@ -246,7 +247,7 @@ class InsertTerceirizados(forms.ModelForm):
             'fornecedor',
             'nome_funcionario',
             'rg',
-            'cpf'
+            'cpf',
         ]
 
 class UploadForm(forms.Form):
