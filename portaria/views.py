@@ -2628,7 +2628,7 @@ def chamadoupdate(request,tktid,area, myfile):
                             os.rename(locimg, os.path.join(path, (str(rr) + str(q))))
                         except:
                             os.rename(locimg, os.path.join(path, str(rr) + str(q) + str(random.randint(1,100))))
-                    item = os.path.join('/static/chamados' + str(hoje) + '/', (str(rr) + str(q)))
+                    item = os.path.join('/static/chamados/' + str(hoje) + '/', (str(rr) + str(q)))
                     aatt = '<div class="mailattatch"><a href="' + item + '" download><img src="/static/images/downicon.png" width="40"><p>' + str(
                         q) + '</p></a></div>'
                     attatch += aatt
@@ -2639,7 +2639,7 @@ def chamadoupdate(request,tktid,area, myfile):
             if re.findall(pattern, msg):
                 for q in re.findall(pattern,msg):
                     media = q
-                    img_data = open((media), 'rb').read()
+                    img_data = open(('/home/bora/www' + media), 'rb').read()
                     msgimg = MIMEImage(img_data, name=os.path.basename(media), _subtype='jpg')
                     msgimg.add_header('Content-ID', f'{media}')
                     msg1.attach(msgimg)
