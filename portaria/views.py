@@ -1112,8 +1112,7 @@ def chamado(request):
 
 def chamadopainel(request):
     groups = request.user.groups.values_list('name', flat=True)
-    form = TicketChamado.objects.filter(servico__in=groups
-    ).exclude(Q(status='CANCELADO') | Q(status='CONCLUIDO'))
+    form = TicketChamado.objects.all().exclude(Q(status='CANCELADO') | Q(status='CONCLUIDO'))
 
     if request.method == 'POST':
         srctkt = request.POST.get('srctkt')
@@ -1160,7 +1159,12 @@ def chamadodetail(request, tktid):
     resp = User.objects.filter(groups__name='chamado').exclude(id=1)
     form = get_object_or_404(EmailChamado, tkt_ref=tktid)
     editor = TextEditor()
-
+    array = []
+    try:
+        for q in form.ult_resp_html.split('<p>Anterior</p><hr>'):
+            array.append(q)
+    except:
+        pass
     if request.method == 'POST':
         ndptm = request.POST.get('ndptm')
         nstts = request.POST.get('nstts')
@@ -1185,11 +1189,15 @@ def chamadodetail(request, tktid):
                 else:
                     TicketChamado.objects.filter(pk=form.tkt_ref_id).update(status=nstts)
             if area and area != '<p><br></p>':
-                chamadoupdate(request, tktid, area)
+                if request.POST.get('file') != '':
+                    myfile = request.FILES.getlist('file')
+                else:
+                    myfile = None
+                chamadoupdate(request, tktid, area, myfile)
         except Exception as e:
             print(e)
     return render(request, 'portaria/chamado/chamadodetail.html', {'form':form,'editor':editor,'stts':stts,'dp':dp,
-                                                                   'resp':resp,'fil':fil})
+                                                                   'resp':resp,'fil':fil,'array':array})
 
 def etiquetas(request):
     gachoices = TicketMonitoramento.GARAGEM_CHOICES
@@ -2583,41 +2591,106 @@ def createchamado(request, **kwargs):
                     description="Seu ticket foi criado.")
         messages.success(request, 'Email enviado e ticket criado com sucesso')
 
-def chamadoupdate(request,tktid,area):
+def chamadoupdate(request,tktid,area, myfile):
     media = ''
+    attatch = ''
+    hoje = datetime.date.today()
+    rr = random.random()
+    path = settings.STATIC_ROOT + '/chamados/' + str(hoje) + '/'
     pattern = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
+    pattern2 = re.compile(r'/static/chamados/\S+(?i:jpeg|jpg|gif|png|bmp)')
     orig = get_object_or_404(EmailChamado, tkt_ref_id=tktid)
     if request.method == 'POST':
-        msg1 = MIMEMultipart()
+        msg1 = MIMEMultipart('related')
         msg = area
+        msg2 = area
+        if myfile is not None:
+            for q in myfile:
+                locimg = os.path.join(path, str(q))
+                if os.path.exists(os.path.join(path)):
+                    fp = open(locimg, 'wb')
+                    fp.write(q.read())
+                    fp.close()
+                    os.chmod(locimg, 0o777)
+                    try:
+                        os.rename(locimg, os.path.join(path, str(rr) + str(q)))
+                    except:
+                        os.rename(locimg, os.path.join(path, str(rr) + str(q) + str(random.randint(1,100))))
+                else:
+                    os.mkdir(path=path)
+                    os.chmod(path, 0o777)
+                    fp = open(locimg, 'wb')
+                    fp.write(q.read())
+                    fp.close()
+                    os.chmod(locimg, 0o777)
+                    try:
+                        os.rename(locimg, os.path.join(path, (str(rr) + str(q))))
+                    except:
+                        os.rename(locimg, os.path.join(path, str(rr) + str(q) + str(random.randint(1,100))))
+                item = os.path.join('/static/chamados' + str(hoje) + '/', (str(rr) + str(q)))
+                aatt = '<div class="mailattatch"><a href="' + item + '" download><img src="/static/images/downicon.png" width="40"><p>' + str(
+                    q) + '</p></a></div>'
+                attatch += aatt
+                q.seek(0)
+                part = MIMEApplication(q.read(), name=str(q))
+                part['Content-Disposition'] = 'attachment; filename="%s"' % q
+                msg1.attach(part)
         if re.findall(pattern, msg):
             for q in re.findall(pattern,msg):
                 media = q
-                img_data = open(('/home/bora/www' + media), 'rb').read()
-                msgimg = MIMEImage(img_data, name=os.path.basename(media))
-                print(msgimg)
+                img_data = open((media), 'rb').read()
+                msgimg = MIMEImage(img_data, name=os.path.basename(media), _subtype='jpg')
                 msgimg.add_header('Content-ID', f'{media}')
-                msg = msg.replace(('src="' + media + '"'), f'src="cid:{media}" ')
                 msg1.attach(msgimg)
+                msg = msg.replace(('src="' + media + '"'), f'src="cid:{media}" ')
+        if orig.ult_resp:
+            nmsg = '<div class="container chmdimg">' + msg + '</div>' + orig.ult_resp.split('<p>Anterior</p><hr>')[0]
+            nmsg2 = '<div class="container chmdimg">' + msg2 + '</div>' + orig.ult_resp_html.split('<p>Anterior</p><hr>')[0]
+        else:
+            nmsg = '<div class="container chmdimg">' + msg + '</div>' + orig.mensagem.split('<div class="mailattatch">')[0]
+            nmsg2 = '<div class="container chmdimg">' + msg2 + '</div>' + orig.mensagem.split('<div class="mailattatch">')[0]
+        if re.findall(pattern2, nmsg):
+            array = []
+            for q in re.findall(pattern2, nmsg):
+                fp = open(('/home/bora/www' + q), 'rb')
+                img_data = fp.read()
+                msgimg2 = MIMEImage(img_data, name=os.path.basename(q), _subtype='jpg')
+                msgimg2.add_header('Content-ID', f'{os.path.basename(q)}')
+                for i in msgimg2.walk():
+                    if i['Content-ID'] not in array:
+                        msg1.attach(msgimg2)
+                        nmsg = nmsg.replace((f'="{q}"'), f'="cid:{os.path.basename(q)}"')
+                        array.append(i['Content-ID'])
+        nmsg2 = nmsg2.replace(f'<p>Anterior</p><hr>', '<hr>')
+        nmsg = nmsg.replace(f'<p>Anterior</p><hr>', '<hr>')
+        if orig.ult_resp is not None:
+            aa = msg + orig.ult_resp
+            bb = '<hr>' + str(request.user) + ' -- ' + str(dateformat.format(timezone.now(), 'd-m-Y H:i')) + '<br>' + nmsg2 + '<br>' + attatch + '<p>Anterior</p><hr>' + orig.ult_resp_html
+        else:
+            aa = msg
+            bb = '<hr>' + str(request.user) + ' -- ' + str(dateformat.format(timezone.now(), 'd-m-Y H:i')) + '<br>' + nmsg2 + '<br>' + attatch
         msg1['Subject'] = orig.assunto
         msg1['In-Reply-To'] = orig.email_id
         msg1['References'] = orig.email_id
         msg_id = make_msgid(idstring=None, domain='bora.com.br')
         msg1['Message-ID'] = msg_id
-        msg1['From'] = get_secret('EUSER_CH') ################### alterar
+        msg1['From'] = 'teste@bora.com.br' ################### alterar
         msg1['To'] = orig.tkt_ref.solicitante
-        msg1.attach(MIMEText(msg, 'html', 'utf-8'))
-        smtp_h = get_secret('EHOST_CH')
+        msg1.attach(MIMEText(nmsg, 'html', 'utf-8'))
+        smtp_h = "pop.bora.com.br"
         smtp_p = '587'
-        user = get_secret('EUSER_CH')  ################### alterar
-        passw = get_secret('EPASS_CH')
+        user = "teste@bora.com.br"  ################### alterar
+        passw = "Bor@413247"
         try:
-            sm = smtplib.SMTP(get_secret('ESMTP_CH'), smtp_p)
+            sm = smtplib.SMTP('smtp.bora.com.br', smtp_p)
             sm.set_debuglevel(1)
-            sm.login(get_secret('EUSER_CH'), get_secret('EPASS_CH')) ################### alterar################### alterar
-            sm.sendmail(get_secret('EUSER_CH'), [get_secret('EUSER_CH')]+orig.tkt_ref.solicitante.split(';'), msg1.as_string())
+            sm.login('teste@bora.com.br', 'Bor@413247') ################### alterar################### alterar
+            sm.sendmail('teste@bora.com.br', orig.tkt_ref.solicitante.split(';'), msg1.as_string())
+            EmailChamado.objects.filter(pk=orig.id).update(ult_resp=aa, ult_resp_html=bb,ult_resp_dt=dateformat.format(timezone.now(),'Y-m-d H:i'))
         except Exception as e:
             print(f'ErrorType:{type(e).__name__}, Error:{e}')
+        else:
+            messages.success(request, 'Resposta enviada com sucesso!')
     else:
         print('nao entrou no if')
 
@@ -2626,13 +2699,11 @@ def chamadoreadmail(request):
     tkt = None
     servico = ''
     hoje = datetime.date.today()
-    attatch = ''
     host = "smtp.bora.com.br" #get_secret('EHOST_CH')
     e_user = "teste@bora.com.br" #get_secret('EUSER_CH') ################### alterar
     e_pass = "Bor@413247" #get_secret('EPASS_CH')
     pattern1 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
     pattern2 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp).\w+.\w+')
-    rr = random.random()
 
     #logando no email
     pp = poplib.POP3(host)
@@ -2642,6 +2713,8 @@ def chamadoreadmail(request):
 
     num_messages = len(pp.list()[1]) #conta quantos emails existem na caixa
     for i in range(num_messages):
+        rr = random.random()
+        attatch = ''
         try:
             raw_email = b'\n'.join(pp.retr(i+1)[1]) #pega email
             parsed_email = email.message_from_bytes(raw_email, policy=policy.compat32)
@@ -2668,7 +2741,10 @@ def chamadoreadmail(request):
                             fp.write(part.get_payload(decode=True))
                             fp.close()
                             os.chmod(locimg, 0o777)
-                            os.rename(locimg, os.path.join(path, (str(rr) + filename)))
+                            try:
+                                os.rename(locimg, os.path.join(path, (str(rr) + filename)))
+                            except Exception as e:
+                                os.rename(locimg, os.path.join(path, (str(rr) + filename + str(random.randint(1,100)))))
                         else:
                             os.mkdir(path=path)
                             os.chmod(path, 0o777)
@@ -2676,12 +2752,16 @@ def chamadoreadmail(request):
                             fp.write(part.get_payload(decode=True))
                             fp.close()
                             os.chmod(locimg, 0o777)
-                            os.rename(locimg, os.path.join(path, (str(rr) + filename)))
-                        item = os.path.join((settings.STATIC_URL + 'chamados/' + str(hoje) + '/'), (str(rr) + filename))
-                        aa = '<div class="mailattatch"><a href="'+item+'" download><img src="/static/images/downicon.png" width="40"><p>'+filename+'</p></a></div>'
+                            try:
+                                os.rename(locimg, os.path.join(path, (str(rr) + filename)))
+                            except Exception as e:
+                                os.rename(locimg, os.path.join(path, (str(rr) + filename + str(random.randint(1,100)))))
+                        item = os.path.join(('/static/chamados/' + str(hoje) + '/'), (str(rr) + filename))
+                        aa = '<div class="mailattatch"><a href="'+item+'" download><img src="/static/images/downicon.png" width="40"><p>'+filename[:-4]+'</p></a></div>'
                         attatch += aa
             else:
                 body = parsed_email.get_payload(decode=True)
+                htbody = body
             #funcao para pegar codificacao
             cs = parsed_email.get_charsets()
             for q in cs:
@@ -2714,25 +2794,25 @@ def chamadoreadmail(request):
 
             #separa conteudo email, e pega attatchments
             e_body = body.decode(cs)
-            if e_body:
-                reply_parse = re.findall(r'(De:*\a*\w.*.\sEnviada em:+\s+\w.*.+[,]+\s+\d+\s+\w+\s+\w+\s+\w+\s+\d+\s+\d+:+\d.*)', e_body)
-                if reply_parse:
-                    e_body = e_body.split(reply_parse[0])[0].replace('\n', '<br>')
             w_body = '<div class="container chmdimg">' + htbody.decode(cs) + '</div>'
-            if w_body:
-                reply_html = re.findall(r'(<b><span+\s+\w.*.[>]+De:.*.Enviada em:.*.\s+\w.*.[,]+\s+\d+\s+\w+\s+\w+\s+\w+\s+\d+\s+\d+:+\d.*)',w_body)
-                if reply_html:
-                    w_body = w_body.split(reply_html[0])[0]
             if re.findall(pattern2, w_body):
+                print(re.findall(pattern2, w_body))
                 for q in re.findall(pattern2, w_body):
                     new = re.findall(pattern1, q)
+                    print(re.findall(pattern1, q), q)
                     if re.findall(f'/media/django-summernote/{str(hoje)}/', q):
                         new_cid = os.path.join(settings.STATIC_URL + 'chamados/' + str(hoje) + '/', (str(rr) +
                                                 new[0].split(f'cid:/media/django-summernote/{str(hoje)}/')[1]))
                     else:
-                        new_cid = os.path.join(settings.STATIC_URL + 'chamados/' + str(hoje) + '/',
+                        try:
+                            new_cid = os.path.join(settings.STATIC_URL + 'chamados/' + str(hoje) + '/',
                                                (str(rr) + new[0].split('cid:')[1]))
+                        except Exception as e:
+                            new_cid = os.path.join(settings.STATIC_URL + 'chamados/' + str(hoje) + '/',
+                                                   (str(rr) + q))
+
                     w_body = w_body.replace(q, new_cid)
+                    e_body = e_body.replace(q, new_cid)
             elif re.findall(pattern1, w_body):
                 for q in re.findall(pattern1, w_body):
                     new = re.findall(pattern1, q)
@@ -2741,58 +2821,44 @@ def chamadoreadmail(request):
                             new_cid = os.path.join(settings.STATIC_URL + 'chamados/' + str(hoje) + '/', (str(rr) +
                                                    new[0].split(f'cid:/media/django-summernote/{str(hoje)}/')[1]))
                         else:
-                            new_cid = os.path.join(settings.STATIC_URL + 'chamados/' + str(hoje)
+                            try:
+                                new_cid = os.path.join(settings.STATIC_URL + 'chamados/' + str(hoje)
                                                    + '/', (str(rr) + new[0].split('cid:')[1]))
-
+                            except Exception as e:
+                                new_cid = os.path.join(settings.STATIC_URL + 'chamados/' + str(hoje) + '/',
+                                                       (str(rr) + new[0].split('cid:')[1]))
                     except Exception as e:
                         print(f'ErrorType: {type(e).__name__}, Error: {e}')
                     else:
                         w_body = w_body.replace(q, new_cid)
+                        e_body = e_body.replace(q, new_cid)
             try:
-                form = EmailChamado.objects.filter(email_id=e_ref)
-                tkt = TicketChamado.objects.get(Q(msg_id=e_id) | Q(msg_id=e_ref))
+                form = EmailChamado.objects.filter(email_id=e_ref.strip())
             except Exception as e:
                 print(e)
-            try:
+            else:
                 if form.exists():
-                    oldreply = form[0].ult_resp_html
-                    if oldreply: newreply = w_body.split(oldreply[:50])
-                    if form[0].ult_resp:
-                        aa = '<hr>' + e_from + ' -- ' + e_date + '\n' + e_body + '\n------Anterior-------\n' + form[0].ult_resp
-                        bb = '<hr>' + e_from + ' -- ' + e_date + '<br>' + newreply[0] + attatch + '<hr>' + form[0].ult_resp_html
+                    try:
+                        tkt = TicketChamado.objects.get(pk=form[0].tkt_ref_id)
+                    except Exception as e:
+                        print(f'Error:{e}, error_type:{type(e).__name__}')
                     else:
-                        aa = '<hr>' + e_from + ' -- ' + e_date + '\n' + e_body
-                        bb = '<hr>' + e_from + ' -- ' + e_date + '<br>' + w_body + attatch
-                    form.update(ult_resp=aa, ult_resp_html=bb, ult_resp_dt=e_date)
-                    notify.send(sender=User.objects.get(pk=1),
-                                recipient=User.objects.filter(Q(groups__name='chamado')),
-                                verb='message', description=f"Nova mensagem para o ticket {tkt.id}")
-                elif form.exists() and form[0].tkt_ref.status == ('CANCELADO' or 'CONCLUIDO'):
-                    messages.warning(request, 'Ticket já encerrado')
-                    pp.dele(i + 1)
-                    pp.quit()
-                    return redirect('portaria:chamado')
-                elif form.exists() == False and tkt != None:
-                    mensagem = '<hr>' + e_from + ' -- ' + e_date + w_body + attatch
-                    newmail = EmailChamado.objects.create(assunto=e_title, mensagem=mensagem, cc=e_cc, dt_envio=e_date,
-                                                          email_id=e_id, tkt_ref=tkt)
-                    notify.send(sender=User.objects.get(pk=1),
-                                recipient=User.objects.filter(Q(groups__name='chamado')),
-                                verb='message', description=f"Nova mensagem para o ticket {tkt.id}")
+                        if form[0].ult_resp is not None:
+                            aa = '<hr>' + e_body + '<p>Anterior</p><hr>' + form[0].ult_resp
+                            bb = '<hr>' + e_from + ' -- ' + e_date + '<br>' + w_body + '<br>' + attatch + '<p>Anterior</p><hr>' + form[0].ult_resp_html
+                        else:
+                            aa = '<hr>' + e_body
+                            bb = '<hr>' + e_from + ' -- ' + e_date + '<br>' + w_body + '<br>' + attatch
+                        form.update(ult_resp=aa, ult_resp_html=bb, ult_resp_dt=e_date)
                 else:
                     newtkt = TicketChamado.objects.create(solicitante=e_from, servico=servico, nome_tkt=e_title,
                                                           dt_abertura=e_date, status='ABERTO', msg_id=e_id)
                     mensagem = '<hr>' + e_from + ' -- ' + e_date + w_body + attatch
                     newmail = EmailChamado.objects.create(assunto=e_title, mensagem=mensagem, cc=e_cc, dt_envio=e_date,
                                                           email_id=e_id, tkt_ref=newtkt)
-                    notify.send(sender=User.objects.get(pk=1),
-                                recipient=User.objects.filter(Q(groups__name='chamado')),
-                                verb='message', description=f"Novo Chamado aberto: id {newtkt.id}")
-            except Exception as e:
-                print(e)
-            else:
-                pp.dele(i + 1)
-            pp.quit()
+
+        pp.dele(i + 1)
+    pp.quit()
     return redirect('portaria:chamado')
 
 def isnotifyread(request, notifyid):
