@@ -2600,99 +2600,102 @@ def chamadoupdate(request,tktid,area, myfile):
     pattern = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
     pattern2 = re.compile(r'/static/chamados/\S+(?i:jpeg|jpg|gif|png|bmp)')
     orig = get_object_or_404(EmailChamado, tkt_ref_id=tktid)
-    if request.method == 'POST':
-        msg1 = MIMEMultipart('related')
-        msg = area
-        msg2 = area
-        if myfile is not None:
-            for q in myfile:
-                locimg = os.path.join(path, str(q))
-                if os.path.exists(os.path.join(path)):
-                    fp = open(locimg, 'wb')
-                    fp.write(q.read())
-                    fp.close()
-                    os.chmod(locimg, 0o777)
-                    try:
-                        os.rename(locimg, os.path.join(path, str(rr) + str(q)))
-                    except:
-                        os.rename(locimg, os.path.join(path, str(rr) + str(q) + str(random.randint(1,100))))
-                else:
-                    os.mkdir(path=path)
-                    os.chmod(path, 0o777)
-                    fp = open(locimg, 'wb')
-                    fp.write(q.read())
-                    fp.close()
-                    os.chmod(locimg, 0o777)
-                    try:
-                        os.rename(locimg, os.path.join(path, (str(rr) + str(q))))
-                    except:
-                        os.rename(locimg, os.path.join(path, str(rr) + str(q) + str(random.randint(1,100))))
-                item = os.path.join('/static/chamados' + str(hoje) + '/', (str(rr) + str(q)))
-                aatt = '<div class="mailattatch"><a href="' + item + '" download><img src="/static/images/downicon.png" width="40"><p>' + str(
-                    q) + '</p></a></div>'
-                attatch += aatt
-                q.seek(0)
-                part = MIMEApplication(q.read(), name=str(q))
-                part['Content-Disposition'] = 'attachment; filename="%s"' % q
-                msg1.attach(part)
-        if re.findall(pattern, msg):
-            for q in re.findall(pattern,msg):
-                media = q
-                img_data = open((media), 'rb').read()
-                msgimg = MIMEImage(img_data, name=os.path.basename(media), _subtype='jpg')
-                msgimg.add_header('Content-ID', f'{media}')
-                msg1.attach(msgimg)
-                msg = msg.replace(('src="' + media + '"'), f'src="cid:{media}" ')
-        if orig.ult_resp:
-            nmsg = '<div class="container chmdimg">' + msg + '</div>' + orig.ult_resp.split('<p>Anterior</p><hr>')[0]
-            nmsg2 = '<div class="container chmdimg">' + msg2 + '</div>' + orig.ult_resp_html.split('<p>Anterior</p><hr>')[0]
+    try:
+        if request.method == 'POST':
+            msg1 = MIMEMultipart('related')
+            msg = area
+            msg2 = area
+            if myfile is not None:
+                for q in myfile:
+                    locimg = os.path.join(path, str(q))
+                    if os.path.exists(os.path.join(path)):
+                        fp = open(locimg, 'wb')
+                        fp.write(q.read())
+                        fp.close()
+                        os.chmod(locimg, 0o777)
+                        try:
+                            os.rename(locimg, os.path.join(path, str(rr) + str(q)))
+                        except:
+                            os.rename(locimg, os.path.join(path, str(rr) + str(q) + str(random.randint(1,100))))
+                    else:
+                        os.mkdir(path=path)
+                        os.chmod(path, 0o777)
+                        fp = open(locimg, 'wb')
+                        fp.write(q.read())
+                        fp.close()
+                        os.chmod(locimg, 0o777)
+                        try:
+                            os.rename(locimg, os.path.join(path, (str(rr) + str(q))))
+                        except:
+                            os.rename(locimg, os.path.join(path, str(rr) + str(q) + str(random.randint(1,100))))
+                    item = os.path.join('/static/chamados' + str(hoje) + '/', (str(rr) + str(q)))
+                    aatt = '<div class="mailattatch"><a href="' + item + '" download><img src="/static/images/downicon.png" width="40"><p>' + str(
+                        q) + '</p></a></div>'
+                    attatch += aatt
+                    q.seek(0)
+                    part = MIMEApplication(q.read(), name=str(q))
+                    part['Content-Disposition'] = 'attachment; filename="%s"' % q
+                    msg1.attach(part)
+            if re.findall(pattern, msg):
+                for q in re.findall(pattern,msg):
+                    media = q
+                    img_data = open((media), 'rb').read()
+                    msgimg = MIMEImage(img_data, name=os.path.basename(media), _subtype='jpg')
+                    msgimg.add_header('Content-ID', f'{media}')
+                    msg1.attach(msgimg)
+                    msg = msg.replace(('src="' + media + '"'), f'src="cid:{media}" ')
+            if orig.ult_resp:
+                nmsg = '<div class="container chmdimg">' + msg + '</div>' + orig.ult_resp.split('<p>Anterior</p><hr>')[0]
+                nmsg2 = '<div class="container chmdimg">' + msg2 + '</div>' + orig.ult_resp_html.split('<p>Anterior</p><hr>')[0]
+            else:
+                nmsg = '<div class="container chmdimg">' + msg + '</div>' + orig.mensagem.split('<div class="mailattatch">')[0]
+                nmsg2 = '<div class="container chmdimg">' + msg2 + '</div>' + orig.mensagem.split('<div class="mailattatch">')[0]
+            if re.findall(pattern2, nmsg):
+                array = []
+                for q in re.findall(pattern2, nmsg):
+                    fp = open(('/home/bora/www' + q), 'rb')
+                    img_data = fp.read()
+                    msgimg2 = MIMEImage(img_data, name=os.path.basename(q), _subtype='jpg')
+                    msgimg2.add_header('Content-ID', f'{os.path.basename(q)}')
+                    for i in msgimg2.walk():
+                        if i['Content-ID'] not in array:
+                            msg1.attach(msgimg2)
+                            nmsg = nmsg.replace((f'="{q}"'), f'="cid:{os.path.basename(q)}"')
+                            array.append(i['Content-ID'])
+            nmsg2 = nmsg2.replace(f'<p>Anterior</p><hr>', '<hr>')
+            nmsg = nmsg.replace(f'<p>Anterior</p><hr>', '<hr>')
+            if orig.ult_resp is not None:
+                aa = msg + orig.ult_resp
+                bb = '<hr>' + str(request.user) + ' -- ' + str(dateformat.format(timezone.now(), 'd-m-Y H:i')) + '<br>' + nmsg2 + '<br>' + attatch + '<p>Anterior</p><hr>' + orig.ult_resp_html
+            else:
+                aa = msg
+                bb = '<hr>' + str(request.user) + ' -- ' + str(dateformat.format(timezone.now(), 'd-m-Y H:i')) + '<br>' + nmsg2 + '<br>' + attatch
+            msg1['Subject'] = orig.assunto
+            msg1['In-Reply-To'] = orig.email_id
+            msg1['References'] = orig.email_id
+            msg_id = make_msgid(idstring=None, domain='bora.com.br')
+            msg1['Message-ID'] = msg_id
+            msg1['From'] = 'teste@bora.com.br' ################### alterar
+            msg1['To'] = orig.tkt_ref.solicitante
+            msg1.attach(MIMEText(nmsg, 'html', 'utf-8'))
+            smtp_h = "pop.bora.com.br"
+            smtp_p = '587'
+            user = "teste@bora.com.br"  ################### alterar
+            passw = "Bor@413247"
+            try:
+                sm = smtplib.SMTP('smtp.bora.com.br', smtp_p)
+                sm.set_debuglevel(1)
+                sm.login('teste@bora.com.br', 'Bor@413247') ################### alterar################### alterar
+                sm.sendmail('teste@bora.com.br', orig.tkt_ref.solicitante.split(';'), msg1.as_string())
+                EmailChamado.objects.filter(pk=orig.id).update(ult_resp=aa, ult_resp_html=bb,ult_resp_dt=dateformat.format(timezone.now(),'Y-m-d H:i'))
+            except Exception as e:
+                print(f'ErrorType:{type(e).__name__}, Error:{e}')
+            else:
+                messages.success(request, 'Resposta enviada com sucesso!')
         else:
-            nmsg = '<div class="container chmdimg">' + msg + '</div>' + orig.mensagem.split('<div class="mailattatch">')[0]
-            nmsg2 = '<div class="container chmdimg">' + msg2 + '</div>' + orig.mensagem.split('<div class="mailattatch">')[0]
-        if re.findall(pattern2, nmsg):
-            array = []
-            for q in re.findall(pattern2, nmsg):
-                fp = open(('/home/bora/www' + q), 'rb')
-                img_data = fp.read()
-                msgimg2 = MIMEImage(img_data, name=os.path.basename(q), _subtype='jpg')
-                msgimg2.add_header('Content-ID', f'{os.path.basename(q)}')
-                for i in msgimg2.walk():
-                    if i['Content-ID'] not in array:
-                        msg1.attach(msgimg2)
-                        nmsg = nmsg.replace((f'="{q}"'), f'="cid:{os.path.basename(q)}"')
-                        array.append(i['Content-ID'])
-        nmsg2 = nmsg2.replace(f'<p>Anterior</p><hr>', '<hr>')
-        nmsg = nmsg.replace(f'<p>Anterior</p><hr>', '<hr>')
-        if orig.ult_resp is not None:
-            aa = msg + orig.ult_resp
-            bb = '<hr>' + str(request.user) + ' -- ' + str(dateformat.format(timezone.now(), 'd-m-Y H:i')) + '<br>' + nmsg2 + '<br>' + attatch + '<p>Anterior</p><hr>' + orig.ult_resp_html
-        else:
-            aa = msg
-            bb = '<hr>' + str(request.user) + ' -- ' + str(dateformat.format(timezone.now(), 'd-m-Y H:i')) + '<br>' + nmsg2 + '<br>' + attatch
-        msg1['Subject'] = orig.assunto
-        msg1['In-Reply-To'] = orig.email_id
-        msg1['References'] = orig.email_id
-        msg_id = make_msgid(idstring=None, domain='bora.com.br')
-        msg1['Message-ID'] = msg_id
-        msg1['From'] = 'teste@bora.com.br' ################### alterar
-        msg1['To'] = orig.tkt_ref.solicitante
-        msg1.attach(MIMEText(nmsg, 'html', 'utf-8'))
-        smtp_h = "pop.bora.com.br"
-        smtp_p = '587'
-        user = "teste@bora.com.br"  ################### alterar
-        passw = "Bor@413247"
-        try:
-            sm = smtplib.SMTP('smtp.bora.com.br', smtp_p)
-            sm.set_debuglevel(1)
-            sm.login('teste@bora.com.br', 'Bor@413247') ################### alterar################### alterar
-            sm.sendmail('teste@bora.com.br', orig.tkt_ref.solicitante.split(';'), msg1.as_string())
-            EmailChamado.objects.filter(pk=orig.id).update(ult_resp=aa, ult_resp_html=bb,ult_resp_dt=dateformat.format(timezone.now(),'Y-m-d H:i'))
-        except Exception as e:
-            print(f'ErrorType:{type(e).__name__}, Error:{e}')
-        else:
-            messages.success(request, 'Resposta enviada com sucesso!')
-    else:
-        print('nao entrou no if')
+            print('nao entrou no if')
+    except:
+        raise
 
 def chamadoreadmail(request):
     #params
