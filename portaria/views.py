@@ -1104,16 +1104,19 @@ def includemailtkt(request):
     return render(request, 'portaria/monitoramento/includemailtkt.html', {'ac':ac})
 
 def chamado(request):
+    print(datetime.datetime.today())
     metrics = TicketChamado.objects.exclude(Q(status='CANCELADO') | Q(status='CONCLUIDO')).annotate(
         dev=Count('id', filter=Q(servico='DESENVOLVIMENTO')), praxio=Count('id', filter=Q(servico='PRAXIO')),
-        ti=Count('id', filter=Q(servico='TI')), manutencao=Count('id', filter=Q(servico='MANUTENCAO'))
-    ).aggregate(dev1=Sum('dev'), praxio1=Sum('praxio'), ti1=Sum('ti'), manu1=Sum('manutencao'))
+        ti=Count('id', filter=Q(servico='TI')), manutencao=Count('id', filter=Q(servico='MANUTENCAO')),
+        hoje=Count('id', filter=Q(dt_abertura__date=datetime.datetime.today())),andamento=Count('id',
+                                      filter=Q(status='ABERTO') | Q(status='ANDAMENTO'))
+    ).aggregate(dev1=Sum('dev'), praxio1=Sum('praxio'), ti1=Sum('ti'), manu1=Sum('manutencao'), hoje1=Sum('hoje'),
+                andamento1=Sum('andamento'))
     return render(request, 'portaria/chamado/chamado.html', {'metrics':metrics})
 
 def chamadopainel(request):
     groups = request.user.groups.values_list('name', flat=True)
     form = TicketChamado.objects.all().exclude(Q(status='CANCELADO') | Q(status='CONCLUIDO'))
-
     if request.method == 'POST':
         srctkt = request.POST.get('srctkt')
         if srctkt:
@@ -1155,6 +1158,7 @@ def chamadonovo(request):
 def chamadodetail(request, tktid):
     stts = TicketChamado.STATUS_CHOICES
     dp = TicketChamado.DEPARTAMENTO_CHOICES
+    serv = TicketChamado.SERVICO_CHOICES
     fil = TIPO_GARAGEM
     resp = User.objects.filter(groups__name='chamado').exclude(id=1)
     form = get_object_or_404(EmailChamado, tkt_ref=tktid)
@@ -1171,8 +1175,10 @@ def chamadodetail(request, tktid):
         nresp = request.POST.get('nresp')
         nfil = request.POST.get('nfil')
         area = request.POST.get('area')
-
+        nserv = request.POST.get('nserv')
         try:
+            if nserv != 'selected':
+                TicketChamado.objects.filter(pk=form.tkt_ref_id).update(servico=nserv)
             if ndptm != 'selected':
                 TicketChamado.objects.filter(pk=form.tkt_ref_id).update(departamento=ndptm)
             if nresp != 'selected':
@@ -1197,7 +1203,8 @@ def chamadodetail(request, tktid):
         except Exception as e:
             print(e)
     return render(request, 'portaria/chamado/chamadodetail.html', {'form':form,'editor':editor,'stts':stts,'dp':dp,
-                                                                   'resp':resp,'fil':fil,'array':array})
+                                                                   'resp':resp,'fil':fil,'array':array,
+                                                                   'serv':serv})
 
 def etiquetas(request):
     gachoices = TicketMonitoramento.GARAGEM_CHOICES
@@ -2799,10 +2806,8 @@ def chamadoreadmail(request):
             e_body = body.decode(cs)
             w_body = '<div class="container chmdimg">' + htbody.decode(cs) + '</div>'
             if re.findall(pattern2, w_body):
-                print(re.findall(pattern2, w_body))
                 for q in re.findall(pattern2, w_body):
                     new = re.findall(pattern1, q)
-                    print(re.findall(pattern1, q), q)
                     if re.findall(f'/media/django-summernote/{str(hoje)}/', q):
                         new_cid = os.path.join(settings.STATIC_URL + 'chamados/' + str(hoje) + '/', (str(rr) +
                                                 new[0].split(f'cid:/media/django-summernote/{str(hoje)}/')[1]))

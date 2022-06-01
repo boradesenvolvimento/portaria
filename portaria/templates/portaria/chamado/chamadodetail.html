@@ -35,7 +35,7 @@
             </div>
             <div class="tktcontainer">
             <div class="row">
-            <div class="col-lg-4 col-md">
+            <div class="col-4">
                 <div>
                     <ul>
                         <li><strong>Assunto:</strong> {{ form.assunto }} </li>
@@ -49,7 +49,7 @@
                     </ul>
                 </div>
             </div>
-            <div class="container col-lg col-md-12">
+            <div class="container col">
                 <div>
                     <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
@@ -89,16 +89,26 @@
                                 <select name="nfil" id="nfil" style="width:10rem;">
                                     <option hidden value="selected">Selecione...</option>
                                     {% for q,v in fil %}
-                                        <option value="{{ q }}">{{ v }}</option>
+                                        <option value="{{ v }}">{{ v }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
-                            <div class="col-1">
-                                <label for="id_file" style="margin-top:1.5rem;font-size:3.2rem;cursor:pointer;"><ion-icon name="attach-outline"></ion-icon></label>
+                            <div class="col-2">
+                                <label for="nserv">Serviço:</label>
+                                <select name="nserv" id="nserv" style="width:10rem;">
+                                    <option hidden value="selected">Selecione...</option>
+                                    {% for k,v in serv %}
+                                    <option value="{{ v }}">{{ v }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-2">
+                                <label for="id_file" style="margin-top:1.5rem;font-size:2.4rem;cursor:pointer;"><ion-icon name="attach-outline"></ion-icon></label>
                                 <input type="file" name="file" multiple="" id="id_file">
+                                <button type="submit" style="height:5rem;">Enviar</button>
                             </div>
                             <div class="col-1">
-                                <button type="submit" style="height:5rem;">Enviar</button>
+
                             </div>
                         </div>
                     </form>

@@ -20,10 +20,10 @@
             </div><hr>
             <div class="row">
                 <div class="col-3">
-                    <div class="container createboxes">
+                    <!--<div class="container createboxes">
                         <label for="botao1">Novo Chamado</label>
                         <a id="botao1" href="{% url 'portaria:chamadonovo' %}"><button style="width:10rem;">Acessar</button></a>
-                    </div>
+                    </div>-->
 
                     <div class="container createboxes">
                         <label for="botao2">Painel Chamados</label>
@@ -34,7 +34,6 @@
                     <h2 class="title-cad">Metricas</h2>
                     <hr>
                     <div class="row">
-                        <h4>Setor</h4>
                         <div class="container col-4 card" style="width:auto;background:#e8eef5;border:solid 3px;border-radius:10px;">
                                 <div class="card-body" style="text-align:center;">
                                     <h3 class="card-title">Desenvolvimento</h3>
@@ -55,23 +54,16 @@
                         </div>
                     </div><hr>
                     <div class="row">
-                        <h4>Status</h4>
                         <div class="container col-4 card" style="width:auto;background:#e8eef5;border:solid 3px;border-radius:10px;">
                                 <div class="card-body" style="text-align:center;">
-                                    <h3 class="card-title">Desenvolvimento</h3>
-                                    <p class="card-text">{{ metrics.dev1|default_if_none:'0' }}</p>
+                                    <h3 class="card-title">Aberto hoje</h3>
+                                    <p class="card-text">{{ metrics.hoje1|default_if_none:'0' }}</p>
                                 </div>
                         </div>
                         <div class="container col-4 card" style="width:auto;background:#e8eef5;border:solid 3px;border-radius:10px;">
                                 <div class="card-body" style="text-align:center;">
-                                    <h3 class="card-title">Praxio</h3>
-                                    <p class="card-text">{{ metrics.praxio1|default_if_none:'0' }}</p>
-                                </div>
-                        </div>
-                        <div class="container col-4 card" style="width:auto;background:#e8eef5;border:solid 3px;border-radius:10px;">
-                                <div class="card-body" style="text-align:center;">
-                                    <h3 class="card-title"> &nbsp; TI &nbsp; </h3>
-                                    <p class="card-text">{{ metrics.ti1|default_if_none:'0' }}</p>
+                                    <h3 class="card-title">Andamento</h3>
+                                    <p class="card-text">{{ metrics.andamento1|default_if_none:'0' }}</p>
                                 </div>
                         </div>
                     </div>

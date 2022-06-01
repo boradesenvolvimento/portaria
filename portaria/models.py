@@ -610,7 +610,7 @@ class TicketChamado(models.Model):
     servico = models.CharField(max_length=15,choices=SERVICO_CHOICES)
     nome_tkt = models.CharField(max_length=150)
     dt_abertura = models.DateTimeField()
-    filial = models.CharField(max_length=3, choices=TIPO_GARAGEM, blank=True, null=True)
+    filial = models.CharField(max_length=3, choices=GARAGEM_CHOICES, blank=True, null=True)
     departamento = models.CharField(max_length=15, choices=DEPARTAMENTO_CHOICES, blank=True, null=True)
     status = models.CharField(max_length=9, choices=STATUS_CHOICES)
     msg_id = models.CharField(max_length=100, unique=True)

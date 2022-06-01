@@ -21,6 +21,7 @@
                 </a>
                 </div>
             </div>
+            {% if request.user|has_group:"terceirizados-adm" %}
             <div class="row linha-baixo">
                 <div class="col">
                 <label for="saidaterceiro"><strong>Lançar saídas</strong></label>
@@ -39,6 +40,7 @@
                     </form>
                 </div>
             </div>
+            {% endif %}
         </div>
     </div>
 {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
