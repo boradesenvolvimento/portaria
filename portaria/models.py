@@ -782,6 +782,7 @@ class SolicitacoesCompras(models.Model):
     status = models.CharField(max_length=1)
     filial = models.CharField(max_length=3, choices=GARAGEM_CHOICES)
     solicitante = models.CharField(max_length=100)
+    email_solic = models.EmailField(max_length=255)
     departamento = models.CharField(max_length=15, choices=DEPARTAMENTO_CHOICES, blank=True, null=True)
     responsavel = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True, related_name='responsavelcompras')
     pub_date = models.DateTimeField(default=timezone.now)

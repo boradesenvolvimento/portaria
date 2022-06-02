@@ -2384,7 +2384,7 @@ def replymail_monitoramento(request, tktid, area, myfile):
     for i in getmailfil:
         mailfil += i.email + ', '
     #send = orig.cc.split(';')
-    send = ['IGOR.ROSARIO@BORA.COM.BR','ROBERT.DIAS@BORA.COM.BR', request.user.email] + orig.cc.split(',') + mailfil.split(',')
+    #send = ['IGOR.ROSARIO@BORA.COM.BR','ROBERT.DIAS@BORA.COM.BR', request.user.email] + orig.cc.split(',') + mailfil.split(',')
     if request.method == 'POST':
         msg1 = MIMEMultipart('related')
         msg = area
@@ -2478,7 +2478,7 @@ def replymail_monitoramento(request, tktid, area, myfile):
             sm = smtplib.SMTP(get_secret('EHOST_MN'), smtp_p)################
             #sm.set_debuglevel(1)
             sm.login(get_secret('EUSER_MN'), get_secret('EPASS_MN'))###############
-            sm.sendmail(get_secret('EUSER_MN'), send, msg1.as_string())#############
+            sm.sendmail(get_secret('EUSER_MN'), orig.cc.split(';'), msg1.as_string())#############
             print('mandou o email')
             EmailMonitoramento.objects.filter(pk=orig.id).update(ult_resp=aa,ult_resp_html=bb, ult_resp_dt=dateformat.format(timezone.now(), 'Y-m-d H:i'))
         except Exception as e:
@@ -2609,7 +2609,7 @@ def chamadoupdate(request,tktid,area, myfile):
     orig = get_object_or_404(EmailChamado, tkt_ref_id=tktid)
     try:
         if request.method == 'POST':
-            msg1 = MIMEMultipart('related')
+            msg1 = MIMEMultipart('alternative')
             msg = area
             msg2 = area
             if myfile is not None:
@@ -2734,6 +2734,7 @@ def chamadoreadmail(request):
             if parsed_email.is_multipart():
                 #caminha pelas partes do email e armazena dados e arquivos
                 for part in parsed_email.walk():
+                    print(part)
                     ctype = part.get_content_type()
                     cdispo = str(part.get('Content-Type'))
                     if ctype == 'text/plain' and 'attatchment' not in cdispo:
@@ -3487,19 +3488,22 @@ def compras_lancar_pedido(request):
                                        WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '8' THEN 'BMG'
                                        WHEN SO.CODIGOEMPRESA = '4' AND SO.CODIGOFL = '1' THEN 'FMA'
                                    END FILIAL,
-                                   SO.USUARIO SOLICITANTE     
+                                   SO.USUARIO SOLICITANTE,
+                                   CC.EMAIL 
                             FROM
                                 CPR_SOLICITACAO SO, 
                                 CPR_ITENSSOLICITADOS CIS,
-                                EST_CADMATERIAL CM
+                                EST_CADMATERIAL CM,
+                                CTR_CADASTRODEUSUARIOS CC
                             WHERE
                                 SO.CODIGOEMPRESA = {newga['empresa']}             AND
-                                SO.CODIGOFL = {newga['filial']}                   AND 
+                                SO.CODIGOFL = {newga['filial']}                   AND
                                 SO.NUMEROSOLIC = CIS.NUMEROSOLIC AND
                                 SO.STATUSSOLIC = 'P'                      AND    
                                 SO.DATASOLIC BETWEEN ((SYSDATE)-30) AND (SYSDATE) AND    
                                 CM.CODIGOMATINT = CIS.CODIGOMATINT                 AND
-                                SO.NUMEROSOLIC = {idsolic}                         
+                                SO.NUMEROSOLIC = 3970                              AND
+                                CC.USUARIO = SO.USUARIO
                             UNION ALL                        
                             SELECT 
                                    SO.NUMEROSOLIC NR_SOLICITACAO,
@@ -3537,17 +3541,20 @@ def compras_lancar_pedido(request):
                                        WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '8' THEN 'BMG'
                                        WHEN SO.CODIGOEMPRESA = '4' AND SO.CODIGOFL = '1' THEN 'FMA'
                                    END FILIAL,
-                                   SO.USUARIO SOLICITANTE
+                                   SO.USUARIO SOLICITANTE,
+                                   CC.EMAIL
                             FROM
                                 CPR_SOLICITACAO SO,
-                                CPR_SOLICOUTROS SCO
+                                CPR_SOLICOUTROS SCO,
+                                CTR_CADASTRODEUSUARIOS CC
                             WHERE
                                 SO.CODIGOEMPRESA = {newga['empresa']}             AND
                                 SO.CODIGOFL = {newga['filial']}                   AND
                                 SO.NUMEROSOLIC = SCO.NUMEROSOLIC    AND
                                 SO.STATUSSOLIC = 'P'                      AND    
                                 SO.DATASOLIC BETWEEN ((SYSDATE)-30) AND (SYSDATE) AND
-                                SO.NUMEROSOLIC = {idsolic}
+                                SO.NUMEROSOLIC = 3970                             AND
+                                CC.USUARIO = SO.USUARIO
                             """)
             except cxerr:
                 messages.error(request, 'Não encontrado solicitação com este número.')
@@ -3560,11 +3567,11 @@ def compras_lancar_pedido(request):
                     for q in res:
                         obj = SolicitacoesCompras.objects.get_or_create(
                             nr_solic=q['NR_SOLICITACAO'], data=q['DATA'], status=q['STATUS'], filial=keyga[q['FILIAL']],
-                            solicitante=q['SOLICITANTE'], autor=request.user
+                            solicitante=q['SOLICITANTE'], autor=request.user, email_solic=q['EMAIL']
                         )
                         prod = ProdutosSolicitacoes.objects.get_or_create(produto=q['PRODUTO'],
                                                                       qnt_itens=int(q['QTD_ITENS']),solic_ref=obj[0])
-                    messages.success(request, f'Solicitação nº{idsolic} cadastrada com sucesso!')
+                    messages.success(request, f'Solicitação cadastrada com sucesso!')
                 else:
                     messages.error(request, 'Não encontrado solicitação com este número.')
         return redirect('portaria:compras_index')
@@ -3577,7 +3584,7 @@ def garagem_para_filial_praxio(garagem):
     elif garagem == 'SSA':
         newga = {'empresa':'1', 'filial':'3'}
     elif garagem == 'FOR':
-        newga = {'empresa': '1', 'filial': '4'}
+        newga = {'empresa':'1', 'filial':'4'}
     elif garagem == 'MCZ':
         newga = {'empresa':'1', 'filial':'5'}
     elif garagem == 'NAT':
@@ -3621,10 +3628,11 @@ def garagem_para_filial_praxio(garagem):
     return newga
 
 def painel_compras(request):
-    form = SolicitacoesCompras.objects.all()
+    form = SolicitacoesCompras.objects.all().exclude(Q(status='CONCLUIDO') | Q(status='CANCELADO'))
     return render(request, 'portaria/etc/painelcompras.html', {'form':form})
 
 def edit_compras(request, id):
+    editor = TextEditor()
     obj = get_object_or_404(SolicitacoesCompras, pk=id)
     entradas = SolicitacoesEntradas.objects.filter(cpr_ref=obj)
     gachoices = GARAGEM_CHOICES
@@ -3634,12 +3642,13 @@ def edit_compras(request, id):
     rpchoices = User.objects.all()
     if request.method == 'POST':
         status = request.POST.get('status')
-        filial = keyga[request.POST.get('filial')]
+        filial = request.POST.get('filial')
         departamento = request.POST.get('departamento')
         responsavel = request.POST.get('responsavel')
+        print(status, filial, departamento, responsavel)
         try:
             obj.status = status
-            obj.filial = filial
+            obj.filial = keyga[filial]
             obj.departamento = departamento
             obj.responsavel_id = responsavel
         except Exception as e:
@@ -3649,14 +3658,15 @@ def edit_compras(request, id):
 
     return render(request, 'portaria/etc/edit_compras.html', {'obj':obj, 'gachoices':gachoices, 'stschoices':stschoices,
                                                               'dpchoices':dpchoices, 'rpchoices':rpchoices,
-                                                              'entradas':entradas})
+                                                              'entradas':entradas, 'editor':editor})
 
 def insert_entradas_cpr(request):
     if request.method == 'POST':
         obj = get_object_or_404(SolicitacoesCompras, pk=request.POST.get('obj_id'))
-        textarea = request.POST.get('textarea')
+        textarea = request.POST.get('area')
         files = request.FILES.getlist('file')
-        if obj and textarea:
+
+        if obj and textarea and textarea != '<p><br></p>':
             try:
                 entrada = SolicitacoesEntradas.objects.create(obs=textarea, cpr_ref=obj)
                 if files:
@@ -3674,8 +3684,60 @@ def insert_entradas_cpr(request):
                 print(f'Error:{e}, error_type:{type(e).__name__}')
                 messages.error(request,'Whoops, something went wrong :/')
             else:
-                messages.success(request, 'Cadastrad com sucesso')
+                file1 = None
+                file2 = None
+                file3 = None
+                itens = [i.produto for i in obj.produtossolicitacoes_set.all()]
+                text = f'''
+                    Solicitação: {obj.nr_solic} <br>
+                    Data: {obj.data} <br>
+                    Status: {obj.status} <br>
+                    Responsável: {obj.responsavel} <br>
+                    Itens solicitados:<br>
+                '''
+                for q in itens:
+                    text += f'      {q} <br>'
+                text += f'{entrada.obs}'
+                if entrada.file1:
+                    file1 = entrada.file1
+                if entrada.file2:
+                    file2 = entrada.file2
+                if entrada.file3:
+                    file3 = entrada.file3
+                text += '<br>Atenciosamente,<br>Bora Desenvolvimento.'
+                try:
+                    sendmail_compras(obj.email_solic, text, file1=file1, file2=file2, file3=file3)
+                except:
+                    pass
+                messages.success(request, 'Cadastrado com sucesso')
     return redirect('portaria:painel_compras')
+
+def sendmail_compras(to, text, file1, file2, file3):
+    fromm = 'teste@bora.com.br'
+    msg = MIMEMultipart('related')
+    msg['From'] = fromm
+    msg['To'] = to
+    msg['Subject'] = f'Teste'
+    msg.attach(MIMEText(text, 'html', 'utf-8'))
+    if file1:
+        data = file1.read()
+        part = MIMEApplication(data, str(os.path.basename(file1.name)))
+        part['Content-Disposition'] = 'attachment; filename="%s"' % os.path.basename(file1.name)
+        msg.attach(part)
+    if file2:
+        data = file2.read()
+        part = MIMEApplication(data, str(os.path.basename(file2.name)))
+        part['Content-Disposition'] = 'attachment; filename="%s"' % os.path.basename(file2.name)
+        msg.attach(part)
+    if file3:
+        data = file3.read()
+        part = MIMEApplication(data, str(os.path.basename(file3.name)))
+        part['Content-Disposition'] = 'attachment; filename="%s"' % os.path.basename(file3.name)
+        msg.attach(part)
+    sm = smtplib.SMTP('smtp.bora.com.br', '587')
+    sm.set_debuglevel(1)
+    sm.login(fromm, "Bor@413247")
+    sm.sendmail(fromm, to, msg.as_string())
 
 def terceirizados_index(request):
     return render(request, 'portaria/etc/terceirizadosindex.html')

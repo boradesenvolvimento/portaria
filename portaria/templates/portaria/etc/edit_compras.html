@@ -16,34 +16,34 @@
             <div class="tktcontainer">
                 <div class="row">
 
-                    <div class="col-lg col-md">
+                    <div class="col-4">
                     <h2>Solicitação nº {{ obj.nr_solic }}</h2>
                     <form method="post">{% csrf_token %}
                     <ul>
                         <li>Status:
                         <select name="status">
-                            <option>{{ obj.status }}</option>
+                            <option hidden value="selected">{{ obj.status }}</option>
                             {% for k,v in stschoices %}
                             <option value="{{ k }}">{{ v }}</option>
                             {% endfor %}
                         </select></li>
                         <li>Filial:
                         <select name="filial">
-                            <option>{{ obj.get_filial_display }}</option>
+                            <option hidden value="selected">{{ obj.get_filial_display }}</option>
                             {% for k,v in gachoices %}
                             <option value="{{ v }}">{{ v }}</option>
                             {% endfor %}
                         </select></li>
                         <li>Departamento:
                             <select name="departamento">
-                            <option>{{ obj.departamento }}</option>
+                            <option hidden value="selected">{{ obj.departamento }}</option>
                             {% for k,v in dpchoices %}
                             <option value="{{ k }}">{{ v }}</option>
                             {% endfor %}
                         </select></li>
                         <li>Responsável:
                         <select name="responsavel">
-                            <option>{{ obj.responsavel }}</option>
+                            <option disabled value="selected">{{ obj.responsavel }}</option>
                             {% for q in rpchoices %}
                             <option value="{{ q.id }}">{{ q.username }}</option>
                             {% endfor %}
@@ -52,6 +52,20 @@
                     </ul>
                         <button type="submit">Atualizar</button>
                     </form>
+                    </div>
+                    <div class="col">
+                        <h2>Cadastrar entradas</h2>
+                        <form method="post" action="{% url 'portaria:insert_entradas_cpr' %}" enctype="multipart/form-data">{% csrf_token %}
+                            <input type="hidden" name="obj_id" value="{{ obj.id }}">
+                            <div class="col">
+                                {{ editor.area|safe }}
+                            </div>
+                            <div class="col-2" style="margin-left:2rem;">
+                                <label for="id_file" style="font-size:3.2rem;cursor:pointer;"><ion-icon name="attach-outline"></ion-icon></label>
+                                <input type="file" name="file" multiple="" id="id_file">
+                                <button type="submit">Botão</button>
+                            </div>
+                        </form>
                     </div>
                 </div>
 
@@ -66,21 +80,7 @@
         </div>
         <div class="container viewmonit">
             <div class="tktcontainer">
-                <div class="row">
-                    <h2>Cadastrar entradas</h2>
-                        <form method="post" action="{% url 'portaria:insert_entradas_cpr' %}" enctype="multipart/form-data">{% csrf_token %}
-                            <input type="hidden" name="obj_id" value="{{ obj.id }}">
-                            <div class="col-8">
-                                <textarea rows="7" cols="60" style="border:solid 1px;resize:none;" name="textarea"></textarea>
-                            </div>
-                            <div class="col-2" style="margin-left:2rem;">
-                                <label for="id_file" style="font-size:3.2rem;cursor:pointer;"><ion-icon name="attach-outline"></ion-icon></label>
-                                <input type="file" name="file" multiple="" id="id_file">
-                                <button type="submit">Botão</button>
-                            </div>
-                        </form>
-
-                </div>
+                <h2>Entradas</h2>
                 <hr>
                 <div class="row">
                     {% if entradas %}
@@ -88,7 +88,7 @@
                             <div class="container createboxes">
                                 <ul>
                                     <li>ID entrada: {{ q.id }}</li>
-                                    <li>Observação: {{ q.obs }}</li>
+                                    <li>Observação: {{ q.obs|safe }}</li>
                                     {% if q.file1 %}<li><a href="/media/{{ q.file1 }}" download>{{ q.file1|filename }}</a></li>{% endif %}
                                     {% if q.file2 %}<li><a href="/media/{{ q.file2 }}" download>{{ q.file2|filename }}</a></li>{% endif %}
                                     {% if q.file3 %}<li><a href="/media/{{ q.file3 }}" download>{{ q.file3|filename }}</a></li>{% endif %}
