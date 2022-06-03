@@ -2609,7 +2609,7 @@ def chamadoupdate(request,tktid,area, myfile):
     orig = get_object_or_404(EmailChamado, tkt_ref_id=tktid)
     try:
         if request.method == 'POST':
-            msg1 = MIMEMultipart('alternative')
+            msg1 = MIMEMultipart()
             msg = area
             msg2 = area
             if myfile is not None:
@@ -2643,6 +2643,7 @@ def chamadoupdate(request,tktid,area, myfile):
                     part = MIMEApplication(q.read(), name=str(q))
                     part['Content-Disposition'] = 'attachment; filename="%s"' % q
                     msg1.attach(part)
+
             if re.findall(pattern, msg):
                 for q in re.findall(pattern,msg):
                     media = q
@@ -2672,10 +2673,10 @@ def chamadoupdate(request,tktid,area, myfile):
             nmsg2 = nmsg2.replace(f'<p>Anterior</p><hr>', '<hr>')
             nmsg = nmsg.replace(f'<p>Anterior</p><hr>', '<hr>')
             if orig.ult_resp is not None:
-                aa = msg + orig.ult_resp
+                aa = nmsg + orig.ult_resp
                 bb = '<hr>' + str(request.user) + ' -- ' + str(dateformat.format(timezone.now(), 'd-m-Y H:i')) + '<br>' + nmsg2 + '<br>' + attatch + '<p>Anterior</p><hr>' + orig.ult_resp_html
             else:
-                aa = msg
+                aa = nmsg
                 bb = '<hr>' + str(request.user) + ' -- ' + str(dateformat.format(timezone.now(), 'd-m-Y H:i')) + '<br>' + nmsg2 + '<br>' + attatch
             msg1['Subject'] = orig.assunto
             msg1['In-Reply-To'] = orig.email_id
@@ -2734,7 +2735,6 @@ def chamadoreadmail(request):
             if parsed_email.is_multipart():
                 #caminha pelas partes do email e armazena dados e arquivos
                 for part in parsed_email.walk():
-                    print(part)
                     ctype = part.get_content_type()
                     cdispo = str(part.get('Content-Type'))
                     if ctype == 'text/plain' and 'attatchment' not in cdispo:
