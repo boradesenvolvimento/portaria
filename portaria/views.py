@@ -1104,7 +1104,6 @@ def includemailtkt(request):
     return render(request, 'portaria/monitoramento/includemailtkt.html', {'ac':ac})
 
 def chamado(request):
-    print(datetime.datetime.today())
     metrics = TicketChamado.objects.exclude(Q(status='CANCELADO') | Q(status='CONCLUIDO')).annotate(
         dev=Count('id', filter=Q(servico='DESENVOLVIMENTO')), praxio=Count('id', filter=Q(servico='PRAXIO')),
         ti=Count('id', filter=Q(servico='TI')), manutencao=Count('id', filter=Q(servico='MANUTENCAO')),
@@ -2686,15 +2685,15 @@ def chamadoupdate(request,tktid,area, myfile):
             msg1['From'] = 'teste@bora.com.br' ################### alterar
             msg1['To'] = orig.tkt_ref.solicitante
             msg1.attach(MIMEText(nmsg, 'html', 'utf-8'))
-            smtp_h = "pop.bora.com.br"
+            smtp_h = get_secret('ESMTP_CH')
             smtp_p = '587'
-            user = "teste@bora.com.br"  ################### alterar
-            passw = "Bor@413247"
+            user = get_secret('EUSER_CH')
+            passw = get_secret('EPASS_CH')
             try:
-                sm = smtplib.SMTP('smtp.bora.com.br', smtp_p)
+                sm = smtplib.SMTP(smtp_h, smtp_p)
                 sm.set_debuglevel(1)
-                sm.login('teste@bora.com.br', 'Bor@413247') ################### alterar################### alterar
-                sm.sendmail('teste@bora.com.br', orig.tkt_ref.solicitante.split(';'), msg1.as_string())
+                sm.login(user, passw)
+                sm.sendmail(user, orig.tkt_ref.solicitante.split(';'), msg1.as_string())
                 EmailChamado.objects.filter(pk=orig.id).update(ult_resp=aa, ult_resp_html=bb,ult_resp_dt=dateformat.format(timezone.now(),'Y-m-d H:i'))
             except Exception as e:
                 print(f'ErrorType:{type(e).__name__}, Error:{e}')
@@ -2710,9 +2709,9 @@ def chamadoreadmail(request):
     tkt = None
     servico = ''
     hoje = datetime.date.today()
-    host = "smtp.bora.com.br" #get_secret('EHOST_CH')
-    e_user = "teste@bora.com.br" #get_secret('EUSER_CH') ################### alterar
-    e_pass = "Bor@413247" #get_secret('EPASS_CH')
+    host = get_secret('ESMTP_CH')
+    e_user = get_secret('EUSER_CH')
+    e_pass = get_secret('EPASS_CH')
     pattern1 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
     pattern2 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp).\w+.\w+')
 
@@ -2868,7 +2867,7 @@ def chamadoreadmail(request):
 
         pp.dele(i + 1)
     pp.quit()
-    return redirect('portaria:chamado')
+    return HttpResponse('<h2>Job done!</h2>')
 
 def isnotifyread(request, notifyid):
     nid = get_object_or_404(Notification, pk=notifyid)
@@ -3502,7 +3501,7 @@ def compras_lancar_pedido(request):
                                 SO.STATUSSOLIC = 'P'                      AND    
                                 SO.DATASOLIC BETWEEN ((SYSDATE)-30) AND (SYSDATE) AND    
                                 CM.CODIGOMATINT = CIS.CODIGOMATINT                 AND
-                                SO.NUMEROSOLIC = 3970                              AND
+                                SO.NUMEROSOLIC = {idsolic}                         AND
                                 CC.USUARIO = SO.USUARIO
                             UNION ALL                        
                             SELECT 
@@ -3553,7 +3552,7 @@ def compras_lancar_pedido(request):
                                 SO.NUMEROSOLIC = SCO.NUMEROSOLIC    AND
                                 SO.STATUSSOLIC = 'P'                      AND    
                                 SO.DATASOLIC BETWEEN ((SYSDATE)-30) AND (SYSDATE) AND
-                                SO.NUMEROSOLIC = 3970                             AND
+                                SO.NUMEROSOLIC = {idsolic}                        AND
                                 CC.USUARIO = SO.USUARIO
                             """)
             except cxerr:
@@ -3645,17 +3644,19 @@ def edit_compras(request, id):
         filial = request.POST.get('filial')
         departamento = request.POST.get('departamento')
         responsavel = request.POST.get('responsavel')
-        print(status, filial, departamento, responsavel)
         try:
-            obj.status = status
-            obj.filial = keyga[filial]
-            obj.departamento = departamento
-            obj.responsavel_id = responsavel
+            if status != '':
+                obj.status = status
+                messages.success(request, f'Status alterado para {status} com sucesso!')
+            if filial != '': obj.filial = keyga[filial]
+            if departamento != '': obj.departamento = departamento
+            if responsavel != '': obj.responsavel_id = responsavel
         except Exception as e:
             print(f'err:{e}, err_t:{type(e).__name__}')
         else:
             obj.save()
-
+            messages.info(request, f'Solicitação {obj.nr_solic} alterada com sucesso')
+            return redirect('portaria:painel_compras')
     return render(request, 'portaria/etc/edit_compras.html', {'obj':obj, 'gachoices':gachoices, 'stschoices':stschoices,
                                                               'dpchoices':dpchoices, 'rpchoices':rpchoices,
                                                               'entradas':entradas, 'editor':editor})
@@ -3696,7 +3697,7 @@ def insert_entradas_cpr(request):
                     Itens solicitados:<br>
                 '''
                 for q in itens:
-                    text += f'      {q} <br>'
+                    text += f'{q} <br>'
                 text += f'{entrada.obs}'
                 if entrada.file1:
                     file1 = entrada.file1
@@ -3714,7 +3715,7 @@ def insert_entradas_cpr(request):
 
 def sendmail_compras(to, text, file1, file2, file3):
     fromm = 'teste@bora.com.br'
-    msg = MIMEMultipart('related')
+    msg = MIMEMultipart()
     msg['From'] = fromm
     msg['To'] = to
     msg['Subject'] = f'Teste'

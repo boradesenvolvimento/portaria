@@ -22,28 +22,28 @@
                     <ul>
                         <li>Status:
                         <select name="status">
-                            <option hidden value="selected">{{ obj.status }}</option>
+                            <option label="{{ obj.status }}"></option>
                             {% for k,v in stschoices %}
                             <option value="{{ k }}">{{ v }}</option>
                             {% endfor %}
                         </select></li>
                         <li>Filial:
                         <select name="filial">
-                            <option hidden value="selected">{{ obj.get_filial_display }}</option>
+                            <option label="{{ obj.get_filial_display }}"></option>
                             {% for k,v in gachoices %}
                             <option value="{{ v }}">{{ v }}</option>
                             {% endfor %}
                         </select></li>
                         <li>Departamento:
                             <select name="departamento">
-                            <option hidden value="selected">{{ obj.departamento }}</option>
+                            <option label="{{ obj.departamento }}"></option>
                             {% for k,v in dpchoices %}
                             <option value="{{ k }}">{{ v }}</option>
                             {% endfor %}
                         </select></li>
                         <li>Responsável:
                         <select name="responsavel">
-                            <option disabled value="selected">{{ obj.responsavel }}</option>
+                            <option label="{{ obj.responsavel }}"></option>
                             {% for q in rpchoices %}
                             <option value="{{ q.id }}">{{ q.username }}</option>
                             {% endfor %}
