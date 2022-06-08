@@ -210,7 +210,7 @@ def paleteview(request):
     return render(request, 'portaria/palete/paletes.html', {'form':form,'tp_fil':tp_fil,'tp_emp':tp_emp,'ttcount':ttcount})
 
 def cadpaletes(request):
-    tp_fil = TIPO_GARAGEM
+    tp_fil = GARAGEM_CHOICES
     tp_emp = Cliente.objects.all().order_by('razao_social')
     if request.method == 'POST':
         qnt = request.POST.get('qnt')
@@ -239,7 +239,7 @@ def paletecliente(request):
     return render(request, 'portaria/palete/paletecliente.html', {'form':form,'tcount':tcount})
 
 def saidapalete(request):
-    tp_fil = TIPO_GARAGEM
+    tp_fil = GARAGEM_CHOICES
     tp_emp = Cliente.objects.all().order_by('razao_social')
     if request.method == 'POST':
         qnt = int(request.POST.get('qnt'))
@@ -1158,7 +1158,7 @@ def chamadodetail(request, tktid):
     stts = TicketChamado.STATUS_CHOICES
     dp = TicketChamado.DEPARTAMENTO_CHOICES
     serv = TicketChamado.SERVICO_CHOICES
-    fil = TIPO_GARAGEM
+    fil = GARAGEM_CHOICES
     resp = User.objects.filter(groups__name='chamado').exclude(id=1)
     form = get_object_or_404(EmailChamado, tkt_ref=tktid)
     editor = TextEditor()
@@ -3215,16 +3215,24 @@ def justificativa(request):
             return render(request,'portaria/etc/justificativa.html', {'form':form,'gachoices':gachoices,
                                                                       'justchoices':justchoices})
     if request.method == 'POST':
-        lista = json.loads(request.POST.get('vals'))
+        lista = request.POST.getlist('counter')
         for q in lista:
-            result = dict(justchoices).get(q['ocorr'])
-            try:
-                obj = get_object_or_404(JustificativaEntrega, pk=q['id'])
-            except Exception as e:
-                print(f'Error:{e}, error_type:{type(e).__name__}')
-            else:
-                JustificativaEntrega.objects.filter(pk=obj.id).update(cod_just=q['ocorr'], desc_just=result,
-                                                                      autor=request.user)
+            if request.POST.get(f'ocor{q}') is not None:
+                idocor = request.POST.get(f'ocor{q}')
+                idobj = request.POST.get(f'idobj{q}')
+                result = dict(justchoices).get(request.POST.get(f'ocor{q}'))
+                try:
+                    obj = get_object_or_404(JustificativaEntrega, pk=idobj)
+                except Exception as e:
+                    print(f'Error:{e}, error_type:{type(e).__name__}')
+                else:
+                    obj.cod_just = idocor
+                    obj.desc_just = result
+                    obj.autor = request.user
+                    if request.FILES.get(f'file{q}'):
+                        file = request.FILES.get(f'file{q}')
+                        obj.file = file
+                    obj.save()
         messages.success(request, 'Justificativas cadastradas')
         return HttpResponse('200')
     return render(request, 'portaria/etc/justificativa.html', {'gachoices': gachoices})
@@ -3269,6 +3277,13 @@ async def get_justificativas(request):
                                WHEN F11.DT_PREV_ENTREGA IS NULL THEN '01-JAN-0001'
                                WHEN F11.DT_PREV_ENTREGA IS NOT NULL THEN TO_CHAR(F11.DT_PREV_ENTREGA, 'DD-MM-YYYY') 
                            END DT_PREV_ENTREGA,
+                           CASE
+                               WHEN F1.DATA_ENTREGA = '01-JAN-0001' THEN 'NAO ENTREGUE'
+                               WHEN F1.DATA_ENTREGA <> '01-JAN-0001' THEN CASE
+                                                  WHEN (F1.DATA_ENTREGA - F11.DT_PREV_ENTREGA) < 0 THEN 'ADIANTADO'
+                                                  WHEN (F1.DATA_ENTREGA - F11.DT_PREV_ENTREGA) > 0 THEN 'ATRASADO'
+                                                  END
+                           END LEADTIME,
                            CASE 
                                 WHEN (TRUNC((MIN(F11.DT_PREV_ENTREGA))-(SYSDATE))*-1) >= 0 THEN (TRUNC((MIN(F11.DT_PREV_ENTREGA))-(SYSDATE))*-1)
                                 WHEN (TRUNC((MIN(F11.DT_PREV_ENTREGA))-(SYSDATE))*-1) < 0 THEN 0
@@ -3300,7 +3315,7 @@ async def get_justificativas(request):
                          F1.CARGA_ENCOMENDA IN ('CARGA DIRETA','RODOVIARIO')    AND
                          F1.ID_GARAGEM <> 1                                     AND
                                                                            
-                         F1.DATA_EMISSAO BETWEEN ((SYSDATE)-3) AND (SYSDATE)                         
+                         F1.DATA_EMISSAO BETWEEN ((SYSDATE)-5) AND (SYSDATE)                         
                     GROUP BY
                            F1.EMPRESA,
                            F1.FILIAL,

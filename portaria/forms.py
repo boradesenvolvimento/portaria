@@ -5,7 +5,7 @@ from django.forms import Textarea, DateField
 from django_summernote.widgets import SummernoteWidget
 
 from .models import Cadastro, TIPO_GARAGEM, ChecklistFrota, NfServicoPj, ManutencaoFrota, ServJoinManu, feriaspj, \
-    FuncPj, Motorista, Veiculos, Cliente, PaleteControl, TipoServicosManut, RegistraTerceirizados
+    FuncPj, Motorista, Veiculos, Cliente, PaleteControl, TipoServicosManut, RegistraTerceirizados, GARAGEM_CHOICES
 
 
 #forms
@@ -47,8 +47,8 @@ class CadastroForm(forms.ModelForm):
         ]
 
 class TPaletesForm(forms.Form):
-    origem_ = forms.ChoiceField(choices=TIPO_GARAGEM)
-    destino_ = forms.ChoiceField(choices=TIPO_GARAGEM)
+    origem_ = forms.ChoiceField(choices=GARAGEM_CHOICES)
+    destino_ = forms.ChoiceField(choices=GARAGEM_CHOICES)
     quantidade_ = forms.IntegerField()
     placa_veic = forms.CharField(max_length=7)
     tp_palete = forms.ChoiceField(choices=PaleteControl.TIPO_PALETE_CHOICES)

@@ -34,7 +34,7 @@
                 </div>
             </div>
             <div class="row" style="margin-left: 6rem;">
-            <form method="post" id="formgroup">{% csrf_token %}
+            <form method="post" id="formgroup" enctype="multipart/form-data">{% csrf_token %}
             <table class="table">
                 <thead>
                 <tr>
@@ -64,15 +64,18 @@
                         <td>{{ f.em_aberto }}</td>
                         <td>{{ f.local_entreg }}</td>
                         <td>{{ f.nota_fiscal|truncatechars:'100' }}</td>
-                        <td><select name="ocor" style="font-size:10px;">
+                        <td><select name="ocor{{ forloop.counter0 }}" style="font-size:10px;">
                             <option selected disabled value="">--</option>
                             {% for k,v in justchoices %}
                             <option value="{{ k }}">{{ v }}</option>
                             {% endfor %}
                             </select>
-                            <input type="hidden" name="idobj" value="{{ f.id }}">
+                            <input type="hidden" name="idobj{{ forloop.counter0 }}" value="{{ f.id }}">
+                            <input type="hidden" name="counter" value="{{ forloop.counter0 }}">
                         </td>
-                        <td><button type="button" id="myBtn" value="{{ forloop.counter }}"><ion-icon name="list"></ion-icon></button></td>
+                        <td><label style="font-size:3.2rem;cursor:pointer;"for="file{{ forloop.counter0 }}"><ion-icon name="cloud-upload-outline"></ion-icon></label>
+                            <input type="file" id="file{{ forloop.counter0 }}" name="file{{ forloop.counter0 }}"> |
+                            <button type="button" id="myBtn" value="{{ forloop.counter }}"><ion-icon name="list"></ion-icon></button></td>
                     </tr>
                         <div id="myModal{{ forloop.counter }}" class="modal">
                             <div class="modal-content">
@@ -97,53 +100,15 @@
                 {% endfor %}
                 </tbody>
             </table>
+                <button class="col-1" type="submit">Lançar</button>
             </form>
-                <button class="col-1" type="button" id="bot">Lançar</button>
+
             </div>
         </div>
 {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
 <script>
     $(document).ready(function(){
-        var array = []
-        var botao = document.getElementById('bot');
-        $(botao).click(function (){
-            console.log('started');
-            var data = document.getElementsByName('ocor');
-            var data2 = document.getElementsByName('idobj');
-            if(data.length == data2.length){
-                for(i=0; data[i]; i++){
-                    var toinsert = {'id':data2[i].value,'ocorr':data[i].value}
-                    if(data[i].value != ''){
-                        console.log(data[i].value)
-                        array.push(toinsert)
-                    }
-                }
-                console.log(array)
-                $.ajax({
-                    type: "POST",
-                    url: "{% url 'portaria:justificativa' %}",
-                    headers: {
-                        "X-CSRFToken": "{{ csrf_token }}"
-                    },
-                    data: {'vals':JSON.stringify(array)},
-                    success: function (msg){
-                             if(msg == 200){
-                                location.reload();
-                             }},
-                    error: function (err)
-                            { alert(err.responseText)}
-                });
-            }else{
-                console.log('erro dados diferem');
-            };
-        });
-    });
-</script>
-
-<script>
-    $(document).ready(function(){
         $("button").click(function(){
-            console.log($(this));
             var btn = $(this);
             var but = $(this).val();
             var modal = document.getElementById("myModal"+but);
