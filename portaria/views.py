@@ -2682,15 +2682,16 @@ def chamadoupdate(request,tktid,area, myfile):
             msg1['References'] = orig.email_id
             msg_id = make_msgid(idstring=None, domain='bora.com.br')
             msg1['Message-ID'] = msg_id
-            msg1['From'] = 'teste@bora.com.br' ################### alterar
+            msg1['From'] = 'bora@bora.tec.br' ################### alterar
             msg1['To'] = orig.tkt_ref.solicitante
             msg1.attach(MIMEText(nmsg, 'html', 'utf-8'))
-            smtp_h = 'pop.kinghost.net'
+            smtp_h = 'smtp.kinghost.net'
             smtp_p = '587'
             user = 'bora@bora.tec.br'
             passw = 'Bor@dev#123'
             try:
                 sm = smtplib.SMTP(smtp_h, smtp_p)
+                sm.starttls()
                 sm.set_debuglevel(1)
                 sm.login(user, passw)
                 sm.sendmail(user, orig.tkt_ref.solicitante.split(';'), msg1.as_string())
