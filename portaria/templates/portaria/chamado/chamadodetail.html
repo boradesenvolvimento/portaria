@@ -41,7 +41,7 @@
                 <div>
                     <ul>
                         <li><strong>Assunto:</strong> <input type="text" name="subject" value="{{ form.assunto }}"> </li>
-                        <li><strong>Solicitante:</strong> {{ form.tkt_ref.solicitante }} </li>
+                        <li><strong>Solicitante:</strong> <input type="text" name="mailcc" value="{{ form.tkt_ref.solicitante }}"> </li>
                         <li><strong>Serviço:</strong> {{ form.tkt_ref.servico }} </li>
                         <li><strong>Data Abertura:</strong> {{ form.tkt_ref.dt_abertura }}</li>
                         <li><strong>Status:</strong> {{ form.tkt_ref.status }}</li>

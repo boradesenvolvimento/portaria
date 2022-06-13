@@ -1178,11 +1178,14 @@ def chamadodetail(request, tktid):
         area = request.POST.get('area')
         nserv = request.POST.get('nserv')
         nsubject = request.POST.get('subject')
+        ncc = request.POST.get('mailcc')
         try:
             if nsubject != form.assunto:
                 TicketChamado.objects.filter(pk=form.tkt_ref_id).update(nome_tkt=nsubject)
                 form.assunto = nsubject
                 form.save()
+            if ncc != form.tkt_ref.solicitante:
+                TicketChamado.objects.filter(pk=form.tkt_ref_id).update(solicitante=ncc)
             if nserv != 'selected':
                 TicketChamado.objects.filter(pk=form.tkt_ref_id).update(servico=nserv)
             if ndptm != 'selected':
