@@ -242,6 +242,7 @@ def paletecliente(request):
 def saidapalete(request):
     tp_fil = GARAGEM_CHOICES
     tp_emp = Cliente.objects.all().order_by('razao_social')
+    keyga = {k: v for k, v in GARAGEM_CHOICES}
     if request.method == 'POST':
         qnt = int(request.POST.get('qnt'))
         fil = request.POST.get('fil')
@@ -251,7 +252,7 @@ def saidapalete(request):
             chk = Cliente.objects.get(pk=emp)
             Cliente.objects.filter(razao_social=emp).update(saldo=(chk.saldo - qnt))
             for q in range(0,qnt):
-                PaleteControl.objects.filter(loc_atual=fil, tp_palete=tp_p).first().delete()
+                PaleteControl.objects.filter(loc_atual=keyga[fil], tp_palete=tp_p).first().delete()
             messages.success(request, 'Saidas cadastradas com sucesso')
             return redirect('portaria:paletecliente')
     return render(request, 'portaria/palete/saidapalete.html', {'tp_fil':tp_fil,'tp_emp':tp_emp})
