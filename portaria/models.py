@@ -775,7 +775,8 @@ class SolicitacoesCompras(models.Model):
         ('JURIDICO', 'JURIDICO'),
         ('DESENVOLVIMENTO', 'DESENVOLVIMENTO'),
         ('TI', 'TI'),
-        ('FILIAIS', 'FILIAIS')
+        ('FILIAIS', 'FILIAIS'),
+        ('COMPRAS', 'COMPRAS')
     ]
     id = models.BigAutoField(primary_key=True)
     nr_solic = models.CharField(max_length=10)
