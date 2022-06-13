@@ -602,7 +602,8 @@ class TicketChamado(models.Model):
         ('JURIDICO', 'JURIDICO'),
         ('DESENVOLVIMENTO', 'DESENVOLVIMENTO'),
         ('TI', 'TI'),
-        ('FILIAIS', 'FILIAIS')
+        ('FILIAIS', 'FILIAIS'),
+        ('COMPRAS', 'COMPRAS')
     ]
     id = models.BigAutoField(primary_key=True)
     solicitante = models.CharField(max_length=100)
