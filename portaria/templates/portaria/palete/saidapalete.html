@@ -26,11 +26,7 @@
                         <option value="{{ t }}">{{ v }}</option>
                         {% endfor %}
                     </select></th></tr>
-                    <tr><th>Empresa:<select name="emp">
-                        {% for x in tp_emp %}
-                        <option value="{{ x.id }}">{{ x }}</option>
-                        {% endfor %}
-                    </select></th></tr>
+                    <tr><th>Empresa:<input id="emp" type="text" name="emp"></tr>
                     <tr><th>Tipo:<select name="tp_p">
                         <option value="PBR">PBR</option>
                         <option value="CHEP">CHEP</option>
@@ -42,5 +38,14 @@
             </div>
         </div>
 {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
-
+<script>
+    $(function(){
+        var availableTags = [
+            {% for q in tp_emp %}
+                "{{ q|safe }}",
+            {% endfor %}
+        ];
+        $('#emp').autocomplete({source: availableTags});
+    });
+</script>
 {% endblock %}

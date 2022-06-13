@@ -42,7 +42,7 @@
     $(function(){
         var availableTags = [
             {% for q in tp_emp %}
-                "{{ q }}",
+                "{{ q|safe }}",
             {% endfor %}
         ];
         $('#emp').autocomplete({source: availableTags});

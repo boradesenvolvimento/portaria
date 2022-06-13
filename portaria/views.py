@@ -212,6 +212,7 @@ def paleteview(request):
 def cadpaletes(request):
     tp_fil = GARAGEM_CHOICES
     tp_emp = Cliente.objects.all().order_by('razao_social')
+    keyga = {k: v for k, v in GARAGEM_CHOICES}
     if request.method == 'POST':
         qnt = request.POST.get('qnt')
         fil = request.POST.get('fil')
@@ -227,7 +228,7 @@ def cadpaletes(request):
                 nsal = Cliente.objects.filter(razao_social=emp).annotate(saldonew=Sum(F('saldo')+int(qnt)))
                 Cliente.objects.filter(razao_social=emp).update(saldo=nsal[0].saldonew)
                 for x in range(0,int(qnt)):
-                    PaleteControl.objects.create(loc_atual=fil, tp_palete=tp_p, autor=request.user)
+                    PaleteControl.objects.create(loc_atual=keyga[fil], tp_palete=tp_p, autor=request.user)
                     if x == 2000: break
                 messages.success(request, f'{qnt} Paletes foram cadastrados com sucesso')
 
@@ -248,7 +249,7 @@ def saidapalete(request):
         tp_p = request.POST.get('tp_p')
         if qnt and fil and emp and tp_p:
             chk = Cliente.objects.get(pk=emp)
-            Cliente.objects.filter(pk=emp).update(saldo=(chk.saldo - qnt))
+            Cliente.objects.filter(razao_social=emp).update(saldo=(chk.saldo - qnt))
             for q in range(0,qnt):
                 PaleteControl.objects.filter(loc_atual=fil, tp_palete=tp_p).first().delete()
             messages.success(request, 'Saidas cadastradas com sucesso')
@@ -1175,7 +1176,12 @@ def chamadodetail(request, tktid):
         nfil = request.POST.get('nfil')
         area = request.POST.get('area')
         nserv = request.POST.get('nserv')
+        nsubject = request.POST.get('subject')
         try:
+            if nsubject != form.assunto:
+                TicketChamado.objects.filter(pk=form.tkt_ref_id).update(nome_tkt=nsubject)
+                form.assunto = nsubject
+                form.save()
             if nserv != 'selected':
                 TicketChamado.objects.filter(pk=form.tkt_ref_id).update(servico=nserv)
             if ndptm != 'selected':
@@ -1768,19 +1774,20 @@ def romxmltoexcel(*romaneio, tp_dld):
 @login_required
 def transfpalete(request):
     form = TPaletesForm()
+    keyga = {k:v for k,v in GARAGEM_CHOICES}
     if request.method == 'POST':
         ori = request.POST.get('origem_')
         des = request.POST.get('destino_')
         qnt = int(request.POST.get('quantidade_'))
         plc = request.POST.get('placa_veic')
         tp_p = request.POST.get('tp_palete')
-        if qnt <= PaleteControl.objects.filter(loc_atual=ori,tp_palete=tp_p).count():
+        if qnt <= PaleteControl.objects.filter(loc_atual=keyga[ori],tp_palete=tp_p).count():
             for q in range(0,qnt):
-                x = PaleteControl.objects.filter(loc_atual=ori, tp_palete=tp_p).first()
-                MovPalete.objects.create(palete=x,data_ult_mov=timezone.now(),origem=ori,destino=des, placa_veic=plc,
-                                         autor=request.user)
-                PaleteControl.objects.filter(pk=x.id).update(loc_atual=des)
-            messages.success(request, f'{qnt} palete transferido de {ori} para {des}')
+                x = PaleteControl.objects.filter(loc_atual=keyga[ori], tp_palete=tp_p).first()
+                MovPalete.objects.create(palete=x,data_ult_mov=timezone.now(),origem=keyga[ori],destino=keyga[des],
+                                         placa_veic=plc,autor=request.user)
+                PaleteControl.objects.filter(pk=x.id).update(loc_atual=keyga[des])
+            messages.success(request, f'{qnt} palete transferido de {keyga[ori]} para {keyga[des]}')
             return render(request,'portaria/palete/transfpaletes.html', {'form':form})
         else:
             messages.error(request,'Quantidade solicitada maior que a disponível')

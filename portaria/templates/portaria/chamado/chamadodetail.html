@@ -34,11 +34,13 @@
                 </div>
             </div>
             <div class="tktcontainer">
+            <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
             <div class="row">
             <div class="col-4">
                 <div>
                     <ul>
-                        <li><strong>Assunto:</strong> {{ form.assunto }} </li>
+                        <li><strong>Assunto:</strong> <input type="text" name="subject" value="{{ form.assunto }}"> </li>
                         <li><strong>Solicitante:</strong> {{ form.tkt_ref.solicitante }} </li>
                         <li><strong>Serviço:</strong> {{ form.tkt_ref.servico }} </li>
                         <li><strong>Data Abertura:</strong> {{ form.tkt_ref.dt_abertura }}</li>
@@ -51,8 +53,6 @@
             </div>
             <div class="container col">
                 <div>
-                    <form method="post" enctype="multipart/form-data">
-                        {% csrf_token %}
                         <div>
                         {{ editor.area|safe }}
                         </div>
@@ -111,10 +111,11 @@
 
                             </div>
                         </div>
-                    </form>
+
                 </div>
             </div>
             </div>
+            </form>
         </div>
             <div class="container tktcontainer">
                 <h2>Resposta: </h2>

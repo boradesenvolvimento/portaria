@@ -822,4 +822,3 @@ class FornecedorTerceirizados(models.Model):
     cnpj = models.CharField(max_length=14, validators=[only_int])
     valor_p_funcionario = models.FloatField()
 
-
