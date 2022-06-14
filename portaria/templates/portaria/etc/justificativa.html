@@ -16,7 +16,7 @@
             </div>
             {% endfor %}
             <div class="row linha-baixo">
-                <h2 class="title-cad col-6">Quantidade</h2>
+                <h2 class="title-cad col-6">Justificativas</h2>
                 <div class="col-6">
                     <form method="get">
                     <label for="dates">Período:</label>
@@ -73,9 +73,12 @@
                             <input type="hidden" name="idobj{{ forloop.counter0 }}" value="{{ f.id }}">
                             <input type="hidden" name="counter" value="{{ forloop.counter0 }}">
                         </td>
-                        <td><label style="font-size:3.2rem;cursor:pointer;"for="file{{ forloop.counter0 }}"><ion-icon name="cloud-upload-outline"></ion-icon></label>
-                            <input type="file" id="file{{ forloop.counter0 }}" name="file{{ forloop.counter0 }}"> |
-                            <button type="button" id="myBtn" value="{{ forloop.counter }}"><ion-icon name="list"></ion-icon></button></td>
+                        <td><label style="font-size:2.4rem;cursor:pointer;margin-top:5px;" for="file{{ forloop.counter0 }}"><ion-icon name="cloud-upload-outline"></ion-icon></label>
+                            <input type="file" id="file{{ forloop.counter0 }}" name="file{{ forloop.counter0 }}">
+                        </td>
+                        <td>
+                            <button style="font-size:1.4rem;" type="button" id="myBtn" value="{{ forloop.counter }}"><ion-icon name="list"></ion-icon></button>
+                        </td>
                     </tr>
                         <div id="myModal{{ forloop.counter }}" class="modal">
                             <div class="modal-content">

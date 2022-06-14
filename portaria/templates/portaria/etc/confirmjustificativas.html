@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load groupscheck %}
+{% if request.user|has_group:"justificativas_adm" %}
+        <div class="container mt-5">
+            {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+            {% endfor %}
+            <div class="row linha-baixo">
+                <h2 class="title-cad col-6">Confirmar Justificativas</h2>
+                <div class="col-6">
+                    <form method="get">
+                    <label for="dates">Período:</label>
+                    <input type="date" name="data1" id="dates">
+                    <input type="date" name="data2">
+                    <label for="filial">Filial:</label>
+                    <select name="filial" id="filial">
+                        <option></option>
+                        {% for t,p in gachoices %}
+                            <option value="{{ t }}">{{ p }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit">Filtrar</button>
+                    </form>
+                </div>
+            </div>
+            <div class="container">
+                <div class="row linha-baixo">
+                <form method="post">{% csrf_token %}
+                    <table class="table table1">
+                        <thead>
+                            <th>#</th>
+                            <th>CTE</th>
+                            <th>NOTAS</th>
+                            <th>JUSTIFICATIVA</th>
+                            <th>CONFIRMAR</th>
+                        </thead>
+                        <tbody>
+                            {% for q in form %}
+                            <tr>
+                                <th><input type="checkbox" value="{{ q.id }}" name="romid"></th>
+                                <td>{{ q.conhecimento }}</td>
+                                <td>{{ q.nota_fiscal }}</td>
+                                <td>{{ q.desc_just }}</td>
+                                {% if q.file %}<td><a href="/media/{{ q.file }}" download>
+                                    <button type="button"><ion-icon name="download-outline"></ion-icon></button>
+                                </a></td>{% endif %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <button type="submit">send</button>
+                </form>
+                </div>
+            </div>
+        </div>
+
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+{% endblock %}

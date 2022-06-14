@@ -13,7 +13,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='justificativaentrega',
             name='file',
-            field=models.FileField(default=1, upload_to='justificativas/%Y/%m/%d'),
+            field=models.FileField(default=None, upload_to='justificativas/%Y/%m/%d'),
             preserve_default=False,
         ),
     ]

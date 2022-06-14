@@ -74,6 +74,7 @@ urlpatterns = [
     path(r'mailferias/<int:idfpj>', views.mailferias, name='mailferias'),
     path('justificativa/', views.justificativa, name='justificativa'),
     path('relatorios-just/', views.rel_justificativa, name='rel_justificativa'),
+    path('confirmar-just/', views.confirmjust, name='confirmjust'),
     path('outputs/', views.outputs, name='outputs'),
     path(r'edibuilder/', views.ediexceltosd1, name='ediexceltosd1'),
     path(r'ediexample/', views.exedicorreios, name='exedicorreios'),

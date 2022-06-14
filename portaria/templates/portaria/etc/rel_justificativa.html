@@ -25,6 +25,12 @@
                     </form>
                 </div>
             </div>
+            <div class="container">
+                <div class="linha-baixo">
+                    <h2>Confirmar Justificativas</h2>
+                    <a class="col" href="{% url 'portaria:confirmjust' %}"><button type="button">Acessar</button></a>
+                </div>
+            </div>
         </div>
 
 {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}

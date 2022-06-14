@@ -741,7 +741,8 @@ class JustificativaEntrega(models.Model):
     tipo_doc = models.CharField(max_length=5)
     cod_just = models.CharField(max_length=3, blank=True, null=True)
     desc_just = models.CharField(max_length=100, blank=True, null=True)
-    file = models.FileField(upload_to='justificativas/%Y/%m/%d')
+    file = models.FileField(upload_to='justificativas/%Y/%m/%d', null=True)
+    confirmado = models.BooleanField(default=False)
     autor = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
 
 class OcorrenciaEntrega(models.Model):

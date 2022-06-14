@@ -2702,7 +2702,6 @@ def chamadoupdate(request,tktid,area, myfile):
             passw = 'Bor@dev#123'
             try:
                 sm = smtplib.SMTP(smtp_h, smtp_p)
-                sm.starttls()
                 sm.set_debuglevel(1)
                 sm.login(user, passw)
                 sm.sendmail(user, orig.tkt_ref.solicitante.split(';'), msg1.as_string())
@@ -3223,7 +3222,7 @@ def justificativa(request):
         filial = request.GET.get('filial')
         if date1 and date2 and filial:
             form = JustificativaEntrega.objects.filter(id_garagem=filial, data_emissao__lte=date2, data_emissao__gte=date1,
-                                                       cod_just__isnull=True, desc_just__isnull=True)
+                                                       confirmado=False)
             return render(request,'portaria/etc/justificativa.html', {'form':form,'gachoices':gachoices,
                                                                       'justchoices':justchoices})
     if request.method == 'POST':
@@ -3246,7 +3245,7 @@ def justificativa(request):
                         obj.file = file
                     obj.save()
         messages.success(request, 'Justificativas cadastradas')
-        return HttpResponse('200')
+        return redirect('portaria:justificativa')
     return render(request, 'portaria/etc/justificativa.html', {'gachoices': gachoices})
 
 def rel_justificativa(request):
@@ -3262,6 +3261,31 @@ def rel_justificativa(request):
             else:
                 return response
     return render(request, 'portaria/etc/rel_justificativa.html', {'gachoices': gachoices})
+
+def confirmjust(request):
+    gachoices = GARAGEM_CHOICES
+    form = JustificativaEntrega.objects.filter(cod_just__isnull=False, desc_just__isnull=False, confirmado=False)
+    if request.method == 'GET':
+        date1 = request.GET.get('data1')
+        date2 = request.GET.get('data2')
+        filial = request.GET.get('filial')
+        if date1 and date2 and filial:
+            form = JustificativaEntrega.objects.filter(id_garagem=filial, data_emissao__lte=date2,
+                                                       data_emissao__gte=date1, confirmado=False,
+                                                       cod_just__isnull=False, desc_just__isnull=False)
+            return render(request, 'portaria/etc/confirmjustificativas.html', {'form': form, 'gachoices': gachoices})
+    if request.method == 'POST':
+        aa = request.POST.getlist('romid')
+        for q in aa:
+            try:
+                obj = get_object_or_404(JustificativaEntrega, pk=q)
+            except Exception as err:
+                print(err)
+                continue
+            else:
+                obj.confirmado = True
+                obj.save()
+    return render(request, 'portaria/etc/confirmjustificativas.html', {'form':form,'gachoices':gachoices})
 
 async def get_justificativas(request):
     conn = settings.CONNECTION
