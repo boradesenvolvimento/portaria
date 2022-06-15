@@ -1208,9 +1208,14 @@ def chamadodetail(request, tktid):
                     myfile = request.FILES.getlist('file')
                 else:
                     myfile = None
-                chamadoupdate(request, tktid, area, myfile)
+                try:
+                    chamadoupdate(request, tktid, area, myfile)
+                except Exception as e:
+                    print(e)
         except Exception as e:
             print(e)
+        else:
+            return redirect('portaria:chamadopainel')
     return render(request, 'portaria/chamado/chamadodetail.html', {'form':form,'editor':editor,'stts':stts,'dp':dp,
                                                                    'resp':resp,'fil':fil,'array':array,
                                                                    'serv':serv})
