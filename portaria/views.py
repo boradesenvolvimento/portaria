@@ -249,7 +249,7 @@ def saidapalete(request):
         emp = request.POST.get('emp')
         tp_p = request.POST.get('tp_p')
         if qnt and fil and emp and tp_p:
-            chk = Cliente.objects.get(pk=emp)
+            chk = Cliente.objects.get(razao_social=emp)
             Cliente.objects.filter(razao_social=emp).update(saldo=(chk.saldo - qnt))
             for q in range(0,qnt):
                 PaleteControl.objects.filter(loc_atual=keyga[fil], tp_palete=tp_p).first().delete()
