@@ -61,12 +61,6 @@ from .forms import * #CadastroForm, isPlacaForm, DateForm, FilterForm, TPaletsFo
 from mysite.settings import get_secret
 
 
-def telausuariothiago(request):
-    return render(request, "portaria/telausuariothiago.html")
-
-def telausuariorodrigo(request):
-    return render(request, "portaria/telausuariorodrigo.html")
-
 def cardusuario(request):
     form = CardFuncionario.objects.all()
     src = request.GET.get('srcfunc')
@@ -3084,7 +3078,8 @@ def mdfeporfilial(request):
                 else:
                     pdr = pdr.drop(row.index)
                     if not row.empty:
-                        send2 = ['renan.amarantes@bora.com.br', 'alan@bora.com.br', 'thiago@bora.com.br'] + resultrec
+                        send2 = ['renan.amarantes@bora.com.br', 'alan@bora.com.br', 'gabriel.moura@bora.com.br',
+                                 'thiago@bora.com.br'] + resultrec
                         msg = MIMEMultipart('related')
                         msg['From'] = get_secret('EUSER_MN')
                         msg['To'] = '; '.join(send2)
@@ -3695,6 +3690,7 @@ def edit_compras(request, id):
         filial = request.POST.get('filial')
         departamento = request.POST.get('departamento')
         responsavel = request.POST.get('responsavel')
+        categoria = request.POST.get('categoria')
         try:
             if status != '':
                 obj.status = status
@@ -3702,8 +3698,10 @@ def edit_compras(request, id):
             if filial != '': obj.filial = keyga[filial]
             if departamento != '': obj.departamento = departamento
             if responsavel != '': obj.responsavel_id = responsavel
+            if categoria != '': obj.categoria = categoria
         except Exception as e:
             print(f'err:{e}, err_t:{type(e).__name__}')
+            raise e
         else:
             obj.save()
             messages.info(request, f'Solicitação {obj.nr_solic} alterada com sucesso')
@@ -3765,7 +3763,7 @@ def insert_entradas_cpr(request):
     return redirect('portaria:painel_compras')
 
 def sendmail_compras(to, text, file1, file2, file3):
-    fromm = 'teste@bora.com.br'
+    fromm = 'teste@bora.com.br' ########### alterar
     msg = MIMEMultipart()
     msg['From'] = fromm
     msg['To'] = to
@@ -3788,7 +3786,7 @@ def sendmail_compras(to, text, file1, file2, file3):
         msg.attach(part)
     sm = smtplib.SMTP('smtp.bora.com.br', '587')
     sm.set_debuglevel(1)
-    sm.login(fromm, "Bor@413247")
+    sm.login(fromm, "Bor@456987")
     sm.sendmail(fromm, to, msg.as_string())
 
 def terceirizados_index(request):
@@ -3858,14 +3856,22 @@ def get_terceirizados_xls(request):
             writer.save()
             return response
 
-class TestApi:
-    def __init__(self):
-        self.__token = 'Bearer eyJhbGciOiJodHRwOi8vd3d3LnczLm9yZy8yMDAxLzA0L3htbGRzaWctbW9yZSNobWFjLXNoYTUxMiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3VzZXJkYXRhIjoiYnd1T3Q2RnRXN0p5L3lKQnh3QUhENXhQK2tJRk1BalpJWDFYQjRNQ1FUU2g4cjM0QU9rN2Jhd2hvVXJwSVhObyROYkUwcjh1dmZ1bmJLWm1XQVVsdWR3PT0iLCJpc3MiOiJBdXRoQVBJIiwiYXVkIjoiSW50ZWdyYXdheSJ9.u3Ikt1Tn-8j-zJuarsBE7zcHz9DRfQ6GGe7m_y5Olp4nPl8dMaft4V8qL5ptoLO220aCX_b2hcwNdwgElQMC8Q'
-        self.url = f'https://wayds.net:8081/integraway/api/v1/pedido/status?pedido=0000008780&entrega=11099025'
-
-    def conn(self):
-        url = self.url
-        token = self.__token
-        response = requests.get(url, headers={'Authorization':token})
-
-        return HttpResponse(response.json())
+def sugestoesedenuncias(request):
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        texto = request.POST.get('texto')
+        categoria = request.POST.get('categoria')
+        identificacao = request.POST.get('iden')
+        if title and texto and categoria:
+            obj = Sugestoes.objects.create(titulo=title, texto=texto, categoria=categoria)
+            if request.FILES.get('anexo'):
+                obj.file = request.FILES.get('anexo')
+            if identificacao:
+                obj.autor = identificacao
+            obj.save()
+            messages.success(request, 'Success')
+            return redirect('portaria:sugestoesedenuncias')
+        else:
+            messages.error(request, 'Error')
+            return redirect('portaria:sugestoesedenuncias')
+    return render(request, 'portaria/etc/sugestoesedenuncias.html')

@@ -110,5 +110,5 @@ urlpatterns = [
     path('terceirizados/insert', views.insert_terceirizados, name='insertterceirizados'),
     path('terceirizados/saidas', views.saidas_terceirizados, name='saidas_terceirizados'),
     path('get_terceirizados_xls', views.get_terceirizados_xls, name='get_terceirizados_xls'),
-    #path('testapi/', views.TestApi.conn, name='testapi')
+    path('sugestoes/', views.sugestoesedenuncias, name='sugestoesedenuncias')
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -48,6 +48,13 @@
                             <option value="{{ q.id }}">{{ q.username }}</option>
                             {% endfor %}
                         </select></li>
+                        <li>Categoria:
+                        <select name="categoria">
+                            <option selected disabled>{{ obj.categoria }}</option>
+                            <option>ALMOXARIFADO</option>
+                            <option>COTAÇÃO</option>
+                            <option>NOTA FISCAL</option>
+                        </select></li>
                         <li>Solicitante: {{ obj.solicitante }} </li>
                     </ul>
                         <button type="submit">Atualizar</button>
@@ -63,7 +70,7 @@
                             <div class="col-2" style="margin-left:2rem;">
                                 <label for="id_file" style="font-size:3.2rem;cursor:pointer;"><ion-icon name="attach-outline"></ion-icon></label>
                                 <input type="file" name="file" multiple="" id="id_file">
-                                <button type="submit">Botão</button>
+                                <button type="submit">Enviar</button>
                             </div>
                         </form>
                     </div>

@@ -785,6 +785,7 @@ class SolicitacoesCompras(models.Model):
     data = models.DateTimeField()
     status = models.CharField(max_length=1)
     filial = models.CharField(max_length=3, choices=GARAGEM_CHOICES)
+    categoria = models.CharField(max_length=10)
     solicitante = models.CharField(max_length=100)
     email_solic = models.EmailField(max_length=255)
     departamento = models.CharField(max_length=15, choices=DEPARTAMENTO_CHOICES, blank=True, null=True)
@@ -825,3 +826,9 @@ class FornecedorTerceirizados(models.Model):
     cnpj = models.CharField(max_length=14, validators=[only_int])
     valor_p_funcionario = models.FloatField()
 
+class Sugestoes(models.Model):
+    titulo = models.CharField(max_length=150)
+    texto = models.TextField()
+    categoria = models.CharField(max_length=8)
+    file = models.FileField(upload_to='sugestoes/%Y/%m/%d', null=True, blank=True)
+    autor = models.CharField(max_length=15, default='anônimo')
