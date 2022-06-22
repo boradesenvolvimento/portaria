@@ -2714,9 +2714,9 @@ def chamadoreadmail(request):
     tkt = None
     service = ''
     hoje = datetime.date.today()
-    host = 'pop.bora.com.br' #'pop.kinghost.net'  #get_secret('ESMTP_CH')
-    e_user = 'teste@bora.com.br' #'bora@bora.tec.br' #get_secret('EUSER_CH')
-    e_pass = 'Bor@456987' #'Bor@dev#123'  #get_secret('EPASS_CH')
+    host = 'pop.kinghost.net'  #get_secret('ESMTP_CH')
+    e_user = 'bora@bora.tec.br' #get_secret('EUSER_CH')
+    e_pass = 'Bor@dev#123'  #get_secret('EPASS_CH')
     pattern1 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
     pattern2 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp).\w+.\w+')
 
