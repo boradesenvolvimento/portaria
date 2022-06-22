@@ -2,7 +2,7 @@
 {% block content %}
 {% load static %}
 {% load groupscheck %}
-{% if request.user|has_group:"frota" %}
+{% if request.user|has_group:"compras" %}
     <div class="container mt-4">
         {% for message in messages %}
             <div class="container-fluid p-0">
@@ -50,7 +50,7 @@
                         </select></li>
                         <li>Categoria:
                         <select name="categoria">
-                            <option selected disabled>{{ obj.categoria }}</option>
+                            <option label="{{ obj.categoria }}"></option>
                             <option>ALMOXARIFADO</option>
                             <option>COTAÇÃO</option>
                             <option>NOTA FISCAL</option>

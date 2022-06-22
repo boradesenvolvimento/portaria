@@ -40,6 +40,7 @@
                     </thead>
                     <tbody>
                     {% for q in form %}
+                        {% if q.servico in request.user.groups.all|stringformat:'s' %}
                         <tr class="tabletkt">
                             <th>{{ q.id }}</th>
                             <th>{{ q.nome_tkt }}</th>
@@ -51,6 +52,7 @@
                                 <button><ion-icon name="eye-outline"></ion-icon></button>
                             </a></th>
                         </tr>
+                        {% endif %}
                     {% endfor %}
                     </tbody>
                 </table>

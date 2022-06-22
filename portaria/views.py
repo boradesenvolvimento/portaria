@@ -1097,10 +1097,10 @@ def includemailtkt(request):
 def chamado(request):
     metrics = TicketChamado.objects.exclude(Q(status='CANCELADO') | Q(status='CONCLUIDO')).annotate(
         dev=Count('id', filter=Q(servico='DESENVOLVIMENTO')), praxio=Count('id', filter=Q(servico='PRAXIO')),
-        ti=Count('id', filter=Q(servico='TI')), manutencao=Count('id', filter=Q(servico='MANUTENCAO')),
+        imp=Count('id', filter=Q(servico='IMPLEMENTACAO')), manutencao=Count('id', filter=Q(servico='MANUTENCAO')),
         hoje=Count('id', filter=Q(dt_abertura__date=datetime.datetime.today())),andamento=Count('id',
                                       filter=Q(status='ABERTO') | Q(status='ANDAMENTO'))
-    ).aggregate(dev1=Sum('dev'), praxio1=Sum('praxio'), ti1=Sum('ti'), manu1=Sum('manutencao'), hoje1=Sum('hoje'),
+    ).aggregate(dev1=Sum('dev'), praxio1=Sum('praxio'), imp1=Sum('imp'), manu1=Sum('manutencao'), hoje1=Sum('hoje'),
                 andamento1=Sum('andamento'))
     return render(request, 'portaria/chamado/chamado.html', {'metrics':metrics})
 
@@ -1970,7 +1970,7 @@ def get_palete_csv(request):
         buffer = io.BytesIO(df.to_string().encode('utf-8'))
         df.to_excel(buffer, engine='xlsxwriter', index=False)
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        response['Content-Disposition'] = f'attachment; filename="teste.xlsx"'
+        response['Content-Disposition'] = f'attachment; filename="{date1}-{date2}.xlsx"'
         writer = pd.ExcelWriter(response, engine='xlsxwriter')
         df.to_excel(writer, 'sheet1', index=False)
         writer.save()
@@ -2712,11 +2712,11 @@ def chamadoupdate(request,tktid,area, myfile):
 def chamadoreadmail(request):
     #params
     tkt = None
-    servico = ''
+    service = ''
     hoje = datetime.date.today()
-    host = 'pop.kinghost.net'  #get_secret('ESMTP_CH')
-    e_user = 'bora@bora.tec.br' #get_secret('EUSER_CH')
-    e_pass = 'Bor@dev#123'  #get_secret('EPASS_CH')
+    host = 'pop.bora.com.br' #'pop.kinghost.net'  #get_secret('ESMTP_CH')
+    e_user = 'teste@bora.com.br' #'bora@bora.tec.br' #get_secret('EUSER_CH')
+    e_pass = 'Bor@456987' #'Bor@dev#123'  #get_secret('EPASS_CH')
     pattern1 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
     pattern2 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp).\w+.\w+')
 
@@ -2782,11 +2782,16 @@ def chamadoreadmail(request):
             for q in cs:
                 if q is None: continue
                 else: cs = q
-            '''
-            inserir função para determinar qual tipo de serviço
-            para cada email ti/dev/praxio etc
-            ler a caixa de entrada e setar o servico
-            '''
+
+            get_serv = (str(parsed_email['Cc']) + str(parsed_email['To']))
+            if 'chamado.praxio@bora.com.br' in get_serv:
+                service = 'PRAXIO'
+            if 'chamado.descarga@bora.com.br' in get_serv:
+                service = 'DESCARGA'
+            if 'chamado.comprovantes@bora.com.br' in get_serv:
+                service = 'COMPROVANTES'
+            if 'chamado.fiscal@bora.com.br' in get_serv:
+                service = 'FISCAL'
             #pega parametros do email
             e_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
             e_title_unencoded = decode_header(parsed_email['Subject'])
@@ -2864,7 +2869,7 @@ def chamadoreadmail(request):
                             bb = '<hr>' + e_from + ' -- ' + e_date + '<br>' + w_body + '<br>' + attatch
                         form.update(ult_resp=aa, ult_resp_html=bb, ult_resp_dt=e_date)
                 else:
-                    newtkt = TicketChamado.objects.create(solicitante=e_from, servico=servico, nome_tkt=e_title,
+                    newtkt = TicketChamado.objects.create(solicitante=e_from, servico=service, nome_tkt=e_title,
                                                           dt_abertura=e_date, status='ABERTO', msg_id=e_id)
                     mensagem = '<hr>' + e_from + ' -- ' + e_date + w_body + attatch
                     newmail = EmailChamado.objects.create(assunto=e_title, mensagem=mensagem, cc=e_cc, dt_envio=e_date,
@@ -3067,7 +3072,8 @@ def mdfeporfilial(request):
         cur.close()
         pdr = pd.DataFrame(res)
         if not pdr.empty:
-            send = ['renan.amarantes@bora.com.br', 'alan@bora.com.br', 'thiago@bora.com.br'] + result
+            send = ['renan.amarantes@bora.com.br', 'alan@bora.com.br', 'gabriel.moura@bora.com.br',
+                    'thiago@bora.com.br'] + result
             #Separa congelado inicio
             if k in ('6','7'):
                 resultrec = mailchoices.get('REC', '')
@@ -3684,7 +3690,7 @@ def edit_compras(request, id):
     keyga = {k:v for v,k in gachoices}
     stschoices = SolicitacoesCompras.STATUS_CHOICES
     dpchoices = SolicitacoesCompras.DEPARTAMENTO_CHOICES
-    rpchoices = User.objects.all()
+    rpchoices = User.objects.filter(groups__name='compras')
     if request.method == 'POST':
         status = request.POST.get('status')
         filial = request.POST.get('filial')

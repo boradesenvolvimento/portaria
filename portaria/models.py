@@ -577,10 +577,10 @@ class EmailOcorenciasMonit(models.Model):
 
 class TicketChamado(models.Model):
     SERVICO_CHOICES = [
-        ('DESENVOLVIMENTO', 'DESENVOLVIMENTO'),
-        ('TI','TI'),
+        ('DESCARGA', 'DESCARGA'),
+        ('COMPROVANTE','COMPROVANTE'),
         ('PRAXIO','PRAXIO'),
-        ('MANUTENCAO','MANUTENCAO')
+        ('FISCAL','FISCAL')
     ]
     STATUS_CHOICES = [
         ('ABERTO', 'ABERTO'),
