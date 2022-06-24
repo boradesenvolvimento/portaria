@@ -1096,11 +1096,11 @@ def includemailtkt(request):
 
 def chamado(request):
     metrics = TicketChamado.objects.exclude(Q(status='CANCELADO') | Q(status='CONCLUIDO')).annotate(
-        dev=Count('id', filter=Q(servico='DESENVOLVIMENTO')), praxio=Count('id', filter=Q(servico='PRAXIO')),
-        imp=Count('id', filter=Q(servico='IMPLEMENTACAO')), manutencao=Count('id', filter=Q(servico='MANUTENCAO')),
+        fis=Count('id', filter=Q(servico='FISCAL')), praxio=Count('id', filter=Q(servico='PRAXIO')),
+        des=Count('id', filter=Q(servico='DESCARGA')), comp=Count('id', filter=Q(servico='COMPROVANTE')),
         hoje=Count('id', filter=Q(dt_abertura__date=datetime.datetime.today())),andamento=Count('id',
                                       filter=Q(status='ABERTO') | Q(status='ANDAMENTO'))
-    ).aggregate(dev1=Sum('dev'), praxio1=Sum('praxio'), imp1=Sum('imp'), manu1=Sum('manutencao'), hoje1=Sum('hoje'),
+    ).aggregate(fis1=Sum('fis'), praxio1=Sum('praxio'), des1=Sum('des'), comp1=Sum('comp'), hoje1=Sum('hoje'),
                 andamento1=Sum('andamento'))
     return render(request, 'portaria/chamado/chamado.html', {'metrics':metrics})
 
@@ -2714,9 +2714,9 @@ def chamadoreadmail(request):
     tkt = None
     service = ''
     hoje = datetime.date.today()
-    host = 'pop.kinghost.net'  #get_secret('ESMTP_CH')
-    e_user = 'bora@bora.tec.br' #get_secret('EUSER_CH')
-    e_pass = 'Bor@dev#123'  #get_secret('EPASS_CH')
+    host = 'pop.bora.com.br'  #get_secret('ESMTP_CH')
+    e_user = 'teste@bora.com.br'#'bora@bora.tec.br' #get_secret('EUSER_CH')
+    e_pass = 'Bor@456987' #'Bor@dev#123'  #get_secret('EPASS_CH')
     pattern1 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
     pattern2 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp).\w+.\w+')
 
@@ -2737,12 +2737,14 @@ def chamadoreadmail(request):
             print(f'Error type:{type(e).__name__}, error: {e}')
         else:
             if parsed_email.is_multipart():
+                print('is multipart')
                 #caminha pelas partes do email e armazena dados e arquivos
                 for part in parsed_email.walk():
                     ctype = part.get_content_type()
                     cdispo = str(part.get('Content-Type'))
                     if ctype == 'text/plain' and 'attatchment' not in cdispo:
                         body = part.get_payload(decode=True)
+                        htbody = body
                     elif ctype == 'text/html' and 'attatchment' not in cdispo:
                         body = part.get_payload(decode=True)
                     if ctype == 'text/html' and 'attatchment' not in cdispo:
@@ -2782,14 +2784,13 @@ def chamadoreadmail(request):
             for q in cs:
                 if q is None: continue
                 else: cs = q
-
             get_serv = (str(parsed_email['Cc']) + str(parsed_email['To']))
             if 'chamado.praxio@bora.com.br' in get_serv:
                 service = 'PRAXIO'
             if 'chamado.descarga@bora.com.br' in get_serv:
                 service = 'DESCARGA'
             if 'chamado.comprovantes@bora.com.br' in get_serv:
-                service = 'COMPROVANTES'
+                service = 'COMPROVANTE'
             if 'chamado.fiscal@bora.com.br' in get_serv:
                 service = 'FISCAL'
             #pega parametros do email
@@ -3746,6 +3747,7 @@ def insert_entradas_cpr(request):
                 itens = [i.produto for i in obj.produtossolicitacoes_set.all()]
                 text = f'''
                     Solicitação: {obj.nr_solic} <br>
+                    Categoria: {obj.categoria} <br>
                     Data: {obj.data} <br>
                     Status: {obj.status} <br>
                     Responsável: {obj.responsavel} <br>
