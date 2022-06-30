@@ -15,12 +15,13 @@
             {% endfor %}
         <section class="container">
             <div class="row">
-                <h2 class="title-cad col-3">Suporte Chamados</h2>
-                <div class="col-6"></div>
-                <div class="col-3">
+                <h2 class="title-cad col-6">Suporte Chamados</h2>
+                <div class="col">
                     <form method="post">
                         {% csrf_token %}
-                    <input type="text" name="srctkt" placeholder="Buscar Ticket por ID">
+                    <label for="date1"><strong>Buscar Tickets por período</strong></label>
+                    <input type="date" name="date1" id="date1">
+                    <input type="date" name="date2">
                     <button type="submit"><ion-icon size="small" name="search"></ion-icon></button>
                     </form>
                 </div>

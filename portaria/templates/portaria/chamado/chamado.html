@@ -16,7 +16,6 @@
         <section class="container createtkt">
             <div class="row">
                 <h2 class="title-cad col-3">Suporte Chamados</h2>
-
             </div><hr>
             <div class="row">
                 <div class="col-3">
@@ -28,6 +27,10 @@
                     <div class="container createboxes">
                         <label for="botao2">Painel Chamados</label>
                         <a id="botao2" href="{% url 'portaria:chamadopainel' %}"><button style="width:10rem;">Acessar</button></a>
+                    </div>
+                    <div class="container createboxes">
+                        <label for="botao3">Painel Concluídos</label>
+                        <a id="botao3" href="{% url 'portaria:chamadoconcluido' %}"><button style="width:10rem;">Acessar</button></a>
                     </div>
                 </div>
                 <div class="col-9 createboxes">

@@ -790,6 +790,8 @@ class SolicitacoesCompras(models.Model):
     email_solic = models.EmailField(max_length=255)
     departamento = models.CharField(max_length=15, choices=DEPARTAMENTO_CHOICES, blank=True, null=True)
     responsavel = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True, related_name='responsavelcompras')
+    prazo_conclusao = models.DateField(blank=True, null=True)
+    dt_vencimento = models.DateField(blank=True, null=True)
     pub_date = models.DateTimeField(default=timezone.now)
     autor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='autorcompras')
 

@@ -69,6 +69,7 @@ urlpatterns = [
     path('chamados/novo', views.chamadonovo, name='chamadonovo'),
     path('chamados/painel', views.chamadopainel, name='chamadopainel'),
     path('chamados/painel/<tktid>/detalhes', views.chamadodetail, name='chamadodetail'),
+    path('chamados/concluidos', views.chamado_concluido, name='chamadoconcluido'),
     path('chamados/chamadoreadmail', views.chamadoreadmail, name='chamadoreadmail'),
     path('replymail_monitoramento/<tktid>', views.replymail_monitoramento, name='replymail_monitoramento'),
     path(r'mailferias/<int:idfpj>', views.mailferias, name='mailferias'),
