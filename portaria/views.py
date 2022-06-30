@@ -1216,7 +1216,6 @@ def chamado_concluido(request):
         date1 = datetime.datetime.strptime(request.POST.get('date1'), '%Y-%m-%d').replace(hour=00, minute=00)
         date2 = datetime.datetime.strptime(request.POST.get('date2'), '%Y-%m-%d').replace(hour=23, minute=59)
         if date1 and date2:
-            print(date1, date2)
             form = TicketChamado.objects.filter(status='CONCLUIDO', dt_abertura__lte=date2,
                                                 dt_abertura__gte=date1)
             return render(request, 'portaria/chamado/chamadosconcluidos.html', {'form': form})
