@@ -795,6 +795,9 @@ class SolicitacoesCompras(models.Model):
     pub_date = models.DateTimeField(default=timezone.now)
     autor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='autorcompras')
 
+    class Meta:
+        unique_together=('filial', 'nr_solic')
+
 class ProdutosSolicitacoes(models.Model):
     id = models.BigAutoField(primary_key=True)
     produto = models.CharField(max_length=200)
