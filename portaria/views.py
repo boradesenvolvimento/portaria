@@ -1186,7 +1186,7 @@ def chamadodetail(request, tktid):
             if nstts != 'selected':
                 if nstts == 'CONCLUIDO' or nstts == 'CANCELADO':
                     if form.tkt_ref.status == 'ABERTO':
-                        messages.error(request, 'Não autorizado encerramento do monitoramento.')
+                        messages.error(request, 'Não autorizado encerramento do ticket.')
                         return redirect('portaria:chamado')
                     else:
                         TicketChamado.objects.filter(pk=form.tkt_ref_id).update(status=nstts)
