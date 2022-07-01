@@ -3653,12 +3653,27 @@ def compras_lancar_pedido(request):
                 cur.close()
                 if res:
                     for q in res:
-                        obj = SolicitacoesCompras.objects.get_or_create(
+                        try:
+                            obj = SolicitacoesCompras.objects.get(filial=keyga[q['FILIAL']],nr_solic=q['NR_SOLICITACAO'])
+                        except:
+                            obj = SolicitacoesCompras.objects.create(
+                                nr_solic=q['NR_SOLICITACAO'], data=q['DATA'], status=q['STATUS'],
+                                filial=keyga[q['FILIAL']],
+                                solicitante=q['SOLICITANTE'], autor=request.user, email_solic=q['EMAIL']
+                            )
+                            prod = ProdutosSolicitacoes.objects.create(produto=q['PRODUTO'],
+                                                                              qnt_itens=int(q['QTD_ITENS']),
+                                                                              solic_ref=obj)
+                        else:
+                            prod = ProdutosSolicitacoes.objects.create(produto=q['PRODUTO'],
+                                                                      qnt_itens=int(q['QTD_ITENS']),
+                                                                      solic_ref=obj)
+                        '''obj = SolicitacoesCompras.objects.get_or_create(
                             nr_solic=q['NR_SOLICITACAO'], data=q['DATA'], status=q['STATUS'], filial=keyga[q['FILIAL']],
                             solicitante=q['SOLICITANTE'], autor=request.user, email_solic=q['EMAIL']
                         )
                         prod = ProdutosSolicitacoes.objects.get_or_create(produto=q['PRODUTO'],
-                                                                      qnt_itens=int(q['QTD_ITENS']),solic_ref=obj[0])
+                                                                      qnt_itens=int(q['QTD_ITENS']),solic_ref=obj[0])'''
                     messages.success(request, f'Solicitação cadastrada com sucesso!')
                 else:
                     messages.error(request, 'Não encontrado solicitação com este número.')
