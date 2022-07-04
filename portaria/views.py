@@ -1184,14 +1184,7 @@ def chamadodetail(request, tktid):
             if nfil != 'selected':
                 TicketChamado.objects.filter(pk=form.tkt_ref_id).update(filial=nfil)
             if nstts != 'selected':
-                if nstts == 'CONCLUIDO' or nstts == 'CANCELADO':
-                    if form.tkt_ref.status == 'ABERTO':
-                        messages.error(request, 'Não autorizado encerramento do ticket.')
-                        return redirect('portaria:chamado')
-                    else:
-                        TicketChamado.objects.filter(pk=form.tkt_ref_id).update(status=nstts)
-                else:
-                    TicketChamado.objects.filter(pk=form.tkt_ref_id).update(status=nstts)
+                TicketChamado.objects.filter(pk=form.tkt_ref_id).update(status=nstts)
             if area and area != '<p><br></p>':
                 if request.POST.get('file') != '':
                     myfile = request.FILES.getlist('file')
@@ -2742,10 +2735,10 @@ def chamadoreadmail(request):
     service = ''
     hoje = datetime.date.today()
     host = 'pop.bora.com.br'
-    mails = ['chamado.praxio@bora.com.br','chamado.descarga@bora.com.br','chamado.comprovantes@bora.com.br', 'chamado.fiscal@bora.com.br']
-    #mails = ['teste@bora.com.br']
+    #mails = ['chamado.praxio@bora.com.br','chamado.descarga@bora.com.br','chamado.comprovantes@bora.com.br', 'chamado.fiscal@bora.com.br']
+    mails = ['teste@bora.com.br']
     for e_user in mails:
-        e_pass = 'B0r*610580' #'Bor@456987'
+        e_pass = 'Bor@456987' #'B0r*610580'
         pattern1 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
         pattern2 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp).\w+.\w+')
 
@@ -2847,8 +2840,13 @@ def chamadoreadmail(request):
                 e_id = parsed_email['Message-ID']
                 e_ref = parsed_email['References']
                 if e_ref is None: e_ref = e_id
-                else: e_ref = e_ref.split(' ')[0]
-
+                else: e_ref = e_ref
+                e_irt = parsed_email['In-Reply-To']
+                try:
+                    inreply = e_ref.strip() + ' ' + e_irt.strip()
+                    inreply = inreply.replace('\n',' ').replace(' ', ',').split(',')
+                except Exception as e:
+                    inreply = e_ref.strip()
                 #separa conteudo email, e pega attatchments
                 e_body = body.decode(cs)
                 w_body = '<div class="container chmdimg">' + htbody.decode(cs) + '</div>'
@@ -2888,7 +2886,7 @@ def chamadoreadmail(request):
                             w_body = w_body.replace(q, new_cid)
                             e_body = e_body.replace(q, new_cid)
                 try:
-                    form = EmailChamado.objects.filter(email_id=e_ref.strip())
+                    form = EmailChamado.objects.filter(email_id__in=inreply)
                 except Exception as e:
                     print(e)
                 else:

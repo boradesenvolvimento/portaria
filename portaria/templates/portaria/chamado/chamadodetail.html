@@ -80,7 +80,9 @@
                                 <select name="nresp" id="nresp" style="width:10rem;">
                                     <option hidden value="selected">Selecione...</option>
                                     {% for q in resp %}
+                                    {% if q|has_group:form.tkt_ref.servico %}
                                         <option value="{{ q.id }}">{{ q }}</option>
+                                    {% endif %}
                                     {% endfor %}
                                 </select>
                             </div>
