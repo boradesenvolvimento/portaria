@@ -1148,7 +1148,7 @@ def chamadonovo(request):
 def chamadodetail(request, tktid):
     stts = TicketChamado.STATUS_CHOICES
     dp = TicketChamado.DEPARTAMENTO_CHOICES
-    serv = TicketChamado.SERVICO_CHOICES
+    catg = TicketChamado.CATEGORIA_CHOICES
     fil = GARAGEM_CHOICES
     resp = User.objects.filter(groups__name='chamado').exclude(id=1)
     form = get_object_or_404(EmailChamado, tkt_ref=tktid)
@@ -1165,7 +1165,7 @@ def chamadodetail(request, tktid):
         nresp = request.POST.get('nresp')
         nfil = request.POST.get('nfil')
         area = request.POST.get('area')
-        nserv = request.POST.get('nserv')
+        ncatg = request.POST.get('catg')
         nsubject = request.POST.get('subject')
         ncc = request.POST.get('mailcc')
         try:
@@ -1175,8 +1175,8 @@ def chamadodetail(request, tktid):
                 form.save()
             if ncc != form.tkt_ref.solicitante:
                 TicketChamado.objects.filter(pk=form.tkt_ref_id).update(solicitante=ncc)
-            if nserv != 'selected':
-                TicketChamado.objects.filter(pk=form.tkt_ref_id).update(servico=nserv)
+            if ncatg != 'selected':
+                TicketChamado.objects.filter(pk=form.tkt_ref_id).update(categoria=ncatg)
             if ndptm != 'selected':
                 TicketChamado.objects.filter(pk=form.tkt_ref_id).update(departamento=ndptm)
             if nresp != 'selected':
@@ -1201,10 +1201,11 @@ def chamadodetail(request, tktid):
             return redirect('portaria:chamadopainel')
     return render(request, 'portaria/chamado/chamadodetail.html', {'form':form,'editor':editor,'stts':stts,'dp':dp,
                                                                    'resp':resp,'fil':fil,'array':array,
-                                                                   'serv':serv})
+                                                                   'catg':catg})
 
 def chamado_concluido(request):
-    form = TicketChamado.objects.filter(status='CONCLUIDO')
+    form = TicketChamado.objects.filter(status='CONCLUIDO', dt_abertura__year=datetime.datetime.now().year,
+                                        dt_abertura__month=datetime.datetime.now().month)
     if request.method == 'POST':
         date1 = datetime.datetime.strptime(request.POST.get('date1'), '%Y-%m-%d').replace(hour=00, minute=00)
         date2 = datetime.datetime.strptime(request.POST.get('date2'), '%Y-%m-%d').replace(hour=23, minute=59)
@@ -1505,7 +1506,7 @@ def romaneioxml(request):
 def painelromaneio(request):
     context = RomXML.objects.all().filter(pub_date__month=datetime.datetime.now().month,
                                           pub_date__year=datetime.datetime.now().year).order_by('-pub_date')
-    getrem = RomXML.objects.all().values_list('remetente', flat=True).distinct()
+    getrem = context.values_list('remetente', flat=True).distinct()
     if request.method == 'GET':
         dt1 = request.GET.get('data1')
         dt2 = request.GET.get('data2')

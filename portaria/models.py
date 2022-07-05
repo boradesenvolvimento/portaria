@@ -605,6 +605,15 @@ class TicketChamado(models.Model):
         ('FILIAIS', 'FILIAIS'),
         ('COMPRAS', 'COMPRAS')
     ]
+    CATEGORIA_CHOICES = [
+        ('FISCAL', (
+                ('CFOP', 'CFOP'),
+                ('CANCELAR NFSe', 'CANCELAR NFSe'),
+                ('CANCELAMENTO CTe', 'CANCELAMENTO CTe'),
+                ('AVALIACAO CTe', 'AVALIACAO CTe')
+                )
+        )
+    ]
     id = models.BigAutoField(primary_key=True)
     solicitante = models.CharField(max_length=100)
     responsavel = models.ForeignKey(User, on_delete=PROTECT, blank=True, null=True)
@@ -614,6 +623,7 @@ class TicketChamado(models.Model):
     filial = models.CharField(max_length=3, choices=GARAGEM_CHOICES, blank=True, null=True)
     departamento = models.CharField(max_length=15, choices=DEPARTAMENTO_CHOICES, blank=True, null=True)
     status = models.CharField(max_length=9, choices=STATUS_CHOICES)
+    categoria = models.CharField(max_length=20, choices=CATEGORIA_CHOICES, blank=True, null=True)
     msg_id = models.CharField(max_length=100, unique=True)
 
 class EmailChamado(models.Model):

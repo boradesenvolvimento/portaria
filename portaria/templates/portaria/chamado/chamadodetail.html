@@ -45,6 +45,9 @@
                         <li><strong>Serviço:</strong> {{ form.tkt_ref.servico }} </li>
                         <li><strong>Data Abertura:</strong> {{ form.tkt_ref.dt_abertura }}</li>
                         <li><strong>Status:</strong> {{ form.tkt_ref.status }}</li>
+                        {% if form.tkt_ref.servico == "FISCAL" %}
+                        <li><strong>Categoria:</strong> {{ form.tkt_ref.categoria|default_if_none:'Não cadastrado' }}</li>
+                        {% endif %}
                         <li><strong>Responsável:</strong> {{ form.tkt_ref.responsavel|default_if_none:'Não cadastrado' }}</li>
                         <li><strong>Filial:</strong> {{ form.tkt_ref.filial|default_if_none:'Não cadastrado' }} </li>
                         <li><strong>Departamento:</strong> {{ form.tkt_ref.departamento|default_if_none:'Não cadastrado' }} </li>
@@ -96,13 +99,19 @@
                                 </select>
                             </div>
                             <div class="col-2">
-                                <label for="nserv">Serviço:</label>
-                                <select name="nserv" id="nserv" style="width:10rem;">
+                                {% if form.tkt_ref.servico == "FISCAL" %}
+                                <label for="catg">Categoria:</label>
+                                <select name="catg" id="catg" style="width:10rem;">
                                     <option hidden value="selected">Selecione...</option>
-                                    {% for k,v in serv %}
-                                    <option value="{{ v }}">{{ v }}</option>
+                                    {% for k,v in catg %}
+                                    <optgroup label="{{ k }}">
+                                        {% for m,l in v %}
+                                            <option value="{{ m }}">{{ l }}</option>
+                                        {% endfor %}
+                                    </optgroup>
                                     {% endfor %}
                                 </select>
+                                {% endif %}
                             </div>
                             <div class="col-2">
                                 <label for="id_file" style="margin-top:1.5rem;font-size:2.4rem;cursor:pointer;"><ion-icon name="attach-outline"></ion-icon></label>
