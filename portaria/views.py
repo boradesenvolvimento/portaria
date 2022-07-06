@@ -220,7 +220,6 @@ def cadpaletes(request):
                     PaleteControl.objects.create(loc_atual=keyga[fil], tp_palete=tp_p, autor=request.user)
                     if x == 2000: break
                 messages.success(request, f'{qnt} Paletes foram cadastrados com sucesso')
-
     return render(request, 'portaria/palete/cadpaletes.html', {'tp_fil':tp_fil, 'tp_emp':tp_emp})
 
 def paletecliente(request):
@@ -300,7 +299,6 @@ def checklistdetail(request, idckl):
     form = get_object_or_404(ChecklistFrota, pk=idckl)
     return render(request, 'portaria/frota/checklistdetail.html', {'form':form})
 
-
 def cadfuncionariopj(request):
     form = FuncPjForm
     if request.method == 'POST':
@@ -337,7 +335,6 @@ def atualizarfunc(request):
                 return redirect('portaria:index')
     return render(request, 'portaria/pj/atualizarfunc.html', {'fields':fields,'allfuncs':allfuncs,'func':func})
 
-
 @login_required
 def servicospj(request):
     func = request.GET.get('nomefunc')
@@ -347,7 +344,6 @@ def servicospj(request):
         qnt_funcs = FuncPj.objects.all().filter(nome__icontains=func, ativo=True)
     elif filter:
         qnt_funcs = FuncPj.objects.all().filter(ativo=True).order_by(filter)
-
     return render(request, 'portaria/pj/servicospj.html', {'qnt_funcs': qnt_funcs})
 
 @login_required
@@ -1504,9 +1500,10 @@ def romaneioxml(request):
     return render(request, 'portaria/etc/romaneioindex.html')
 
 def painelromaneio(request):
-    context = RomXML.objects.all().filter(pub_date__month=datetime.datetime.now().month,
+    context = RomXML.objects.filter(pub_date__month=datetime.datetime.now().month,
                                           pub_date__year=datetime.datetime.now().year).order_by('-pub_date')
-    getrem = context.values_list('remetente', flat=True).distinct()
+    getrem = RomXML.objects.filter(pub_date__month=datetime.datetime.now().month,
+                                          pub_date__year=datetime.datetime.now().year).values_list('remetente', flat=True).distinct()
     if request.method == 'GET':
         dt1 = request.GET.get('data1')
         dt2 = request.GET.get('data2')
@@ -2828,12 +2825,14 @@ def chamadoreadmail(request):
                 if re.findall(r'<(.*?)>', e_from): e_from = re.findall(r'<(.*?)>', e_from)[0]
                 e_to = parsed_email['To']
                 if e_to:
+                    e_to = e_to.lower()
                     for q in re.findall(r'<(.*?)>', e_to):
                         if q not in ['chamado.praxio@bora.com.br','chamado.descarga@bora.com.br',
                                      'chamado.comprovantes@bora.com.br', 'chamado.fiscal@bora.com.br']:
                             e_cc_a += q + ','
                 e_cc = parsed_email['CC']
                 if e_cc:
+                    e_cc = e_cc.lower()
                     for q in re.findall(r'<(.*?)>', e_cc):
                         if q not in ['chamado.praxio@bora.com.br', 'chamado.descarga@bora.com.br',
                                      'chamado.comprovantes@bora.com.br', 'chamado.fiscal@bora.com.br']:
@@ -2910,7 +2909,6 @@ def chamadoreadmail(request):
                         mensagem = '<hr>' + e_from + ' -- ' + e_date + w_body + attatch
                         newmail = EmailChamado.objects.create(assunto=e_title, mensagem=mensagem, cc=e_cc_a, dt_envio=e_date,
                                                               email_id=e_id, tkt_ref=newtkt)
-
             pp.dele(i + 1)
         pp.quit()
     return HttpResponse('<h2>Job done!</h2>')
@@ -2985,8 +2983,8 @@ def mdfeporfilial(request):
                    'CTG': ['silvana.dily@borexpress.com.br', 'ygor.henrique@borexpress.com.br',
                            'fausto@borexpress.com.br'],
                    'MCZ': ['rafael@bora.com.br', 'elicarlos.santos@bora.com.br','valmir.silva@bora.com.br'],
-                   'SSA': ['raphael.oliveira@bora.com.br', 'fernando.malaquias@bora.com.br',
-                           'brandao.alan@bora.com.br'],
+                   'SSA': ['jaqueline.santos@bora.com.br', 'fernando.malaquias@bora.com.br',
+                           'brandao.alan@bora.com.br', ],
                    'NAT': ['ronnielly@bora.com.br', 'lindalva@bora.com.br', 'lidianne@bora.com.br'],
                    'SLZ': ['felipe@bora.com.br'],
                    'THE': ['felipe@bora.com.br'],
@@ -3109,7 +3107,7 @@ def mdfeporfilial(request):
         pdr = pd.DataFrame(res)
         if not pdr.empty:
             send = ['renan.amarantes@bora.com.br', 'alan@bora.com.br', 'gabriel.moura@bora.com.br',
-                    'thiago@bora.com.br', 'jaqueline@bora.com.br'] + result
+                    'thiago@bora.com.br'] + result
             #Separa congelado inicio
             if k in ('6','7'):
                 resultrec = mailchoices.get('REC', '')
@@ -3121,7 +3119,7 @@ def mdfeporfilial(request):
                     pdr = pdr.drop(row.index)
                     if not row.empty:
                         send2 = ['renan.amarantes@bora.com.br', 'alan@bora.com.br', 'gabriel.moura@bora.com.br',
-                                 'thiago@bora.com.br', 'jaqueline@bora.com.br'] + resultrec
+                                 'thiago@bora.com.br'] + resultrec
                         msg = MIMEMultipart('related')
                         msg['From'] = get_secret('EUSER_MN')
                         msg['To'] = '; '.join(send2)
