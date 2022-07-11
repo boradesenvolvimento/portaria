@@ -2804,15 +2804,6 @@ def chamadoreadmail(request):
                 for q in cs:
                     if q is None: continue
                     else: cs = q
-                get_serv = (str(parsed_email['Cc']) + str(parsed_email['To']))
-                if 'chamado.praxio@bora.com.br' in get_serv:
-                    service = 'PRAXIO'
-                if 'chamado.descarga@bora.com.br' in get_serv:
-                    service = 'DESCARGA'
-                if 'chamado.comprovantes@bora.com.br' in get_serv:
-                    service = 'COMPROVANTE'
-                if 'chamado.fiscal@bora.com.br' in get_serv:
-                    service = 'FISCAL'
                 #pega parametros do email
                 e_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
                 e_title_unencoded = decode_header(parsed_email['Subject'])
@@ -2837,6 +2828,15 @@ def chamadoreadmail(request):
                         if q not in ['chamado.praxio@bora.com.br', 'chamado.descarga@bora.com.br',
                                      'chamado.comprovantes@bora.com.br', 'chamado.fiscal@bora.com.br']:
                             e_cc_a += q + ','
+                get_serv = (str(parsed_email['Cc']) + str(parsed_email['To'])).lower()
+                if 'chamado.praxio@bora.com.br' in get_serv:
+                    service = 'PRAXIO'
+                if 'chamado.descarga@bora.com.br' in get_serv:
+                    service = 'DESCARGA'
+                if 'chamado.comprovantes@bora.com.br' in get_serv:
+                    service = 'COMPROVANTE'
+                if 'chamado.fiscal@bora.com.br' in get_serv:
+                    service = 'FISCAL'
                 e_id = parsed_email['Message-ID']
                 e_ref = parsed_email['References']
                 if e_ref is None: e_ref = e_id
