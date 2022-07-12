@@ -3,6 +3,12 @@
 {% load static %}
 {% load groupscheck %}
 {% if request.user|has_group:"compras" %}
+<style>
+    input[type="file"]{
+        display:block;
+        border-radius:0;
+    }
+</style>
     <div class="container mt-4">
         {% for message in messages %}
             <div class="container-fluid p-0">
@@ -73,7 +79,6 @@
                                 {{ editor.area|safe }}
                             </div>
                             <div class="col-2" style="margin-left:2rem;">
-                                <label for="id_file" style="font-size:3.2rem;cursor:pointer;"><ion-icon name="attach-outline"></ion-icon></label>
                                 <input type="file" name="file" multiple="" id="id_file">
                                 <button type="submit">Enviar</button>
                             </div>
