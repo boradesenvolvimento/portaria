@@ -1166,21 +1166,35 @@ def chamadodetail(request, tktid):
         ncc = request.POST.get('mailcc')
         try:
             if nsubject != form.assunto:
-                TicketChamado.objects.filter(pk=form.tkt_ref_id).update(nome_tkt=nsubject)
+                TicketChamado.objects.filter(pk=form.tkt_ref_id).update(nome_tkt=nsubject,
+                                                                        ultimo_autor=request.user.username,
+                                                                        ultima_att=timezone.now())
                 form.assunto = nsubject
                 form.save()
             if ncc != form.tkt_ref.solicitante:
-                TicketChamado.objects.filter(pk=form.tkt_ref_id).update(solicitante=ncc)
+                TicketChamado.objects.filter(pk=form.tkt_ref_id).update(solicitante=ncc,
+                                                                        ultimo_autor=request.user.username,
+                                                                        ultima_att=timezone.now())
             if ncatg != 'selected':
-                TicketChamado.objects.filter(pk=form.tkt_ref_id).update(categoria=ncatg)
+                TicketChamado.objects.filter(pk=form.tkt_ref_id).update(categoria=ncatg,
+                                                                        ultimo_autor=request.user.username,
+                                                                        ultima_att=timezone.now())
             if ndptm != 'selected':
-                TicketChamado.objects.filter(pk=form.tkt_ref_id).update(departamento=ndptm)
+                TicketChamado.objects.filter(pk=form.tkt_ref_id).update(departamento=ndptm,
+                                                                        ultimo_autor=request.user.username,
+                                                                        ultima_att=timezone.now())
             if nresp != 'selected':
-                TicketChamado.objects.filter(pk=form.tkt_ref_id).update(responsavel=nresp)
+                TicketChamado.objects.filter(pk=form.tkt_ref_id).update(responsavel=nresp,
+                                                                        ultimo_autor=request.user.username,
+                                                                        ultima_att=timezone.now())
             if nfil != 'selected':
-                TicketChamado.objects.filter(pk=form.tkt_ref_id).update(filial=nfil)
+                TicketChamado.objects.filter(pk=form.tkt_ref_id).update(filial=nfil,
+                                                                        ultimo_autor=request.user.username,
+                                                                        ultima_att=timezone.now())
             if nstts != 'selected':
-                TicketChamado.objects.filter(pk=form.tkt_ref_id).update(status=nstts)
+                TicketChamado.objects.filter(pk=form.tkt_ref_id).update(status=nstts,
+                                                                        ultimo_autor=request.user.username,
+                                                                        ultima_att=timezone.now())
             if area and area != '<p><br></p>':
                 if request.POST.get('file') != '':
                     myfile = request.FILES.getlist('file')
@@ -3650,6 +3664,7 @@ def compras_lancar_pedido(request):
                 cur.close()
                 if res:
                     for q in res:
+                        print(q)
                         try:
                             obj = SolicitacoesCompras.objects.get(filial=keyga[q['FILIAL']],nr_solic=q['NR_SOLICITACAO'])
                         except:
@@ -3739,7 +3754,7 @@ def edit_compras(request, id):
     keyga = {k:v for v,k in gachoices}
     stschoices = SolicitacoesCompras.STATUS_CHOICES
     dpchoices = SolicitacoesCompras.DEPARTAMENTO_CHOICES
-    rpchoices = User.objects.filter(groups__name='compras')
+    rpchoices = User.objects.filter(groups__name='compras').exclude(id=1)
     if request.method == 'POST':
         status = request.POST.get('status')
         filial = request.POST.get('filial')

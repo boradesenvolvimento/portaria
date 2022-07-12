@@ -625,6 +625,8 @@ class TicketChamado(models.Model):
     status = models.CharField(max_length=9, choices=STATUS_CHOICES)
     categoria = models.CharField(max_length=20, choices=CATEGORIA_CHOICES, blank=True, null=True)
     msg_id = models.CharField(max_length=100, unique=True)
+    ultima_att = models.DateTimeField()
+    ultimo_autor = models.CharField(blank=True, null=True, max_length=15)
 
 class EmailChamado(models.Model):
     id = models.BigAutoField(primary_key=True)
@@ -793,9 +795,9 @@ class SolicitacoesCompras(models.Model):
     id = models.BigAutoField(primary_key=True)
     nr_solic = models.CharField(max_length=10)
     data = models.DateTimeField()
-    status = models.CharField(max_length=1)
+    status = models.CharField(max_length=8)
     filial = models.CharField(max_length=3, choices=GARAGEM_CHOICES)
-    categoria = models.CharField(max_length=10)
+    categoria = models.CharField(max_length=12)
     solicitante = models.CharField(max_length=100)
     email_solic = models.EmailField(max_length=255)
     departamento = models.CharField(max_length=15, choices=DEPARTAMENTO_CHOICES, blank=True, null=True)
