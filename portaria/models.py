@@ -625,7 +625,7 @@ class TicketChamado(models.Model):
     status = models.CharField(max_length=9, choices=STATUS_CHOICES)
     categoria = models.CharField(max_length=20, choices=CATEGORIA_CHOICES, blank=True, null=True)
     msg_id = models.CharField(max_length=100, unique=True)
-    ultima_att = models.DateTimeField()
+    ultima_att = models.DateTimeField(null=True, blank=True)
     ultimo_autor = models.CharField(blank=True, null=True, max_length=15)
 
 class EmailChamado(models.Model):
