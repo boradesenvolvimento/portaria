@@ -42,3 +42,7 @@ def is_past(value):
 @register.filter
 def filename(value):
     return os.path.basename(value.file.name)
+
+@register.filter(name='split_char')
+def split_char(obj,value):
+    return obj.split(value)[0]
