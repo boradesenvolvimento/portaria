@@ -755,6 +755,7 @@ class JustificativaEntrega(models.Model):
     desc_just = models.CharField(max_length=100, blank=True, null=True)
     file = models.FileField(upload_to='justificativas/%Y/%m/%d', null=True)
     confirmado = models.BooleanField(default=False)
+    recusa = models.BooleanField(default=False)
     autor = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
 
 class OcorrenciaEntrega(models.Model):
@@ -794,17 +795,18 @@ class SolicitacoesCompras(models.Model):
     ]
     id = models.BigAutoField(primary_key=True)
     nr_solic = models.CharField(max_length=10)
-    data = models.DateTimeField()
-    status = models.CharField(max_length=8)
+    data = models.DateField()
+    status = models.CharField(max_length=15)
     filial = models.CharField(max_length=3, choices=GARAGEM_CHOICES)
-    categoria = models.CharField(max_length=12)
+    categoria = models.CharField(max_length=15)
     solicitante = models.CharField(max_length=100)
-    email_solic = models.EmailField(max_length=255)
+    email_solic = models.EmailField(max_length=255, blank=True, null=True)
     departamento = models.CharField(max_length=15, choices=DEPARTAMENTO_CHOICES, blank=True, null=True)
     responsavel = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True, related_name='responsavelcompras')
     prazo_conclusao = models.DateField(blank=True, null=True)
     dt_vencimento = models.DateField(blank=True, null=True)
     pub_date = models.DateTimeField(default=timezone.now)
+    anexo = models.FileField(upload_to='cpr/%Y/%m/%d', blank=True, null=True)
     autor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='autorcompras')
 
 

@@ -14,7 +14,8 @@
         <h1>Funções<hr></h1>
         <div class="container">
             <div class="row linha-baixo">
-                <form method="post" action="{% url 'portaria:compras_lancar_pedido' %}">{% csrf_token %}
+                <form method="post" action="{% url 'portaria:compras_lancar_pedido' %}" enctype="multipart/form-data">
+                    {% csrf_token %}
                     <h3>Lançar</h3>
                     <label for="fil">Filial:</label>
                     <select id="fil" name="filial">
@@ -25,7 +26,9 @@
                     </select>
                     <label for="getid">Código Solicitação:</label>
                     <input type="text" name="getid" id="getid">
-                    <button type="submit">Botão</button>
+                    <label for="getanexo" style="font-size:2.4rem;cursor:pointer;"><ion-icon name="attach-outline"></ion-icon></label>
+                    <input type="file" name="getanexo" id="getanexo">
+                    <button type="submit">Enviar</button>
                 </form>
             </div>
             <div class="row linha-baixo">

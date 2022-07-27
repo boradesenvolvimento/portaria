@@ -53,7 +53,7 @@
                 <tbody>
 
                 {% for f in form %}
-                    <tr class="smallcap">
+                    <tr class="smallcap" style="{% if f.recusa %}background-color: #ff000091;{% endif %}" >
 
                         <td>{{ f.conhecimento }}</td>
                         <td>{{ f.data_emissao }}</td>

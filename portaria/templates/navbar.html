@@ -131,8 +131,9 @@
                 <li class="nav-item"><a class="nav-link1" href="{% url 'portaria:rel_justificativa' %}">Rel Justificativas</a></li>
                 {% endif %}
               {% endif %}
+              {% if request.user|has_group:"compras" %}
               <li class="nav-item"><a class="nav-link1" href="{% url 'portaria:compras_index' %}">Compras</a></li>
-              <li class="nav-item"><a class="nav-link1" href="{% url 'portaria:terceirizadosindex' %}">Terceirizados</a></li>
+              {% endif %}
             </ul>
           </div>
           {% endif %}
@@ -175,6 +176,21 @@
             <ul class="dropdown-menu" style="background-color: #3188E8;" aria-labelledby="dropdownMenuButton1">
             <li class="nav-item">
               <a class="nav-link1" href="{% url 'portaria:chamado' %}">Inicio</a>
+            </li>
+            </ul>
+          </div>
+          {% endif %}
+          {% if request.user|has_group:"estoque" %}
+            <div class="dropdown">
+            <button class="dropdown-toggle menutext-navbar nav-link1" type="button" style="background-color: #3188E8;" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+              Estoque
+            </button>
+            <ul class="dropdown-menu" style="background-color: #3188E8;" aria-labelledby="dropdownMenuButton1">
+              <li class="nav-item">
+                <a class="nav-link1" href="{% url 'portaria:estoque_index' %}">Inicio</a>
+              </li>
+              <li class="nav-item">
+              <a class="nav-link1" href="{% url 'portaria:estoque_listagem_itens' %}">Lista de itens</a>
             </li>
             </ul>
           </div>

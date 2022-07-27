@@ -1,0 +1,56 @@
+    {% extends 'base.html' %}
+    {% block content %}
+    {% load groupscheck %}
+    <div class="container mt-5">
+    {% if auth_message %}
+        <p><strong>{{ auth_message }}</strong></p>
+    {% else %}
+    {% if request.user|has_group:"estoque" %}
+            {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+            {% endfor %}
+        <section class="container">
+            <div class="row">
+                <h2 class="title-cad col-3">Controle de Estoque</h2>
+                <div class="col"></div>
+                <div class="col-3" style="text-align:center;">
+                    <input style="margin:auto;" type="text" id="buscaitem">
+                    <button type="submit" style="font-size:1.8rem;margin:auto;"><ion-icon name="search-circle-outline"></ion-icon></button>
+                </div>
+            </div><hr>
+            <div class="row">
+                <table class="table1 table">
+                    <thead>
+                        <tr>
+                            <th scope="col" style="width:10%;">ID</th>
+                            <th scope="col" style="width:25%;">Nome - TKT</th>
+                            <th scope="col">Aberto em</th>
+                            <th scope="col">Responsável</th>
+                            <th scope="col">Solicitante</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Serviço</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="tabletkt">
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </section>
+    {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+    </div>
+    {% endif %}
+    {% endblock %}

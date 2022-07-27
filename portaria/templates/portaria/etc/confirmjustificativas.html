@@ -41,23 +41,41 @@
                         </thead>
                         <tbody>
                             {% for q in form %}
-                            <tr>
-                                <th><input type="checkbox" value="{{ q.id }}" name="romid"></th>
+                            <tr style="{% if q.recusa %}background-color: #ff000091;{% endif %}">
+                                <th><input type="checkbox" value="{{ q.id }}" id="romid" name="romid"></th>
                                 <td>{{ q.conhecimento }}</td>
                                 <td>{{ q.nota_fiscal }}</td>
                                 <td>{{ q.desc_just }}</td>
-                                {% if q.file %}<td><a href="/media/{{ q.file }}" download>
+                                <td>{% if q.file %}<a href="/media/{{ q.file }}" download>
                                     <button type="button"><ion-icon name="download-outline"></ion-icon></button>
-                                </a></td>{% endif %}
+                                </a>{% endif %}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
-                    <button type="submit">Confirmar</button>
+                    <button type="submit" id="submiter">Confirmar</button>
                 </form>
                 </div>
             </div>
         </div>
 
 {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+<script>
+    $(document).ready(function() {
+        form = document.getElementById('submiter')
+        chkbx = document.getElementsByName('romid')
+        console.log(chkbx)
+        form.addEventListener('click', (event) => {
+            chkbx = document.getElementsByName('romid');
+            chkbx.forEach(function(p){
+                if(p.checked == true){
+                    console.log('true')
+                }else{
+                    p.value = p.value + '-false'
+                    p.checked = true
+                }
+            })
+        })
+    })
+</script>
 {% endblock %}

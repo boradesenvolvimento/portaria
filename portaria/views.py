@@ -855,7 +855,7 @@ def tktcreate(request):
                 remet = 'F1.REM_RZ_SOCIAL'
                 dest = 'F1.DEST_RZ_SOCIAL'
             try:
-                conn = settings.CONNECTION
+                conn = conndb()
                 cur = conn.cursor()
                 cur.execute(f'''
                                 SELECT 
@@ -1238,7 +1238,7 @@ def etiquetas(request):
         else:
             lista = tuple(lista)
         try:
-            conn = settings.CONNECTION
+            conn = conndb()
             cur = conn.cursor()
             cur.execute(f"""
                         SELECT F4.NOTA_FISCAL, F4.VOLUMES, F1.CONHECIMENTO
@@ -3012,7 +3012,7 @@ def mdfeporfilial(request):
                    }
     for k, v in gachoices:
         result = mailchoices.get(v, '')
-        conn = settings.CONNECTION
+        conn = conndb()
         cur = conn.cursor()
         cur.execute(f"""
                     SELECT DISTINCT
@@ -3327,17 +3327,26 @@ def confirmjust(request):
         aa = request.POST.getlist('romid')
         for q in aa:
             try:
+                if 'false' in q:
+                    sts = q.split('-')[1]
+                    q = q.split('-')[0]
+                else:
+                    q = q
+                    sts = None
                 obj = get_object_or_404(JustificativaEntrega, pk=q)
             except Exception as err:
                 print(err)
                 continue
             else:
-                obj.confirmado = True
+                if sts:
+                    obj.recusa = True
+                else:
+                    obj.confirmado = True
                 obj.save()
     return render(request, 'portaria/etc/confirmjustificativas.html', {'form':form,'gachoices':gachoices})
 
 async def get_justificativas(request):
-    conn = settings.CONNECTION
+    conn = conndb()
     cur = conn.cursor()
     cur.execute(f"""
                     SELECT 
@@ -3398,7 +3407,8 @@ async def get_justificativas(request):
                          F1.SERIE = F4.SERIE                    AND
                          
                          F1.CARGA_ENCOMENDA IN ('CARGA DIRETA','RODOVIARIO')    AND
-                         F1.ID_GARAGEM <> 1                                     AND
+                         F1.ID_GARAGEM NOT IN (1,23,30)                         AND
+                         F1.DATA_CANCELADO = '01-JAN-0001'                      AND
                                                                            
                          F1.DATA_EMISSAO BETWEEN ((SYSDATE)-5) AND (SYSDATE)                         
                     GROUP BY
@@ -3442,7 +3452,7 @@ def insert_to_justificativa(obj):
     )
 
 async def get_ocorrencias(request):
-    conn = settings.CONNECTION
+    conn = conndb()
     cur = conn.cursor()
     cur.execute(f"""
                     SELECT 
@@ -3545,9 +3555,11 @@ def compras_lancar_pedido(request):
     if request.method == 'POST':
         idsolic = request.POST.get('getid')
         fil = request.POST.get('filial')
+        anexo = request.FILES.get('getanexo')
+        print(anexo)
         newga = garagem_para_filial_praxio(gakey[fil])
         if idsolic:
-            conn = settings.CONNECTION
+            conn = conndb()
             cur = conn.cursor()
             try:
                 cur.execute(f"""
@@ -3671,7 +3683,7 @@ def compras_lancar_pedido(request):
                             obj = SolicitacoesCompras.objects.create(
                                 nr_solic=q['NR_SOLICITACAO'], data=q['DATA'], status=q['STATUS'],
                                 filial=keyga[q['FILIAL']],
-                                solicitante=q['SOLICITANTE'], autor=request.user, email_solic=q['EMAIL']
+                                solicitante=q['SOLICITANTE'], autor=request.user, email_solic=q['EMAIL'], anexo=anexo
                             )
                             prod = ProdutosSolicitacoes.objects.create(produto=q['PRODUTO'],
                                                                               qnt_itens=int(q['QTD_ITENS']),
@@ -3680,12 +3692,8 @@ def compras_lancar_pedido(request):
                             prod = ProdutosSolicitacoes.objects.create(produto=q['PRODUTO'],
                                                                       qnt_itens=int(q['QTD_ITENS']),
                                                                       solic_ref=obj)
-                        '''obj = SolicitacoesCompras.objects.get_or_create(
-                            nr_solic=q['NR_SOLICITACAO'], data=q['DATA'], status=q['STATUS'], filial=keyga[q['FILIAL']],
-                            solicitante=q['SOLICITANTE'], autor=request.user, email_solic=q['EMAIL']
-                        )
-                        prod = ProdutosSolicitacoes.objects.get_or_create(produto=q['PRODUTO'],
-                                                                      qnt_itens=int(q['QTD_ITENS']),solic_ref=obj[0])'''
+                            obj.anexo = anexo
+                            obj.save()
                     messages.success(request, f'Solicitação cadastrada com sucesso!')
                 else:
                     messages.error(request, 'Não encontrado solicitação com este número.')
@@ -3864,7 +3872,7 @@ def sendmail_compras(to, text, file1, file2, file3):
     sm.login(fromm, "Bor@dev#123")
     sm.sendmail(fromm, to, msg.as_string())
 
-def terceirizados_index(request):
+'''def terceirizados_index(request):
     return render(request, 'portaria/etc/terceirizadosindex.html')
 
 def insert_terceirizados(request):
@@ -3929,7 +3937,7 @@ def get_terceirizados_xls(request):
             writer = pd.ExcelWriter(response, engine='xlsxwriter')
             df.to_excel(writer, 'sheet1', index=False)
             writer.save()
-            return response
+            return response'''
 
 def sugestoesedenuncias(request):
     if request.method == 'POST':
@@ -3950,3 +3958,15 @@ def sugestoesedenuncias(request):
             messages.error(request, 'Error')
             return redirect('portaria:sugestoesedenuncias')
     return render(request, 'portaria/etc/sugestoesedenuncias.html')
+
+def estoque_index(request):
+    return render(request, 'portaria/estoque/estoqueindex.html')
+
+def estoque_painel(request):
+    return render(request, 'portaria/estoque/painelsolic.html')
+
+def estoque_nova_solic(request):
+    return render(request, 'portaria/estoque/nova_solicitacao.html')
+
+def estoque_listagem_itens(request):
+    return render(request, 'portaria/estoque/listagemitens.html')

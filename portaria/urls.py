@@ -107,9 +107,13 @@ urlpatterns = [
     path('compras/painel/', views.painel_compras, name='painel_compras'),
     path('compras/painel/<id>/edit', views.edit_compras, name='edit_compras'),
     path('insert_entradas_cpr/', views.insert_entradas_cpr, name='insert_entradas_cpr'),
-    path('terceirizados/', views.terceirizados_index, name='terceirizadosindex'),
-    path('terceirizados/insert', views.insert_terceirizados, name='insertterceirizados'),
-    path('terceirizados/saidas', views.saidas_terceirizados, name='saidas_terceirizados'),
-    path('get_terceirizados_xls', views.get_terceirizados_xls, name='get_terceirizados_xls'),
+    path('estoque/', views.estoque_index, name='estoque_index'),
+    path('estoque/solicitacoes', views.estoque_painel, name='estoque_painel'),
+    path('estoque/nova_solicitacao/', views.estoque_nova_solic, name='estoque_nova_solic'),
+    path('estoque/itens/listagem', views.estoque_listagem_itens, name='estoque_listagem_itens'),
+    #path('terceirizados/', views.terceirizados_index, name='terceirizadosindex'),
+    #path('terceirizados/insert', views.insert_terceirizados, name='insertterceirizados'),
+    #path('terceirizados/saidas', views.saidas_terceirizados, name='saidas_terceirizados'),
+    #path('get_terceirizados_xls', views.get_terceirizados_xls, name='get_terceirizados_xls'),
     path('sugestoes/', views.sugestoesedenuncias, name='sugestoesedenuncias')
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
