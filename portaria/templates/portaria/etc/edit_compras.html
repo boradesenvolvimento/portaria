@@ -67,7 +67,9 @@
                                 <label for="dt_venc">Vencimento:</label><input type="date" id="dt_venc" name="dt_venc">
                         </li></div>{% endif %}
                         <li>Solicitante: {{ obj.solicitante|default_if_none:'Não Cadastrado' }} </li>
-                        <li>Anexo: <a href="/media/{{ obj.anexo }}" download>{{ obj.anexo|filename }}</a></li>
+                        <li>Anexo: {% if obj.anexo %}<a href="/media/{{ obj.anexo }}" download>{{ obj.anexo|filename }}</a>
+                            {% else %} nenhum anexo. {% endif %}
+                        </li>
                     </ul>
                         <button type="submit">Atualizar</button>
                     </form>
