@@ -1,0 +1,61 @@
+    {% extends 'base.html' %}
+    {% block content %}
+    {% load groupscheck %}
+    <div class="container mt-5">
+    {% if auth_message %}
+        <p><strong>{{ auth_message }}</strong></p>
+    {% else %}
+    {% if request.user|has_group:"demissoes" %}
+            {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+            {% endfor %}
+        <section class="container createtkt">
+            <div class="row">
+                <h2 class="title-cad col-3">Buscar funcionários</h2>
+            </div><hr>
+            <div class="row">
+                <div class="col">
+                    <form method="get">
+                        <label for="getcpf" style="font-size:2.4rem;"><ion-icon name="search-circle-outline"></ion-icon></label>
+                        <input type="text" autocomplete="off" onkeypress="if(this.value.length==11) return false;" id="getcpf" name="getcpf">
+                        <button>Buscar</button>
+                    </form>
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+            {% if obj %}
+                {% if obj.dtdemissao is not None and obj.motivodemissao is not None %}
+                <div class="createboxes">
+                    <ul style="list-style: none;">
+                        <li><strong>Nome:</strong> {{ obj.nome }}</li>
+                        <li><strong>Data demissão:</strong> <input readonly value="{{ obj.dtdemissao }}"></li>
+                        <li><label for="motivo">Motivo demissão:</label><input readonly value="{{ obj.motivodemissao }}"></li>
+
+                    </ul>
+                </div>
+                {% else %}
+                <div class="createboxes">
+                    <form method="post">{% csrf_token %}
+                    <input type="hidden" name="getcpf" value="{{ obj.cpf }}">
+                    <ul style="list-style: none;">
+                        <li><strong>Nome:</strong> {{ obj.nome }}</li>
+                        <li><strong>Data demissão:</strong> <input type="date" name="datademissao"></li>
+                        <li><label for="motivo">Motivo demissão:</label></li>
+                        <li><textarea style="border:solid 1px;resize:none;" id="motivo" name="motivo" cols="30" rows="4"></textarea></li>
+                        <li><button>Cadastrar</button></li>
+                    </ul>
+                    </form>
+                </div>
+                {% endif %}
+            {% endif %}
+            </div>
+        </section>
+    {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+    </div>
+    {% endif %}
+    {% endblock %}

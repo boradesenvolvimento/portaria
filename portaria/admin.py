@@ -165,3 +165,7 @@ admin.site.register(FornecedorTerceirizados, FornecedorTerceirizadosAdmin)
 class SugestoesAdmin(admin.ModelAdmin):
     pass
 admin.site.register(Sugestoes,SugestoesAdmin)
+
+class DemissoesAdmin(admin.ModelAdmin):
+    pass
+admin.site.register(Demissoes,DemissoesAdmin)

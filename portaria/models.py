@@ -849,3 +849,13 @@ class Sugestoes(models.Model):
     categoria = models.CharField(max_length=8)
     file = models.FileField(upload_to='sugestoes/%Y/%m/%d', null=True, blank=True)
     autor = models.CharField(max_length=15, default='anônimo')
+
+class Demissoes(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    empresa = models.IntegerField()
+    filial = models.IntegerField()
+    nome = models.CharField(max_length=50)
+    cpf = models.CharField(max_length=11, validators=[only_int], unique=True)
+    dtadmissao = models.DateField()
+    dtdemissao = models.DateField(blank=True, null=True)
+    motivodemissao = models.TextField(blank=True, null=True)

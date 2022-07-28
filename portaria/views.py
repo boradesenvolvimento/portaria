@@ -3556,7 +3556,6 @@ def compras_lancar_pedido(request):
         idsolic = request.POST.get('getid')
         fil = request.POST.get('filial')
         anexo = request.FILES.get('getanexo')
-        print(anexo)
         newga = garagem_para_filial_praxio(gakey[fil])
         if idsolic:
             conn = conndb()
@@ -3970,3 +3969,81 @@ def estoque_nova_solic(request):
 
 def estoque_listagem_itens(request):
     return render(request, 'portaria/estoque/listagemitens.html')
+
+def index_demissoes(request):
+    if request.method == 'GET':
+        cpf = request.GET.get('getcpf')
+        if cpf:
+            try:
+                obj = get_object_or_404(Demissoes, cpf=cpf)
+            except Exception as e:
+                messages.error(request, 'Erro: não encontrado o CPF -- %s' % e)
+                return render(request, 'portaria/pj/index_demissoes.html')
+            else:
+                return render(request, 'portaria/pj/index_demissoes.html', {'obj':obj})
+
+    if request.method == 'POST':
+        data = request.POST.get('datademissao')
+        motivo = request.POST.get('motivo')
+        cpf = request.POST.get('getcpf')
+        update_demissoes(request, cpf, data, motivo)
+
+    return render(request, 'portaria/pj/index_demissoes.html')
+
+def checa_demissoes(request, cpf):
+    try:
+        obj = get_object_or_404(Demissoes, cpf=cpf)
+    except Exception as e:
+        error = messages.error(request, 'Erro: não encontrado o CPF -- %s' % e)
+        return error
+    else:
+        return obj
+
+def update_demissoes(request, cpf, data, motivo):
+    try:
+        obj = get_object_or_404(Demissoes, cpf=cpf)
+    except Exception as e:
+        messages.error(request, 'Erro: não encontrado o CPF -- %s' % e)
+    else:
+        obj.dtdemissao = data
+        obj.motivodemissao = motivo
+        obj.save()
+        messages.success(request, 'Cadastrado com sucesso!')
+
+def get_funcionarios_demissao(request):
+    conn = conndb()
+    cur = conn.cursor()
+    try:
+        cur.execute(f"""
+                    SELECT 
+                           FF.CODIGOEMPRESA,
+                           FF.CODIGOFL,
+                           FF.NOMEFUNC,
+                           FD.NRDOCTO,
+                           FF.DTADMFUNC,
+                           FF.SITUACAOFUNC
+                    FROM 
+                           FLP_FUNCIONARIOS FF,
+                           FLP_DOCUMENTOS FD
+                    WHERE
+                           FF.SITUACAOFUNC = 'D'         AND
+                           FF.CODIGOEMPRESA <> '999'     AND
+                           FF.CODINTFUNC = FD.CODINTFUNC AND
+                           FD.TIPODOCTO = 'CPF'
+                                """)
+    except cxerr as e:
+        print(f'Error:{e}, error_type:{type(e).__name__}')
+    except Exception as e:
+        print(f'Error:{e}, error_type:{type(e).__name__}')
+    else:
+        res = dictfetchall(cur)
+        cur.close()
+    for q in res:
+        try:
+            obj = get_object_or_404(Demissoes, cpf=q['NRDOCTO'])
+        except Http404:
+            obj = Demissoes.objects.create(empresa=q['CODIGOEMPRESA'],filial=q['CODIGOFL'], nome=q['NOMEFUNC'],
+                                           cpf=q['NRDOCTO'], dtadmissao=q['DTADMFUNC'])
+        except Exception as e:
+            print(f'Error:{e}, error_type:{type(e).__name__}')
+    return HttpResponse('job done')
