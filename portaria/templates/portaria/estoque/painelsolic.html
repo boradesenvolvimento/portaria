@@ -26,29 +26,29 @@
                 <table class="table1 table">
                     <thead>
                         <tr>
-                            <th scope="col" style="width:10%;">ID</th>
-                            <th scope="col" style="width:25%;">Nome - TKT</th>
-                            <th scope="col">Aberto em</th>
-                            <th scope="col">Responsável</th>
+                            <th scope="col">Descrição</th>
+                            <th scope="col">Quantidade</th>
+                            <th scope="col">Tamanho</th>
+                            <th scope="col">Filial</th>
+                            <th scope="col">Data Solicitado</th>
                             <th scope="col">Solicitante</th>
-                            <th scope="col">Status</th>
-                            <th scope="col">Serviço</th>
                             <th scope="col" style="width:10%;">Visualizar</th>
                         </tr>
                     </thead>
                     <tbody>
+                        {% for q in form %}
                         <tr class="tabletkt">
-                            <th></th>
-                            <th></th>
-                            <th></th>
-                            <th></th>
-                            <th></th>
-                            <th></th>
-                            <th></th>
-                            <th><a href="#">
+                            <th>{{ q.item }}</th>
+                            <th>{{ q.quant_solic }}</th>
+                            <th>{{ q.item.tamanho }}</th>
+                            <th>{{ q.get_filial_display }}</th>
+                            <th>{{ q.data_solic }}</th>
+                            <th>{{ q.autor }}</th>
+                            <th><a href="{% url 'portaria:estoque_detalhe' q.id %}">
                                 <button><ion-icon name="eye-outline"></ion-icon></button>
                             </a></th>
                         </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>

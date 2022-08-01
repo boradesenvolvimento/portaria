@@ -15,12 +15,8 @@
             {% endfor %}
         <section class="container">
             <div class="row">
-                <h2 class="title-cad col-3">Controle de Estoque</h2>
-                <div class="col" style="text-align:center;">
-                    <label for="createitem">Cadastrar Item</label>
-                    <a href="{% url 'portaria:estoque_caditem' %}">
-                        <button id="createitem"><ion-icon name="add-circle-outline"></ion-icon></button></a>
-                </div>
+                <h2 class="title-cad col-3">Confirmar solicitações</h2>
+                <div class="col"></div>
                 <div class="col-3">
                     <form method="get">
                         <input style="margin:auto;" type="text" id="buscaitem" name="buscaitem">
@@ -35,47 +31,28 @@
                         <tr>
                             <th scope="col" style="width:10%;">ID</th>
                             <th scope="col">Descrição</th>
-                            <th scope="col" style="width:10%;">Quantidade</th>
-                            <th scope="col">Tipo</th>
+                            <th scope="col" style="width:10%;">Filial</th>
+                            <th scope="col">Quantidade</th>
                             <th scope="col">Tamanho</th>
-                            <th scope="col">Editar</th>
+                            <th scope="col">Data Envio</th>
+                            <th scope="col">Confirmar</th>
                         </tr>
                     </thead>
                     <tbody>
                     {% for q in form %}
                         <tr class="tabletkt">
                             <th>{{ q.id }}</th>
-                            <th>{{ q.desc }}</th>
-                            <th>{{ q.quantidade }}</th>
-                            <th>{{ q.tipo }}</th>
-                            <th>{{ q.tamanho }}</th>
-                            <th><button id="myBtn" type="button" value="{{ forloop.counter }}">
-                                <ion-icon name="create-outline"></ion-icon></button></th>
+                            <th>{{ q.item }}</th>
+                            <th>{{ q.get_filial_display }}</th>
+                            <th>{{ q.quant_solic }}</th>
+                            <th>{{ q.item.tamanho }}</th>
+                            <th>{{ q.data_envio }}</th>
+                            <th><form method="post">{% csrf_token %}
+                                <input type="hidden" name="objid" value="{{ q.id }}">
+                                <button type="submit">
+                                <ion-icon name="checkmark-done-circle-outline"></ion-icon></ion-icon></button>
+                            </form></th>
                         </tr>
-                        <div id="myModal{{ forloop.counter }}" class="modal">
-                            <div class="modal-content">
-                                <div>
-                                    <span class="title-cad">Editar quantidade</span>
-                                    <span class="close col">&times;</span>
-                                </div><hr>
-                                <form action="" id="formdata-id" method="post">
-                                    {% csrf_token %}
-                                    <div class="row">
-                                        <ul style="list-style:none;">
-                                            <input name="obj" value="{{ q.id }}" hidden>
-                                            <li><strong>Descrição:</strong> {{ q }}</li>
-                                            <li><strong>Tipo:</strong> {{ q.tipo }}</li>
-                                            <li><strong>Tamanho:</strong> {{ q.tamanho }}</li>
-                                            <li><strong>Quantidade:</strong>
-                                                <input name="quantidade" id="quantidade" maxlength="5"></li>
-                                        </ul>
-                                    </div>
-                                    <div class="row">
-                                        <center><button id="submiter" type="submit">Confirmar</button></center>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
                     {% endfor %}
                     </tbody>
                 </table>
@@ -109,7 +86,7 @@
     $(function(){
         var availableTags = [
             {% for q in autocomplete %}
-                "{{ q.desc }} {{ q.tamanho }}",
+                "{{ q.desc }}",
             {% endfor %}
         ];
         $('#buscaitem').autocomplete({source: availableTags});

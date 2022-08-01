@@ -1,10 +1,60 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'base.html' %}
+{% block content %}
+{% load groupscheck %}
+{% load static %}
+<div class="container mt-5">
+{% if auth_message %}
+    <p><strong>{{ auth_message }}</strong></p>
+{% else %}
+{% if request.user|has_group:"chamado" %}
+        {% for message in messages %}
+        <div class="container-fluid p-0">
+            <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                {{ message }}
+            </div>
+        </div>
+        {% endfor %}
 
-</body>
-</html>
+        <div class="row">
+            <h2 class="title-cad col-3">Estoque</h2>
+        </div><hr>
+    <section class="container viewmonit">
+        <div class="container">
+            <div class="row">
+                <h2 class="title-cad">Detalhes solicitação</h2>
+            </div>
+        </div>
+        <div class="tktcontainer">
+        <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+        <div class="row">
+            <div class="col-4">
+                <div>
+                    <ul>
+                        <li><strong>Item:</strong> {{ obj.item }} </li>
+                        <li><strong>Quantidade:</strong> {{ obj.quant_solic }} </li>
+                        <li><strong>Tamanho:</strong> {{ obj.item.tamanho }} </li>
+                        <li><strong>Data Solicitação:</strong> {{ obj.data_solic }}</li>
+                        <li><strong>Solicitante:</strong> {{ obj.autor }}</li>
+                        <li><strong>Filial:</strong> {{ obj.get_filial_display }}</li>
+                        <li><strong>Enviar para:</strong><input type="email" name="e_to"></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="container col">
+                <div>
+                    {{ editor.area|safe }}
+                </div>
+                <div>
+                    <input type="file" name="file" multiple style="display:block;border-radius:0;">
+                </div>
+            </div>
+        </div>
+            <center><button class="col">enviar</button></center>
+        </form>
+    </div>
+    </section>
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+</div>
+{% endif %}
+{% endblock %}

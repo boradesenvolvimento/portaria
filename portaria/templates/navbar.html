@@ -128,7 +128,7 @@
               {% endif %}
               {% if request.user|has_group:"justificativas" %}
               <li class="nav-item"><a class="nav-link1" href="{% url 'portaria:justificativa' %}">Justificativas</a></li>
-                {% if request.user|has_group:"justificativas_adm" %}
+                {% if request.user|has_group:"justificativas" %}
                 <li class="nav-item"><a class="nav-link1" href="{% url 'portaria:rel_justificativa' %}">Rel Justificativas</a></li>
                 {% endif %}
               {% endif %}
@@ -191,8 +191,11 @@
                 <a class="nav-link1" href="{% url 'portaria:estoque_index' %}">Inicio</a>
               </li>
               <li class="nav-item">
-              <a class="nav-link1" href="{% url 'portaria:estoque_listagem_itens' %}">Lista de itens</a>
-            </li>
+                <a class="nav-link1" href="{% url 'portaria:estoque_listagem_itens' %}">Lista de itens</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link1" href="{% url 'portaria:estoque_confirma_item' %}">Confirmar solicitações</a>
+              </li>
             </ul>
           </div>
           {% endif %}

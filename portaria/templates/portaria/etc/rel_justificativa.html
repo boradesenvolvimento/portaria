@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block content %}
 {% load groupscheck %}
-{% if request.user|has_group:"justificativas_adm" %}
+{% if request.user|has_group:"justificativas" %}
         <div class="container mt-5">
             {% for message in messages %}
             <div class="container-fluid p-0">
@@ -25,12 +25,14 @@
                     </form>
                 </div>
             </div>
+            {% if request.user|has_group:"justificativas_adm" %}
             <div class="container">
                 <div class="linha-baixo">
                     <h2>Confirmar Justificativas</h2>
                     <a class="col" href="{% url 'portaria:confirmjust' %}"><button type="button">Acessar</button></a>
                 </div>
             </div>
+            {% endif %}
         </div>
 
 {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}

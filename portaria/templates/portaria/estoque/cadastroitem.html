@@ -1,10 +1,45 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-
-</body>
-</html>
+{% extends 'base.html' %}
+{% block content %}
+{% load groupscheck %}
+<div class="container mt-5">
+{% if auth_message %}
+    <p><strong>{{ auth_message }}</strong></p>
+{% else %}
+{% if request.user|has_group:"estoque" %}
+        {% for message in messages %}
+        <div class="container-fluid p-0">
+            <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                {{ message }}
+            </div>
+        </div>
+        {% endfor %}
+    <section class="container">
+        <div class="row">
+            <h2 class="title-cad col-3">Cadastrar Item</h2>
+        </div><hr>
+        <div class="row" style="margin-left:2rem;">
+            <form method="post">{% csrf_token %}
+                <ul style="list-style:none;">
+                    <li><strong>Descrição:</strong><input type="text" name="desc"></li>
+                    <li><strong>Quantidade:</strong><input type="number" name="qnt"></li>
+                    <li><strong>Tipo:</strong><input type="text" name="tipo"></li>
+                    <li><strong>Tamanho:</strong><input type="text" name="tam"></li>
+                    <li><button>botao</button></li>
+                </ul>
+            </form>
+        </div><hr>
+    </section>
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+</div>
+{% endif %}
+<script>
+$(function(){
+    var availableTags = [
+        {% for q in autocomplete %}
+            "{{ q.desc }}",
+        {% endfor %}
+    ];
+    $('#buscaitem').autocomplete({source: availableTags});
+});
+</script>
+{% endblock %}

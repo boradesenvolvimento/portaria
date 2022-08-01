@@ -35,19 +35,19 @@
                         <div class="container col-4 card" style="width:auto;background:#e8eef5;border:solid 3px;border-radius:10px;">
                                 <div class="card-body" style="text-align:center;">
                                     <h3 class="card-title">Em aberto</h3>
-                                    <p class="card-text">{{ metrics.praxio1|default_if_none:'0' }}</p>
+                                    <p class="card-text">{{ metrics.aberto1|default_if_none:'0' }}</p>
                                 </div>
                         </div>
                         <div class="container col-4 card" style="width:auto;background:#e8eef5;border:solid 3px;border-radius:10px;">
                                 <div class="card-body" style="text-align:center;">
                                     <h3 class="card-title">Aguardando confirmação</h3>
-                                    <p class="card-text">{{ metrics.fis1|default_if_none:'0' }}</p>
+                                    <p class="card-text">{{ metrics.ag_conf1|default_if_none:'0' }}</p>
                                 </div>
                         </div>
                         <div class="container col-4 card" style="width:auto;background:#e8eef5;border:solid 3px;border-radius:10px;">
                                 <div class="card-body" style="text-align:center;">
                                     <h3 class="card-title">Concluído</h3>
-                                    <p class="card-text">{{ metrics.des1|default_if_none:'0' }}</p>
+                                    <p class="card-text">{{ metrics.concluido1|default_if_none:'0' }}</p>
                                 </div>
                         </div>
                     </div>

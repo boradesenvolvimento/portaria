@@ -859,3 +859,25 @@ class Demissoes(models.Model):
     dtadmissao = models.DateField()
     dtdemissao = models.DateField(blank=True, null=True)
     motivodemissao = models.TextField(blank=True, null=True)
+
+class EstoqueItens(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    desc = models.CharField(max_length=100, unique=True)
+    quantidade = models.PositiveSmallIntegerField()
+    tipo = models.CharField(max_length=20)
+    tamanho = models.CharField(max_length=5)
+
+    def __str__(self):
+        return self.desc
+
+class EstoqueSolicitacoes(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    item = models.ForeignKey(EstoqueItens, on_delete=models.CASCADE)
+    filial = models.CharField(max_length=3, choices=GARAGEM_CHOICES)
+    quant_solic = models.PositiveSmallIntegerField()
+    data_solic = models.DateField()
+    data_envio = models.DateField(blank=True, null=True)
+    autor = models.ForeignKey(User, on_delete=models.CASCADE)
+    confirmacao = models.DateField(blank=True, null=True)
+    autor_confirmacao = models.ForeignKey(User, on_delete=models.CASCADE, related_name='estoque_autor_confirmacao',
+                                          blank=True, null=True)

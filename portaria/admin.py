@@ -169,3 +169,11 @@ admin.site.register(Sugestoes,SugestoesAdmin)
 class DemissoesAdmin(admin.ModelAdmin):
     pass
 admin.site.register(Demissoes,DemissoesAdmin)
+
+class EstoqueItensAdmin(admin.ModelAdmin):
+    pass
+admin.site.register(EstoqueItens, EstoqueItensAdmin)
+
+class EstoqueSolicitacoesAdmin(admin.ModelAdmin):
+    pass
+admin.site.register(EstoqueSolicitacoes, EstoqueSolicitacoesAdmin)

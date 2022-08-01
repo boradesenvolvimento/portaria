@@ -3959,16 +3959,144 @@ def sugestoesedenuncias(request):
     return render(request, 'portaria/etc/sugestoesedenuncias.html')
 
 def estoque_index(request):
-    return render(request, 'portaria/estoque/estoqueindex.html')
+    metrics = EstoqueSolicitacoes.objects.annotate(
+        aberto=Count('id', filter=Q(data_envio__isnull=True)),
+        ag_conf=Count('id', filter=Q(data_envio__isnull=False, confirmacao=None)),
+        concluido=Count('id', filter=Q(confirmacao__isnull=False))
+    ).aggregate(aberto1=Sum('aberto'),ag_conf1=Sum('ag_conf'), concluido1=Sum('concluido'))
+    return render(request, 'portaria/estoque/estoqueindex.html', {'metrics':metrics})
 
 def estoque_painel(request):
-    return render(request, 'portaria/estoque/painelsolic.html')
+    form = EstoqueSolicitacoes.objects.filter(data_envio__isnull=True)
+    return render(request, 'portaria/estoque/painelsolic.html', {'form':form})
+
+def estoque_confirma_item(request):
+    form = EstoqueSolicitacoes.objects.filter(data_envio__isnull=False, confirmacao=None)
+    if request.method == 'POST':
+        obj = request.POST.get('objid')
+        try:
+            obj = get_object_or_404(EstoqueSolicitacoes, pk=obj)
+        except Exception as e:
+            print(e)
+        else:
+            obj.confirmacao = timezone.now()
+            obj.autor_confirmacao = request.user
+            obj.save()
+            messages.success(request, 'Solicitação com id %s confirmada com sucesso.' % obj.id)
+    return render(request, 'portaria/estoque/confirmasolicitacao.html', {'form':form})
+
+def estoque_detalhe(request, id):
+    editor = TextEditor()
+    obj = get_object_or_404(EstoqueSolicitacoes, pk=id)
+    if request.method == 'POST':
+        area = request.POST.get('area')
+        e_to = request.POST.get('e_to')
+        if area and area != '<p><br></p>' and e_to:
+            if request.POST.get('file') != '':
+                myfile = request.FILES.getlist('file')
+            else:
+                myfile = None
+            msg = MIMEMultipart()
+            if myfile is not None:
+                for q in myfile:
+                    q.seek(0)
+                    part = MIMEApplication(q.file.getvalue(), name=str(q.open()))
+                    msg.attach(part)
+            msg['Subject'] = 'Solicitação Compras %s' % obj
+            msg['From'] = 'teste@bora.com.br'
+            msg['To'] = 'renan.amarantes@bora.com.br'
+            msg.attach(MIMEText(area, 'html', 'utf-8'))
+            smtp_h = 'smtp.bora.com.br'
+            smtp_p = '587'
+            passw = 'Bor@456987'
+            try:
+                sm = smtplib.SMTP(smtp_h, smtp_p)
+                sm.set_debuglevel(1)
+                sm.login('teste@bora.com.br', passw)
+                sm.sendmail('teste@bora.com.br', 'renan.amarantes@bora.com.br', msg.as_string())
+                obj.data_envio = timezone.now()
+                obj.save()
+            except Exception as e:
+                print(f'ErrorType:{type(e).__name__}, Error:{e}')
+                raise e
+            else:
+                messages.success(request, 'Resposta enviada com sucesso!')
+                return redirect('portaria:estoque_index')
+        else:
+            messages.error(request, 'Algo deu errado, gentileza verifique os parâmetros.')
+    return render(request, 'portaria/estoque/detalhesolic.html', {'editor':editor, 'obj':obj})
 
 def estoque_nova_solic(request):
-    return render(request, 'portaria/estoque/nova_solicitacao.html')
+    keyga = {k: v for k, v in GARAGEM_CHOICES}
+    autocomplete = EstoqueItens.objects.all().exclude(quantidade__lte=0)
+    filial = GARAGEM_CHOICES
+    if request.method == 'POST':
+        item = request.POST.get('buscaitem')
+        qnt = request.POST.get('quant')
+        tam = request.POST.get('tamanho')
+        fil = request.POST.get('filial')
+        if item and qnt and tam and fil:
+            try:
+                qnt = int(qnt)
+                item = EstoqueItens.objects.get(desc=item)
+                if item.quantidade >= qnt:
+                    obj = EstoqueSolicitacoes.objects.create(item=item, filial=fil, quant_solic=qnt,
+                                                             data_solic=timezone.now(), autor=request.user)
+                else:
+                    messages.error(request, 'Quantidade em estoque menor que o solicitado.')
+                    raise ValueError
+            except Exception as e:
+                messages.error(request,'Algo deu errado, por gentileza verifique os parâmetros')
+            else:
+                item.quantidade -= qnt
+                item.save()
+                messages.success(request, 'Solicitação de %s criada com sucesso'% item)
+        else:
+            messages.error(request, 'Está faltando parâmetros, gentileza verificar.')
+    return render(request, 'portaria/estoque/nova_solicitacao.html', {'autocomplete':autocomplete, 'filial':filial})
 
 def estoque_listagem_itens(request):
-    return render(request, 'portaria/estoque/listagemitens.html')
+    form = EstoqueItens.objects.all()
+    autocomplete = EstoqueItens.objects.all()
+    if request.method == 'GET':
+        item = request.GET.get('buscaitem')
+        if item:
+            form = EstoqueItens.objects.filter(desc=item)
+    if request.method == 'POST':
+        obj = request.POST.get('obj')
+        qnt = int(request.POST.get('quantidade'))
+        if obj and qnt > 0:
+            try:
+                obj = get_object_or_404(EstoqueItens, pk=obj)
+            except Exception as e:
+                print(e)
+            else:
+                obj.quantidade += qnt
+                messages.success(request, 'Quantidade do %s alterado para %s' % (obj, obj.quantidade))
+                obj.save()
+    return render(request, 'portaria/estoque/listagemitens.html', {'form':form, 'autocomplete':autocomplete})
+
+def estoque_caditem(request):
+    if request.method == 'POST':
+        desc = request.POST.get('desc')
+        qnt = request.POST.get('qnt')
+        tipo = request.POST.get('tipo')
+        tam = request.POST.get('tam')
+        if desc and qnt and tipo and tam:
+            try:
+                desc = desc.upper()
+                qnt = int(qnt)
+                tipo = tipo.upper()
+                tam = tam.upper()
+                obj = EstoqueItens.objects.create(desc=desc, quantidade=qnt, tipo=tipo, tamanho=tam)
+            except Exception as e:
+                messages.error(request, 'Algo de errado nao esta certo')
+                print(e)
+            else:
+                messages.success(request, 'Cadastrado com sucesso!')
+        else:
+            messages.error(request, 'Está faltando informações, gentileza verificar.')
+    return render(request, 'portaria/estoque/cadastroitem.html')
 
 def index_demissoes(request):
     if request.method == 'GET':
@@ -3987,7 +4115,6 @@ def index_demissoes(request):
         motivo = request.POST.get('motivo')
         cpf = request.POST.get('getcpf')
         update_demissoes(request, cpf, data, motivo)
-
     return render(request, 'portaria/pj/index_demissoes.html')
 
 def checa_demissoes(request, cpf):
