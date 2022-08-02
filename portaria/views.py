@@ -2899,7 +2899,7 @@ def chamadoreadmail(request):
                         else:
                             w_body = w_body.replace(q, new_cid)
                             e_body = e_body.replace(q, new_cid)
-                '''try:
+                try:
                     form = EmailChamado.objects.filter(email_id__in=inreply)
                 except Exception as e:
                     print(e)
@@ -2924,7 +2924,7 @@ def chamadoreadmail(request):
                         newmail = EmailChamado.objects.create(assunto=e_title, mensagem=mensagem, cc=e_cc_a, dt_envio=e_date,
                                                               email_id=e_id, tkt_ref=newtkt)
             pp.dele(i + 1)
-        pp.quit()'''
+        pp.quit()
     return HttpResponse('<h2>Job done!</h2>')
 
 def isnotifyread(request, notifyid):
