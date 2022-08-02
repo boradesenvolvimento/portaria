@@ -1094,7 +1094,7 @@ def chamado(request):
     metrics = TicketChamado.objects.exclude(Q(status='CANCELADO') | Q(status='CONCLUIDO')).annotate(
         fis=Count('id', filter=Q(servico='FISCAL')), praxio=Count('id', filter=Q(servico='PRAXIO')),
         des=Count('id', filter=Q(servico='DESCARGA')), comp=Count('id', filter=Q(servico='COMPROVANTE')),
-        hoje=Count('id', filter=Q(dt_abertura__date=datetime.datetime.today())),andamento=Count('id',
+        hoje=Count('id', filter=Q(dt_abertura__date=datetime.date.today())),andamento=Count('id',
                                       filter=Q(status='ABERTO') | Q(status='ANDAMENTO'))
     ).aggregate(fis1=Sum('fis'), praxio1=Sum('praxio'), des1=Sum('des'), comp1=Sum('comp'), hoje1=Sum('hoje'),
                 andamento1=Sum('andamento'))
@@ -2747,10 +2747,10 @@ def chamadoreadmail(request):
     service = ''
     hoje = datetime.date.today()
     host = 'pop.bora.com.br'
-    mails = ['chamado.praxio@bora.com.br','chamado.descarga@bora.com.br','chamado.comprovantes@bora.com.br', 'chamado.fiscal@bora.com.br']
-    #mails = ['teste@bora.com.br']
+    #mails = ['chamado.praxio@bora.com.br','chamado.descarga@bora.com.br','chamado.comprovantes@bora.com.br', 'chamado.fiscal@bora.com.br']
+    mails = ['teste@bora.com.br']
     for e_user in mails:
-        e_pass = 'B0r*610580' #'Bor@456987'
+        e_pass = 'Bor@456987' #'B0r*610580'
         pattern1 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
         pattern2 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp).\w+.\w+')
 
@@ -2842,7 +2842,7 @@ def chamadoreadmail(request):
                         if q not in ['chamado.praxio@bora.com.br', 'chamado.descarga@bora.com.br',
                                      'chamado.comprovantes@bora.com.br', 'chamado.fiscal@bora.com.br']:
                             e_cc_a += q + ','
-                get_serv = (str(parsed_email['Cc']) + str(parsed_email['To'])).lower()
+                get_serv = (str(parsed_email['Cc']) +' '+ str(parsed_email['To'])).lower()
                 if 'chamado.praxio@bora.com.br' in get_serv:
                     service = 'PRAXIO'
                 if 'chamado.descarga@bora.com.br' in get_serv:
@@ -2899,7 +2899,7 @@ def chamadoreadmail(request):
                         else:
                             w_body = w_body.replace(q, new_cid)
                             e_body = e_body.replace(q, new_cid)
-                try:
+                '''try:
                     form = EmailChamado.objects.filter(email_id__in=inreply)
                 except Exception as e:
                     print(e)
@@ -2924,7 +2924,7 @@ def chamadoreadmail(request):
                         newmail = EmailChamado.objects.create(assunto=e_title, mensagem=mensagem, cc=e_cc_a, dt_envio=e_date,
                                                               email_id=e_id, tkt_ref=newtkt)
             pp.dele(i + 1)
-        pp.quit()
+        pp.quit()'''
     return HttpResponse('<h2>Job done!</h2>')
 
 def isnotifyread(request, notifyid):
@@ -3498,7 +3498,7 @@ def pivot_rel_just(date1, date2):
     gachoices = GARAGEM_CHOICES
     dictga = {k:v for k,v in gachoices}
     compare_date = datetime.datetime.strptime('0001-01-01', '%Y-%m-%d')
-    qs = JustificativaEntrega.objects.filter(data_emissao__lte=date2, data_emissao__gte=date1).exclude(garagem=1)
+    qs = JustificativaEntrega.objects.filter(data_emissao__lte=date2, data_emissao__gte=date1)
     for q in qs:
         array.append({'ID_GARAGEM':dictga[q.id_garagem],'CONHECIMENTO':q.conhecimento, 'TIPO_DOC': q.tipo_doc,
                       'DATA_EMISSAO':q.data_emissao,'REMETENTE':q.remetente,'DESTINATARIO':q.destinatario,
@@ -4002,18 +4002,18 @@ def estoque_detalhe(request, id):
                     q.seek(0)
                     part = MIMEApplication(q.file.getvalue(), name=str(q.open()))
                     msg.attach(part)
-            msg['Subject'] = 'Solicitação Compras %s' % obj
-            msg['From'] = 'teste@bora.com.br'
-            msg['To'] = 'renan.amarantes@bora.com.br'
+            msg['Subject'] = 'Solicitação Compras %s %s' % (obj.item, obj.item.tamanho)
+            msg['From'] = 'envio@bora.com.br'
+            msg['To'] = e_to
             msg.attach(MIMEText(area, 'html', 'utf-8'))
             smtp_h = 'smtp.bora.com.br'
             smtp_p = '587'
-            passw = 'Bor@456987'
+            passw = 'B0r*520150'
             try:
                 sm = smtplib.SMTP(smtp_h, smtp_p)
                 sm.set_debuglevel(1)
-                sm.login('teste@bora.com.br', passw)
-                sm.sendmail('teste@bora.com.br', 'renan.amarantes@bora.com.br', msg.as_string())
+                sm.login('envio@bora.com.br', passw)
+                sm.sendmail('envio@bora.com.br', e_to, msg.as_string())
                 obj.data_envio = timezone.now()
                 obj.save()
             except Exception as e:
@@ -4038,7 +4038,7 @@ def estoque_nova_solic(request):
         if item and qnt and tam and fil:
             try:
                 qnt = int(qnt)
-                item = EstoqueItens.objects.get(desc=item)
+                item = EstoqueItens.objects.get(desc=item, tamanho=tam)
                 if item.quantidade >= qnt:
                     obj = EstoqueSolicitacoes.objects.create(item=item, filial=fil, quant_solic=qnt,
                                                              data_solic=timezone.now(), autor=request.user)
@@ -4056,7 +4056,7 @@ def estoque_nova_solic(request):
     return render(request, 'portaria/estoque/nova_solicitacao.html', {'autocomplete':autocomplete, 'filial':filial})
 
 def estoque_listagem_itens(request):
-    form = EstoqueItens.objects.all()
+    form = EstoqueItens.objects.all().order_by('desc')
     autocomplete = EstoqueItens.objects.all()
     if request.method == 'GET':
         item = request.GET.get('buscaitem')
@@ -4090,7 +4090,7 @@ def estoque_caditem(request):
                 tam = tam.upper()
                 obj = EstoqueItens.objects.create(desc=desc, quantidade=qnt, tipo=tipo, tamanho=tam)
             except Exception as e:
-                messages.error(request, 'Algo de errado nao esta certo')
+                messages.error(request, 'Algo deu errado, por gentileza verifique os parâmetros.')
                 print(e)
             else:
                 messages.success(request, 'Cadastrado com sucesso!')

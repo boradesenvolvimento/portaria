@@ -862,7 +862,7 @@ class Demissoes(models.Model):
 
 class EstoqueItens(models.Model):
     id = models.BigAutoField(primary_key=True)
-    desc = models.CharField(max_length=100, unique=True)
+    desc = models.CharField(max_length=100)
     quantidade = models.PositiveSmallIntegerField()
     tipo = models.CharField(max_length=20)
     tamanho = models.CharField(max_length=5)

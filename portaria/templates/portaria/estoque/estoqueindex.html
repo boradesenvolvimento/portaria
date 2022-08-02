@@ -19,10 +19,12 @@
             </div><hr>
             <div class="row">
                 <div class="col-4">
+                    {% if request.user|has_group:"estoque_rh" %}
                     <div class="container createboxes">
                         <label for="botao2">Nova solicitação</label>
                         <a id="botao2" href="{% url 'portaria:estoque_nova_solic' %}"><button style="width:10rem;">Acessar</button></a>
                     </div>
+                    {% endif %}
                     <div class="container createboxes">
                         <label for="botao3">Painel de Solicitações</label>
                         <a id="botao3" href="{% url 'portaria:estoque_painel' %}"><button style="width:10rem;">Acessar</button></a>

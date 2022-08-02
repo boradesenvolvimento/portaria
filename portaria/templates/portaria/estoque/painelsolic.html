@@ -32,7 +32,9 @@
                             <th scope="col">Filial</th>
                             <th scope="col">Data Solicitado</th>
                             <th scope="col">Solicitante</th>
+                            {% if request.user|has_group:"estoque_main" %}
                             <th scope="col" style="width:10%;">Visualizar</th>
+                            {% endif %}
                         </tr>
                     </thead>
                     <tbody>
@@ -44,15 +46,16 @@
                             <th>{{ q.get_filial_display }}</th>
                             <th>{{ q.data_solic }}</th>
                             <th>{{ q.autor }}</th>
+                            {% if request.user|has_group:"estoque_main" %}
                             <th><a href="{% url 'portaria:estoque_detalhe' q.id %}">
                                 <button><ion-icon name="eye-outline"></ion-icon></button>
                             </a></th>
+                            {% endif %}
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
-
         </section>
     {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
     </div>

@@ -17,9 +17,11 @@
             <div class="row">
                 <h2 class="title-cad col-3">Controle de Estoque</h2>
                 <div class="col" style="text-align:center;">
+                    {% if request.user|has_group:"estoque_main" %}
                     <label for="createitem">Cadastrar Item</label>
                     <a href="{% url 'portaria:estoque_caditem' %}">
                         <button id="createitem"><ion-icon name="add-circle-outline"></ion-icon></button></a>
+                    {% endif %}
                 </div>
                 <div class="col-3">
                     <form method="get">
@@ -38,7 +40,9 @@
                             <th scope="col" style="width:10%;">Quantidade</th>
                             <th scope="col">Tipo</th>
                             <th scope="col">Tamanho</th>
+                            {% if request.user|has_group:"estoque_main" %}
                             <th scope="col">Editar</th>
+                            {% endif %}
                         </tr>
                     </thead>
                     <tbody>
@@ -49,8 +53,10 @@
                             <th>{{ q.quantidade }}</th>
                             <th>{{ q.tipo }}</th>
                             <th>{{ q.tamanho }}</th>
+                            {% if request.user|has_group:"estoque_main" %}
                             <th><button id="myBtn" type="button" value="{{ forloop.counter }}">
                                 <ion-icon name="create-outline"></ion-icon></button></th>
+                            {% endif %}
                         </tr>
                         <div id="myModal{{ forloop.counter }}" class="modal">
                             <div class="modal-content">

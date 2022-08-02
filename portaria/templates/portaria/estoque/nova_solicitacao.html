@@ -20,9 +20,12 @@
         <div class="row">
             <form method="post">{% csrf_token %}
             <ul style="margin-left:5rem;list-style:none;">
-                <li>Item: <input type="text" id="buscaitem" name="buscaitem" onchange="get_tamanho()"></li>
+                <li>Item: <input type="text" id="buscaitem" name="buscaitem" onblur="getVal()"></li>
                 <li>Quantidade: <input type="text" name="quant"></li>
-                <li>Tamanho: <input type="text" name="tamanho"></li>
+                <li>Tamanho: <select id="gettam" name="tamanho">
+                                <option selected disabled>Selecione...</option>
+                             </select>
+                </li>
                 <li>Filial: <select name="filial">
                     <option selected disabled>Selecione...</option>
                     {% for k,v in filial %}
@@ -39,16 +42,29 @@
 {% endif %}
 <script>
     $(function(){
-        var availableTags = [
+        var availableTags = [];
             {% for q in autocomplete %}
-                "{{ q.desc }}",
+                if(availableTags.indexOf("{{ q.desc }}") <= -1){
+                    availableTags.push("{{ q.desc }}")
+                }else{}
             {% endfor %}
-        ];
         $('#buscaitem').autocomplete({source: availableTags});
     });
-    function get_tamanho(){
-        d = document.getElementById('buscaitem').value
-        console.log(d)
+    function getVal(){
+        field = document.getElementById('buscaitem').value
+        var availableTags = []
+        {% for q in autocomplete %}
+            if("{{q}}" == field){
+                availableTags.push("{{ q.tamanho }}")
+            }else{}
+        {% endfor %}
+        var select = document.getElementById('gettam')
+        for(i = 0; i < availableTags.length; i++){
+            var opt = document.createElement('option');
+            opt.value = availableTags[i];
+            opt.innerHTML = availableTags[i];
+            select.appendChild(opt);
+        }
     }
 </script>
 {% endblock %}

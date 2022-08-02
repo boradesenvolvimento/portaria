@@ -193,9 +193,11 @@
               <li class="nav-item">
                 <a class="nav-link1" href="{% url 'portaria:estoque_listagem_itens' %}">Lista de itens</a>
               </li>
+              {% if request.user|has_group:"estoque_conf" %}
               <li class="nav-item">
                 <a class="nav-link1" href="{% url 'portaria:estoque_confirma_item' %}">Confirmar solicitações</a>
               </li>
+              {% endif %}
             </ul>
           </div>
           {% endif %}
