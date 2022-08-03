@@ -176,11 +176,6 @@ def cadastro(request):
         auth_message = 'Usuário não autenticado, por favor logue novamente'
         return render(request, 'portaria/portaria/cadastro.html', {'auth_message': auth_message})
 
-@login_required
-def outputs(request):
-    return render(request, 'portaria/etc/outputs.html')
-
-
 def paleteview(request):
     keyga = {k:v for k,v in GARAGEM_CHOICES}
     tp_fil = GARAGEM_CHOICES
@@ -1550,13 +1545,14 @@ def painelromaneio(request):
                     municipio1=F('xmlref__municipio'), uf1=F('xmlref__uf'), codigo1=F('codigo'),
                     qnt_un1=F('qnt_un'), desc_prod1=F('desc_prod'), rem=F('xmlref__remetente'),
                     romaneio_id=F('xmlref__nota_fiscal'), volume=F('xmlref__volume'), valor=F('xmlref__vlr_nf'),
-                    tp_un1=F('tp_un'), peso=F('xmlref__peso')
+                    tp_un1=F('tp_un'), peso=F('xmlref__peso'), tp_vol1=F('tp_vol'), qnt_vol1=F('qnt_vol')
                 )
             elif tp_dld == 'Destinatario':
                 romaneio = SkuRefXML.objects.filter(xmlref__id__in=romidd).annotate(
                     municipio1=F('xmlref__municipio'), uf1=F('xmlref__uf'), codigo1=F('codigo'),qnt_un1=F('qnt_un'),
                     desc_prod1=F('desc_prod'), dest=F('xmlref__destinatario'), romaneio_id=F('xmlref__nota_fiscal'),
                     volume=F('xmlref__volume'), valor=F('xmlref__vlr_nf'), tp_un1=F('tp_un'), peso=F('xmlref__peso'),
+                    tp_vol1=F('tp_vol'), qnt_vol1=F('qnt_vol')
                 )
             elif tp_dld == 'XMLS':
                 try:
@@ -1682,7 +1678,8 @@ def entradaxml(request, args=None):
                         raise e
                     else:
                         for q in skus:
-                            SkuRefXML.objects.create(codigo=q['sku'],desc_prod=q['descprod'],tp_un=q['un'], qnt_un=int(q['qnt']),
+                            SkuRefXML.objects.create(codigo=q['sku'],desc_prod=q['descprod'],tp_un=q['un'],
+                                                     qnt_un=int(q['qnt']), tp_vol=q['un2'], qnt_vol=int(q['qnt2']),
                                                      xmlref=rom)
                 print('finalizado')
             else:
@@ -1700,7 +1697,9 @@ def getText(nodelist):
         descprod = var1.getElementsByTagName('xProd')[0].firstChild.nodeValue
         un = var1.getElementsByTagName('uTrib')[0].firstChild.nodeValue
         qnt = var1.getElementsByTagName('qTrib')[0].firstChild.nodeValue.split('.')[0]
-        all = {'sku':sku, 'descprod':descprod, 'un':un, 'qnt':qnt}
+        un2 = var1.getElementsByTagName('uCom')[0].firstChild.nodeValue
+        qnt2 = var1.getElementsByTagName('qCom')[0].firstChild.nodeValue.split('.')[0]
+        all = {'sku':sku, 'descprod':descprod, 'un':un, 'qnt':qnt, 'un2':un2, 'qnt2':qnt2}
         rc.append(all)
     return rc
 
@@ -1737,13 +1736,15 @@ def romxmltoexcel(*romaneio, tp_dld):
         elif tp_dld == 'Remetente':
             array.append({'municipio': q.municipio1, 'uf': q.uf1, 'codigo': q.codigo1,
                           'qnt_un': q.qnt_un1, 'desc': q.desc_prod1, 'remetente': q.rem, 'nota': q.romaneio_id,
-                          'volume': q.volume, 'valor': q.valor, 'tp_un':q.tp_un1, 'peso':q.peso})
+                          'volume': q.volume, 'valor': q.valor, 'tp_un':q.tp_un1, 'peso':q.peso, 'tp_vol':q.tp_vol1,
+                          'qnt_vol':q.qnt_vol1})
             if q.romaneio_id not in roms:
                 roms.extend({q.romaneio_id})
         elif tp_dld == 'Destinatario':
             array.append({'municipio': q.municipio1, 'uf': q.uf1, 'codigo': q.codigo1,
                           'qnt_un': q.qnt_un1, 'desc': q.desc_prod1, 'destinatario': q.dest, 'nota': q.romaneio_id,
-                          'volume': q.volume, 'valor': q.valor, 'tp_un': q.tp_un1, 'peso': q.peso})
+                          'volume': q.volume, 'valor': q.valor, 'tp_un': q.tp_un1, 'peso': q.peso, 'tp_vol':q.tp_vol1,
+                          'qnt_vol':q.qnt_vol1})
             if q.romaneio_id not in roms:
                 roms.extend({q.romaneio_id})
     RomXML.objects.filter(pk__in=roms).update(printed=True)
@@ -1765,12 +1766,12 @@ def romxmltoexcel(*romaneio, tp_dld):
                               margins=True,
                               margins_name='Total')).astype(np.int64)
     elif tp_dld == 'Remetente':
-        dt = (pdr.pivot_table(index=['remetente','nota','valor','peso','desc','tp_un',],
-                              values=['qnt_un',],
+        dt = (pdr.pivot_table(index=['remetente','nota','valor','peso','desc','tp_un', 'tp_vol'],
+                              values=['qnt_un', 'qnt_vol'],
                               fill_value='0')).astype(np.float)
     elif tp_dld == 'Destinatario':
-        dt = (pdr.pivot_table(index=['destinatario', 'nota', 'volume', 'valor', 'peso', 'desc', 'tp_un', ],
-                              values=['qnt_un', ],
+        dt = (pdr.pivot_table(index=['destinatario', 'nota', 'volume', 'valor', 'peso', 'desc', 'tp_un', 'tp_vol' ],
+                              values=['qnt_un', 'qnt_vol'],
                               fill_value='0')).astype(np.float)
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = f'attachment; filename="{datetime.datetime.today()}.xlsx"'
@@ -1779,7 +1780,8 @@ def romxmltoexcel(*romaneio, tp_dld):
     pdr.to_excel(writer, 'Relatorio')
     writer.save()
     try:
-        return response
+        if response:
+            return response
     except Exception as e:
         raise e
 #fim das views

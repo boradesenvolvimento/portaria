@@ -665,6 +665,8 @@ class SkuRefXML(models.Model):
     desc_prod = models.CharField(max_length=200)
     tp_un = models.CharField(max_length=10)
     qnt_un = models.IntegerField()
+    tp_vol = models.CharField(max_length=10)
+    qnt_vol = models.IntegerField()
     xmlref = models.ForeignKey(RomXML, on_delete=models.CASCADE)
 
     def __str__(self):

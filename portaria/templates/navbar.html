@@ -47,7 +47,7 @@
           </div>
           {% endif %}
           {% if request.user|has_group:"frota" %}
-          <div class="dropdown">
+          <!--<div class="dropdown">
             <button class="dropdown-toggle menutext-navbar nav-link1" type="button" style="background-color: #3188E8;" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
               Frota
             </button>
@@ -61,10 +61,7 @@
                 <a class="nav-link1" href="{% url 'portaria:agendamentomanu' %}">Agendamento</a>
               </li>
             </ul>
-          </div>
-          {% endif %}
-          {% if request.user|has_group:"outputs" %}
-          <!--<li class="nav-item"><a class="nav-link1" href="{% url 'portaria:outputs' %}">Gerar CSVs</a></li>-->
+          </div>-->
           {% endif %}
           {% if request.user|has_group:"servicopj" %}
           <div class="dropdown">
@@ -86,7 +83,7 @@
           </div>
           {% endif %}
           {% if request.user|has_group:"faturamento" %}
-          <div class="dropdown">
+          <!--<div class="dropdown">
             <button class="dropdown-toggle menutext-navbar nav-link1" type="button" style="background-color: #3188E8;" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
               Faturamento
             </button>
@@ -95,7 +92,7 @@
               <a class="nav-link1" href="{% url 'portaria:fatferramentas' %}">Ferramentas</a>
             </li>
             </ul>
-          </div>
+          </div>-->
           {% endif %}
           {% if request.user|has_group:"monitoramento" %}
           <!--

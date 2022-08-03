@@ -2,7 +2,7 @@
 {% block content %}
 {% load static %}
 {% load groupscheck %}
-{% if request.user|has_group:"frota" %}
+{% if request.user|has_group:"romaneioxml" %}
     <div class="container mt-4">
         {% for message in messages %}
             <div class="container-fluid p-0">

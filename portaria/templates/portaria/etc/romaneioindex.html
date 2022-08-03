@@ -2,7 +2,7 @@
 {% block content %}
 {% load static %}
 {% load groupscheck %}
-{% if request.user|has_group:"frota" %}
+{% if request.user|has_group:"romaneioxml" %}
     <div class="container mt-4">
         {% for message in messages %}
             <div class="container-fluid p-0">
@@ -22,11 +22,11 @@
                 </form>
                 <!--<a href="{% url 'portaria:entradaxml' %}" style="color:white;text-decoration:none;font-size:20px;"></a>-->
             </div>
-            <div class="linha-baixo">
+            <!--<div class="linha-baixo">
                 <h3 style="display:inline;">Entrada Manual:</h3>
                 <button type="button"><a href="{% url 'portaria:entradaromaneio' %}" style="color:white;text-decoration:none;font-size:20px;">
                     <ion-icon name="enter-outline"></ion-icon></a></button>
-            </div>
+            </div>-->
             <div class="linha-baixo">
                 <h3 style="display:inline;">Painel XMLS:</h3>
                 <button type="button"><a href="{% url 'portaria:painelromaneio' %}" style="color:white;text-decoration:none;font-size:20px;">
