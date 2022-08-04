@@ -4090,12 +4090,15 @@ def estoque_caditem(request):
                 qnt = int(qnt)
                 tipo = tipo.upper()
                 tam = tam.upper()
-                obj = EstoqueItens.objects.create(desc=desc, quantidade=qnt, tipo=tipo, tamanho=tam)
+                obj = get_object_or_404(EstoqueItens, desc=desc, tamanho=tam)
+            except Http404:
+                EstoqueItens.objects.create(desc=desc, tamanho=tam, quantidade=qnt, tipo=tipo)
+                messages.success(request, 'Item cadastrado com sucesso !!')
             except Exception as e:
                 messages.error(request, 'Algo deu errado, por gentileza verifique os parâmetros.')
                 print(e)
             else:
-                messages.success(request, 'Cadastrado com sucesso!')
+                messages.warning(request, 'Item já cadastrado!')
         else:
             messages.error(request, 'Está faltando informações, gentileza verificar.')
     return render(request, 'portaria/estoque/cadastroitem.html')
