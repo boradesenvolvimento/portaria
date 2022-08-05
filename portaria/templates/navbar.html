@@ -54,11 +54,11 @@
             <ul class="dropdown-menu" style="background-color: #3188E8;" aria-labelledby="dropdownMenuButton1">
               <li class="nav-item">
                 {% if request.user|has_group:"frota-staff" %}
-                <a class="nav-link1" href="{% url 'portaria:frota' %}">Checklist</a>
-                <a class="nav-link1" href="{% url 'portaria:manutencaofrota' %}">Manutencao</a>
-                <a class="nav-link1" href="{% url 'portaria:frotacadastros' %}">Cadastros</a>
+                <a class="nav-link1" href="{# url 'portaria:frota' #}">Checklist</a>
+                <a class="nav-link1" href="{# url 'portaria:manutencaofrota' #}">Manutencao</a>
+                <a class="nav-link1" href="{# url 'portaria:frotacadastros' #}">Cadastros</a>
                 {% endif %}
-                <a class="nav-link1" href="{% url 'portaria:agendamentomanu' %}">Agendamento</a>
+                <a class="nav-link1" href="{# url 'portaria:agendamentomanu' #}">Agendamento</a>
               </li>
             </ul>
           </div>-->
@@ -102,10 +102,10 @@
             </button>
             <ul class="dropdown-menu" style="background-color: #3188E8;" aria-labelledby="dropdownMenuButton1">
             <li class="nav-item">
-              <a class="nav-link1" href="{% url 'portaria:tktmetrics' %}">Ticket</a>
+              <a class="nav-link1" href="{# url 'portaria:tktmetrics' #}">Ticket</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link1" href="{% url 'portaria:includemailtkt' %}">Add Mails</a>
+              <a class="nav-link1" href="{# url 'portaria:includemailtkt' #}">Add Mails</a>
             </li>
             </ul>
           </div>

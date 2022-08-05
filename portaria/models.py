@@ -649,6 +649,8 @@ class RomXML(models.Model):
     peso = models.FloatField()
     volume = models.IntegerField()
     vlr_nf = models.FloatField()
+    bairro = models.CharField(max_length=30)
+    cep = models.CharField(max_length=8)
     municipio = models.CharField(max_length=100)
     uf = models.CharField(max_length=2)
     autor = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)

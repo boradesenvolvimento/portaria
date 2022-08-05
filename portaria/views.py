@@ -1552,7 +1552,7 @@ def painelromaneio(request):
                     municipio1=F('xmlref__municipio'), uf1=F('xmlref__uf'), codigo1=F('codigo'),qnt_un1=F('qnt_un'),
                     desc_prod1=F('desc_prod'), dest=F('xmlref__destinatario'), romaneio_id=F('xmlref__nota_fiscal'),
                     volume=F('xmlref__volume'), valor=F('xmlref__vlr_nf'), tp_un1=F('tp_un'), peso=F('xmlref__peso'),
-                    tp_vol1=F('tp_vol'), qnt_vol1=F('qnt_vol')
+                    tp_vol1=F('tp_vol'), qnt_vol1=F('qnt_vol'), bairro1=F('xmlref__bairro'), cep1=F('xmlref__cep')
                 )
             elif tp_dld == 'XMLS':
                 try:
@@ -1664,6 +1664,8 @@ def entradaxml(request, args=None):
                 dest = mydoc.getElementsByTagName('dest')[0].getElementsByTagName('xNome')[0].firstChild.nodeValue
                 dest_mun = mydoc.getElementsByTagName('dest')[0].getElementsByTagName('xMun')[0].firstChild.nodeValue
                 dest_uf = mydoc.getElementsByTagName('dest')[0].getElementsByTagName('UF')[0].firstChild.nodeValue
+                dest_bairro = mydoc.getElementsByTagName('dest')[0].getElementsByTagName('xBairro')[0].firstChild.nodeValue
+                dest_cep = mydoc.getElementsByTagName('dest')[0].getElementsByTagName('CEP')[0].firstChild.nodeValue
                 peso = mydoc.getElementsByTagName('transp')[0].getElementsByTagName('pesoB')[0].firstChild.nodeValue
                 volume = mydoc.getElementsByTagName('transp')[0].getElementsByTagName('qVol')[0].firstChild.nodeValue
                 vlr_nf = mydoc.getElementsByTagName('total')[0].getElementsByTagName('vNF')[0].firstChild.nodeValue
@@ -1671,8 +1673,8 @@ def entradaxml(request, args=None):
                 if skus:
                     try:
                         rom = RomXML.objects.create(dt_emissao=dhEmi, nota_fiscal=nf, remetente=rem, destinatario=dest,
-                        peso=peso, volume=volume, vlr_nf=vlr_nf, municipio=dest_mun, uf=dest_uf, autor=autor,
-                                                    xmlfile=file)
+                        peso=peso, volume=volume, vlr_nf=vlr_nf, bairo=dest_bairro, cep=dest_cep,
+                                                    municipio=dest_mun, uf=dest_uf, autor=autor, xmlfile=file)
                     except Exception as e:
                         print(f'Error: {e}, error_type: {type(e).__name__}')
                         raise e
@@ -1744,7 +1746,7 @@ def romxmltoexcel(*romaneio, tp_dld):
             array.append({'municipio': q.municipio1, 'uf': q.uf1, 'codigo': q.codigo1,
                           'qnt_un': q.qnt_un1, 'desc': q.desc_prod1, 'destinatario': q.dest, 'nota': q.romaneio_id,
                           'volume': q.volume, 'valor': q.valor, 'tp_un': q.tp_un1, 'peso': q.peso, 'tp_vol':q.tp_vol1,
-                          'qnt_vol':q.qnt_vol1})
+                          'qnt_vol':q.qnt_vol1, 'bairro':q.bairro1,'cep':q.cep1})
             if q.romaneio_id not in roms:
                 roms.extend({q.romaneio_id})
     RomXML.objects.filter(pk__in=roms).update(printed=True)
@@ -1770,7 +1772,8 @@ def romxmltoexcel(*romaneio, tp_dld):
                               values=['qnt_un', 'qnt_vol'],
                               fill_value='0')).astype(np.float)
     elif tp_dld == 'Destinatario':
-        dt = (pdr.pivot_table(index=['destinatario', 'nota', 'volume', 'valor', 'peso', 'desc', 'tp_un', 'tp_vol' ],
+        dt = (pdr.pivot_table(index=['destinatario', 'nota', 'volume', 'valor', 'peso', 'bairro', 'cep', 'desc', 'tp_un',
+                                     'tp_vol'],
                               values=['qnt_un', 'qnt_vol'],
                               fill_value='0')).astype(np.float)
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
