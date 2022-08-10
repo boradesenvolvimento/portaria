@@ -35,6 +35,47 @@
                 <h3>Painel</h3>
                 <a class="col-1" href="{% url 'portaria:painel_compras' %}"><button type="button">Acessar</button></a>
             </div>
+            <!--
+            <div class="linha-baixo">
+                <div class="row createtkt">
+                    <div class="col-4 createboxes">
+                        <h3>Tickets por usuário</h3>
+                        <hr>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <td>Nome</td>
+                                    <td>Quantidade</td>
+                                </tr>
+                            </thead>
+                        {% for q in item_solicitante %}
+                            <tbody>
+                            {% if q.responsavel__username %}
+                            <td>{{ q.responsavel__username }}</td><td>{{ q.total }}</td>
+                            {% endif %}
+                            </tbody>
+                        {% endfor %}
+                        </table>
+                    </div>
+                    <div class="col-8 createboxes">
+                        <div class="row">
+                            <h3>Métricas</h3><hr>
+                            <div class="col-4 card" style="width:auto;background:#e8eef5;border:solid 3px;border-radius:10px;">
+                                <div class="card-body" style="text-align:center;">
+                                    <h3 class="card-title">Andamento</h3>
+                                    <p class="card-text">{{ metrics.andamento|default_if_none:'0' }}</p>
+                                </div>
+                            </div>
+                            <div class="col-4 card" style="width:auto;background:#e8eef5;border:solid 3px;border-radius:10px;">
+                                <div class="card-body" style="text-align:center;">
+                                    <h3 class="card-title">Concluido</h3>
+                                    <p class="card-text">{{ metrics.concluido|default_if_none:'0' }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>-->
         </div>
     </div>
 {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}

@@ -812,7 +812,8 @@ class SolicitacoesCompras(models.Model):
     pub_date = models.DateTimeField(default=timezone.now)
     anexo = models.FileField(upload_to='cpr/%Y/%m/%d', blank=True, null=True)
     autor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='autorcompras')
-
+    ultima_att = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ultimaattcompras',
+                                   blank=True, null=True)
 
 class ProdutosSolicitacoes(models.Model):
     id = models.BigAutoField(primary_key=True)
@@ -827,6 +828,7 @@ class SolicitacoesEntradas(models.Model):
     file2 = models.FileField(upload_to='cpr/%Y/%m/%d', blank=True, null=True)
     file3 = models.FileField(upload_to='cpr/%Y/%m/%d', blank=True, null=True)
     cpr_ref = models.ForeignKey(SolicitacoesCompras, on_delete=models.CASCADE)
+    ultima_att = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
 
 class RegistraTerceirizados(models.Model):
     id = models.BigAutoField(primary_key=True)

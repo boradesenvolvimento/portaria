@@ -1673,7 +1673,7 @@ def entradaxml(request, args=None):
                 if skus:
                     try:
                         rom = RomXML.objects.create(dt_emissao=dhEmi, nota_fiscal=nf, remetente=rem, destinatario=dest,
-                        peso=peso, volume=volume, vlr_nf=vlr_nf, bairo=dest_bairro, cep=dest_cep,
+                        peso=peso, volume=volume, vlr_nf=vlr_nf, bairro=dest_bairro, cep=dest_cep,
                                                     municipio=dest_mun, uf=dest_uf, autor=autor, xmlfile=file)
                     except Exception as e:
                         print(f'Error: {e}, error_type: {type(e).__name__}')
@@ -1693,14 +1693,19 @@ def entradaxml(request, args=None):
 def getText(nodelist):
     doc = nodelist.getElementsByTagName('det')
     rc = []
+    emit = nodelist.getElementsByTagName('emit')[0].getElementsByTagName('CNPJ')[0].firstChild.nodeValue
     for q in doc:
         var1 = q.getElementsByTagName('prod')[0]
         sku = var1.getElementsByTagName('cProd')[0].firstChild.nodeValue
         descprod = var1.getElementsByTagName('xProd')[0].firstChild.nodeValue
         un = var1.getElementsByTagName('uTrib')[0].firstChild.nodeValue
         qnt = var1.getElementsByTagName('qTrib')[0].firstChild.nodeValue.split('.')[0]
-        un2 = var1.getElementsByTagName('uCom')[0].firstChild.nodeValue
-        qnt2 = var1.getElementsByTagName('qCom')[0].firstChild.nodeValue.split('.')[0]
+        if emit == '00763832000160':
+            un2 = 'CX'
+            qnt2 = q.getElementsByTagName('infAdProd')[0].firstChild.nodeValue[19:].split(' ')[0]
+        else:
+            un2 = var1.getElementsByTagName('uCom')[0].firstChild.nodeValue
+            qnt2 = var1.getElementsByTagName('qCom')[0].firstChild.nodeValue.split('.')[0]
         all = {'sku':sku, 'descprod':descprod, 'un':un, 'qnt':qnt, 'un2':un2, 'qnt2':qnt2}
         rc.append(all)
     return rc
@@ -3552,7 +3557,15 @@ async def get_xmls_api(request):
 
 def compras_index(request):
     gachoices = GARAGEM_CHOICES
-    return render(request, 'portaria/etc/compras.html', {'gachoices':gachoices})
+    item_solicitante = SolicitacoesCompras.objects.exclude(Q(status='CONCLUIDO') | Q(status='CANCELADO'))\
+        .filter(data__month=datetime.datetime.now().month,data__year=datetime.datetime.now().year).values('responsavel__username')\
+        .annotate(total=Count('responsavel'))
+    metrics = SolicitacoesCompras.objects.annotate(
+        concl=Count('id', filter=Q(status='CONCLUIDO')),
+        andam=Count('id',filter=(Q(status='ANDAMENTO') | Q(status='APROVADO') | Q(status='ABERTO'))),
+        ).aggregate(concluido=Sum('concl'), andamento=Sum('andam'))
+    return render(request, 'portaria/etc/compras.html', {'gachoices':gachoices,'item_solicitante':item_solicitante,
+                                                         'metrics':metrics})
 
 def compras_lancar_pedido(request):
     keyga = {v: k for k, v in GARAGEM_CHOICES}
@@ -3697,6 +3710,7 @@ def compras_lancar_pedido(request):
                                                                       qnt_itens=int(q['QTD_ITENS']),
                                                                       solic_ref=obj)
                             obj.anexo = anexo
+                            obj.ultima_att = request.user
                             obj.save()
                     messages.success(request, f'Solicitação cadastrada com sucesso!')
                 else:
@@ -3756,6 +3770,11 @@ def garagem_para_filial_praxio(garagem):
 
 def painel_compras(request):
     form = SolicitacoesCompras.objects.all().exclude(Q(status='CONCLUIDO') | Q(status='CANCELADO'))
+    if request.method == 'GET':
+        filter = request.GET.get('filter')
+        if filter:
+            form = SolicitacoesCompras.objects.filter(Q(nr_solic=filter) | Q(solicitante=filter.upper()) |
+                                                      Q(id=int(filter)))
     return render(request, 'portaria/etc/painelcompras.html', {'form':form})
 
 def edit_compras(request, id):
@@ -3789,6 +3808,7 @@ def edit_compras(request, id):
             print(f'err:{e}, err_t:{type(e).__name__}')
             raise e
         else:
+            obj.ultima_att = request.user
             obj.save()
             messages.info(request, f'Solicitação {obj.nr_solic} alterada com sucesso')
             return redirect('portaria:painel_compras')
@@ -3804,7 +3824,7 @@ def insert_entradas_cpr(request):
 
         if obj and textarea and textarea != '<p><br></p>':
             try:
-                entrada = SolicitacoesEntradas.objects.create(obs=textarea, cpr_ref=obj)
+                entrada = SolicitacoesEntradas.objects.create(obs=textarea, cpr_ref=obj, ultima_att=request.user)
                 if files:
                     cont = 1
                     for q in files:
@@ -3819,6 +3839,7 @@ def insert_entradas_cpr(request):
             except Exception as e:
                 print(f'Error:{e}, error_type:{type(e).__name__}')
                 messages.error(request,'Whoops, something went wrong :/')
+                raise e
             else:
                 file1 = None
                 file2 = None
@@ -3977,6 +3998,10 @@ def estoque_painel(request):
 
 def estoque_confirma_item(request):
     form = EstoqueSolicitacoes.objects.filter(data_envio__isnull=False, confirmacao=None)
+    if request.method == 'GET':
+        busca = request.GET.get('buscaitem')
+        if busca:
+            form = EstoqueSolicitacoes.objects.filter(data_envio__isnull=False, confirmacao=None, pk=busca)
     if request.method == 'POST':
         obj = request.POST.get('objid')
         try:
@@ -3996,11 +4021,18 @@ def estoque_detalhe(request, id):
     if request.method == 'POST':
         area = request.POST.get('area')
         e_to = request.POST.get('e_to')
+
         if area and area != '<p><br></p>' and e_to:
             if request.POST.get('file') != '':
                 myfile = request.FILES.getlist('file')
             else:
                 myfile = None
+            area += f'''
+                <br>
+                <a href="http://localhost:8000/estoque/confirma?buscaitem={obj.id}">
+                <button>Confirmar solicitação</button>
+                </a>
+            '''
             msg = MIMEMultipart()
             if myfile is not None:
                 for q in myfile:
