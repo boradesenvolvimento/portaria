@@ -43,7 +43,7 @@ from django.core.mail import send_mail
 from django.db import IntegrityError
 from django.db.models import Count, Sum, F, Q, Value, Subquery, CharField, ExpressionWrapper, IntegerField, \
     DateTimeField
-from django.db.models.functions import Coalesce, TruncDate, Cast, TruncMinute
+from django.db.models.functions import Coalesce, TruncDate, Cast, TruncMinute, Lower
 from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, Http404, FileResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.template.defaultfilters import upper
@@ -3769,12 +3769,15 @@ def garagem_para_filial_praxio(garagem):
     return newga
 
 def painel_compras(request):
-    form = SolicitacoesCompras.objects.all().exclude(Q(status='CONCLUIDO') | Q(status='CANCELADO'))
+    CharField.register_lookup(Lower)
+    form = SolicitacoesCompras.objects.all().exclude(Q(status='CONCLUIDO') | Q(status='CANCELADO')).order_by('data')
     if request.method == 'GET':
         filter = request.GET.get('filter')
         if filter:
-            form = SolicitacoesCompras.objects.filter(Q(nr_solic=filter) | Q(solicitante=filter.upper()) |
-                                                      Q(id=int(filter)))
+            filter = filter.lower()
+            form = SolicitacoesCompras.objects.filter(Q(nr_solic=filter) | Q(solicitante__lower=filter) |
+                                                      Q(departamento__lower=filter))\
+                .order_by('data')
     return render(request, 'portaria/etc/painelcompras.html', {'form':form})
 
 def edit_compras(request, id):

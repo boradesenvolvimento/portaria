@@ -1,7 +1,8 @@
 import os
-from datetime import date
+from datetime import date, timedelta
 
 from django import template
+from django.utils.timesince import timesince
 from notifications.models import Notification
 
 register = template.Library()
@@ -46,3 +47,12 @@ def filename(value):
 @register.filter(name='split_char')
 def split_char(obj,value):
     return obj.split(value)[0]
+
+@register.filter(name='timedelta5')
+def timedelta5(value):
+    hoje = date.today()
+    a = hoje - value
+    b = timedelta(5)
+    if a > b:
+        return True
+

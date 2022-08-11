@@ -20,7 +20,7 @@
                     <form method="get">
                         <label for="filter">Filtro</label>
                         <input type="text" id="filter" name="filter">
-                        <button>botao</button>
+                        <button><ion-icon name="search-circle-outline"></ion-icon></button>
                     </form>
                 </div>
             </div>
@@ -34,18 +34,20 @@
                         <th>Status</th>
                         <th>Filial</th>
                         <th>Solicitante</th>
+                        <th>Responsável</th>
                         <th>Itens cad.</th>
                         <th>Editar</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for q in form %}
-                    <tr>
+                    <tr style="{% if q.data|timedelta5 %}background:#ff644e;{% endif %}">
                         <td>{{ q.nr_solic }}</td>
                         <td>{{ q.data }}</td>
                         <td>{{ q.status }}</td>
                         <td>{{ q.get_filial_display }}</td>
                         <td>{{ q.solicitante }}</td>
+                        <td>{{ q.responsavel|default_if_none:'Não Cadastrado' }}</td>
                         <td><button type="button" id="myBtn" value="{{ forloop.counter }}"><ion-icon name="list"></ion-icon></button></td>
                         <td><a href="{% url 'portaria:edit_compras' q.id %}"><button type="button"><ion-icon name="create"></ion-icon></button></a></td>
                     </tr>

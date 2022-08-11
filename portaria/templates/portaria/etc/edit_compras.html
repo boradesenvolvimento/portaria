@@ -21,7 +21,6 @@
         <div class="container viewmonit">
             <div class="tktcontainer">
                 <div class="row">
-
                     <div class="col-4">
                     <h2>Solicitação nº {{ obj.nr_solic }}</h2>
                     <form method="post">{% csrf_token %}
@@ -62,10 +61,20 @@
                             <option label="NOTA FISCAL">NOTA FISCAL</option>
                         </select></li>
                         {% if not obj.prazo_conclusao %}<li><label for="prazo_conclusao">Prazo:</label>
-                            <input type="date" readonly id="prazo_conclusao" name="prazo_conclusao"></li>{% endif %}
+                            <input type="date" readonly id="prazo_conclusao" name="prazo_conclusao"></li>
+                        {% else %}
+                            <li><label for="prazo_conclusao">Prazo:</label>
+                            <input type="text" readonly id="prazo_conclusao" value="{{ obj.prazo_conclusao }}"></li>
+                        {% endif %}
                         {% if not obj.dt_vencimento %}<div id="display_dt_venc" style="display:none;"><li>
                                 <label for="dt_venc">Vencimento:</label><input type="date" id="dt_venc" name="dt_venc">
-                        </li></div>{% endif %}
+                        </li></div>
+                        {% else %}
+                            <li>
+                                <label for="dt_venc">Vencimento:</label>
+                                <input type="text" id="dt_venc" readonly value="{{ obj.dt_vencimento }}">
+                            </li>
+                        {% endif %}
                         <li>Solicitante: {{ obj.solicitante|default_if_none:'Não Cadastrado' }} </li>
                         <li>Anexo: {% if obj.anexo %}<a href="/media/{{ obj.anexo }}" download>{{ obj.anexo|filename }}</a>
                             {% else %} nenhum anexo. {% endif %}
@@ -136,9 +145,11 @@
         key = document.getElementById('categoria');
         switchkey = key.options[key.selectedIndex].label
         if(switchkey == 'NOTA FISCAL'){
-            display = document.getElementById('display_dt_venc').style.display = "block";
+            document.getElementById('dt_venc').required = true;
+            document.getElementById('display_dt_venc').style.display = "block";
         }else{
-            display = document.getElementById('display_dt_venc').style.display = "none";
+            document.getElementById('dt_venc').required = false;
+            document.getElementById('display_dt_venc').style.display = "none";
             }
         lklk = document.getElementById('prazo_conclusao').value = getPrazo(switchkey);
         };
