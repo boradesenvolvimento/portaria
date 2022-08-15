@@ -1,5 +1,5 @@
 import os
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 
 from django import template
 from django.utils.timesince import timesince
@@ -50,7 +50,7 @@ def split_char(obj,value):
 
 @register.filter(name='timedelta5')
 def timedelta5(value):
-    hoje = date.today()
+    hoje = datetime.today()
     a = hoje - value
     b = timedelta(5)
     if a > b:

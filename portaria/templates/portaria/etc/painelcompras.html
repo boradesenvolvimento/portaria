@@ -2,6 +2,16 @@
 {% block content %}
 {% load static %}
 {% load groupscheck %}
+<style>
+    .maozinha{
+        cursor: pointer;
+        -webkit-touch-callout: none;  /* iPhone OS, Safari */
+        -webkit-user-select: none;    /* Chrome, Safari 3 */
+        -khtml-user-select: none;     /* Safari 2 */
+        -moz-user-select: none;       /* Firefox */
+        -ms-user-select: none;        /* IE10+ */
+    }
+</style>
 {% if request.user|has_group:"compras" %}
     <div class="container mt-4">
         {% for message in messages %}
@@ -20,6 +30,13 @@
                     <form method="get">
                         <label for="filter">Filtro</label>
                         <input type="text" id="filter" name="filter">
+                        <select name="filtertype">
+                            <option selected disabled label="---"></option>
+                            <option value="filial">Por Filial</option>
+                            <option value="solicitante">Por Solicitante</option>
+                            <option value="codigo">Por Código</option>
+                            <option value="departamento">Por Departamento</option>
+                        </select>
                         <button><ion-icon name="search-circle-outline"></ion-icon></button>
                     </form>
                 </div>
@@ -27,23 +44,22 @@
         </div><hr>
         <div class="container">
             <table class="table table1">
-                <thead>
                     <tr>
-                        <th>Nº Solicitação</th>
-                        <th>Data</th>
-                        <th>Status</th>
-                        <th>Filial</th>
-                        <th>Solicitante</th>
-                        <th>Responsável</th>
-                        <th>Itens cad.</th>
-                        <th>Editar</th>
+                        <th><span class="maozinha">Nº Solicitação</span></th>
+                        <th><span class="maozinha">Dt Solicitação</span></th>
+                        <th><span class="maozinha">Dt Lançamento</span></th>
+                        <th><span class="maozinha">Status</span></th>
+                        <th><span class="maozinha">Filial</span></th>
+                        <th><span class="maozinha">Solicitante</span></th>
+                        <th><span class="maozinha">Responsável</span></th>
+                        <th><span class="maozinha">Itens cad.</span></th>
+                        <th><span class="maozinha">Editar</span></th>
                     </tr>
-                </thead>
-                <tbody>
                     {% for q in form %}
-                    <tr style="{% if q.data|timedelta5 %}background:#ff644e;{% endif %}">
+                    <tr style="{% if q.pub_date|timedelta5 %}background:#ff644e;{% endif %}">
                         <td>{{ q.nr_solic }}</td>
                         <td>{{ q.data }}</td>
+                        <td>{{ q.pub_date }}</td>
                         <td>{{ q.status }}</td>
                         <td>{{ q.get_filial_display }}</td>
                         <td>{{ q.solicitante }}</td>
@@ -71,7 +87,6 @@
                             </div>
                         </div>
                     {% endfor %}
-                </tbody>
             </table>
         </div>
     </div>
@@ -81,8 +96,6 @@
         $("button").click(function(){
             var btn = $(this);
             var but = $(this).val();
-            console.log(but)
-            console.log(btn)
             var modal = document.getElementById("myModal"+but);
             var span = modal.getElementsByClassName("close")[0];
             modal.style.display = "block";
@@ -97,5 +110,20 @@
             };
         });
     });
+</script>
+<script>
+const getCellValue = (tr, idx) => tr.children[idx].innerText || tr.children[idx].textContent;
+
+const comparer = (idx, asc) => (a, b) => ((v1, v2) =>
+    v1 !== '' && v2 !== '' && !isNaN(v1) && !isNaN(v2) ? v1 - v2 : v1.toString().localeCompare(v2)
+    )(getCellValue(asc ? a : b, idx), getCellValue(asc ? b : a, idx));
+
+// do the work...
+document.querySelectorAll('th').forEach(th => th.addEventListener('click', (() => {
+    const table = th.closest('table');
+    Array.from(table.querySelectorAll('tr:nth-child(n+2)'))
+        .sort(comparer(Array.from(th.parentNode.children).indexOf(th), this.asc = !this.asc))
+        .forEach(tr => table.children[0].appendChild(tr) );
+})));
 </script>
 {% endblock %}

@@ -145,10 +145,8 @@
         key = document.getElementById('categoria');
         switchkey = key.options[key.selectedIndex].label
         if(switchkey == 'NOTA FISCAL'){
-            document.getElementById('dt_venc').required = true;
             document.getElementById('display_dt_venc').style.display = "block";
         }else{
-            document.getElementById('dt_venc').required = false;
             document.getElementById('display_dt_venc').style.display = "none";
             }
         lklk = document.getElementById('prazo_conclusao').value = getPrazo(switchkey);

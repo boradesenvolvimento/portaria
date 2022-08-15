@@ -3617,21 +3617,35 @@ def compras_lancar_pedido(request):
                                        WHEN SO.CODIGOEMPRESA = '4' AND SO.CODIGOFL = '1' THEN 'FMA'
                                    END FILIAL,
                                    SO.USUARIO SOLICITANTE,
-                                   CC.EMAIL 
+                                   CC.EMAIL,
+                                   CAP.DATAAPROVACAO
                             FROM
                                 CPR_SOLICITACAO SO, 
                                 CPR_ITENSSOLICITADOS CIS,
                                 EST_CADMATERIAL CM,
-                                CTR_CADASTRODEUSUARIOS CC
+                                CTR_CADASTRODEUSUARIOS CC,
+                                CPR_AUT_SOL_COMPRAS CAP
                             WHERE
                                 SO.CODIGOEMPRESA = {newga['empresa']}             AND
                                 SO.CODIGOFL = {newga['filial']}                   AND
                                 SO.NUMEROSOLIC = CIS.NUMEROSOLIC AND
                                 SO.STATUSSOLIC = 'P'                      AND    
                                 SO.DATASOLIC BETWEEN ((SYSDATE)-30) AND (SYSDATE) AND    
-                                CM.CODIGOMATINT = CIS.CODIGOMATINT                 AND
-                                SO.NUMEROSOLIC = {idsolic}                         AND
-                                CC.USUARIO = SO.USUARIO
+                                CM.CODIGOMATINT = CIS.CODIGOMATINT                AND
+                                SO.NUMEROSOLIC = {idsolic}                        AND
+                                CC.USUARIO = SO.USUARIO                           AND
+                                CAP.NUMEROSOLIC = SO.NUMEROSOLIC
+                            GROUP BY
+                                  SO.NUMEROSOLIC,
+                                  CM.DESCRICAOMAT,
+                                  SO.DATASOLIC,
+                                  CIS.QTDEITSOLIC,
+                                  SO.STATUSSOLIC,
+                                  SO.CODIGOEMPRESA,
+                                  SO.CODIGOFL,
+                                  SO.USUARIO,
+                                  CC.EMAIL,
+                                  CAP.DATAAPROVACAO
                             UNION ALL                        
                             SELECT 
                                    SO.NUMEROSOLIC NR_SOLICITACAO,
@@ -3670,19 +3684,33 @@ def compras_lancar_pedido(request):
                                        WHEN SO.CODIGOEMPRESA = '4' AND SO.CODIGOFL = '1' THEN 'FMA'
                                    END FILIAL,
                                    SO.USUARIO SOLICITANTE,
-                                   CC.EMAIL
+                                   CC.EMAIL,
+                                   CAP.DATAAPROVACAO
                             FROM
                                 CPR_SOLICITACAO SO,
                                 CPR_SOLICOUTROS SCO,
-                                CTR_CADASTRODEUSUARIOS CC
+                                CTR_CADASTRODEUSUARIOS CC,
+                                CPR_AUT_SOL_COMPRAS CAP
                             WHERE
                                 SO.CODIGOEMPRESA = {newga['empresa']}             AND
                                 SO.CODIGOFL = {newga['filial']}                   AND
-                                SO.NUMEROSOLIC = SCO.NUMEROSOLIC    AND
-                                SO.STATUSSOLIC = 'P'                      AND    
+                                SO.NUMEROSOLIC = SCO.NUMEROSOLIC                  AND
+                                SO.STATUSSOLIC = 'P'                              AND    
                                 SO.DATASOLIC BETWEEN ((SYSDATE)-30) AND (SYSDATE) AND
                                 SO.NUMEROSOLIC = {idsolic}                        AND
-                                CC.USUARIO = SO.USUARIO
+                                CC.USUARIO = SO.USUARIO                           AND
+                                CAP.NUMEROSOLIC = SO.NUMEROSOLIC
+                            GROUP BY
+                                  SO.NUMEROSOLIC,
+                                  SCO.DESCRICAOSOLOUTROS,
+                                  SCO.QTDESOLOUTROS,
+                                  SO.DATASOLIC,
+                                  SO.STATUSSOLIC,
+                                  SO.CODIGOEMPRESA,
+                                  SO.CODIGOFL,
+                                  SO.USUARIO,
+                                  CC.EMAIL,
+                                  CAP.DATAAPROVACAO
                             """)
             except cxerr:
                 messages.error(request, 'Não encontrado solicitação com este número.')
@@ -3698,7 +3726,7 @@ def compras_lancar_pedido(request):
                             obj = SolicitacoesCompras.objects.get(filial=keyga[q['FILIAL']],nr_solic=q['NR_SOLICITACAO'])
                         except:
                             obj = SolicitacoesCompras.objects.create(
-                                nr_solic=q['NR_SOLICITACAO'], data=q['DATA'], status=q['STATUS'],
+                                nr_solic=q['NR_SOLICITACAO'], data=q['DATAAPROVACAO'], status=q['STATUS'],
                                 filial=keyga[q['FILIAL']],
                                 solicitante=q['SOLICITANTE'], autor=request.user, email_solic=q['EMAIL'], anexo=anexo
                             )
@@ -3773,11 +3801,22 @@ def painel_compras(request):
     form = SolicitacoesCompras.objects.all().exclude(Q(status='CONCLUIDO') | Q(status='CANCELADO')).order_by('data')
     if request.method == 'GET':
         filter = request.GET.get('filter')
+        filtertype = request.GET.get('filtertype')
         if filter:
-            filter = filter.lower()
-            form = SolicitacoesCompras.objects.filter(Q(nr_solic=filter) | Q(solicitante__lower=filter) |
-                                                      Q(departamento__lower=filter))\
-                .order_by('data')
+            if filtertype == 'filial':
+                filter = filter.upper()
+                keyga = {v:k for k,v in GARAGEM_CHOICES}
+                form = SolicitacoesCompras.objects.filter(filial=keyga[filter]).order_by('pub_date')
+            elif filtertype == 'solicitante':
+                filter = filter.upper()
+                form = SolicitacoesCompras.objects.filter(solicitante=filter).order_by('pub_date')
+            elif filtertype == 'codigo':
+                form = SolicitacoesCompras.objects.filter(nr_solic=filter).order_by('pub_date')
+            elif filtertype == 'departamento':
+                filter = filter.upper()
+                form = SolicitacoesCompras.objects.filter(departamento=filter).order_by('pub_date')
+            else:
+                messages.error(request, 'Selecione algum filtro.')
     return render(request, 'portaria/etc/painelcompras.html', {'form':form})
 
 def edit_compras(request, id):
