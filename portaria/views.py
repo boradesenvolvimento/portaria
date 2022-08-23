@@ -3378,7 +3378,7 @@ async def get_justificativas(request):
                            END DESTINATARIO,
                            F1.PESO,
                            CASE
-                               WHEN F11.DT_PREV_ENTREGA IS NULL THEN '01-JAN-0001'
+                               WHEN F11.DT_PREV_ENTREGA IS NULL THEN '01-01-0001'
                                WHEN F11.DT_PREV_ENTREGA IS NOT NULL THEN TO_CHAR(F11.DT_PREV_ENTREGA, 'DD-MM-YYYY') 
                            END DT_PREV_ENTREGA,
                            CASE
@@ -3391,6 +3391,7 @@ async def get_justificativas(request):
                            CASE 
                                 WHEN (TRUNC((MIN(F11.DT_PREV_ENTREGA))-(SYSDATE))*-1) >= 0 THEN (TRUNC((MIN(F11.DT_PREV_ENTREGA))-(SYSDATE))*-1)
                                 WHEN (TRUNC((MIN(F11.DT_PREV_ENTREGA))-(SYSDATE))*-1) < 0 THEN 0
+                                WHEN F11.DT_PREV_ENTREGA IS NULL THEN 0
                            END EM_ABERTO_APOS_LEAD_TIME,
                            E2.DESC_LOCALIDADE || '-' || E2.COD_UF DESTINO,
                            LISTAGG ((LTRIM (F4.NOTA_FISCAL,0)), ' / ') NF                           
@@ -3452,14 +3453,16 @@ async def get_justificativas(request):
 
 @sync_to_async
 def insert_to_justificativa(obj):
-    print(obj)
-    nobj = JustificativaEntrega.objects.get_or_create(
-        empresa=obj['EMPRESA'], filial=obj['FILIAL'], garagem=obj['GARAGEM'], id_garagem=obj['ID_GARAGEM'],
-        conhecimento=obj['CONHECIMENTO'], data_emissao=obj['DATA_EMISSAO'], destinatario=obj['DESTINATARIO'],
-        remetente=obj['REMETENTE'], peso=obj['PESO'], tipo_doc=obj['TP_DOC'],data_entrega=obj['DATA_ENTREGA'],
-        lead_time=datetime.datetime.strptime(obj['DT_PREV_ENTREGA'], '%d-%m-%Y'),
-        em_aberto=obj['EM_ABERTO_APOS_LEAD_TIME'], local_entreg=obj['DESTINO'], nota_fiscal=obj['NF']
-    )
+    try:
+        JustificativaEntrega.objects.get(empresa=obj['EMPRESA'], filial=obj['FILIAL'], garagem=obj['GARAGEM'],tipo_doc=obj['TP_DOC'],conhecimento=obj['CONHECIMENTO'])
+    except:
+        nobj = JustificativaEntrega.objects.create(
+            empresa=obj['EMPRESA'], filial=obj['FILIAL'], garagem=obj['GARAGEM'], id_garagem=obj['ID_GARAGEM'],
+            conhecimento=obj['CONHECIMENTO'], data_emissao=obj['DATA_EMISSAO'], destinatario=obj['DESTINATARIO'],
+            remetente=obj['REMETENTE'], peso=obj['PESO'], tipo_doc=obj['TP_DOC'], data_entrega=obj['DATA_ENTREGA'],
+            lead_time=datetime.datetime.strptime(obj['DT_PREV_ENTREGA'], '%d-%m-%Y'),
+            em_aberto=obj['EM_ABERTO_APOS_LEAD_TIME'], local_entreg=obj['DESTINO'], nota_fiscal=obj['NF']
+        )
 
 async def get_ocorrencias(request):
     conn = conndb()
@@ -3479,7 +3482,7 @@ async def get_ocorrencias(request):
                          ACA002 A2
                     WHERE
                          A1.COD_OCORRENCIA = A2.CODIGO                    AND
-                         A1.DATA_CADASTRO BETWEEN ((SYSDATE)-3) AND (SYSDATE)                        
+                         A1.DATA_CADASTRO BETWEEN ((SYSDATE)-5) AND (SYSDATE)                        
                     """)
     res = dictfetchall(cur)
     print('query feita')
@@ -3497,11 +3500,18 @@ def insert_to_ocorrencias(obj):
     just = JustificativaEntrega.objects.filter(empresa=obj['EMPRESA'], filial=obj['FILIAL'], garagem=obj['GARAGEM'],
                                                conhecimento=obj['NUMERO_CTRC'])
     if just:
-        nobj = OcorrenciaEntrega.objects.get_or_create(
-            empresa=obj['EMPRESA'], filial=obj['FILIAL'], garagem=obj['GARAGEM'], conhecimento=obj['NUMERO_CTRC'],
-            tp_doc=obj['TIPO_DOCTO'], cod_ocor=obj['CODIGO'], desc_ocor=obj ['DESCRICAO'],
-            data_ocorrencia=obj['DATA_OCORRENCIA'], entrega=just[0]
-        )
+        try:
+            OcorrenciaEntrega.objects.get(
+                entrega=just[0], empresa=obj['EMPRESA'], filial=obj['FILIAL'], garagem=obj['GARAGEM'], conhecimento=obj['NUMERO_CTRC'],
+                tp_doc=obj['TIPO_DOCTO'], cod_ocor=obj['CODIGO'], desc_ocor=obj['DESCRICAO'],
+                data_ocorrencia=obj['DATA_OCORRENCIA']
+            )
+        except:
+            nobj = OcorrenciaEntrega.objects.get_or_create(
+                empresa=obj['EMPRESA'], filial=obj['FILIAL'], garagem=obj['GARAGEM'], conhecimento=obj['NUMERO_CTRC'],
+                tp_doc=obj['TIPO_DOCTO'], cod_ocor=obj['CODIGO'], desc_ocor=obj['DESCRICAO'],
+                data_ocorrencia=obj['DATA_OCORRENCIA'], entrega=just[0]
+            )
     
 def pivot_rel_just(date1, date2):
     array = []
