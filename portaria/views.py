@@ -2757,7 +2757,7 @@ def chamadoreadmail(request):
     service = ''
     hoje = datetime.date.today()
     host = 'pop.bora.com.br'
-    mails = ['chamado.praxio@bora.com.br','chamado.descarga@bora.com.br','chamado.comprovantes@bora.com.br', 'chamado.fiscal@bora.com.br', 'chamado.marketing@bora.com.br']
+    mails = ['chamado.praxio@bora.com.br','chamado.descarga@bora.com.br','chamado.comprovantes@bora.com.br', 'chamado.fiscal@bora.com.br', 'chamado.mkt@bora.com.br']
     #mails = ['chamado.marketing@bora.com.br']
     for e_user in mails:
         e_pass = 'B0r*610580' #'Bor@456987'
@@ -2844,7 +2844,7 @@ def chamadoreadmail(request):
                     for q in re.findall(r'<(.*?)>', e_to):
                         if q not in ['chamado.praxio@bora.com.br','chamado.descarga@bora.com.br',
                                      'chamado.comprovantes@bora.com.br', 'chamado.fiscal@bora.com.br',
-                                     'chamado.marketing@bora.com.br']:
+                                     'chamado.mkt@bora.com.br']:
                             e_cc_a += q + ','
                 e_cc = parsed_email['CC']
                 if e_cc:
@@ -2852,7 +2852,7 @@ def chamadoreadmail(request):
                     for q in re.findall(r'<(.*?)>', e_cc):
                         if q not in ['chamado.praxio@bora.com.br', 'chamado.descarga@bora.com.br',
                                      'chamado.comprovantes@bora.com.br', 'chamado.fiscal@bora.com.br',
-                                     'chamado.marketing@bora.com.br']:
+                                     'chamado.mkt@bora.com.br']:
                             e_cc_a += q + ','
                 get_serv = (str(parsed_email['Cc']) +' '+ str(parsed_email['To'])).lower()
                 if 'chamado.praxio@bora.com.br' in get_serv:
@@ -2863,7 +2863,7 @@ def chamadoreadmail(request):
                     service = 'COMPROVANTE'
                 if 'chamado.fiscal@bora.com.br' in get_serv:
                     service = 'FISCAL'
-                if 'chamado.marketing@bora.com.br' in get_serv:
+                if 'chamado.mkt@bora.com.br' in get_serv:
                     service = 'MARKETING'
                 e_id = parsed_email['Message-ID']
                 e_ref = parsed_email['References']
