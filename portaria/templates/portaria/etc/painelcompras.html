@@ -86,6 +86,8 @@
                                 </div>
                             </div>
                         </div>
+                    {% empty %}
+                        <tr><h2><strong>Não foi encontrado nenhuma solicitação com os dados informados.</strong></h2></tr><hr>
                     {% endfor %}
             </table>
         </div>

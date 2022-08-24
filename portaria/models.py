@@ -96,8 +96,8 @@ class Cadastro(models.Model):
     destino = models.CharField(max_length=5, choices=TIPO_GARAGEM, blank=True, null=True)
     tipo_mot = models.CharField(max_length=11, choices=TIPO_MOT)
     tipo_viagem = models.CharField(max_length=10, choices=TIPO_VIAGEM)
-    notas = models.IntegerField()
-    kilometragem = models.IntegerField()
+    notas = models.IntegerField(blank=True, null=True)
+    kilometragem = models.IntegerField(blank=True, null=True)
     hr_chegada = models.DateTimeField(blank=True)
     hr_saida = models.DateTimeField(blank=True, null=True)
     autor = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
@@ -580,7 +580,8 @@ class TicketChamado(models.Model):
         ('DESCARGA', 'DESCARGA'),
         ('COMPROVANTE','COMPROVANTE'),
         ('PRAXIO','PRAXIO'),
-        ('FISCAL','FISCAL')
+        ('FISCAL','FISCAL'),
+        ('MARKETING', 'MARKETING')
     ]
     STATUS_CHOICES = [
         ('ABERTO', 'ABERTO'),
