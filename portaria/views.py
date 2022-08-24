@@ -3631,14 +3631,12 @@ def compras_lancar_pedido(request):
                                        WHEN SO.CODIGOEMPRESA = '4' AND SO.CODIGOFL = '1' THEN 'FMA'
                                    END FILIAL,
                                    SO.USUARIO SOLICITANTE,
-                                   CC.EMAIL,
-                                   CAP.DATAAPROVACAO
+                                   CC.EMAIL
                             FROM
                                 CPR_SOLICITACAO SO, 
                                 CPR_ITENSSOLICITADOS CIS,
                                 EST_CADMATERIAL CM,
-                                CTR_CADASTRODEUSUARIOS CC,
-                                CPR_AUT_SOL_COMPRAS CAP
+                                CTR_CADASTRODEUSUARIOS CC
                             WHERE
                                 SO.CODIGOEMPRESA = {newga['empresa']}             AND
                                 SO.CODIGOFL = {newga['filial']}                   AND
@@ -3647,8 +3645,7 @@ def compras_lancar_pedido(request):
                                 SO.DATASOLIC BETWEEN ((SYSDATE)-30) AND (SYSDATE) AND    
                                 CM.CODIGOMATINT = CIS.CODIGOMATINT                AND
                                 SO.NUMEROSOLIC = {idsolic}                        AND
-                                CC.USUARIO = SO.USUARIO                           AND
-                                CAP.NUMEROSOLIC = SO.NUMEROSOLIC
+                                CC.USUARIO = SO.USUARIO
                             GROUP BY
                                   SO.NUMEROSOLIC,
                                   CM.DESCRICAOMAT,
@@ -3658,8 +3655,7 @@ def compras_lancar_pedido(request):
                                   SO.CODIGOEMPRESA,
                                   SO.CODIGOFL,
                                   SO.USUARIO,
-                                  CC.EMAIL,
-                                  CAP.DATAAPROVACAO
+                                  CC.EMAIL
                             UNION ALL                        
                             SELECT 
                                    SO.NUMEROSOLIC NR_SOLICITACAO,
@@ -3698,13 +3694,11 @@ def compras_lancar_pedido(request):
                                        WHEN SO.CODIGOEMPRESA = '4' AND SO.CODIGOFL = '1' THEN 'FMA'
                                    END FILIAL,
                                    SO.USUARIO SOLICITANTE,
-                                   CC.EMAIL,
-                                   CAP.DATAAPROVACAO
+                                   CC.EMAIL
                             FROM
                                 CPR_SOLICITACAO SO,
                                 CPR_SOLICOUTROS SCO,
-                                CTR_CADASTRODEUSUARIOS CC,
-                                CPR_AUT_SOL_COMPRAS CAP
+                                CTR_CADASTRODEUSUARIOS CC
                             WHERE
                                 SO.CODIGOEMPRESA = {newga['empresa']}             AND
                                 SO.CODIGOFL = {newga['filial']}                   AND
@@ -3723,8 +3717,7 @@ def compras_lancar_pedido(request):
                                   SO.CODIGOEMPRESA,
                                   SO.CODIGOFL,
                                   SO.USUARIO,
-                                  CC.EMAIL,
-                                  CAP.DATAAPROVACAO
+                                  CC.EMAIL
                             """)
             except cxerr:
                 messages.error(request, 'Não encontrado solicitação com este número.')
