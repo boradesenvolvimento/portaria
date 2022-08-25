@@ -3706,8 +3706,7 @@ def compras_lancar_pedido(request):
                                 SO.STATUSSOLIC = 'P'                              AND    
                                 SO.DATASOLIC BETWEEN ((SYSDATE)-30) AND (SYSDATE) AND
                                 SO.NUMEROSOLIC = {idsolic}                        AND
-                                CC.USUARIO = SO.USUARIO                           AND
-                                CAP.NUMEROSOLIC = SO.NUMEROSOLIC
+                                CC.USUARIO = SO.USUARIO                           
                             GROUP BY
                                   SO.NUMEROSOLIC,
                                   SCO.DESCRICAOSOLOUTROS,
