@@ -3732,7 +3732,7 @@ def compras_lancar_pedido(request):
                             obj = SolicitacoesCompras.objects.get(filial=keyga[q['FILIAL']],nr_solic=q['NR_SOLICITACAO'])
                         except:
                             obj = SolicitacoesCompras.objects.create(
-                                nr_solic=q['NR_SOLICITACAO'], data=q['DATAAPROVACAO'], status=q['STATUS'],
+                                nr_solic=q['NR_SOLICITACAO'], data=q['DATA'], status=q['STATUS'],
                                 filial=keyga[q['FILIAL']],
                                 solicitante=q['SOLICITANTE'], autor=request.user, email_solic=q['EMAIL'], anexo=anexo
                             )
