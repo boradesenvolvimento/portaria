@@ -38,7 +38,7 @@ from PIL import Image
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.core.mail import send_mail
 from django.db import IntegrityError
 from django.db.models import Count, Sum, F, Q, Value, Subquery, CharField, ExpressionWrapper, IntegerField, \
@@ -3461,7 +3461,7 @@ async def get_justificativas(request):
 def insert_to_justificativa(obj):
     try:
         JustificativaEntrega.objects.get(empresa=obj['EMPRESA'], filial=obj['FILIAL'], garagem=obj['GARAGEM'],tipo_doc=obj['TP_DOC'],conhecimento=obj['CONHECIMENTO'])
-    except:
+    except ObjectDoesNotExist:
         nobj = JustificativaEntrega.objects.create(
             empresa=obj['EMPRESA'], filial=obj['FILIAL'], garagem=obj['GARAGEM'], id_garagem=obj['ID_GARAGEM'],
             conhecimento=obj['CONHECIMENTO'], data_emissao=obj['DATA_EMISSAO'], destinatario=obj['DESTINATARIO'],
@@ -3469,6 +3469,8 @@ def insert_to_justificativa(obj):
             lead_time=datetime.datetime.strptime(obj['DT_PREV_ENTREGA'], '%d-%m-%Y'),
             em_aberto=obj['EM_ABERTO_APOS_LEAD_TIME'], local_entreg=obj['DESTINO'], nota_fiscal=obj['NF']
         )
+    except Exception as e:
+        print('Error:%s, error_type:%s' %(e, type(e)))
 
 async def get_ocorrencias(request):
     conn = conndb()
@@ -3512,12 +3514,14 @@ def insert_to_ocorrencias(obj):
                 tp_doc=obj['TIPO_DOCTO'], cod_ocor=obj['CODIGO'], desc_ocor=obj['DESCRICAO'],
                 data_ocorrencia=obj['DATA_OCORRENCIA']
             )
-        except:
+        except ObjectDoesNotExist:
             nobj = OcorrenciaEntrega.objects.get_or_create(
                 empresa=obj['EMPRESA'], filial=obj['FILIAL'], garagem=obj['GARAGEM'], conhecimento=obj['NUMERO_CTRC'],
                 tp_doc=obj['TIPO_DOCTO'], cod_ocor=obj['CODIGO'], desc_ocor=obj['DESCRICAO'],
                 data_ocorrencia=obj['DATA_OCORRENCIA'], entrega=just[0]
             )
+        except Exception as e:
+            print('Error:%s, error_type:%s' % (e, type(e)))
     
 def pivot_rel_just(date1, date2):
     array = []
