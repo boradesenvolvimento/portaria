@@ -3515,7 +3515,7 @@ def insert_to_ocorrencias(obj):
                 data_ocorrencia=obj['DATA_OCORRENCIA']
             )
         except ObjectDoesNotExist:
-            nobj = OcorrenciaEntrega.objects.get_or_create(
+            nobj = OcorrenciaEntrega.objects.create(
                 empresa=obj['EMPRESA'], filial=obj['FILIAL'], garagem=obj['GARAGEM'], conhecimento=obj['NUMERO_CTRC'],
                 tp_doc=obj['TIPO_DOCTO'], cod_ocor=obj['CODIGO'], desc_ocor=obj['DESCRICAO'],
                 data_ocorrencia=obj['DATA_OCORRENCIA'], entrega=just[0]
