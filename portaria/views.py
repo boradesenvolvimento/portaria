@@ -3427,7 +3427,7 @@ async def get_justificativas(request):
                          F1.ID_GARAGEM NOT IN (1,23,30)                         AND
                          F1.DATA_CANCELADO = '01-JAN-0001'                      AND
                                                                            
-                         F1.DATA_EMISSAO BETWEEN ((SYSDATE)-5) AND (SYSDATE)                         
+                         F1.DATA_EMISSAO BETWEEN ((SYSDATE)-3) AND (SYSDATE)                         
                     GROUP BY
                            F1.EMPRESA,
                            F1.FILIAL,
@@ -3490,7 +3490,7 @@ async def get_ocorrencias(request):
                          ACA002 A2
                     WHERE
                          A1.COD_OCORRENCIA = A2.CODIGO                    AND
-                         A1.DATA_CADASTRO BETWEEN ((SYSDATE)-5) AND (SYSDATE)                        
+                         A1.DATA_CADASTRO BETWEEN ((SYSDATE)-3) AND (SYSDATE)                        
                     """)
     res = dictfetchall(cur)
     print('query feita')

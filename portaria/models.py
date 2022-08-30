@@ -128,7 +128,7 @@ class PaleteControl(models.Model):
 
 class MovPalete(models.Model):
     id = models.BigAutoField(primary_key=True)
-    palete = models.ForeignKey(PaleteControl, on_delete=models.CASCADE)
+    palete = models.ForeignKey(PaleteControl, on_delete=models.SET_NULL, null=True)
     data_ult_mov = models.DateField(default=timezone.now)
     origem = models.CharField(max_length=3, choices=TIPO_GARAGEM)
     destino = models.CharField(max_length=3, choices=TIPO_GARAGEM)
