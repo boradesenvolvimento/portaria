@@ -109,7 +109,7 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 #        'NAME': BASE_DIR / 'db.sqlite3',
 #    }
 #}
-#CONNECTION = cx_Oracle.connect(get_secret('ORA_UID'),get_secret('ORA_PWD'), cx_Oracle.makedsn(get_secret('ORA_HOST'), '1521', None, get_secret('ORA_XE')))
+
 #production
 DATABASES = {
     'default': {
@@ -193,7 +193,7 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = get_secret('E_UMAIL')
 EMAIL_HOST_PASSWORD = get_secret('E_UPASS')
 
-DJANGO_NOTIFICATIONS_CONFIG = { 'USE_JSONFIELD': True}
+DJANGO_NOTIFICATIONS_CONFIG = {'USE_JSONFIELD': True}
 
 #summernote
 X_FRAME_OPTIONS = 'SAMEORIGIN'

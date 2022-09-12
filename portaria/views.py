@@ -1992,7 +1992,7 @@ def get_palete_csv(request):
     if palete:
         for q in palete:
             array.append({'origem':q.origem, 'destino':q.destino, 'data_ult_mov':q.data_ult_mov, 'placa':q.placa_veic,
-                          'autor':q.autor, 'tipo':q.palete.tp_palete})
+                          'autor':q.autor, 'tipo': q.palete.tp_palete if q.palete else 'DEVOLVIDO'})
         df = pd.DataFrame(array)
         buffer = io.BytesIO(df.to_string().encode('utf-8'))
         df.to_excel(buffer, engine='xlsxwriter', index=False)
@@ -3448,13 +3448,13 @@ async def get_justificativas(request):
                     """)
     res = dictfetchall(cur)
     print('query feita')
-    cur.close()
     for i in res:
         try:
             await insert_to_justificativa(i)
         except Exception as e:
             print(f'Error:{e}, error_type:{type(e).__name__}')
             continue
+    cur.close()
     return HttpResponse('job done')
 
 @sync_to_async
@@ -3476,7 +3476,7 @@ async def get_ocorrencias(request):
     conn = conndb()
     cur = conn.cursor()
     cur.execute(f"""
-                    SELECT 
+                    SELECT DISTINCT
                            A1.EMPRESA,
                            A1.FILIAL,
                            A1.GARAGEM,
@@ -3494,13 +3494,13 @@ async def get_ocorrencias(request):
                     """)
     res = dictfetchall(cur)
     print('query feita')
-    cur.close()
     for i in res:
         try:
             await insert_to_ocorrencias(i)
         except Exception as e:
             print(f'Error:{e}, error_type:{type(e).__name__}')
             continue
+    cur.close()
     return HttpResponse('job done')
 
 @sync_to_async
@@ -3736,7 +3736,7 @@ def compras_lancar_pedido(request):
                         print(q)
                         try:
                             obj = SolicitacoesCompras.objects.get(filial=keyga[q['FILIAL']],nr_solic=q['NR_SOLICITACAO'])
-                        except:
+                        except ObjectDoesNotExist:
                             obj = SolicitacoesCompras.objects.create(
                                 nr_solic=q['NR_SOLICITACAO'], data=q['DATA'], status=q['STATUS'],
                                 filial=keyga[q['FILIAL']],
