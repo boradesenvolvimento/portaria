@@ -3448,29 +3448,29 @@ async def get_justificativas(request):
                     """)
     res = dictfetchall(cur)
     print('query feita')
-    for i in res:
-        try:
-            await insert_to_justificativa(i)
-        except Exception as e:
-            print(f'Error:{e}, error_type:{type(e).__name__}')
-            continue
+    try:
+        await insert_to_justificativa(res)
+    except Exception as e:
+        print(f'Error:{e}, error_type:{type(e).__name__}')
     cur.close()
     return HttpResponse('job done')
 
 @sync_to_async
-def insert_to_justificativa(obj):
-    try:
-        JustificativaEntrega.objects.get(empresa=obj['EMPRESA'], filial=obj['FILIAL'], garagem=obj['GARAGEM'],tipo_doc=obj['TP_DOC'],conhecimento=obj['CONHECIMENTO'])
-    except ObjectDoesNotExist:
-        nobj = JustificativaEntrega.objects.create(
-            empresa=obj['EMPRESA'], filial=obj['FILIAL'], garagem=obj['GARAGEM'], id_garagem=obj['ID_GARAGEM'],
-            conhecimento=obj['CONHECIMENTO'], data_emissao=obj['DATA_EMISSAO'], destinatario=obj['DESTINATARIO'],
-            remetente=obj['REMETENTE'], peso=obj['PESO'], tipo_doc=obj['TP_DOC'], data_entrega=obj['DATA_ENTREGA'],
-            lead_time=datetime.datetime.strptime(obj['DT_PREV_ENTREGA'], '%d-%m-%Y'),
-            em_aberto=obj['EM_ABERTO_APOS_LEAD_TIME'], local_entreg=obj['DESTINO'], nota_fiscal=obj['NF']
-        )
-    except Exception as e:
-        print('Error:%s, error_type:%s' %(e, type(e)))
+def insert_to_justificativa(data):
+    for obj in data:
+        try:
+            JustificativaEntrega.objects.get(empresa=obj['EMPRESA'], filial=obj['FILIAL'], garagem=obj['GARAGEM'],tipo_doc=obj['TP_DOC'],conhecimento=obj['CONHECIMENTO'])
+        except ObjectDoesNotExist:
+            nobj = JustificativaEntrega.objects.create(
+                empresa=obj['EMPRESA'], filial=obj['FILIAL'], garagem=obj['GARAGEM'], id_garagem=obj['ID_GARAGEM'],
+                conhecimento=obj['CONHECIMENTO'], data_emissao=obj['DATA_EMISSAO'], destinatario=obj['DESTINATARIO'],
+                remetente=obj['REMETENTE'], peso=obj['PESO'], tipo_doc=obj['TP_DOC'], data_entrega=obj['DATA_ENTREGA'],
+                lead_time=datetime.datetime.strptime(obj['DT_PREV_ENTREGA'], '%d-%m-%Y'),
+                em_aberto=obj['EM_ABERTO_APOS_LEAD_TIME'], local_entreg=obj['DESTINO'], nota_fiscal=obj['NF']
+            )
+        except Exception as e:
+            print('Error:%s, error_type:%s' %(e, type(e)))
+    return print('finalizou')
 
 async def get_ocorrencias(request):
     conn = conndb()
@@ -3494,34 +3494,34 @@ async def get_ocorrencias(request):
                     """)
     res = dictfetchall(cur)
     print('query feita')
-    for i in res:
-        try:
-            await insert_to_ocorrencias(i)
-        except Exception as e:
-            print(f'Error:{e}, error_type:{type(e).__name__}')
-            continue
+    try:
+        await insert_to_ocorrencias(res)
+    except Exception as e:
+        print(f'Error:{e}, error_type:{type(e).__name__}')
     cur.close()
     return HttpResponse('job done')
 
 @sync_to_async
-def insert_to_ocorrencias(obj):
-    just = JustificativaEntrega.objects.filter(empresa=obj['EMPRESA'], filial=obj['FILIAL'], garagem=obj['GARAGEM'],
-                                               conhecimento=obj['NUMERO_CTRC'])
-    if just:
-        try:
-            OcorrenciaEntrega.objects.get(
-                entrega=just[0], empresa=obj['EMPRESA'], filial=obj['FILIAL'], garagem=obj['GARAGEM'], conhecimento=obj['NUMERO_CTRC'],
-                tp_doc=obj['TIPO_DOCTO'], cod_ocor=obj['CODIGO'], desc_ocor=obj['DESCRICAO'],
-                data_ocorrencia=obj['DATA_OCORRENCIA']
-            )
-        except ObjectDoesNotExist:
-            nobj = OcorrenciaEntrega.objects.create(
-                empresa=obj['EMPRESA'], filial=obj['FILIAL'], garagem=obj['GARAGEM'], conhecimento=obj['NUMERO_CTRC'],
-                tp_doc=obj['TIPO_DOCTO'], cod_ocor=obj['CODIGO'], desc_ocor=obj['DESCRICAO'],
-                data_ocorrencia=obj['DATA_OCORRENCIA'], entrega=just[0]
-            )
-        except Exception as e:
-            print('Error:%s, error_type:%s' % (e, type(e)))
+def insert_to_ocorrencias(data):
+    for obj in data:
+        just = JustificativaEntrega.objects.filter(empresa=obj['EMPRESA'], filial=obj['FILIAL'], garagem=obj['GARAGEM'],
+                                                   conhecimento=obj['NUMERO_CTRC'])
+        if just:
+            try:
+                OcorrenciaEntrega.objects.get(
+                    entrega=just[0], empresa=obj['EMPRESA'], filial=obj['FILIAL'], garagem=obj['GARAGEM'], conhecimento=obj['NUMERO_CTRC'],
+                    tp_doc=obj['TIPO_DOCTO'], cod_ocor=obj['CODIGO'], desc_ocor=obj['DESCRICAO'],
+                    data_ocorrencia=obj['DATA_OCORRENCIA']
+                )
+            except ObjectDoesNotExist:
+                nobj = OcorrenciaEntrega.objects.create(
+                    empresa=obj['EMPRESA'], filial=obj['FILIAL'], garagem=obj['GARAGEM'], conhecimento=obj['NUMERO_CTRC'],
+                    tp_doc=obj['TIPO_DOCTO'], cod_ocor=obj['CODIGO'], desc_ocor=obj['DESCRICAO'],
+                    data_ocorrencia=obj['DATA_OCORRENCIA'], entrega=just[0]
+                )
+            except Exception as e:
+                print('Error:%s, error_type:%s' % (e, type(e)))
+    return print('finalizou')
     
 def pivot_rel_just(date1, date2):
     array = []
