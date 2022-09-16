@@ -20,84 +20,84 @@
         <h1>Funções<hr></h1>
         <div class="container viewmonit">
             <div class="tktcontainer">
+                <form method="post" enctype="multipart/form-data">{% csrf_token %}
                 <div class="row">
                     <div class="col-4">
                     <h2>Solicitação nº {{ obj.nr_solic }}</h2>
-                    <form method="post">{% csrf_token %}
                     <ul>
-                        <li>Status:
+                        <li><div>Status:
                         <select name="status">
                             <option label="{{ obj.status|default_if_none:'Não Cadastrado' }}"></option>
                             {% for k,v in stschoices %}
                             <option value="{{ k }}">{{ v }}</option>
                             {% endfor %}
-                        </select></li>
-                        <li>Filial:
+                        </select></div></li>
+                        <li><div>Filial:
                         <select name="filial">
                             <option label="{{ obj.get_filial_display|default_if_none:'Não Cadastrado' }}"></option>
                             {% for k,v in gachoices %}
                             <option value="{{ v }}">{{ v }}</option>
                             {% endfor %}
-                        </select></li>
-                        <li>Departamento:
+                        </select></div></li>
+                        <li><div>Departamento:
                             <select name="departamento">
                             <option label="{{ obj.departamento|default_if_none:'Não Cadastrado' }}"></option>
                             {% for k,v in dpchoices %}
                             <option value="{{ k }}">{{ v }}</option>
                             {% endfor %}
-                        </select></li>
-                        <li>Responsável:
+                        </select></div></li>
+                        <li><div>Responsável:
                         <select name="responsavel">
                             <option label="{{ obj.responsavel|default_if_none:'Não Cadastrado' }}"></option>
                             {% for q in rpchoices %}
                             <option value="{{ q.id }}">{{ q.username }}</option>
                             {% endfor %}
-                        </select></li>
-                        <li>Categoria:
+                        </select></div></li>
+                        <li><div>Categoria:
                         <select name="categoria" id="categoria" onchange="DisplayInput();">
                             <option label="{{ obj.categoria }}">{{ obj.categoria }}</option>
                             <option label="ALMOXARIFADO">ALMOXARIFADO</option>
                             <option label="COTAÇÃO">COTAÇÃO</option>
                             <option label="NOTA FISCAL">NOTA FISCAL</option>
-                        </select></li>
-                        {% if not obj.prazo_conclusao %}<li><label for="prazo_conclusao">Prazo:</label>
-                            <input type="date" readonly id="prazo_conclusao" name="prazo_conclusao"></li>
+                        </select></div></li>
+                        {% if not obj.prazo_conclusao %}<li><div><label for="prazo_conclusao">Prazo:</label>
+                            <input type="date" readonly id="prazo_conclusao" name="prazo_conclusao"></div></li>
                         {% else %}
-                            <li><label for="prazo_conclusao">Prazo:</label>
-                            <input type="text" readonly id="prazo_conclusao" value="{{ obj.prazo_conclusao }}"></li>
+                            <li><div><label for="prazo_conclusao">Prazo:</label>
+                            <input type="text" readonly id="prazo_conclusao" value="{{ obj.prazo_conclusao }}"></div></li>
                         {% endif %}
                         {% if not obj.dt_vencimento %}<div id="display_dt_venc" style="display:none;"><li>
                                 <label for="dt_venc">Vencimento:</label><input type="date" id="dt_venc" name="dt_venc">
                         </li></div>
                         {% else %}
-                            <li>
+                            <li><div>
                                 <label for="dt_venc">Vencimento:</label>
                                 <input type="text" id="dt_venc" readonly value="{{ obj.dt_vencimento }}">
-                            </li>
+                            </div></li>
                         {% endif %}
-                        <li>Solicitante: {{ obj.solicitante|default_if_none:'Não Cadastrado' }} </li>
-                        <li>Anexo: {% if obj.anexo %}<a href="/media/{{ obj.anexo }}" download>{{ obj.anexo|filename }}</a>
+                        <li><div>Solicitante: {{ obj.solicitante|default_if_none:'Não Cadastrado' }} </div></li>
+                        <li><div>Anexo: {% if obj.anexo %}<a href="/media/{{ obj.anexo }}" download>{{ obj.anexo|filename }}</a>
                             {% else %} nenhum anexo. {% endif %}
-                        </li>
+                        </div></li>
                     </ul>
-                        <button type="submit">Atualizar</button>
-                    </form>
                     </div>
-                    <div class="col">
+
+                    <div class="col-8">
+                    {% if request.user|has_group:'compras-adm' %}
                         <h2>Cadastrar entradas</h2>
-                        <form method="post" action="{% url 'portaria:insert_entradas_cpr' %}" enctype="multipart/form-data">{% csrf_token %}
                             <input type="hidden" name="obj_id" value="{{ obj.id }}">
                             <div class="col">
                                 {{ editor.area|safe }}
                             </div>
                             <div class="col-2" style="margin-left:2rem;">
                                 <input type="file" name="file" multiple="" id="id_file">
-                                <button type="submit">Enviar</button>
                             </div>
-                        </form>
+                    {% endif %}
                     </div>
-                </div>
 
+                        <button style="max-width:10rem;margin-left:auto;margin-right:auto;margin-top:1rem;" type="submit">Atualizar</button>
+                </div>
+                </form>
                 <hr>
                 <h2>Lista de itens</h2>
                 <ul>

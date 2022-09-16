@@ -935,7 +935,7 @@ def tktcreate(request):
                     messages.error(request, f'Mais de 1 registro encontrado')
                     return redirect('portaria:monitticket')
                 elif res:
-                    modal = EmailOcorenciasMonit.objects.filter(rsocial=res[0]['REMETENTE'], ativo=1)
+                    modal = EmailOcorenciasMonit.objects.filter(rsocial=res[0]['remetente'], ativo=1)
                     return render(request, 'portaria/monitoramento/tktcreate.html', {'editor': editor, 'users': users,
                                                                  'res': res,'opts': opts,'file':file, 'modal':modal})
                 else:
@@ -1261,11 +1261,11 @@ def etiquetas(request):
         else:
             for i in res:
                 try:
-                    check = EtiquetasDocumento.objects.filter(garagem=ga, tp_doc=doc, nr_doc=i['CONHECIMENTO'],
-                                                         nota=i['NOTA_FISCAL'], volume=i['VOLUMES'])
+                    check = EtiquetasDocumento.objects.filter(garagem=ga, tp_doc=doc, nr_doc=i['conhecimento'],
+                                                         nota=i['nota_fiscal'], volume=i['volumes'])
                     if not check:
-                        EtiquetasDocumento.objects.create(garagem=ga, tp_doc=doc, nr_doc=i['CONHECIMENTO'],
-                                                         nota=i['NOTA_FISCAL'], volume=i['VOLUMES'])
+                        EtiquetasDocumento.objects.create(garagem=ga, tp_doc=doc, nr_doc=i['conhecimento'],
+                                                         nota=i['nota_fiscal'], volume=i['volumes'])
                 except Exception as e:
                     print(f'Error: {e}, error_type:{type(e).__name__}')
             request.session['dict'] = res
@@ -2759,10 +2759,10 @@ def chamadoreadmail(request):
     service = ''
     hoje = datetime.date.today()
     host = 'pop.bora.com.br'
-    mails = ['chamado.praxio@bora.com.br','chamado.descarga@bora.com.br','chamado.comprovantes@bora.com.br', 'chamado.fiscal@bora.com.br', 'chamado.mkt@bora.com.br']
-    #mails = ['chamado.mkt@bora.com.br']
+    #mails = ['chamado.praxio@bora.com.br','chamado.descarga@bora.com.br','chamado.comprovantes@bora.com.br', 'chamado.fiscal@bora.com.br', 'chamado.mkt@bora.com.br']
+    mails = ['teste@bora.com.br']
     for e_user in mails:
-        e_pass = 'B0r*610580' #'Bor@456987'
+        e_pass = 'Bor@456987' #'B0r*610580'
         pattern1 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
         pattern2 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp).\w+.\w+')
 
@@ -2786,6 +2786,13 @@ def chamadoreadmail(request):
                 if parsed_email.is_multipart():
                     #caminha pelas partes do email e armazena dados e arquivos
                     for part in parsed_email.walk():
+                        # funcao para pegar codificacao
+                        cs = parsed_email.get_charsets()
+                        for q in cs:
+                            if q is None:
+                                continue
+                            else:
+                                cs = q
                         ctype = part.get_content_type()
                         cdispo = str(part.get('Content-Type'))
                         if ctype == 'text/plain' and 'attatchment' not in cdispo:
@@ -2797,6 +2804,11 @@ def chamadoreadmail(request):
                             htbody = part.get_payload(decode=True)
                         filename = part.get_filename()
                         if filename:
+                            filename = decode_header(filename)
+                            try:
+                                filename = filename[0][0].decode(cs)
+                            except:
+                                filename = filename[0][0]
                             path = settings.STATIC_ROOT + '/chamados/' + str(hoje) + '/'
                             locimg = os.path.join(path, filename)
                             if os.path.exists(os.path.join(path)):
@@ -2825,11 +2837,6 @@ def chamadoreadmail(request):
                 else:
                     body = parsed_email.get_payload(decode=True)
                     htbody = body
-                #funcao para pegar codificacao
-                cs = parsed_email.get_charsets()
-                for q in cs:
-                    if q is None: continue
-                    else: cs = q
                 #pega parametros do email
                 e_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
                 e_title_unencoded = decode_header(parsed_email['Subject'])
@@ -2962,7 +2969,7 @@ def setallread(request, user):
 
 def dictfetchall(cursor):
     #Return all rows from a cursor as a dict
-    columns = [col[0] for col in cursor.description]
+    columns = [col[0].lower() for col in cursor.description]
     return [
         dict(zip(columns, row))
         for row in cursor.fetchall()
@@ -3142,7 +3149,7 @@ def mdfeporfilial(request):
             if k in ('6','7'):
                 resultrec = mailchoices.get('REC', '')
                 try:
-                    row = pdr.loc[pdr['DESCRICAO_PROD'] == 'CONGELADO']
+                    row = pdr.loc[pdr['descricao_prod'] == 'CONGELADO']
                 except Exception as e:
                     print(f'Error:{e}, error_type:{type(e).__name__}')
                 else:
@@ -3165,10 +3172,10 @@ def mdfeporfilial(request):
 
                         buffer = io.BytesIO()
                         pd.ExcelWriter(buffer)
-                        row['SAIDA_VEIC'] = pd.to_datetime(row['SAIDA_VEIC'], format='%d/%m/%Y').dt.strftime('%d/%m/%Y')
-                        row['CHEGADA_VEIC'] = pd.to_datetime(row['CHEGADA_VEIC'], format='%d/%m/%Y').dt.strftime(
+                        row['saida_veic'] = pd.to_datetime(row['saida_veic'], format='%d/%m/%Y').dt.strftime('%d/%m/%Y')
+                        row['chegada_veic'] = pd.to_datetime(row['chegada_veic'], format='%d/%m/%Y').dt.strftime(
                             '%d/%m/%Y')
-                        row['LEADTIME'] = pd.to_datetime(row['LEADTIME'], format='%d/%m/%Y').dt.strftime('%d/%m/%Y')
+                        row['leadtime'] = pd.to_datetime(row['leatime'], format='%d/%m/%Y').dt.strftime('%d/%m/%Y')
                         row.to_excel(buffer, engine='xlsxwriter', index=False)
                         part = MIMEApplication(buffer.getvalue(), name=v)
                         part['Content-Disposition'] = 'attachment; filename=%s.xlsx' % v
@@ -3198,9 +3205,9 @@ def mdfeporfilial(request):
 
             buffer = io.BytesIO()
             pd.ExcelWriter(buffer)
-            pdr['SAIDA_VEIC'] = pd.to_datetime(pdr['SAIDA_VEIC'], format='%d/%m/%Y').dt.strftime('%d/%m/%Y')
-            pdr['CHEGADA_VEIC'] = pd.to_datetime(pdr['CHEGADA_VEIC'], format='%d/%m/%Y').dt.strftime('%d/%m/%Y')
-            pdr['LEADTIME'] = pd.to_datetime(pdr['LEADTIME'], format='%d/%m/%Y').dt.strftime('%d/%m/%Y')
+            pdr['saida_veic'] = pd.to_datetime(pdr['saida_veic'], format='%d/%m/%Y').dt.strftime('%d/%m/%Y')
+            pdr['chegada_veic'] = pd.to_datetime(pdr['chegada_veic'], format='%d/%m/%Y').dt.strftime('%d/%m/%Y')
+            pdr['leadtime'] = pd.to_datetime(pdr['leadtime'], format='%d/%m/%Y').dt.strftime('%d/%m/%Y')
             pdr.to_excel(buffer, engine='xlsxwriter', index=False)
             part = MIMEApplication(buffer.getvalue(), name=v)
             part['Content-Disposition'] = 'attachment; filename=%s.xlsx' % v
@@ -3459,69 +3466,68 @@ async def get_justificativas(request):
 def insert_to_justificativa(data):
     for obj in data:
         try:
-            JustificativaEntrega.objects.get(empresa=obj['EMPRESA'], filial=obj['FILIAL'], garagem=obj['GARAGEM'],tipo_doc=obj['TP_DOC'],conhecimento=obj['CONHECIMENTO'])
+            JustificativaEntrega.objects.get(empresa=obj['empresa'], filial=obj['filial'], garagem=obj['garagem'],tipo_doc=obj['tp_doc'],conhecimento=obj['conhecimento'])
         except ObjectDoesNotExist:
             nobj = JustificativaEntrega.objects.create(
-                empresa=obj['EMPRESA'], filial=obj['FILIAL'], garagem=obj['GARAGEM'], id_garagem=obj['ID_GARAGEM'],
-                conhecimento=obj['CONHECIMENTO'], data_emissao=obj['DATA_EMISSAO'], destinatario=obj['DESTINATARIO'],
-                remetente=obj['REMETENTE'], peso=obj['PESO'], tipo_doc=obj['TP_DOC'], data_entrega=obj['DATA_ENTREGA'],
-                lead_time=datetime.datetime.strptime(obj['DT_PREV_ENTREGA'], '%d-%m-%Y'),
-                em_aberto=obj['EM_ABERTO_APOS_LEAD_TIME'], local_entreg=obj['DESTINO'], nota_fiscal=obj['NF']
+                empresa=obj['empresa'], filial=obj['filial'], garagem=obj['garagem'], id_garagem=obj['id_garagem'],
+                conhecimento=obj['conhecimento'], data_emissao=obj['data_emissao'], destinatario=obj['destinatario'],
+                remetente=obj['remetente'], peso=obj['peso'], tipo_doc=obj['tp_doc'], data_entrega=obj['data_entrega'],
+                lead_time=datetime.datetime.strptime(obj['dt_prev_entrega'], '%d-%m-%Y'),
+                em_aberto=obj['em_aberto_apos_lead_time'], local_entreg=obj['destino'], nota_fiscal=obj['nf']
             )
         except Exception as e:
             print('Error:%s, error_type:%s' %(e, type(e)))
     return print('finalizou')
 
 async def get_ocorrencias(request):
+    hoje = datetime.date.today().strftime('%d-%b-%Y')
     conn = conndb()
     cur = conn.cursor()
     cur.execute(f"""
                     SELECT DISTINCT
-                           A1.EMPRESA,
-                           A1.FILIAL,
-                           A1.GARAGEM,
-                           A1.NUMERO_CTRC,
-                           A1.TIPO_DOCTO,
-                           A2.CODIGO,
-                           A2.DESCRICAO,
-                           A1.DATA_OCORRENCIA      
+                           A1.EMPRESA empresa,
+                           A1.FILIAL filial,
+                           A1.GARAGEM garagem,
+                           A1.NUMERO_CTRC conhecimento,
+                           A1.TIPO_DOCTO tp_doc,
+                           A2.CODIGO cod_ocor,
+                           A2.DESCRICAO desc_ocor,
+                           A1.DATA_OCORRENCIA data_ocorrencia     
                     FROM 
                          ACA001 A1,
                          ACA002 A2
                     WHERE
                          A1.COD_OCORRENCIA = A2.CODIGO                    AND
-                         A1.DATA_CADASTRO BETWEEN ((SYSDATE)-3) AND (SYSDATE)                        
+                         A1.DATA_CADASTRO BETWEEN ((SYSDATE)-1) AND (SYSDATE)                        
                     """)
     res = dictfetchall(cur)
     print('query feita')
+    print(len(res))
     try:
-        await insert_to_ocorrencias(res)
+        r = await insert_to_ocorrencias(res)
     except Exception as e:
         print(f'Error:{e}, error_type:{type(e).__name__}')
-    cur.close()
-    return HttpResponse('job done')
+        raise e
+    else:
+        cur.close()
+        return redirect('portaria:index')
 
 @sync_to_async
 def insert_to_ocorrencias(data):
+    array = []
     for obj in data:
-        just = JustificativaEntrega.objects.filter(empresa=obj['EMPRESA'], filial=obj['FILIAL'], garagem=obj['GARAGEM'],
-                                                   conhecimento=obj['NUMERO_CTRC'])
+        just = JustificativaEntrega.objects.filter(empresa=obj['empresa'], filial=obj['filial'],
+                                                   garagem=obj['garagem'],
+                                                   conhecimento=obj['conhecimento'])
         if just:
+            obj['entrega'] = just[0]
             try:
-                OcorrenciaEntrega.objects.get(
-                    entrega=just[0], empresa=obj['EMPRESA'], filial=obj['FILIAL'], garagem=obj['GARAGEM'], conhecimento=obj['NUMERO_CTRC'],
-                    tp_doc=obj['TIPO_DOCTO'], cod_ocor=obj['CODIGO'], desc_ocor=obj['DESCRICAO'],
-                    data_ocorrencia=obj['DATA_OCORRENCIA']
-                )
-            except ObjectDoesNotExist:
-                nobj = OcorrenciaEntrega.objects.create(
-                    empresa=obj['EMPRESA'], filial=obj['FILIAL'], garagem=obj['GARAGEM'], conhecimento=obj['NUMERO_CTRC'],
-                    tp_doc=obj['TIPO_DOCTO'], cod_ocor=obj['CODIGO'], desc_ocor=obj['DESCRICAO'],
-                    data_ocorrencia=obj['DATA_OCORRENCIA'], entrega=just[0]
-                )
+                kj = OcorrenciaEntrega.objects.get(**obj)
             except Exception as e:
-                print('Error:%s, error_type:%s' % (e, type(e)))
-    return print('finalizou')
+                if obj not in array:
+                    array.append(OcorrenciaEntrega(**obj))
+    OcorrenciaEntrega.objects.bulk_create(array)
+    print('finalizou')
     
 def pivot_rel_just(date1, date2):
     array = []
@@ -3733,21 +3739,20 @@ def compras_lancar_pedido(request):
                 cur.close()
                 if res:
                     for q in res:
-                        print(q)
                         try:
-                            obj = SolicitacoesCompras.objects.get(filial=keyga[q['FILIAL']],nr_solic=q['NR_SOLICITACAO'])
+                            obj = SolicitacoesCompras.objects.get(filial=keyga[q['filial']],nr_solic=q['nr_solicitacao'])
                         except ObjectDoesNotExist:
                             obj = SolicitacoesCompras.objects.create(
-                                nr_solic=q['NR_SOLICITACAO'], data=q['DATA'], status=q['STATUS'],
-                                filial=keyga[q['FILIAL']],
-                                solicitante=q['SOLICITANTE'], autor=request.user, email_solic=q['EMAIL'], anexo=anexo
+                                nr_solic=q['nr_solicitacao'], data=q['data'], status=q['status'],
+                                filial=keyga[q['filial']],
+                                solicitante=q['solicitante'], autor=request.user, email_solic=q['email'], anexo=anexo
                             )
-                            prod = ProdutosSolicitacoes.objects.create(produto=q['PRODUTO'],
-                                                                              qnt_itens=int(q['QTD_ITENS']),
+                            prod = ProdutosSolicitacoes.objects.create(produto=q['produto'],
+                                                                              qnt_itens=int(q['qtd_itens']),
                                                                               solic_ref=obj)
                         else:
-                            prod = ProdutosSolicitacoes.objects.create(produto=q['PRODUTO'],
-                                                                      qnt_itens=int(q['QTD_ITENS']),
+                            prod = ProdutosSolicitacoes.objects.create(produto=q['produto'],
+                                                                      qnt_itens=int(q['qtd_itens']),
                                                                       solic_ref=obj)
                             obj.anexo = anexo
                             obj.ultima_att = request.user
@@ -3848,6 +3853,8 @@ def edit_compras(request, id):
         categoria = request.POST.get('categoria')
         prazo = request.POST.get('prazo_conclusao')
         dt_venc = request.POST.get('dt_venc')
+        textarea = request.POST.get('area')
+        files = request.FILES.getlist('file')
         try:
             if status != '':
                 obj.status = status
@@ -3858,6 +3865,7 @@ def edit_compras(request, id):
             if categoria != '': obj.categoria = categoria
             if dt_venc != '' and dt_venc is not None: obj.dt_vencimento = dt_venc
             if prazo != '' and prazo is not None: obj.prazo_conclusao = prazo
+            if textarea and textarea != '<p><br></p>': insert_entradas_cpr(request, obj, textarea, files)
         except Exception as e:
             print(f'err:{e}, err_t:{type(e).__name__}')
             raise e
@@ -3870,12 +3878,8 @@ def edit_compras(request, id):
                                                               'dpchoices':dpchoices, 'rpchoices':rpchoices,
                                                               'entradas':entradas, 'editor':editor})
 
-def insert_entradas_cpr(request):
+def insert_entradas_cpr(request, obj, textarea, files):
     if request.method == 'POST':
-        obj = get_object_or_404(SolicitacoesCompras, pk=request.POST.get('obj_id'))
-        textarea = request.POST.get('area')
-        files = request.FILES.getlist('file')
-
         if obj and textarea and textarea != '<p><br></p>':
             try:
                 entrada = SolicitacoesEntradas.objects.create(obs=textarea, cpr_ref=obj, ultima_att=request.user)
@@ -3922,7 +3926,6 @@ def insert_entradas_cpr(request):
                 except:
                     pass
                 messages.success(request, 'Cadastrado com sucesso')
-    return redirect('portaria:painel_compras')
 
 def sendmail_compras(to, text, file1, file2, file3):
     fromm = 'bora@bora.tec.br' ########### alterar
@@ -4261,10 +4264,10 @@ def get_funcionarios_demissao(request):
         cur.close()
     for q in res:
         try:
-            obj = get_object_or_404(Demissoes, cpf=q['NRDOCTO'])
+            obj = get_object_or_404(Demissoes, cpf=q['nrdocto'])
         except Http404:
-            obj = Demissoes.objects.create(empresa=q['CODIGOEMPRESA'],filial=q['CODIGOFL'], nome=q['NOMEFUNC'],
-                                           cpf=q['NRDOCTO'], dtadmissao=q['DTADMFUNC'])
+            obj = Demissoes.objects.create(empresa=q['codigoempresa'],filial=q['codigofl'], nome=q['nomefunc'],
+                                           cpf=q['nrdocto'], dtadmissao=q['dtadmfunc'])
         except Exception as e:
             print(f'Error:{e}, error_type:{type(e).__name__}')
     return HttpResponse('job done')
