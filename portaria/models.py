@@ -812,6 +812,7 @@ class SolicitacoesCompras(models.Model):
     prazo_conclusao = models.DateField(blank=True, null=True)
     dt_vencimento = models.DateField(blank=True, null=True)
     pub_date = models.DateTimeField(default=timezone.now)
+    obs = models.TextField(blank=True, null=True)
     anexo = models.FileField(upload_to='cpr/%Y/%m/%d', blank=True, null=True)
     autor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='autorcompras')
     ultima_att = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ultimaattcompras',

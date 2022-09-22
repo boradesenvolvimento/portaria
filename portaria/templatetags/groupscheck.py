@@ -48,11 +48,11 @@ def filename(value):
 def split_char(obj,value):
     return obj.split(value)[0]
 
-@register.filter(name='timedelta5')
-def timedelta5(value):
+@register.filter(name='timedelta7')
+def timedelta7(value):
     hoje = datetime.today()
     a = hoje - value
-    b = timedelta(5)
+    b = timedelta(7)
     if a > b:
         return True
 

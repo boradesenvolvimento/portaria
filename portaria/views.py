@@ -2837,6 +2837,12 @@ def chamadoreadmail(request):
                 else:
                     body = parsed_email.get_payload(decode=True)
                     htbody = body
+                    cs = parsed_email.get_charsets()
+                    for q in cs:
+                        if q is None:
+                            continue
+                        else:
+                            cs = q
                 #pega parametros do email
                 e_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
                 e_title_unencoded = decode_header(parsed_email['Subject'])
@@ -3373,11 +3379,11 @@ async def get_justificativas(request):
     cur = conn.cursor()
     cur.execute(f"""
                     SELECT 
-                           F1.EMPRESA,
-                           F1.FILIAL,
-                           F1.GARAGEM,
-                           F1.ID_GARAGEM, 
-                           DECODE(F1.TIPO_DOCTO, 8, 'NFS', 'CTE') TP_DOC,
+                           F1.EMPRESA empresa,
+                           F1.FILIAL filial,
+                           F1.GARAGEM garagem,
+                           F1.ID_GARAGEM id_garagem, 
+                           DECODE(F1.TIPO_DOCTO, 8, 'NFS', 'CTE') tipo_doc,
                            F1.CONHECIMENTO,
                            F1.DATA_EMISSAO,
                            F1.DATA_ENTREGA,
@@ -3393,7 +3399,7 @@ async def get_justificativas(request):
                            CASE
                                WHEN F11.DT_PREV_ENTREGA IS NULL THEN '01-01-0001'
                                WHEN F11.DT_PREV_ENTREGA IS NOT NULL THEN TO_CHAR(F11.DT_PREV_ENTREGA, 'DD-MM-YYYY') 
-                           END DT_PREV_ENTREGA,
+                           END lead_time,
                            CASE
                                WHEN F1.DATA_ENTREGA = '01-JAN-0001' THEN 'NAO ENTREGUE'
                                WHEN F1.DATA_ENTREGA <> '01-JAN-0001' THEN CASE
@@ -3405,9 +3411,9 @@ async def get_justificativas(request):
                                 WHEN (TRUNC((MIN(F11.DT_PREV_ENTREGA))-(SYSDATE))*-1) >= 0 THEN (TRUNC((MIN(F11.DT_PREV_ENTREGA))-(SYSDATE))*-1)
                                 WHEN (TRUNC((MIN(F11.DT_PREV_ENTREGA))-(SYSDATE))*-1) < 0 THEN 0
                                 WHEN F11.DT_PREV_ENTREGA IS NULL THEN 0
-                           END EM_ABERTO_APOS_LEAD_TIME,
-                           E2.DESC_LOCALIDADE || '-' || E2.COD_UF DESTINO,
-                           LISTAGG ((LTRIM (F4.NOTA_FISCAL,0)), ' / ') NF                           
+                           END em_aberto,
+                           E2.DESC_LOCALIDADE || '-' || E2.COD_UF local_entreg,
+                           LISTAGG ((LTRIM (F4.NOTA_FISCAL,0)), ' / ') nota_fiscal                           
                     FROM 
                          FTA001 F1,
                          FTA011 F11,
@@ -3455,6 +3461,7 @@ async def get_justificativas(request):
                     """)
     res = dictfetchall(cur)
     print('query feita')
+    print(len(res))
     try:
         await insert_to_justificativa(res)
     except Exception as e:
@@ -3465,6 +3472,10 @@ async def get_justificativas(request):
 @sync_to_async
 def insert_to_justificativa(data):
     for obj in data:
+        '''try:
+            just = JustificativaEntrega.objects.get(**obj)
+        except:
+            continue'''
         try:
             JustificativaEntrega.objects.get(empresa=obj['empresa'], filial=obj['filial'], garagem=obj['garagem'],tipo_doc=obj['tp_doc'],conhecimento=obj['conhecimento'])
         except ObjectDoesNotExist:
@@ -3854,6 +3865,7 @@ def edit_compras(request, id):
         prazo = request.POST.get('prazo_conclusao')
         dt_venc = request.POST.get('dt_venc')
         textarea = request.POST.get('area')
+        obs = request.POST.get('obs')
         files = request.FILES.getlist('file')
         try:
             if status != '':
@@ -3865,6 +3877,7 @@ def edit_compras(request, id):
             if categoria != '': obj.categoria = categoria
             if dt_venc != '' and dt_venc is not None: obj.dt_vencimento = dt_venc
             if prazo != '' and prazo is not None: obj.prazo_conclusao = prazo
+            if obs != '' and obs is not None: obj.obs = obs
             if textarea and textarea != '<p><br></p>': insert_entradas_cpr(request, obj, textarea, files)
         except Exception as e:
             print(f'err:{e}, err_t:{type(e).__name__}')

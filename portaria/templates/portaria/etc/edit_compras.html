@@ -76,9 +76,11 @@
                             </div></li>
                         {% endif %}
                         <li><div>Solicitante: {{ obj.solicitante|default_if_none:'Não Cadastrado' }} </div></li>
-                        <li><div>Anexo: {% if obj.anexo %}<a href="/media/{{ obj.anexo }}" download>{{ obj.anexo|filename }}</a>
+                        <li><div style="word-wrap: break-word;">Anexo: {% if obj.anexo %}<a href="/media/{{ obj.anexo }}" download>{{ obj.anexo|filename }}</a>
                             {% else %} nenhum anexo. {% endif %}
                         </div></li>
+                        <li><div><h3>Observação:</h3>
+                            <textarea rows="3" cols="30" id="obs" name="obs" style="border:solid 1px;">{% if obj.obs %}{{ obj.obs }}{% endif %}</textarea></div></li>
                     </ul>
                     </div>
 
