@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+{% load groupscheck %}
+<style>
+    .maozinha{
+        cursor: pointer;
+        -webkit-touch-callout: none;  /* iPhone OS, Safari */
+        -webkit-user-select: none;    /* Chrome, Safari 3 */
+        -khtml-user-select: none;     /* Safari 2 */
+        -moz-user-select: none;       /* Firefox */
+        -ms-user-select: none;        /* IE10+ */
+    }
+</style>
+{% if request.user|has_group:"compras" %}
+    <div class="container mt-4">
+        {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+        {% endfor %}
+        <div class="container">
+            <div class="row">
+                <div class="col">
+                    <h2>Painel Compras</h2>
+                </div>
+                <div class="col">
+                    <form method="get">
+                        <label for="filter">Filtro</label>
+                        <input type="text" id="filter" name="filter">
+                        <select name="filtertype">
+                            <option selected disabled label="---"></option>
+                            <option value="filial">Por Filial</option>
+                            <option value="solicitante">Por Solicitante</option>
+                            <option value="codigo">Por Código</option>
+                            <option value="departamento">Por Departamento</option>
+                        </select>
+                        <button><ion-icon name="search-circle-outline"></ion-icon></button>
+                    </form>
+                </div>
+            </div>
+        </div><hr>
+        <div class="container">
+            <table class="table table1">
+                    <tr>
+                        <th><span class="maozinha">Nº Solicitação</span></th>
+                        <th><span class="maozinha">Dt Solicitação</span></th>
+                        <th><span class="maozinha">Dt Lançamento</span></th>
+                        <th><span class="maozinha">Status</span></th>
+                        <th><span class="maozinha">Filial</span></th>
+                        <th><span class="maozinha">Solicitante</span></th>
+                        <th><span class="maozinha">Responsável</span></th>
+                        <th><span class="maozinha">Itens cad.</span></th>
+                        <th><span class="maozinha">Editar</span></th>
+                    </tr>
+                    {% for q in form %}
+                    <tr style="{% if q.pub_date|timedelta7 %}background:#ff644e;{% endif %}">
+                        <td>{{ q.nr_solic }}</td>
+                        <td>{{ q.data }}</td>
+                        <td>{{ q.pub_date }}</td>
+                        <td>{{ q.status }}</td>
+                        <td>{{ q.get_filial_display }}</td>
+                        <td>{{ q.solicitante }}</td>
+                        <td>{{ q.responsavel|default_if_none:'Não Cadastrado' }}</td>
+                        <td><button type="button" id="myBtn" value="{{ forloop.counter }}"><ion-icon name="list"></ion-icon></button></td>
+                        <td><a href="{% url 'portaria:edit_compras' q.id %}"><button type="button"><ion-icon name="create"></ion-icon></button></a></td>
+                    </tr>
+                        <div id="myModal{{ forloop.counter }}" class="modal">
+                            <div class="modal-content">
+                                <div>
+                                    <span class="title-cad">Itens do pedido</span>
+                                    <span class="close col">&times;</span>
+                                </div>
+                                <div class="container tktcontainer">
+                                    {% if q.produtossolicitacoes_set.all %}
+                                        <ul>
+                                        {% for i in q.produtossolicitacoes_set.all %}
+                                            <li><p style="margin: 0 0 0 0;">Item {{ forloop.counter }}: <strong>{{ i.produto }}</strong>
+                                        {% endfor %}
+                                        </ul>
+                                    {% else %}
+                                        <p style="margin: 0 0 0 0;">Nenhuma ocorrencia encontrada.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <tr><h2><strong>Não foi encontrado nenhuma solicitação com os dados informados.</strong></h2></tr><hr>
+                    {% endfor %}
+            </table>
+        </div>
+    </div>
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+<script>
+    $(document).ready(function(){
+        $("button").click(function(){
+            var btn = $(this);
+            var but = $(this).val();
+            var modal = document.getElementById("myModal"+but);
+            var span = modal.getElementsByClassName("close")[0];
+            modal.style.display = "block";
+
+            span.onclick = function() {
+                modal.style.display = "none";
+            };
+            window.onclick = function(event) {
+                if (event.target == modal){
+                    modal.style.display = "none";
+                }
+            };
+        });
+    });
+</script>
+<script>
+const getCellValue = (tr, idx) => tr.children[idx].innerText || tr.children[idx].textContent;
+
+const comparer = (idx, asc) => (a, b) => ((v1, v2) =>
+    v1 !== '' && v2 !== '' && !isNaN(v1) && !isNaN(v2) ? v1 - v2 : v1.toString().localeCompare(v2)
+    )(getCellValue(asc ? a : b, idx), getCellValue(asc ? b : a, idx));
+
+// do the work...
+document.querySelectorAll('th').forEach(th => th.addEventListener('click', (() => {
+    const table = th.closest('table');
+    Array.from(table.querySelectorAll('tr:nth-child(n+2)'))
+        .sort(comparer(Array.from(th.parentNode.children).indexOf(th), this.asc = !this.asc))
+        .forEach(tr => table.children[0].appendChild(tr) );
+})));
+</script>
+{% endblock %}

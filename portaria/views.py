@@ -3847,6 +3847,34 @@ def painel_compras(request):
                 messages.error(request, 'Selecione algum filtro.')
     return render(request, 'portaria/etc/painelcompras.html', {'form':form})
 
+def painel_compras_concluido(request):
+    if request.method == 'POST':
+        date = request.POST.get('date')
+        if date:
+            CharField.register_lookup(Lower)
+            form = SolicitacoesCompras.objects.filter(status='CONCLUIDO', data=date).order_by('data')
+            if request.method == 'GET':
+                filter = request.GET.get('filter')
+                filtertype = request.GET.get('filtertype')
+                if filter:
+                    if filtertype == 'filial':
+                        filter = filter.upper()
+                        keyga = {v: k for k, v in GARAGEM_CHOICES}
+                        form = SolicitacoesCompras.objects.filter(filial=keyga[filter]).order_by('pub_date')
+                    elif filtertype == 'solicitante':
+                        filter = filter.upper()
+                        form = SolicitacoesCompras.objects.filter(solicitante=filter).order_by('pub_date')
+                    elif filtertype == 'codigo':
+                        form = SolicitacoesCompras.objects.filter(nr_solic=filter).order_by('pub_date')
+                    elif filtertype == 'departamento':
+                        filter = filter.upper()
+                        form = SolicitacoesCompras.objects.filter(departamento=filter).order_by('pub_date')
+                    else:
+                        messages.error(request, 'Selecione algum filtro.')
+        return render(request, 'portaria/etc/painelcomprasconcluido.html', {'form':form})
+    else:
+        print('aaaa')
+
 def edit_compras(request, id):
     editor = TextEditor()
     obj = get_object_or_404(SolicitacoesCompras, pk=id)

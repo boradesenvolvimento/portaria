@@ -35,6 +35,14 @@
                 <h3>Painel</h3>
                 <a class="col-1" href="{% url 'portaria:painel_compras' %}"><button type="button">Acessar</button></a>
             </div>
+            <div class="row linha-baixo">
+                <h3>Painel Concluídos</h3>
+                <form method="post" action="{% url 'portaria:painel_compras_concluido' %}">{% csrf_token %}
+                    <label for="">Período</label>
+                    <input type="date" name="date" id="date">
+                    <button type="submit">Acessar</button></a>
+                </form>
+            </div>
             <div class="linha-baixo">
                 <div class="row createtkt">
                     <div class="col-4 createboxes">
