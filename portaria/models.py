@@ -817,6 +817,7 @@ class SolicitacoesCompras(models.Model):
     autor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='autorcompras')
     ultima_att = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ultimaattcompras',
                                    blank=True, null=True)
+    pago = models.BooleanField(null=True, blank=True, default=False)
 
 class ProdutosSolicitacoes(models.Model):
     id = models.BigAutoField(primary_key=True)

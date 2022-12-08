@@ -11,6 +11,33 @@
         -moz-user-select: none;       /* Firefox */
         -ms-user-select: none;        /* IE10+ */
     }
+    input[type="checkbox"] {
+        display: none;
+        font-family: 'Poppins', sans-serif;
+    }
+    label:before {
+        margin: 0.8rem;
+        background: #3b7efa;
+        border-radius: 0.5rem;
+        border: 1px solid #0f2a5e;
+        height: 24px;
+        width: 24px;
+        display: block;
+        color: #fff;
+
+    }
+    input[type="checkbox"] + label:before {
+        content: 'X';
+        background: #e93e3e;
+        font-size: 20px;
+        line-height: 22px;
+        text-align: center;
+    }
+    input[type="checkbox"]:checked + label:before {
+        background: #3b7efa;
+        content: '✓';
+    }
+
 </style>
 {% if request.user|has_group:"compras" %}
     <div class="container mt-4">
@@ -54,6 +81,7 @@
                         <th><span class="maozinha">Responsável</span></th>
                         <th><span class="maozinha">Itens cad.</span></th>
                         <th><span class="maozinha">Editar</span></th>
+                        <th><span class="maozinha">Pago</span></th>
                     </tr>
                     {% for q in form %}
                     <tr style="{% if q.pub_date|timedelta7 %}background:#ff644e;{% endif %}">
@@ -66,6 +94,10 @@
                         <td>{{ q.responsavel|default_if_none:'Não Cadastrado' }}</td>
                         <td><button type="button" id="myBtn" value="{{ forloop.counter }}"><ion-icon name="list"></ion-icon></button></td>
                         <td><a href="{% url 'portaria:edit_compras' q.id %}"><button type="button"><ion-icon name="create"></ion-icon></button></a></td>
+                        <td>
+                            <input id="checkbutton" type="checkbox" disabled {% if q.pago %}checked{% endif %} /><label for="checkbutton"></label>
+
+                        </td>
                     </tr>
                         <div id="myModal{{ forloop.counter }}" class="modal">
                             <div class="modal-content">

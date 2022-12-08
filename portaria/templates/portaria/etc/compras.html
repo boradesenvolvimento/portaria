@@ -36,7 +36,7 @@
                 <a class="col-1" href="{% url 'portaria:painel_compras' %}"><button type="button">Acessar</button></a>
             </div>
             <div class="row linha-baixo">
-                <h3>Painel Concluídos</h3>
+                <h3>Painel Financeiro</h3>
                 <form method="post" action="{% url 'portaria:painel_compras_concluido' %}">{% csrf_token %}
                     <label for="">Período</label>
                     <input type="date" name="date" id="date">

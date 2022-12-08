@@ -3895,6 +3895,7 @@ def edit_compras(request, id):
         textarea = request.POST.get('area')
         obs = request.POST.get('obs')
         files = request.FILES.getlist('file')
+        pago = request.POST.get('pago')
         try:
             if status != '':
                 obj.status = status
@@ -3907,6 +3908,7 @@ def edit_compras(request, id):
             if prazo != '' and prazo is not None: obj.prazo_conclusao = prazo
             if obs != '' and obs is not None: obj.obs = obs
             if textarea and textarea != '<p><br></p>': insert_entradas_cpr(request, obj, textarea, files)
+            if obj.pago != pago and pago is not None: obj.pago = pago
         except Exception as e:
             print(f'err:{e}, err_t:{type(e).__name__}')
             raise e

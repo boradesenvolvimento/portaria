@@ -72,13 +72,22 @@
                         {% else %}
                             <li><div>
                                 <label for="dt_venc">Vencimento:</label>
-                                <input type="text" id="dt_venc" readonly value="{{ obj.dt_vencimento }}">
+                                
                             </div></li>
                         {% endif %}
                         <li><div>Solicitante: {{ obj.solicitante|default_if_none:'Não Cadastrado' }} </div></li>
                         <li><div style="word-wrap: break-word;">Anexo: {% if obj.anexo %}<a href="/media/{{ obj.anexo }}" download>{{ obj.anexo|filename }}</a>
                             {% else %} nenhum anexo. {% endif %}
                         </div></li>
+                        <li>
+                            <div style="word-wrap: break-word;">
+                                {% if obj.pago %}
+                                    Solicitação paga
+                                {% else %}
+                                    Aguardando pagamento
+                                {% endif %}
+                            </div>
+                        </li>
                         <li><div><h3>Observação:</h3>
                             <textarea rows="3" cols="30" id="obs" name="obs" style="border:solid 1px;">{% if obj.obs %}{{ obj.obs }}{% endif %}</textarea></div></li>
                     </ul>
@@ -97,7 +106,14 @@
                     {% endif %}
                     </div>
 
-                        <button style="max-width:10rem;margin-left:auto;margin-right:auto;margin-top:1rem;" type="submit">Atualizar</button>
+                        <div style="width:55%">
+                            {% if obj.status == 'CONCLUIDO'%}
+                                <button style="float:right;max-width:10rem;margin-top:1rem;" type="submit" name="pago" value="1" {% if obj.pago %}disabled{% endif %}>Pago</button>
+
+                            {% endif %}
+                            <button style="float:right;max-width:10rem;margin-top:1rem;" type="submit">Atualizar</button>
+                        </div>
+
                 </div>
                 </form>
                 <hr>
