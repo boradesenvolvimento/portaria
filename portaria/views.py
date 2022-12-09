@@ -3917,16 +3917,19 @@ def edit_compras(request, id):
             obj.save()
             messages.info(request, f'Solicitação {obj.nr_solic} alterada com sucesso')
             return redirect('portaria:painel_compras')
+    
+    vencimento = str((obj.dt_vencimento - datetime.date.today()).days)
+
     return render(request, 'portaria/etc/edit_compras.html', {'obj':obj, 'gachoices':gachoices, 'stschoices':stschoices,
                                                               'dpchoices':dpchoices, 'rpchoices':rpchoices,
-                                                              'entradas':entradas, 'editor':editor})
+                                                              'entradas':entradas, 'editor':editor, 'vencimento': vencimento})
 
 def insert_entradas_cpr(request, obj, textarea, files):
     if request.method == 'POST':
         if obj and textarea and textarea != '<p><br></p>':
             try:
                 entrada = SolicitacoesEntradas.objects.create(obs=textarea, cpr_ref=obj, ultima_att=request.user)
-                if files:
+                if files:   
                     cont = 1
                     for q in files:
                         if cont == 1:

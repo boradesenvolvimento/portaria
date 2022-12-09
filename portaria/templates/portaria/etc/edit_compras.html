@@ -63,17 +63,28 @@
                         {% if not obj.prazo_conclusao %}<li><div><label for="prazo_conclusao">Prazo:</label>
                             <input type="date" readonly id="prazo_conclusao" name="prazo_conclusao"></div></li>
                         {% else %}
-                            <li><div><label for="prazo_conclusao">Prazo:</label>
-                            <input type="text" readonly id="prazo_conclusao" value="{{ obj.prazo_conclusao }}"></div></li>
+                            <li><div><label for="criado_em">Criado em:</label>
+                            <input type="text" readonly id="criado_em" value="{{ obj.pub_date }}"></div></li>
                         {% endif %}
-                        {% if not obj.dt_vencimento %}<div id="display_dt_venc" style="display:none;"><li>
-                                <label for="dt_venc">Vencimento:</label><input type="date" id="dt_venc" name="dt_venc">
-                        </li></div>
+                        {% if not obj.dt_vencimento %}
+                            <div id="display_dt_venc" style="display:none;">
+                                <li>
+                                    <label for="dt_venc">Vencimento:</label>
+                                    <input type="date" id="dt_venc" name="dt_venc">
+                                </li>
+                            </div>
+                        {% elif vencimento >= 0 %}
+                            <li>
+                                <div>
+                                    <p>O boleto vai vencer em <b>{{ vencimento }}</b> dias</P>
+                                </div>
+                            </li>
                         {% else %}
-                            <li><div>
-                                <label for="dt_venc">Vencimento:</label>
-                                
-                            </div></li>
+                            <li>
+                                <div>
+                                    <p>O boleto venceu faz <b>{{ vencimento|slice:"1:"}}</b>  dias</p>
+                                </div>
+                            </li>
                         {% endif %}
                         <li><div>Solicitante: {{ obj.solicitante|default_if_none:'Não Cadastrado' }} </div></li>
                         <li><div style="word-wrap: break-word;">Anexo: {% if obj.anexo %}<a href="/media/{{ obj.anexo }}" download>{{ obj.anexo|filename }}</a>
