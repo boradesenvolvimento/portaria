@@ -73,12 +73,19 @@
                                     <input type="date" id="dt_venc" name="dt_venc">
                                 </li>
                             </div>
-                        {% elif vencimento >= 0 %}
+                        {% elif vencimento > 0 %}
                             <li>
                                 <div>
                                     <p>O boleto vai vencer em <b>{{ vencimento }}</b> dias</P>
                                 </div>
                             </li>
+                        {% elif vencimento == 0 %}
+                        <li>
+                            <div>
+                                <p>O boleto vence <b>hoje</b></P>
+                            </div>
+                        </li>
+                    
                         {% else %}
                             <li>
                                 <div>

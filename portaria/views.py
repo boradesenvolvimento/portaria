@@ -12,6 +12,7 @@ import socket
 import tempfile
 import textwrap
 import poplib
+import imaplib
 from collections import Counter
 from email.mime.base import MIMEBase
 from io import BytesIO
@@ -2589,6 +2590,7 @@ def closetkt(request, tktid):
     return redirect('portaria:monitticket')
 
 def createchamado(request, **kwargs):
+    print('função create chamado')
     dict = kwargs
     pattern = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
     msg1 = MIMEMultipart()
@@ -2603,8 +2605,8 @@ def createchamado(request, **kwargs):
             msg1.attach(msgimg)
     msg1.attach(MIMEText(msgmail, 'html', 'utf-8'))
     msg1['Subject'] = dict['assnt']
-    msg1['From'] = get_secret('EUSER_CH') ################### alterar
-    msg1['To'] = dict['solic'] ################### alterar
+    msg1['From'] = get_secret('EUSER_MN') ################### alterar
+    msg1['To'] = dict["solic"] ################### alterar
     msg_id = make_msgid(idstring=None, domain='bora.com.br')
     msg1['Message-ID'] = msg_id
     smtp_h = get_secret('ESMTP_CH')
@@ -2758,19 +2760,27 @@ def chamadoreadmail(request):
     tkt = None
     service = ''
     hoje = datetime.date.today()
-    host = 'pop.bora.com.br'
-    mails = ['chamado.praxio@bora.com.br','chamado.descarga@bora.com.br','chamado.comprovantes@bora.com.br', 'chamado.fiscal@bora.com.br', 'chamado.mkt@bora.com.br']
-    #mails = ['teste@bora.com.br']
+    host = 'outlook.office365.com'
+    #mails = ['chamado.praxio@bora.com.br','chamado.descarga@bora.com.br','chamado.comprovantes@bora.com.br', 'chamado.fiscal@bora.com.br', 'chamado.mkt@bora.com.br']
+    mails = ['chamado.praxio@bora.com.br']
     for e_user in mails:
-        e_pass = 'B0r*610580' #'Bor@456987'
+        e_pass = 'B0r610580' #'Bor@456987'
         pattern1 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
         pattern2 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp).\w+.\w+')
 
+        # POP descontinuado - Mudança para OAUTH2(imaplib) necessária
         #logando no email
-        pp = poplib.POP3(host)
+        """
+        pp = poplib.POP3_SSL(host)
         pp.set_debuglevel(1)
+        print(e_user, e_pass)
         pp.user(e_user)
-        pp.pass_(e_pass)
+        pp.pass_(e_pass)      
+        print('Logado com sucesso')
+
+        """
+        pp = imaplib.IMAP4_SSL(host)
+        pp.login(e_user, e_pass)
 
         num_messages = len(pp.list()[1]) #conta quantos emails existem na caixa
         for i in range(num_messages):
