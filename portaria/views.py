@@ -2760,9 +2760,9 @@ def chamadoreadmail(request):
     tkt = None
     service = ''
     hoje = datetime.date.today()
-    host = 'outlook.office365.com'
+    host = 'pop.kinghost.net'
     #mails = ['chamado.praxio@bora.com.br','chamado.descarga@bora.com.br','chamado.comprovantes@bora.com.br', 'chamado.fiscal@bora.com.br', 'chamado.mkt@bora.com.br']
-    mails = ['chamado.praxio@bora.com.br']
+    mails = ['chamados@bora.tec.br']
     for e_user in mails:
         e_pass = 'B0r610580' #'Bor@456987'
         pattern1 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
@@ -2770,17 +2770,16 @@ def chamadoreadmail(request):
 
         # POP descontinuado - Mudança para OAUTH2(imaplib) necessária
         #logando no email
-        """
-        pp = poplib.POP3_SSL(host)
+        
+        pp = poplib.POP3(host)
         pp.set_debuglevel(1)
         print(e_user, e_pass)
         pp.user(e_user)
         pp.pass_(e_pass)      
         print('Logado com sucesso')
 
-        """
-        pp = imaplib.IMAP4_SSL(host)
-        pp.login(e_user, e_pass)
+        #pp = imaplib.IMAP4_SSL(host)
+        #pp.login(e_user, e_pass)
 
         num_messages = len(pp.list()[1]) #conta quantos emails existem na caixa
         for i in range(num_messages):
