@@ -56,3 +56,7 @@ def timedelta7(value):
     if a > b:
         return True
 
+@register.filter
+def invert(value):
+    return value * -1
+

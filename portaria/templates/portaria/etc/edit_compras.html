@@ -79,17 +79,16 @@
                                     <p>O boleto vai vencer em <b>{{ vencimento }}</b> dias</P>
                                 </div>
                             </li>
-                        {% elif vencimento == 0 %}
-                        <li>
-                            <div>
-                                <p>O boleto vence <b>hoje</b></P>
-                            </div>
-                        </li>
-                    
+                        {% elif vencimento < 0 %}
+                            <li>
+                                <div>
+                                    <p>O boleto venceu faz <b>{{ vencimento|invert }}</b>  dias</p>
+                                </div>
+                            </li>
                         {% else %}
                             <li>
                                 <div>
-                                    <p>O boleto venceu faz <b>{{ vencimento|slice:"1:"}}</b>  dias</p>
+                                    <p>O boleto vence <b>hoje</b></P>
                                 </div>
                             </li>
                         {% endif %}

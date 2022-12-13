@@ -3928,10 +3928,9 @@ def edit_compras(request, id):
             messages.info(request, f'Solicitação {obj.nr_solic} alterada com sucesso')
             return redirect('portaria:painel_compras')
     try:
-        vencimento = str((obj.dt_vencimento - datetime.date.today()).days)
+        vencimento = (obj.dt_vencimento - datetime.date.today()).days
     except:
         vencimento = None
-        print('vencimento não existe')
 
     return render(request, 'portaria/etc/edit_compras.html', {'obj':obj, 'gachoices':gachoices, 'stschoices':stschoices,
                                                               'dpchoices':dpchoices, 'rpchoices':rpchoices,
