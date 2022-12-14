@@ -3202,6 +3202,7 @@ def mdfeporfilial(request):
                 sm.login(get_secret('KH_MDFUSER'), get_secret('KH_MDFPASS'))
                 sm.sendmail(get_secret('KH_MDFUSER'), send, msg.as_string())
             except Exception as e:
+                return HttpResponse(f'<h3> Falha no envio do email {k} para {send}, conteúdo: {msg.as_string()}</h3>')
                 raise e
     return HttpResponse('<h3>Job finalizado!</h3>')
 
