@@ -3469,11 +3469,11 @@ async def get_justificativas(request):
                            E2.COD_UF                         
                     """)
     res = dictfetchall(cur)
-    print('query feita')
     print(len(res))
     try:
         await insert_to_justificativa(res)
     except Exception as e:
+        print('get fun error')
         print(f'Error:{e}, error_type:{type(e).__name__}')
     cur.close()
     return HttpResponse('job done')
@@ -3486,14 +3486,30 @@ def insert_to_justificativa(data):
         except:
             continue'''
         try:
-            JustificativaEntrega.objects.get(empresa=obj['empresa'], filial=obj['filial'], garagem=obj['garagem'],tipo_doc=obj['tp_doc'],conhecimento=obj['conhecimento'])
+            JustificativaEntrega.objects.get(
+                empresa=obj['empresa'], 
+                filial=obj['filial'], 
+                garagem=obj['garagem'],
+                tipo_doc=obj['tipo_doc'],
+                conhecimento=obj['conhecimento']
+                )
         except ObjectDoesNotExist:
             nobj = JustificativaEntrega.objects.create(
-                empresa=obj['empresa'], filial=obj['filial'], garagem=obj['garagem'], id_garagem=obj['id_garagem'],
-                conhecimento=obj['conhecimento'], data_emissao=obj['data_emissao'], destinatario=obj['destinatario'],
-                remetente=obj['remetente'], peso=obj['peso'], tipo_doc=obj['tp_doc'], data_entrega=obj['data_entrega'],
-                lead_time=datetime.datetime.strptime(obj['dt_prev_entrega'], '%d-%m-%Y'),
-                em_aberto=obj['em_aberto_apos_lead_time'], local_entreg=obj['destino'], nota_fiscal=obj['nf']
+                empresa=obj['empresa'], 
+                filial=obj['filial'], 
+                garagem=obj['garagem'], 
+                id_garagem=obj['id_garagem'],
+                conhecimento=obj['conhecimento'], 
+                data_emissao=obj['data_emissao'], 
+                destinatario=obj['destinatario'],
+                remetente=obj['remetente'], 
+                peso=obj['peso'], 
+                tipo_doc=obj['tipo_doc'], 
+                data_entrega=obj['data_entrega'],
+                lead_time=datetime.datetime.strptime(obj['lead_time'], '%d-%m-%Y').date(),
+                em_aberto=obj['em_aberto'], 
+                local_entreg=obj['local_entreg'], 
+                nota_fiscal=obj['nota_fiscal']
             )
         except Exception as e:
             print('Error:%s, error_type:%s' %(e, type(e)))
