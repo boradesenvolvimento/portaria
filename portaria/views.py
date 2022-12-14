@@ -3056,39 +3056,6 @@ def mdfeporfilial(request):
                     SELECT DISTINCT
                            E5.CODIGO MDFE,
                            E5.DATA_SAIDA SAIDA_VEIC,
-                           CASE
-                               WHEN E5.DATA_CHEGADA <> '30/DEC/1899' THEN (TO_DATE(E5.DATA_CHEGADA,'DD-MM-YY HH24:MI:SS'))
-                               WHEN E5.DATA_CHEGADA IS NULL AND E5.DT_PREVISAO = '30-DEC-1899' THEN NULL
-                               WHEN E5.DATA_CHEGADA IS NULL THEN (TO_DATE(E5.DT_PREVISAO,'DD-MM-YY HH24:MI:SS'))
-                           END CHEGADA_VEIC,
-                           CASE
-                               WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '1' THEN 'SPO'
-                               WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '2'  THEN 'REC'
-                               WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '3'  THEN 'SSA'
-                               WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '4'  THEN 'FOR'
-                               WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '5'  THEN 'MCZ'
-                               WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '6'  THEN 'NAT'
-                               WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '7'  THEN 'JPA'
-                               WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '8'  THEN 'AJU'
-                               WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '9'  THEN 'VDC'
-                               WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '10' THEN 'MG'
-                               WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '50' THEN 'SPO'
-                               WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '20' THEN 'SPO'
-                               WHEN E5.ID_EMPRESA = '1' AND E5.ID_GARAGEM = '21' THEN 'SPO'
-                               WHEN E5.ID_EMPRESA = '2' AND E5.ID_GARAGEM = '20' THEN 'CTG'
-                               WHEN E5.ID_EMPRESA = '2' AND E5.ID_GARAGEM = '21' THEN 'TCO'
-                               WHEN E5.ID_EMPRESA = '2' AND E5.ID_GARAGEM = '22' THEN 'UDI'
-                               WHEN E5.ID_EMPRESA = '2' AND E5.ID_GARAGEM = '23' THEN 'TMA'
-                               WHEN E5.ID_EMPRESA = '2' AND E5.ID_GARAGEM = '24' THEN 'VIX'  
-                               WHEN E5.ID_EMPRESA = '2' AND E5.ID_GARAGEM = '50' THEN 'VIX'
-                               WHEN E5.ID_EMPRESA = '3' AND E5.ID_GARAGEM = '30' THEN 'BMA'
-                               WHEN E5.ID_EMPRESA = '3' AND E5.ID_GARAGEM = '31' THEN 'BPE'
-                               WHEN E5.ID_EMPRESA = '3' AND E5.ID_GARAGEM = '32' THEN 'BEL'    
-                               WHEN E5.ID_EMPRESA = '3' AND E5.ID_GARAGEM = '33' THEN 'BPB'
-                               WHEN E5.ID_EMPRESA = '3' AND E5.ID_GARAGEM = '34' THEN 'SLZ'
-                               WHEN E5.ID_EMPRESA = '3' AND E5.ID_GARAGEM = '35' THEN 'BAL'
-                               WHEN E5.ID_EMPRESA = '3' AND E5.ID_GARAGEM = '36' THEN 'THE'        
-                           END FILIAL,
                            MO.NOME MOTORISTA,
                            VE.PREFIXOVEIC PLACA,
                            F1.CONHECIMENTO CTE,
@@ -3146,7 +3113,7 @@ def mdfeporfilial(request):
                            
                            E5.GARAGEM IN (1,10,23,30)                       AND 
                            E5.ENTREGA_TRANSF = 'T'                          AND
-                           E5.TIPO_DOCTO = '58'                             AND
+                           E5.TIPO_DOCTO = 58                               AND
                            
                            E5.ID_GARAGEM = {k}                              AND
                            E5.ID_GARAGEM <> 1                               AND
@@ -3158,8 +3125,9 @@ def mdfeporfilial(request):
         cur.close()
         pdr = pd.DataFrame(res)
         if not pdr.empty:
-            send = ['renan.amarantes@bora.com.br', 'alan@bora.com.br', 'gabriel.moura@bora.com.br',
-                    'thiago@bora.com.br'] + result
+            #send = ['gabriel.torres@bora.com.br', 'alan@bora.com.br', 'gabriel.moura@bora.com.br',
+            #        'thiago@bora.com.br'] + result
+            send = ['gabriel.torres@bora.com.br', 'alan@bora.com.br'] # test case
             #Separa congelado inicio
             if k in ('6','7'):
                 resultrec = mailchoices.get('REC', '')
@@ -3170,8 +3138,9 @@ def mdfeporfilial(request):
                 else:
                     pdr = pdr.drop(row.index)
                     if not row.empty:
-                        send2 = ['renan.amarantes@bora.com.br', 'alan@bora.com.br', 'gabriel.moura@bora.com.br',
-                                 'thiago@bora.com.br'] + resultrec
+                        #send2 = ['gabriel.torres@bora.com.br', 'alan@bora.com.br', 'gabriel.moura@bora.com.br',
+                        #         'thiago@bora.com.br'] + resultrec
+                        send2 = ['gabriel.torres@bora.com.br', 'alan@bora.com.br'] # test case
                         msg = MIMEMultipart('related')
                         msg['From'] = get_secret('EUSER_MN')
                         msg['To'] = '; '.join(send2)
@@ -3187,9 +3156,8 @@ def mdfeporfilial(request):
 
                         buffer = io.BytesIO()
                         pd.ExcelWriter(buffer)
+                        print(row)
                         row['saida_veic'] = pd.to_datetime(row['saida_veic'], format='%d/%m/%Y').dt.strftime('%d/%m/%Y')
-                        row['chegada_veic'] = pd.to_datetime(row['chegada_veic'], format='%d/%m/%Y').dt.strftime(
-                            '%d/%m/%Y')
                         row['leadtime'] = pd.to_datetime(row['leatime'], format='%d/%m/%Y').dt.strftime('%d/%m/%Y')
                         row.to_excel(buffer, engine='xlsxwriter', index=False)
                         part = MIMEApplication(buffer.getvalue(), name=v)
@@ -3199,8 +3167,9 @@ def mdfeporfilial(request):
                         try:
                             sm = smtplib.SMTP('smtp.bora.com.br', '587')
                             sm.set_debuglevel(1)
-                            sm.login(get_secret('EUSER_MN'), get_secret('EPASS_MN'))
-                            sm.sendmail(get_secret('EUSER_MN'), send2, msg.as_string())
+                            sm.login(get_secret('KH_MDFUSER'), get_secret('KH_MDFPASS'))
+                            #sm.sendmail(get_secret('EUSER_MN'), send2, msg.as_string())
+                            sm.sendmail(get_secret('KH_MDFUSER'), send2, msg.as_string())
                         except Exception as e:
                             raise e
                         # Separa congelado fim
@@ -3221,7 +3190,6 @@ def mdfeporfilial(request):
             buffer = io.BytesIO()
             pd.ExcelWriter(buffer)
             pdr['saida_veic'] = pd.to_datetime(pdr['saida_veic'], format='%d/%m/%Y').dt.strftime('%d/%m/%Y')
-            pdr['chegada_veic'] = pd.to_datetime(pdr['chegada_veic'], format='%d/%m/%Y').dt.strftime('%d/%m/%Y')
             pdr['leadtime'] = pd.to_datetime(pdr['leadtime'], format='%d/%m/%Y').dt.strftime('%d/%m/%Y')
             pdr.to_excel(buffer, engine='xlsxwriter', index=False)
             part = MIMEApplication(buffer.getvalue(), name=v)
@@ -3229,10 +3197,10 @@ def mdfeporfilial(request):
 
             msg.attach(part)
             try:
-                sm = smtplib.SMTP('smtp.bora.com.br', '587')
+                sm = smtplib.SMTP('smtp.bora.tec.br', '587')
                 sm.set_debuglevel(1)
-                sm.login(get_secret('EUSER_MN'), get_secret('EPASS_MN'))
-                sm.sendmail(get_secret('EUSER_MN'), send, msg.as_string())
+                sm.login(get_secret('KH_MDFUSER'), get_secret('KH_MDFPASS'))
+                sm.sendmail(get_secret('KH_MDFUSER'), send, msg.as_string())
             except Exception as e:
                 raise e
     return HttpResponse('<h3>Job finalizado!</h3>')
@@ -3511,6 +3479,7 @@ def insert_to_justificativa(data):
                 local_entreg=obj['local_entreg'], 
                 nota_fiscal=obj['nota_fiscal']
             )
+            print(' justificativa created')
         except Exception as e:
             print('Error:%s, error_type:%s' %(e, type(e)))
     return print('finalizou')
