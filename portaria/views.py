@@ -3127,7 +3127,7 @@ def mdfeporfilial(request):
         if not pdr.empty:
             #send = ['gabriel.torres@bora.com.br', 'alan@bora.com.br', 'gabriel.moura@bora.com.br',
             #        'thiago@bora.com.br'] + result
-            send = ['gabriel.torres@bora.com.br', 'alan@bora.com.br'] # test case
+            send = ['gabriel.torres@bora.com.br'] # test case
             #Separa congelado inicio
             if k in ('6','7'):
                 resultrec = mailchoices.get('REC', '')
@@ -3140,7 +3140,7 @@ def mdfeporfilial(request):
                     if not row.empty:
                         #send2 = ['gabriel.torres@bora.com.br', 'alan@bora.com.br', 'gabriel.moura@bora.com.br',
                         #         'thiago@bora.com.br'] + resultrec
-                        send2 = ['gabriel.torres@bora.com.br', 'alan@bora.com.br'] # test case
+                        send2 = ['gabriel.torres@bora.com.br'] # test case
                         msg = MIMEMultipart('related')
                         msg['From'] = get_secret('EUSER_MN')
                         msg['To'] = '; '.join(send2)
