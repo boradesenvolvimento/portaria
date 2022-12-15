@@ -151,9 +151,9 @@
             </div>
             {% if request.user|has_group:"DESENVOLVIMENTO" %}
                 <div class="row">
-                    <form action="/chamados/painel/{{form.tkt_ref_id}}/delete" method="post" enctype="multipart/form-data">
+                    <form action="{% url 'portaria:chamadodelete' tktid=form.tkt_ref_id %}" method="post">
                         {% csrf_token %}
-                        <button class="float-end btn btn-danger" onclick="return confirm('Deseja deletar o Ticket {{form.tkt_ref_id}}?');">Vai la meu rei</button>
+                        <button class="float-end btn btn-danger" onclick="return confirm('Deseja deletar o Ticket {{form.tkt_ref_id}}?');">Deletar Ticket</button>
                     </form>
                 </div>
             {% endif %}
