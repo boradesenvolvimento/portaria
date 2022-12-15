@@ -1208,7 +1208,16 @@ def chamadodetail(request, tktid):
     return render(request, 'portaria/chamado/chamadodetail.html', {'form':form,'editor':editor,'stts':stts,'dp':dp,
                                                                    'resp':resp,'fil':fil,'array':array,
                                                                    'catg':catg})
-
+def chamadodelete(request, tktid):
+    email = get_object_or_404(EmailChamado, tkt_ref=tktid)
+    if request.method == 'POST':
+        ticket = TicketChamado.objects.filter(pk=email.tkt_ref_id)
+        ticket.delete()
+        email.delete()
+        
+        messages.success(request, f'Ticket {tktid} deletado com sucesso!') #HttpResponse(f'<h2>Ticket {tktid} deletado com sucesso!</h2>')
+        return redirect('portaria:chamadopainel')
+        
 def chamado_concluido(request):
     form = TicketChamado.objects.filter(status='CONCLUIDO', dt_abertura__year=datetime.datetime.now().year,
                                         dt_abertura__month=datetime.datetime.now().month)

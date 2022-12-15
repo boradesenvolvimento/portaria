@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxLengthValidator, DecimalValidator, MinLengthValidator
 from django.db import models
-from django.db.models import PROTECT, Sum, F
+from django.db.models import PROTECT, Sum, F, CASCADE
 from django.utils import timezone
 from django.utils.crypto import get_random_string
 
@@ -640,7 +640,7 @@ class EmailChamado(models.Model):
     ult_resp = models.TextField(blank=True, null=True)
     ult_resp_dt = models.DateTimeField(blank=True, null=True)
     ult_resp_html = models.TextField(blank=True, null=True)
-    tkt_ref = models.ForeignKey(TicketChamado, on_delete=PROTECT)
+    tkt_ref = models.ForeignKey(TicketChamado, on_delete=CASCADE)
 
 class RomXML(models.Model):
     id = models.BigAutoField(primary_key=True)
