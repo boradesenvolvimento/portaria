@@ -2764,7 +2764,7 @@ def chamadoreadmail(request):
     #mails = ['chamado.praxio@bora.com.br','chamado.descarga@bora.com.br','chamado.comprovantes@bora.com.br', 'chamado.fiscal@bora.com.br', 'chamado.mkt@bora.com.br']
     mails = ['chamados@bora.tec.br']
     for e_user in mails:
-        e_pass = 'B0r610580' #'Bor@456987'
+        e_pass = 'Bor4@123' #'Bor@456987'
         pattern1 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
         pattern2 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp).\w+.\w+')
 
