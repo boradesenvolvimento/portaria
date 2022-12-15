@@ -2750,9 +2750,9 @@ def chamadoupdate(request,tktid,area, myfile):
             passw = 'B0r*610580'
             #passw = 'Bor@456987'
             try:
-                sm = smtplib.SMTP(smtp_h, smtp_p)
+                sm = smtplib.SMTP('smtp.bora.tec.br', '587')
                 sm.set_debuglevel(1)
-                sm.login(user, passw)
+                sm.login('chamados@bora.tec.br', 'Bor4@123')
                 sm.sendmail(user, send.split(','), msg1.as_string())
                 EmailChamado.objects.filter(pk=orig.id).update(ult_resp=aa, ult_resp_html=bb,ult_resp_dt=dateformat.format(timezone.now(),'Y-m-d H:i'))
             except Exception as e:
