@@ -2652,18 +2652,16 @@ def chamadoupdate(request,tktid,area, myfile):
     try:
         if orig.tkt_ref.servico == 'PRAXIO':
             user = 'chamado.praxio@bora.com.br'
-            #user = 'teste@bora.com.br'
         elif orig.tkt_ref.servico == 'DESCARGA':
             user = 'chamado.descarga@bora.com.br'
-            #user = 'teste@bora.com.br'
         elif orig.tkt_ref.servico == 'COMPROVANTE':
             user = 'chamado.comprovante@bora.com.br'
-            #user = 'teste@bora.com.br'
         elif orig.tkt_ref.servico == 'FISCAL':
             user = 'chamado.fiscal@bora.com.br'
-            #user = 'teste@bora.com.br'
-        elif orig.tkt_ref.servico == 'MARKETING':
-            user = 'chamado.mkt@bora.com.br'
+        elif orig.tkt_ref.servico == 'MANUTENÇÃO':
+            user = 'chamado.manutencao@bora.com.br'
+        elif orig.tkt_ref.servico == 'COMPRAS':
+            user = 'chamado.compras@bora.com.br'
         if request.method == 'POST':
             msg1 = MIMEMultipart()
             msg = area
@@ -2895,7 +2893,7 @@ def chamadoreadmail(request):
                 if 'chamado.fiscal@bora.com.br' in get_serv:
                     service = 'FISCAL'
                 if 'chamado.manutencao@bora.com.br' in get_serv:
-                    service = 'MANUTENÇÃO SP'
+                    service = 'MANUTENÇÃO'
                 if 'chamado.almoxarifado@bora.com.br' in get_serv:
                     service = 'ALMOXARIFADOS'
                 if 'chamado.compras@bora.com.br' in get_serv:
