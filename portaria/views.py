@@ -3541,9 +3541,7 @@ def insert_to_ocorrencias(data):
             try:
                 kj = OcorrenciaEntrega.objects.get(**obj)
             except Exception as e:
-                if obj not in array:
-                    array.append(OcorrenciaEntrega(**obj))
-    OcorrenciaEntrega.objects.bulk_create(array)
+                kj = OcorrenciaEntrega.objects.create(**obj)
     print('finalizou')
     
 def pivot_rel_just(date1, date2):
