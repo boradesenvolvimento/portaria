@@ -1154,7 +1154,7 @@ def chamadodetail(request, tktid):
         pass
     if request.method == 'POST':
         ndptm = request.POST.get('ndptm')
-        nstts = request.POST.get('nstts')
+        nstts = 'CONCLUIDO'
         nresp = request.POST.get('nresp')
         nfil = request.POST.get('nfil')
         area = request.POST.get('area')
