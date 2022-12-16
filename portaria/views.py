@@ -2658,7 +2658,7 @@ def chamadoupdate(request,tktid,area, myfile):
             user = 'chamado.comprovante@bora.com.br'
         elif orig.tkt_ref.servico == 'FISCAL':
             user = 'chamado.fiscal@bora.com.br'
-        elif orig.tkt_ref.servico == 'MANUTENÇÃO':
+        elif orig.tkt_ref.servico == 'MANUTENCAO':
             user = 'chamado.manutencao@bora.com.br'
         elif orig.tkt_ref.servico == 'COMPRAS':
             user = 'chamado.compras@bora.com.br'
@@ -2893,7 +2893,7 @@ def chamadoreadmail(request):
                 if 'chamado.fiscal@bora.com.br' in get_serv:
                     service = 'FISCAL'
                 if 'chamado.manutencao@bora.com.br' in get_serv:
-                    service = 'MANUTENÇÃO'
+                    service = 'MANUTENCAO'
                 if 'chamado.almoxarifado@bora.com.br' in get_serv:
                     service = 'ALMOXARIFADOS'
                 if 'chamado.compras@bora.com.br' in get_serv:
