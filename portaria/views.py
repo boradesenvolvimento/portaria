@@ -3496,8 +3496,6 @@ def insert_to_justificativa(data):
     return print('finalizou')
 
 async def get_ocorrencias(request):
-    start_time = time.time()
-    print(f'fetch iniciado em : {start_time}')
     hoje = datetime.date.today().strftime('%d-%b-%Y')
     conn = conndb()
     cur = conn.cursor()
@@ -3522,9 +3520,7 @@ async def get_ocorrencias(request):
     print('query feita')
     print(len(res))
     try:
-        print(f'fech completo em: {time.time() - start_time}')
-        r = insert_to_ocorrencias(res)
-        print(f'Adição completa em: {time.time() - start_time}')
+        r = await insert_to_ocorrencias(res)
     except Exception as e:
         print(f'Error:{e}, error_type:{type(e).__name__}')
         raise e
@@ -3539,6 +3535,7 @@ def insert_to_ocorrencias(data):
         just = JustificativaEntrega.objects.filter(empresa=obj['empresa'], filial=obj['filial'],
                                                    garagem=obj['garagem'],
                                                    conhecimento=obj['conhecimento'])
+        print('ocorrencia adicionada!')
         if just:
             obj['entrega'] = just[0]
             try:
