@@ -1154,7 +1154,7 @@ def chamadodetail(request, tktid):
         pass
     if request.method == 'POST':
         ndptm = request.POST.get('ndptm')
-        nstts = 'CONCLUIDO'
+        nstts = request.POST.get('nstts')
         nresp = request.POST.get('nresp')
         nfil = request.POST.get('nfil')
         area = request.POST.get('area')
@@ -2600,7 +2600,6 @@ def closetkt(request, tktid):
     return redirect('portaria:monitticket')
 
 def createchamado(request, **kwargs):
-    print('função create chamado')
     dict = kwargs
     pattern = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
     msg1 = MIMEMultipart()
@@ -2652,17 +2651,17 @@ def chamadoupdate(request,tktid,area, myfile):
     orig = get_object_or_404(EmailChamado, tkt_ref_id=tktid)
     try:
         if orig.tkt_ref.servico == 'PRAXIO':
-            user = 'chamado.praxio@bora.com.br'
+            user = 'chamado.praxio@bora.tec.br'
         elif orig.tkt_ref.servico == 'DESCARGA':
-            user = 'chamado.descarga@bora.com.br'
+            user = 'chamado.descarga@bora.tec.br'
         elif orig.tkt_ref.servico == 'COMPROVANTE':
-            user = 'chamado.comprovante@bora.com.br'
+            user = 'chamado.comprovantes@bora.tec.br'
         elif orig.tkt_ref.servico == 'FISCAL':
-            user = 'chamado.fiscal@bora.com.br'
+            user = 'chamado.fiscal@bora.tec.br'
         elif orig.tkt_ref.servico == 'MANUTENCAO':
-            user = 'chamado.manutencao@bora.com.br'
-        elif orig.tkt_ref.servico == 'COMPRAS':
-            user = 'chamado.compras@bora.com.br'
+            user = 'chamado.manutencao@bora.tec.br'
+        elif orig.tkt_ref.servico == 'ALMOXARIFADOS':
+            user = 'chamado.almoxarifado@bora.tec.br'
         if request.method == 'POST':
             msg1 = MIMEMultipart()
             msg = area
@@ -2751,7 +2750,8 @@ def chamadoupdate(request,tktid,area, myfile):
             try:
                 sm = smtplib.SMTP('smtp.bora.tec.br', '587')
                 sm.set_debuglevel(1)
-                sm.login('chamados@bora.tec.br', 'Bor4@123')
+                sm.login(user, 'Bor4@123')
+                print('Logado com sucesso')
                 sm.sendmail(user, send.split(','), msg1.as_string())
                 EmailChamado.objects.filter(pk=orig.id).update(ult_resp=aa, ult_resp_html=bb,ult_resp_dt=dateformat.format(timezone.now(),'Y-m-d H:i'))
             except Exception as e:
@@ -2769,7 +2769,9 @@ def chamadoreadmail(request):
     service = ''
     hoje = datetime.date.today()
     host = 'pop.kinghost.net'
-    mails = ['chamados@bora.tec.br']
+    mails = ['chamado.praxio@bora.tec.br', 'chamado.manutencao@bora.tec.br', 
+            'chamado.almoxarifado@bora.tec.br', 'chamado.comprovantes@bora.tec.br', 
+            'chamado.fiscal@bora.tec.br', 'chamado.descarga@bora.tec.br']
     for e_user in mails:
         e_pass = 'Bor4@123' #'Bor@456987'
         pattern1 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
@@ -2874,32 +2876,32 @@ def chamadoreadmail(request):
                 if e_to:
                     e_to = e_to.lower()
                     for q in re.findall(r'<(.*?)>', e_to):
-                        if q not in ['chamado.praxio@bora.com.br','chamado.descarga@bora.com.br', 'chamado.comprovantes@bora.com.br', 
-                                     'chamado.fiscal@bora.com.br','chamado.manutencao@bora.com.br', 'chamado.almoxarifado@bora.com.br']:
+                        if q not in ['chamado.praxio@bora.tec.br','chamado.descarga@bora.tec.br', 'chamado.comprovantes@bora.tec.br', 
+                                     'chamado.fiscal@bora.tec.br','chamado.manutencao@bora.tec.br', 'chamado.almoxarifado@bora.tec.br']:
                             e_cc_a += q + ','
                 e_cc = parsed_email['CC']
                 if e_cc:
                     e_cc = e_cc.lower()
                     for q in re.findall(r'<(.*?)>', e_cc):
-                        if q not in ['chamado.praxio@bora.com.br','chamado.descarga@bora.com.br', 'chamado.comprovantes@bora.com.br', 
-                                     'chamado.fiscal@bora.com.br','chamado.manutencao@bora.com.br', 'chamado.almoxarifado@bora.com.br']:
+                        if q not in ['chamado.praxio@bora.tec.br','chamado.descarga@bora.tec.br', 'chamado.comprovantes@bora.tec.br', 
+                                     'chamado.fiscal@bora.tec.br','chamado.manutencao@bora.tec.br', 'chamado.almoxarifado@bora.tec.br']:
                             e_cc_a += q + ','
                 get_serv = (str(parsed_email['Cc']) +' '+ str(parsed_email['To'])).lower()
-                if 'chamado.praxio@bora.com.br' in get_serv:
+                if 'chamado.praxio@bora.tec.br' in get_serv:
                     service = 'PRAXIO'
-                if 'chamado.descarga@bora.com.br' in get_serv:
+                if 'chamado.descarga@bora.tec.br' in get_serv:
                     service = 'DESCARGA'
-                if 'chamado.comprovantes@bora.com.br' in get_serv:
+                if 'chamado.comprovantes@bora.tec.br' in get_serv:
                     service = 'COMPROVANTE'
-                if 'chamado.fiscal@bora.com.br' in get_serv:
+                if 'chamado.fiscal@bora.tec.br' in get_serv:
                     service = 'FISCAL'
-                if 'chamado.manutencao@bora.com.br' in get_serv:
+                if 'chamado.manutencao@bora.tec.br' in get_serv:
                     service = 'MANUTENCAO'
-                if 'chamado.almoxarifado@bora.com.br' in get_serv:
+                if 'chamado.almoxarifado@bora.tec.br' in get_serv:
                     service = 'ALMOXARIFADOS'
-                if 'chamado.compras@bora.com.br' in get_serv:
+                if 'chamado.compras@bora.tec.br' in get_serv:
                     service = 'COMPRAS'
-                e_id = parsed_email['Message-ID']
+                e_id = parsed_email['Message-ID'].strip()
                 e_ref = parsed_email['References']
                 if e_ref is None: e_ref = e_id
                 else: e_ref = e_ref
@@ -2948,7 +2950,8 @@ def chamadoreadmail(request):
                             w_body = w_body.replace(q, new_cid)
                             e_body = e_body.replace(q, new_cid)
                 try:
-                    form = EmailChamado.objects.filter(email_id__in=inreply)
+                    form = EmailChamado.objects.filter(email_id=inreply[0])
+                    
                 except Exception as e:
                     print(e)
                 else:
