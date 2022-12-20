@@ -2654,6 +2654,8 @@ def chamadoupdate(request,tktid,area, myfile):
             user = 'chamado.praxio@bora.tec.br'
         elif orig.tkt_ref.servico == 'DESCARGA':
             user = 'chamado.descarga@bora.tec.br'
+        elif orig.tkt_ref.servico == 'JURIDICO':
+            user = 'chamado.juridico@bora.tec.br'
         elif orig.tkt_ref.servico == 'COMPROVANTE':
             user = 'chamado.comprovantes@bora.tec.br'
         elif orig.tkt_ref.servico == 'FISCAL':
@@ -2769,7 +2771,7 @@ def chamadoreadmail(request):
     service = ''
     hoje = datetime.date.today()
     host = 'pop.kinghost.net'
-    mails = ['chamado.praxio@bora.tec.br', 'chamado.manutencao@bora.tec.br', 
+    mails = ['chamado.praxio@bora.tec.br', 'chamado.juridico@bora.tec.br','chamado.manutencao@bora.tec.br', 
             'chamado.almoxarifado@bora.tec.br', 'chamado.comprovantes@bora.tec.br', 
             'chamado.fiscal@bora.tec.br', 'chamado.descarga@bora.tec.br']
     for e_user in mails:
@@ -2876,14 +2878,14 @@ def chamadoreadmail(request):
                 if e_to:
                     e_to = e_to.lower()
                     for q in re.findall(r'<(.*?)>', e_to):
-                        if q not in ['chamado.praxio@bora.tec.br','chamado.descarga@bora.tec.br', 'chamado.comprovantes@bora.tec.br', 
+                        if q not in ['chamado.praxio@bora.tec.br', 'chamado.juridico@bora.tec.br','chamado.descarga@bora.tec.br', 'chamado.comprovantes@bora.tec.br', 
                                      'chamado.fiscal@bora.tec.br','chamado.manutencao@bora.tec.br', 'chamado.almoxarifado@bora.tec.br']:
                             e_cc_a += q + ','
                 e_cc = parsed_email['CC']
                 if e_cc:
                     e_cc = e_cc.lower()
                     for q in re.findall(r'<(.*?)>', e_cc):
-                        if q not in ['chamado.praxio@bora.tec.br','chamado.descarga@bora.tec.br', 'chamado.comprovantes@bora.tec.br', 
+                        if q not in ['chamado.praxio@bora.tec.br', 'chamado.juridico@bora.tec.br','chamado.descarga@bora.tec.br', 'chamado.comprovantes@bora.tec.br', 
                                      'chamado.fiscal@bora.tec.br','chamado.manutencao@bora.tec.br', 'chamado.almoxarifado@bora.tec.br']:
                             e_cc_a += q + ','
                 get_serv = (str(parsed_email['Cc']) +' '+ str(parsed_email['To'])).lower()
@@ -2895,6 +2897,8 @@ def chamadoreadmail(request):
                     service = 'COMPROVANTE'
                 if 'chamado.fiscal@bora.tec.br' in get_serv:
                     service = 'FISCAL'
+                if 'chamado.juridico@bora.tec.br' in get_serv:
+                    service = 'JURIDICO'
                 if 'chamado.manutencao@bora.tec.br' in get_serv:
                     service = 'MANUTENCAO'
                 if 'chamado.almoxarifado@bora.tec.br' in get_serv:
