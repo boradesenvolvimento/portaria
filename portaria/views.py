@@ -3866,6 +3866,7 @@ def compras_lancar_pedido(request):
                 res = dictfetchall(cur)
                 cur.close()
                 if res:
+                    print(res)
                     for q in res:
                         try:
                             obj = SolicitacoesCompras.objects.get(filial=keyga[q['filial']],nr_solic=q['nr_solicitacao'])
@@ -3881,7 +3882,7 @@ def compras_lancar_pedido(request):
                         else:
                             prod = ProdutosSolicitacoes.objects.create(produto=q['produto'],
                                                                       qnt_itens=int(q['qtd_itens']),
-                                                                      solic_ref=obj.id)
+                                                                      solic_ref=obj)
                             obj.anexo = anexo
                             obj.ultima_att = request.user
                             obj.save()

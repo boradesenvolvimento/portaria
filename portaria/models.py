@@ -53,6 +53,7 @@ TIPO_GARAGEM = (
     ('UDI','UDI'),
     ('TMA','TMA'),
     ('VIX','VIX'),
+    ('GVR','GVR')
 )
 TIPO_DOCTO_CHOICES = (
     ('8', 'NFS'),
