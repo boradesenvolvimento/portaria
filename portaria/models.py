@@ -82,7 +82,8 @@ GARAGEM_CHOICES = [
         ('34', 'SLZ'),
         ('35', 'BAL'),
         ('36', 'THE'),
-        ('40', 'FMA')
+        ('40', 'FMA'),
+        ('999', 'MOV') # em movimento
     ]
 # Create your models here.
 
@@ -127,10 +128,26 @@ class PaleteControl(models.Model):
     def __str__(self):
         return str(self.id)
 
+class SolicMovPalete(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    solic_id = models.CharField(max_length=25)
+    palete = models.ForeignKey(PaleteControl, on_delete=models.SET_NULL, null=True)
+    data_solic = models.DateTimeField(default=timezone.now)
+    origem = models.CharField(max_length=3, choices=TIPO_GARAGEM)
+    destino = models.CharField(max_length=3, choices=TIPO_GARAGEM)
+    placa_veic = models.CharField(max_length=7)
+    autor = models.ForeignKey(User, on_delete=PROTECT)
+
+    def __str__(self):
+        return str(self.solic_id)
+
+
 class MovPalete(models.Model):
     id = models.BigAutoField(primary_key=True)
+    solic_id = models.CharField(max_length=25)
     palete = models.ForeignKey(PaleteControl, on_delete=models.SET_NULL, null=True)
-    data_ult_mov = models.DateField(default=timezone.now)
+    data_solic = models.DateTimeField()
+    data_receb = models.DateTimeField()
     origem = models.CharField(max_length=3, choices=TIPO_GARAGEM)
     destino = models.CharField(max_length=3, choices=TIPO_GARAGEM)
     placa_veic = models.CharField(max_length=7)

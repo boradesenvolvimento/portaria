@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load groupscheck %}
+{% if request.user|has_group:"paletes" %}
+    <div class="container mt-5">
+        {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+            {% endfor %}
+    <div class="row linha-baixo mb-3">
+            <h3 class="title-cad">Confirmar Recebimento de Pallets</h3>
+
+        </div>
+
+    <div class="row">
+        <div class="container">
+        <form style="width: 100%;" class="form-box d-flex justify-content-center" action="" method="get">
+            {% csrf_token %}
+            <div style="width: 50%;">
+                <div class="form-group">
+                    <label for="solic_id">ID da solicitação</label>
+                    <input type="text" class="form-control" name="solic_id" id="solic_id" placeholder="ID">
+                </div>
+                <button type="submit" class="btn btn-success" style="float: right;">Buscar Transferência</button>
+            </div>
+        </form>
+        <div class="solic">
+            {% if solic %}
+                <form action="{% url 'portaria:recpaletes' %}" style="margin-top: 50px;" method="post">
+                    {% csrf_token %}
+                    <div class="form-box d-flex justify-content-center">
+                        <table class="table"  style="width: 80%;">
+                            <thead>
+                                <tr>
+                                    <th style="width: 10%;">#</th>
+                                    <th style="width: 15%;">Transferido</th>
+                                    <th style="width: 15%;">Recebido</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th scope="row">ID da solicitação</th>
+    
+                                    <td> 
+                                        <input style="width: 80%" type="text" class="form-control" value="{{ solic }}" disabled> 
+                                    </td>
+                                    <td> 
+                                        <input style="width: 80%" type="text" class="form-control" name="solic" id="solic" value="{{ solic }}" readonly> 
+                                    </td>
+        
+                                </tr>
+                                <tr>
+                                    <th scope="row">Data solicitação</th>
+                                    <td> 
+                                        <input style="width: 80%" type="text" class="form-control" value="{{ solic.data_solic }}" disabled> 
+                                    </td>
+                                    <td> 
+                                        <input style="width: 80%" type="datetime" class="form-control" name="data_solic" id="data_solic" value="{% now 'd/m/Y G:i'%}" readonly> 
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Quantidade</th>
+                                    <td> 
+                                        <input style="width: 80%" type="text" class="form-control" value="{{ qty }}" disabled> 
+                                    </td>
+                                    <td> 
+                                        <input style="width: 80%" type="number" class="form-control" name="qty" id="qty" value="{{ qty }}"> 
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Origem</th>
+                                    <td> 
+                                        <input style="width: 80%" type="text" class="form-control" value="{{ solic.origem }}" disabled> 
+                                    </td>
+                                    <td> 
+                                        <input style="width: 80%" type="text" class="form-control" name="origem" id="origem" value="{{ solic.origem }}" readonly> 
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Destino</th>
+                                    <td> 
+                                        <input style="width: 80%" type="text" class="form-control" value="{{ solic.destino }}" disabled> 
+                                    </td>
+                                    <td> 
+                                        <input style="width: 80%" type="text" class="form-control" name="destino" id="destino" value="{{ solic.destino }}" readonly> 
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Veículo</th>
+                                    <td> 
+                                        <input style="width: 80%" type="text" class="form-control" value="{{ solic.placa_veic }}" disabled> 
+                                    </td>
+                                    <td> 
+                                        <input style="width: 80%" type="text" class="form-control" name="placa_veic" id="placa_veic" value="{{ solic.placa_veic }}" readonly> 
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Autor</th>
+                                    <td> 
+                                        <input style="width: 80%" type="text" class="form-control" value="{{ solic.autor }}" disabled> 
+                                    </td>
+                                    <td> 
+                                        <input style="width: 80%" type="text" class="form-control" name="autor" id="autor" value="{{ solic.autor }}" readonly> 
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div style="width: 90%;">
+                        <button type="submit" class="btn btn-success" style="float: right;">Confirmar Recebimento</button>
+                    </div>
+                    
+                    
+
+                </form>
+               
+            {% endif %}
+            <style>
+                .transfer {
+                    display: block;
+                    width: 100%;
+                    padding: 0.375rem 0.75rem;
+                    font-size: 1rem;
+                    font-weight: 400;
+                    line-height: 1.5;
+                    color: #212529;
+                    background-color: #fff;
+                    background-clip: padding-box;
+                    border: 1px solid #ced4da;
+                    -webkit-appearance: none;
+                    -moz-appearance: none;
+                    appearance: none;
+                    border-radius: 0.25rem;
+                }
+            </style>
+        </div>
+        </div>
+    </div>
+</div>
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+
+{% endblock %}

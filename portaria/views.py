@@ -181,10 +181,12 @@ def cadastro(request):
 def paleteview(request):
     keyga = {k:v for k,v in GARAGEM_CHOICES}
     tp_fil = GARAGEM_CHOICES
+    tp_fil.pop()
+    print(tp_fil)
     tp_emp = Cliente.objects.values_list('razao_social', flat=True)
     form = PaleteControl.objects.values('loc_atual').\
         annotate(pbr=Count('id', filter=Q(tp_palete='PBR')),chep=Count('id', filter=Q(tp_palete='CHEP'))).\
-        annotate(total=ExpressionWrapper(Count('id'), output_field=IntegerField()))
+        annotate(total=ExpressionWrapper(Count('id'), output_field=IntegerField())).exclude(Q(loc_atual='MOV'))
     ttcount = form.aggregate(total_amount=Sum('total'))
     fil = request.GET.get('filial')
     if fil:
@@ -1808,7 +1810,7 @@ def romxmltoexcel(*romaneio, tp_dld):
 
 #funcoes variadas
 @login_required
-def transfpalete(request):
+def solictransfpalete(request):
     form = TPaletesForm()
     keyga = {k:v for k,v in GARAGEM_CHOICES}
     if request.method == 'POST':
@@ -1818,11 +1820,15 @@ def transfpalete(request):
         plc = request.POST.get('placa_veic')
         tp_p = request.POST.get('tp_palete')
         if qnt <= PaleteControl.objects.filter(loc_atual=keyga[ori],tp_palete=tp_p).count():
+            currentTime = timezone.now()
+            time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            solic_id = str(time).replace(':', '').replace(' ', '').replace('-', '') + plc[5:]
+            print(solic_id) 
             for q in range(0,qnt):
                 x = PaleteControl.objects.filter(loc_atual=keyga[ori], tp_palete=tp_p).first()
-                MovPalete.objects.create(palete=x,data_ult_mov=timezone.now(),origem=keyga[ori],destino=keyga[des],
+                solic = SolicMovPalete.objects.create(solic_id=solic_id, palete=x,data_solic=currentTime,origem=keyga[ori],destino=keyga[des],
                                          placa_veic=plc,autor=request.user)
-                PaleteControl.objects.filter(pk=x.id).update(loc_atual=keyga[des])
+                PaleteControl.objects.filter(pk=x.id).update(loc_atual=keyga['999'])
             messages.success(request, f'{qnt} palete transferido de {keyga[ori]} para {keyga[des]}')
             return render(request,'portaria/palete/transfpaletes.html', {'form':form})
         else:
@@ -1830,7 +1836,105 @@ def transfpalete(request):
             return render(request,'portaria/palete/transfpaletes.html', {'form':form})
     return render(request,'portaria/palete/transfpaletes.html', {'form':form})
 
+def transfdetalhe(request):
+    return HttpResponse('<H2> ainda não está completo </h2>')
+def paineltransf(request):
+    placas = SolicMovPalete.objects.filter(id=1354).values('autor__username')
+    print(placas)
+    form = (SolicMovPalete.objects.order_by('data_solic')\
+        .values('placa_veic', 'solic_id', 'origem', 'destino', 'data_solic', 'autor__username')\
+        .annotate(quantity=Count('solic_id'))
+    )
+    return render(request, 'portaria/palete/paineltransf.html', {'form': form})
 
+@login_required
+def transfpalete(request):
+    keyga = {k:v for k,v in GARAGEM_CHOICES}
+    if request.method == 'GET':
+        solic_id = request.GET.get('solic_id')
+        if solic_id:
+            quantity = SolicMovPalete.objects.filter(solic_id=solic_id).values('solic_id').annotate(Count("solic_id"))
+            for q in quantity:
+                qty = q['solic_id__count']
+            form = SolicMovPalete.objects.filter(solic_id=solic_id).first()
+            print(form)
+            return render(request,'portaria/palete/recpaletes.html', {"solic": form, "qty": qty})
+
+    if request.method == 'POST':
+        solic_id = request.POST.get('solic')
+        dt_solic = request.POST.get('data_solic')
+        qnt = int(request.POST.get('qty'))
+        ori = request.POST.get('origem')
+        des = request.POST.get('destino')
+        plc = request.POST.get('placa_veic')
+        autor = request.POST.get('autor')
+        movPalete = SolicMovPalete.objects.filter(solic_id=solic_id)
+
+        print(f'Quantidade recebida: {qnt}\nQuantidade Transferida: {movPalete.count()}')
+        if movPalete.count() == 0:
+            messages.error(request, f'Não existem mais pallets disponíveis nessa transferência')
+            return redirect('portaria:painelmov')
+        if qnt <= movPalete.count() or movPalete.count() == qnt:
+            dt_receb = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            print(f'sizes movepalete: {movPalete.count()} qnt: {qnt}' )
+            toDelete = []
+            for q in range(0, qnt):
+                dt_parse = datetime.datetime.strptime(dt_solic, "%d/%m/%Y %I:%M")
+                print(f'Informações do palet\niteração: {q}')
+                print(f'locatual: {movPalete[q]}\n ')
+
+                x = PaleteControl.objects.get(id=movPalete[q].palete.id)
+                if x.loc_atual != des:
+                    #print(x.loc_atual)
+                    #print(test.loc_atual)
+                    #x = PaleteControl.objects.filter(loc_atual=keyga['999'], tp_palete=movPalete[q].palete.id).first()
+                    solic = MovPalete.objects.create(
+                        solic_id = solic_id,
+                        palete = x,
+                        data_solic = datetime.datetime.strftime(dt_parse, '%Y-%m-%d %I:%M'),
+                        data_receb = dt_receb,
+                        origem = ori,
+                        destino = des,
+                        placa_veic = plc,
+                        autor = request.user
+                    )
+                    
+                    PaleteControl.objects.filter(pk=x.id).update(loc_atual=des)
+                    toDelete.append(SolicMovPalete.objects.get(id=movPalete[q].id))
+            for i in toDelete:
+                i.delete()
+            return render(request,'portaria/palete/recpaletes.html')
+        """
+        for q in range(0,qnt):
+                x = PaleteControl.objects.filter(loc_atual=keyga[ori], tp_palete=tp_p).first()
+                solic = SolicMovPalete.objects.create(solic_id=solic_id, palete=x,data_solic=currentTime,origem=keyga[ori],destino=keyga[des],
+                                         placa_veic=plc,autor=request.user)
+                PaleteControl.objects.filter(pk=x.id).update(loc_atual=keyga['MOV'])
+            messages.success(request, f'{qnt} palete transferido de {keyga[ori]} para {keyga[des]}')
+      
+
+        if qnt <= PaleteControl.objects.filter(loc_atual=keyga[ori],tp_palete=tp_p).count():
+            for q in range(0,qnt):
+                x = PaleteControl.objects.filter(loc_atual=keyga[ori], tp_palete=tp_p).first()
+                MovPalete.objects.create(palete=x,data_ult_mov=timezone.now(),origem=keyga[ori],destino=keyga[des],
+                                         placa_veic=plc,autor=request.user)
+                PaleteControl.objects.filter(pk=x.id).update(loc_atual=keyga[des])
+            messages.success(request, f'{qnt} palete transferido de {keyga[ori]} para {keyga[des]}')
+            return render(request,'portaria/palete/recfpaletes.html')
+        else:
+            messages.error(request,'Quantidade solicitada maior que a disponível')
+            return render(request,'portaria/palete/recpaletes.html')
+        """
+    return render(request,'portaria/palete/recpaletes.html')
+
+def painelmov(request):
+    #placas = SolicMovPalete.objects.filter(id=1354).values('autor__username')
+    #print(placas)
+    form = (MovPalete.objects.order_by('data_solic')\
+        .values('placa_veic', 'solic_id', 'origem', 'destino', 'data_solic', 'data_receb', 'autor__username')\
+        .annotate(quantity=Count('solic_id'))
+    )
+    return render(request, 'portaria/palete/painelmov.html', {'form': form})
 
 @login_required
 def get_nfpj_mail(request):
@@ -3654,6 +3758,7 @@ def compras_lancar_pedido(request):
                                        WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '3' THEN 'UDI'
                                        WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '4' THEN 'TMA'
                                        WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '5' THEN 'VIX'
+                                       WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '6' THEN 'GVR'
                                        WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '1' THEN 'BMA'
                                        WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '2' THEN 'BPE'
                                        WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '3' THEN 'BEL'
@@ -3711,6 +3816,7 @@ def compras_lancar_pedido(request):
                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '7' THEN 'JPA'
                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '8' THEN 'AJU'
                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '9' THEN 'VDC'
+                                       WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '6' THEN 'GVR'
                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '10' THEN 'MG'
                                        WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '1' THEN 'CTG'
                                        WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '2' THEN 'TCO'

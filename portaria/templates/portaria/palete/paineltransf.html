@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+{% load groupscheck %}
+{% if request.user|has_group:"paletes" %}
+    <div class="container mt-5">
+        {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+        {% endfor %}
+        <div class="row linha-baixo mb-4">
+            <h3 class="title-cad">Transferências em andamento</h3>
+        </div>
+
+        <div class="container linha-baixo d-flex justify-content-center" style="width: 100%;">
+            <table class="table tablecli" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th> Qtde. de pallets </th>
+                        <th> Data solicitação </th>
+                        <th> Origem </th>
+                        <th> Destino </th>
+                        <th> Placa do veiculo </th>
+                        <th> autor </th>
+                        <th>Código de barras</th>
+                    </tr>
+                </thead>
+                <tbody>
+                        {% for q in form %}
+                            <tr>
+                                <td style="width: 14%;" > {{ q.quantity }} </td>
+                                <td style="width: 14%;" > {{ q.data_solic }} </td>
+                                <td style="width: 10%;" > {{ q.origem }} </td>
+                                <td style="width: 10%;" > {{ q.destino }} </td>
+                                <td style="width: 10%;" > {{ q.placa_veic }} </td>
+                                <td style="width: 10%;" > {{ q.autor__username }} </td>
+                                <td style="width: 10%;" ><a><img class="svg-buttons" style="margin-left: 0" width="20px" height="20px" src="{% static 'images/info.svg' %}" alt=""></a></td>
+
+                            </tr>
+                        {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <style>
+        .svg-buttons {
+            filter: invert(88%) sepia(94%) saturate(2912%) hue-rotate(126deg) brightness(89%) contrast(89%);
+            cursor: pointer;
+        }
+    </style>
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+
+{% endblock %}

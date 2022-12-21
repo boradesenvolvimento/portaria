@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load groupscheck %}
+{% if request.user|has_group:"paletes" %}
+    <div class="container mt-5">
+        {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+        {% endfor %}
+        <div class="row linha-baixo mb-4">
+            <h3 class="title-cad">Transferências em andamento</h3>
+        </div>
+
+        <div class="container linha-baixo d-flex justify-content-center" style="width: 100%;">
+            <table class="table tablecli" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th> Qtde. de pallets </th>
+                        <th> Data Solicitação </th>
+                        <th> Data Recebimento </th>
+                        <th> Origem </th>
+                        <th> Destino </th>
+                        <th> Placa do veiculo </th>
+                        <th> autor </th>
+                    </tr>
+                </thead>
+                <tbody>
+                        {% for q in form %}
+                            <tr>
+                                <td style="width: 14%;" > {{ q.quantity }} </td>
+                                <td style="width: 14%;" > {{ q.data_solic }} </td>
+                                <td style="width: 14%;" > {{ q.data_receb }} </td>
+                                <td style="width: 10%;" > {{ q.origem }} </td>
+                                <td style="width: 10%;" > {{ q.destino }} </td>
+                                <td style="width: 10%;" > {{ q.placa_veic }} </td>
+                                <td style="width: 10%;" > {{ q.autor__username }} </td>
+                            </tr>
+                        {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+
+{% endblock %}
