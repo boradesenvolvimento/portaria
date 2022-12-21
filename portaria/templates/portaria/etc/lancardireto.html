@@ -2,7 +2,7 @@
 {% block content %}
 {% load static %}
 {% load groupscheck %}
-{% if request.user|has_group:"compras" %}
+{% if request.user|has_group:"lancar_compras" %}
     <div class="container mt-4">
         {% for message in messages %}
             <div class="container-fluid p-0">
@@ -11,29 +11,60 @@
                 </div>
             </div>
         {% endfor %}
-        <form>
+        <form style="width: 50%; margin-left: 25%;" method="post">
+        {% csrf_token %}
             <div class="form-group">
-                <label for="nr_solic">Nº da solicitação</label>
-                <input type="text" class="form-control" id="nr_solic" name="nr_solic" aria-describedby="emailHelp" placeholder="Numero da solicitação">
+                <label for="data">Data</label>
+                <input type="date" class="form-control" id="data" name="data" required>
+            </div>
+            <div style="display: flex; width: 100%; justify-content: space-between;">
+                <div class="form-group" style="display: inline-block; width: 48%;">
+                    <label for="filial">Filial</label>
+                    <select class="form-control" id="filial" name="filial" required>
+                        <option selected disabled value="">--</option>
+                        {% for k,v in filiais %}
+                            <option value="{{ k }}"> {{ v }} </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group" style="display: inline-block; width: 48%;">
+                    <label for="dep">Departamento</label>
+                    <select class="form-control" id="dep" name="dep"  required>
+                        <option selected disabled value="">--</option>
+                        {% for k,v in deps %}
+                            <option value="{{ k }}"> {{ v }} </option>
+                        {% endfor %}
+                    </select>
+                </div>
             </div>
             <div class="form-group">
-                <label for="date">Data</label>
-                <input type="date" class="form-control" id="date">
+                <label for="categoria">Categoria</label>
+                <input type="text" class="form-control" id="categoria" name="categoria" aria-describedby="emailHelp" placeholder="Categoria" required>
             </div>
             <div class="form-group">
-                <label for="exampleFormControlSelect1">Filial</label>
-                <select class="form-control" id="exampleFormControlSelect1">
-                    {% for f in filiais %}
-                        <option value="{{  }}"> {{ f }} </option>
-                    {% endfor %}
-
-                </select>
-              </div>
-            <div class="form-check">
-                <input type="checkbox" class="form-check-input" id="exampleCheck1">
-                <label class="form-check-label" for="exampleCheck1">Check me out</label>
+                <label for="solic">Solicitante</label>
+                <input type="text" class="form-control" id="solic" name="solic" aria-describedby="Solicitante" placeholder="Solicitante" required>
             </div>
-            <button type="submit" class="btn btn-primary">Submit</button>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="text" class="form-control" id="email" name="email" aria-describedby="Solicitante" placeholder="Email" required>
+            </div>
+            <br>
+            <div class="form-group">
+                <label for="anexo" style="font-size:2.4rem;cursor:pointer;"><ion-icon name="attach-outline"></ion-icon></label>
+                <input type="file" class="form-control" id="anexo" name="anexo" required />
+            </div>
+            <hr>
+            <h3> Produto </h3>
+            <div class="form-group">
+                <label for="p_item">Nome</label>
+                <input type="text" class="form-control" id="p_item" name="p_item" aria-describedby="Solicitante" placeholder="Solicitante" required>
+            </div>
+            <div class="form-group">
+                <label for="p_qty">Quantidade</label>
+                <input type="text" class="form-control" id="p_qty" name="p_qty" aria-describedby="Solicitante" placeholder="Solicitante" required>
+            </div>
+            <button style="float: right;" type="submit" class="btn btn-primary">Submit</button>
         </form>
         <!--
 

@@ -3892,8 +3892,44 @@ def compras_lancar_pedido(request):
         return redirect('portaria:compras_index')
 
 def compras_lancar_direto(request):
-    keyga = {v: k for k, v in GARAGEM_CHOICES}
-    return render(request, 'portaria/etc/lancardireto.html', {'filiais': keyga})
+    keyga = GARAGEM_CHOICES
+    gakey = {k: v for k, v in GARAGEM_CHOICES}
+    deps = DEPARTAMENTO_CHOICES
+    if request.method == 'POST':
+        compras = SolicitacoesCompras.objects.all()
+        idsolic = f'm{compras.count()}' #id aleatório de solicitação
+        data = request.POST.get('data')
+        fil = request.POST.get('filial')
+        categoria = request.POST.get('categoria')
+        solicitante = request.POST.get('solic')
+        email_solic = request.POST.get('email')
+        departamento = request.POST.get('dep')
+        anexo = request.FILES.get('getanexo')
+        p_item = request.POST.get('p_item')
+        p_qty = request.POST.get('p_qty')
+        try:
+            print(idsolic, data, fil, categoria, solicitante, email_solic, departamento, anexo, p_item, p_qty)
+            obj = SolicitacoesCompras.objects.create(
+                nr_solic=idsolic, 
+                data=data, 
+                status='CONCLUIDO',
+                filial=fil,
+                categoria=categoria,
+                solicitante=solicitante, 
+                autor=request.user,
+                departamento=departamento, 
+                email_solic=email_solic, 
+                anexo=anexo
+            )
+            prod = ProdutosSolicitacoes.objects.create(
+                produto=p_item,
+                qnt_itens=int(p_qty),
+                solic_ref=obj
+            )
+
+        except:
+            messages.error(request, f'Erro ao criar a Solicitação, por favor verifique os dados')
+    return render(request, 'portaria/etc/lancardireto.html', {'filiais': keyga, 'deps': deps})
 
 def garagem_para_filial_praxio(garagem):
     if garagem == 'SPO':

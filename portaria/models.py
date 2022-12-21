@@ -86,6 +86,23 @@ GARAGEM_CHOICES = [
         ('40', 'FMA'),
         ('999', 'MOV') # em movimento
     ]
+DEPARTAMENTO_CHOICES = [
+        ('DIRETORIA', 'DIRETORIA'),
+        ('FATURAMENTO', 'FATURAMENTO'),
+        ('FINANCEIRO', 'FINANCEIRO'),
+        ('RH', 'RH'),
+        ('FISCAL', 'FISCAL'),
+        ('MONITORAMENTO', 'MONITORAMENTO'),
+        ('OPERACIONAL', 'OPERACIONAL'),
+        ('FROTA', 'FROTA'),
+        ('EXPEDICAO', 'EXPEDICAO'),
+        ('COMERCIAL', 'COMERCIAL'),
+        ('JURIDICO', 'JURIDICO'),
+        ('DESENVOLVIMENTO', 'DESENVOLVIMENTO'),
+        ('TI', 'TI'),
+        ('FILIAIS', 'FILIAIS'),
+        ('COMPRAS', 'COMPRAS')
+    ]
 # Create your models here.
 
 
