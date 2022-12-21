@@ -3881,7 +3881,7 @@ def compras_lancar_pedido(request):
                         else:
                             prod = ProdutosSolicitacoes.objects.create(produto=q['produto'],
                                                                       qnt_itens=int(q['qtd_itens']),
-                                                                      solic_ref=obj)
+                                                                      solic_ref=obj.id)
                             obj.anexo = anexo
                             obj.ultima_att = request.user
                             obj.save()
