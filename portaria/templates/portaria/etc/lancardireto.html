@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+{% load groupscheck %}
+{% if request.user|has_group:"compras" %}
+    <div class="container mt-4">
+        {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+        {% endfor %}
+        <form>
+            <div class="form-group">
+                <label for="nr_solic">Nº da solicitação</label>
+                <input type="text" class="form-control" id="nr_solic" name="nr_solic" aria-describedby="emailHelp" placeholder="Numero da solicitação">
+            </div>
+            <div class="form-group">
+                <label for="date">Data</label>
+                <input type="date" class="form-control" id="date">
+            </div>
+            <div class="form-group">
+                <label for="exampleFormControlSelect1">Filial</label>
+                <select class="form-control" id="exampleFormControlSelect1">
+                    {% for f in filiais %}
+                        <option value="{{  }}"> {{ f }} </option>
+                    {% endfor %}
+
+                </select>
+              </div>
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="exampleCheck1">
+                <label class="form-check-label" for="exampleCheck1">Check me out</label>
+            </div>
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+        <!--
+
+            {% for q in form %}
+                    <tr style="{% if q.pub_date|timedelta7 %}background:#ff644e;{% endif %}">
+                        <td>{{ q.nr_solic }}</td>
+                        <td>{{ q.data }}</td>
+                        <td>{{ q.pub_date }}</td>
+                        <td>{{ q.status }}</td>
+                        <td>{{ q.get_filial_display }}</td>
+                        <td>{{ q.solicitante }}</td>
+                        <td>{{ q.responsavel|default_if_none:'Não Cadastrado' }}</td>
+                        <td><button type="button" id="myBtn" value="{{ forloop.counter }}"><ion-icon name="list"></ion-icon></button></td>
+                        <td><a href="{% url 'portaria:edit_compras' q.id %}"><button type="button"><ion-icon name="create"></ion-icon></button></a></td>
+                    </tr>
+                        <div id="myModal{{ forloop.counter }}" class="modal">
+                            <div class="modal-content">
+                                <div>
+                                    <span class="title-cad">Itens do pedido</span>
+                                    <span class="close col">&times;</span>
+                                </div>
+                                <div class="container tktcontainer">
+                                    {% if q.produtossolicitacoes_set.all %}
+                                        <ul>
+                                        {% for i in q.produtossolicitacoes_set.all %}
+                                            <li><p style="margin: 0 0 0 0;">Item {{ forloop.counter }}: <strong>{{ i.produto }}</strong>
+                                        {% endfor %}
+                                        </ul>
+                                    {% else %}
+                                        <p style="margin: 0 0 0 0;">Nenhuma ocorrencia encontrada.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <tr><h2><strong>Não foi encontrado nenhuma solicitação com os dados informados.</strong></h2></tr><hr>
+                    {% endfor %}
+            </table>
+        </div>
+        -->
+                    
+    </div>
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+{% endblock %}

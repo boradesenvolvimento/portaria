@@ -108,9 +108,8 @@ urlpatterns = [
     path('getxmlsapi/', views.get_xmls_api, name='getxmlsapi'),
     path('compras/', views.compras_index, name='compras_index'),
     path('compras/lancar_pedido/', views.compras_lancar_pedido, name='compras_lancar_pedido'),
-    path('compras/lancar_pedido/', views.compras_lancar_pedido, name='compras_lancar_pedido'),
-
-    path('compras/painel/', views.painel_compras, name='painel_compras'),
+    path('compras/lancar_direto/', views.compras_lancar_direto, name='compras_lancar_direto'),
+    path('compras/paincompras/lancar_direto/el/', views.painel_compras, name='painel_compras'),
     path('compras/painel-concluido/', views.painel_compras_concluido, name='painel_compras_concluido'),
     path('compras/painel/<id>/edit', views.edit_compras, name='edit_compras'),
     #path('insert_entradas_cpr/', views.insert_entradas_cpr, name='insert_entradas_cpr'),

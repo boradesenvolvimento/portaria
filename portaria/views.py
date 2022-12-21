@@ -3861,7 +3861,7 @@ def compras_lancar_pedido(request):
             except cxerr:
                 messages.error(request, 'Não encontrado solicitação com este número.')
             except Exception as e:
-                print(f'Error:{e}, error_type:{type(e).__name__}')
+                messages.error(f'Error:{e}, error_type:{type(e).__name__}')
             else:
                 res = dictfetchall(cur)
                 cur.close()
@@ -3889,6 +3889,10 @@ def compras_lancar_pedido(request):
                 else:
                     messages.error(request, 'Não encontrado solicitação com este número.')
         return redirect('portaria:compras_index')
+
+def compras_lancar_direto(request):
+    keyga = {v: k for k, v in GARAGEM_CHOICES}
+    return render(request, 'portaria/etc/lancardireto.html', {'filiais': keyga})
 
 def garagem_para_filial_praxio(garagem):
     if garagem == 'SPO':
@@ -3921,6 +3925,8 @@ def garagem_para_filial_praxio(garagem):
         newga = {'empresa':'2', 'filial':'4'}
     elif garagem == 'VIX':
         newga = {'empresa':'2', 'filial':'5'}
+    elif garagem == 'GVR':
+        newga = {'empresa':'2', 'filial':'6'}
     elif garagem == 'BMA':
         newga = {'empresa':'3', 'filial':'1'}
     elif garagem == 'BPE':
@@ -3988,6 +3994,7 @@ def painel_compras_concluido(request):
                         form = SolicitacoesCompras.objects.filter(departamento=filter).order_by('pub_date')
                     else:
                         messages.error(request, 'Selecione algum filtro.')
+        print(form)
         return render(request, 'portaria/etc/painelcomprasconcluido.html', {'form':form})
     else:
         print('aaaa')

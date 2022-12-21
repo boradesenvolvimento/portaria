@@ -836,6 +836,9 @@ class SolicitacoesCompras(models.Model):
                                    blank=True, null=True)
     pago = models.BooleanField(null=True, blank=True, default=False)
 
+    def __str__(self):
+        return self.nr_solic
+
 class ProdutosSolicitacoes(models.Model):
     id = models.BigAutoField(primary_key=True)
     produto = models.CharField(max_length=200)
