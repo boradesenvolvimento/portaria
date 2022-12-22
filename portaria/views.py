@@ -35,7 +35,7 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.utils.crypto import get_random_string
 from notifications.models import Notification
 from notifications.signals import notify
-from reportlab.pdfgen import canvas
+#from reportlab.pdfgen import canvas
 #imports django built-ins
 from PIL import Image
 from django.conf import settings
@@ -1838,7 +1838,7 @@ def solictransfpalete(request):
     return render(request,'portaria/palete/transfpaletes.html', {'form':form})
 
 def transfdetalhe(request):
-    buffer = io.BytesIO()
+    """buffer = io.BytesIO()
     p = canvas.Canvas(buffer)
 
     p.drawString(10, 10, "Hello World")
@@ -1847,7 +1847,8 @@ def transfdetalhe(request):
     p.save()
 
     buffer.seek(0)
-    return FileResponse(buffer, as_attachment=True, filename="hello.pdf")
+    return FileResponse(buffer, as_attachment=True, filename="hello.pdf")"""
+    return HttpResponse("Funcionando")
 
 def paineltransf(request):
     placas = SolicMovPalete.objects.filter(id=1354).values('autor__username')
