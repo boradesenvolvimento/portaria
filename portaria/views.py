@@ -35,6 +35,7 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.utils.crypto import get_random_string
 from notifications.models import Notification
 from notifications.signals import notify
+from reportlab.pdfgen import canvas
 #imports django built-ins
 from PIL import Image
 from django.conf import settings
@@ -1837,7 +1838,17 @@ def solictransfpalete(request):
     return render(request,'portaria/palete/transfpaletes.html', {'form':form})
 
 def transfdetalhe(request):
-    return HttpResponse('<H2> ainda não está completo </h2>')
+    buffer = io.BytesIO()
+    p = canvas.Canvas(buffer)
+
+    p.drawString(10, 10, "Hello World")
+    
+    p.showPage()
+    p.save()
+
+    buffer.seek(0)
+    return FileResponse(buffer, as_attachment=True, filename="hello.pdf")
+
 def paineltransf(request):
     placas = SolicMovPalete.objects.filter(id=1354).values('autor__username')
     print(placas)
@@ -3263,7 +3274,7 @@ def mdfeporfilial(request):
                         #         'thiago@bora.com.br'] + resultrec
                         send2 = ['gabriel.torres@bora.com.br', 'alan@bora.com.br'] # test case
                         msg = MIMEMultipart('related')
-                        msg['From'] = get_secret('EUSER_MN')
+                        msg['From'] = get_secret('KH_MDFUSER')
                         msg['To'] = '; '.join(send2)
                         msg['Subject'] = f'MDFEs por Filial: REC'
                         text = f'''Prezados,\n
@@ -3286,7 +3297,7 @@ def mdfeporfilial(request):
 
                         msg.attach(part)
                         try:
-                            sm = smtplib.SMTP('smtp.bora.com.br', '587')
+                            sm = smtplib.SMTP('smtp.bora.tec.br', '587')
                             sm.set_debuglevel(1)
                             sm.login(get_secret('KH_MDFUSER'), get_secret('KH_MDFPASS'))
                             #sm.sendmail(get_secret('EUSER_MN'), send2, msg.as_string())
