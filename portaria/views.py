@@ -18,6 +18,9 @@ from collections import Counter
 from email.mime.base import MIMEBase
 from io import BytesIO
 from zipfile import ZipFile
+from fpdf import FPDF
+from barcode import EAN13
+from barcode.writer import ImageWriter
 
 import numpy as np
 import pandas as pd
@@ -1831,27 +1834,55 @@ def solictransfpalete(request):
                                          placa_veic=plc,autor=request.user)
                 PaleteControl.objects.filter(pk=x.id).update(loc_atual=keyga['999'])
             messages.success(request, f'{qnt} palete transferido de {keyga[ori]} para {keyga[des]}')
-            return render(request,'portaria/palete/transfpaletes.html', {'form':form})
+            return redirect('portaria:transfdetalhe', solic_id=solic_id)
+            #return render(request,'portaria/palete/transfpaletes.html', {'form':form})
         else:
             messages.error(request,'Quantidade solicitada maior que a disponível')
             return render(request,'portaria/palete/transfpaletes.html', {'form':form})
     return render(request,'portaria/palete/transfpaletes.html', {'form':form})
 
-def transfdetalhe(request):
-    buffer = io.BytesIO()
-    p = canvas.Canvas(buffer)
+def transfdetalhe(request, solic_id):
+    mov = SolicMovPalete.objects.filter(solic_id=solic_id).first()
+    quantity = SolicMovPalete.objects.filter(solic_id=solic_id).values('solic_id').annotate(Count("solic_id"))
+    qty = quantity[0]
+    data = {
+        "ID Solicitação": mov.solic_id,
+        "Origem": mov.origem,
+        "Destino": mov.destino,
+        "Placa do Veículo": mov.placa_veic,
+        "Data Solicitação": datetime.datetime.strftime(mov.data_solic, "%d/%m/%Y %H:%m"),
+        "Quantidade": qty['solic_id__count'],
+        "Autor": mov.autor.username
+    }
 
-    p.drawString(10, 10, "Hello World")
-    
-    p.showPage()
-    p.save()
-
-    buffer.seek(0)
-    return FileResponse(buffer, as_attachment=True, filename="hello.pdf")
+    titles = ["ID Solicitação", "Origem", "Destino", "Placa Veículo", "Data Solicitação", "Quantidade"]
+    pdf = FPDF(orientation='P', unit='mm', format=(210, 297))
+    pdf.add_page()
+    pdf.ln()
+    barcode = EAN13(data['ID Solicitação'], writer=ImageWriter())
+    barcode.save('barcode')
+    pdf.image('./barcode.png', x=120, y=50, w=80, h=30)
+    pdf.ln()
+    page_w = int(pdf.w)
+    pdf.set_font("Arial", size = 20)
+    pdf.cell(w=page_w, h=5, txt='Solicitação de transferência', border=0, align='C')
+    pdf.ln(20)
+    pdf.set_font("Arial", size = 12)
+    line_height = pdf.font_size * 2.5
+    for k, v in data.items():
+        pdf.cell(35, line_height, k, border=1)
+        pdf.cell(65, line_height, str(v), border=1, ln=1)
+    pdf.output("GFG.pdf")
+    with open("GFG.pdf", "rb") as f:
+        response = HttpResponse(f.read(), content_type="application/pdf")
+        response['Content-Disposition'] = 'filename=some_file.pdf'
+        os.remove(f.name)
+        return response
+    #response['Content-Disposition'] = "attachment; filename='GFG.pdf'"
+    #return response
+    #return HttpResponse('<h2> CARALHO DE FILHO DA PUTA DE TESTE DE CORNO AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</h2>')
 
 def paineltransf(request):
-    placas = SolicMovPalete.objects.filter(id=1354).values('autor__username')
-    print(placas)
     form = (SolicMovPalete.objects.order_by('data_solic')\
         .values('placa_veic', 'solic_id', 'origem', 'destino', 'data_solic', 'autor__username')\
         .annotate(quantity=Count('solic_id'))
