@@ -1815,6 +1815,7 @@ def romxmltoexcel(*romaneio, tp_dld):
 #funcoes variadas
 @login_required
 def solictransfpalete(request):
+    mov_gar = '99'
     form = TPaletesForm()
     keyga = {k:v for k,v in GARAGEM_CHOICES}
     if request.method == 'POST':
@@ -1832,7 +1833,7 @@ def solictransfpalete(request):
                 x = PaleteControl.objects.filter(loc_atual=keyga[ori], tp_palete=tp_p).first()
                 solic = SolicMovPalete.objects.create(solic_id=solic_id, palete=x,data_solic=currentTime,origem=keyga[ori],destino=keyga[des],
                                          placa_veic=plc,autor=request.user)
-                PaleteControl.objects.filter(pk=x.id).update(loc_atual=keyga['999'])
+                PaleteControl.objects.filter(pk=x.id).update(loc_atual=keyga[mov_gar])
             messages.success(request, f'{qnt} palete transferido de {keyga[ori]} para {keyga[des]}')
             return redirect('portaria:transfdetalhe', solic_id=solic_id)
             #return render(request,'portaria/palete/transfpaletes.html', {'form':form})
@@ -1875,9 +1876,11 @@ def transfdetalhe(request, solic_id):
     pdf.output("GFG.pdf")
     with open("GFG.pdf", "rb") as f:
         response = HttpResponse(f.read(), content_type="application/pdf")
-        response['Content-Disposition'] = 'filename=some_file.pdf'
-        os.remove(f.name)
-        return response
+    f.close()
+    os.remove("GFG.pdf")
+    os.remove("barcode.png")
+    response['Content-Disposition'] = 'filename=some_file.pdf'
+    return response
     #response['Content-Disposition'] = "attachment; filename='GFG.pdf'"
     #return response
     #return HttpResponse('<h2> CARALHO DE FILHO DA PUTA DE TESTE DE CORNO AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</h2>')

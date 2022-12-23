@@ -84,7 +84,7 @@ GARAGEM_CHOICES = [
         ('35', 'BAL'),
         ('36', 'THE'),
         ('40', 'FMA'),
-        ('999', 'MOV') # em movimento
+        ('99', 'MOV') # em movimento
     ]
 DEPARTAMENTO_CHOICES = [
         ('DIRETORIA', 'DIRETORIA'),
