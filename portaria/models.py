@@ -910,22 +910,41 @@ class Demissoes(models.Model):
 
 class EstoqueItens(models.Model):
     id = models.BigAutoField(primary_key=True)
-    desc = models.CharField(max_length=100)
-    quantidade = models.PositiveSmallIntegerField()
-    tipo = models.CharField(max_length=20)
-    tamanho = models.CharField(max_length=5)
+    grupo = models.CharField(max_length=100, null=False)
 
     def __str__(self):
-        return self.desc
+        return self.grupo
 
 class EstoqueSolicitacoes(models.Model):
     id = models.BigAutoField(primary_key=True)
-    item = models.ForeignKey(EstoqueItens, on_delete=models.CASCADE)
     filial = models.CharField(max_length=3, choices=GARAGEM_CHOICES)
-    quant_solic = models.PositiveSmallIntegerField()
+    colab = models.CharField(max_length=120)
     data_solic = models.DateField()
     data_envio = models.DateField(blank=True, null=True)
     autor = models.ForeignKey(User, on_delete=models.CASCADE)
     confirmacao = models.DateField(blank=True, null=True)
     autor_confirmacao = models.ForeignKey(User, on_delete=models.CASCADE, related_name='estoque_autor_confirmacao',
                                           blank=True, null=True)
+                                          
+class Cart(models.Model):
+    solic = models.ForeignKey(EstoqueSolicitacoes, on_delete=models.CASCADE)
+
+class CartItem(models.Model):
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
+    tam_id = models.PositiveBigIntegerField()
+    desc = models.CharField(max_length=100)
+    tam = models.CharField(max_length=5)
+    qty = models.PositiveBigIntegerField()
+
+
+class Item(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    desc = models.CharField(max_length=100)
+    validade = models.PositiveBigIntegerField()
+    estoque = models.ForeignKey(EstoqueItens, on_delete=CASCADE, null=True, blank=True)
+
+class Tamanho(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    tam = models.CharField(max_length=5)
+    quantidade = models.PositiveSmallIntegerField()
+    item = models.ForeignKey(Item, on_delete=CASCADE, null=True)

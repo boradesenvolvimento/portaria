@@ -18,6 +18,7 @@
         <div class="row">
             <h2 class="title-cad col-3">Estoque</h2>
         </div><hr>
+        
     <section class="container viewmonit">
         <div class="container">
             <div class="row">
@@ -25,32 +26,93 @@
             </div>
         </div>
         <div class="tktcontainer">
-        <form method="post" enctype="multipart/form-data">
-                    {% csrf_token %}
-        <div class="row">
-            <div class="col-4">
-                <div>
-                    <ul>
-                        <li><strong>Item:</strong> {{ obj.item }} </li>
-                        <li><strong>Quantidade:</strong> {{ obj.quant_solic }} </li>
-                        <li><strong>Tamanho:</strong> {{ obj.item.tamanho }} </li>
-                        <li><strong>Data Solicitação:</strong> {{ obj.data_solic }}</li>
-                        <li><strong>Solicitante:</strong> {{ obj.autor }}</li>
-                        <li><strong>Filial:</strong> {{ obj.get_filial_display }}</li>
-                        <li><strong>Enviar para:</strong><input type="email" name="e_to" autocomplete="off"></li>
-                    </ul>
+            <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-5" style="overflow-y: scroll; height: 50vh;">
+                    <div style="width: 100%;">
+                        <table style=" margin: 10px auto;">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th><b> ID </b></th>
+                                    <td> {{ obj.id }} </td>
+                                </tr>
+                                <tr>
+                                    <th><b> Filial </b></th>
+                                    <td>{{ obj.filial }}</td>
+                                </tr>
+                                <tr>
+                                    <th><b> Colaborador </b></th>
+                                    <td> {{ obj.colab }} </td>
+                                </tr>
+                                <tr>
+                                    <th><b> Data </b></th>
+                                    <td> {{ obj.data_solic }} </td>
+                                </tr>
+                                <tr>
+                                    <th><b> Autor </b></th>
+                                    <td> {{ obj.autor }} </td>
+                                </tr>
+
+                            </tbody>
+                            <!-- <tr><strong>ID:</strong> {{ obj.id }} </tr>
+                            <tr><strong>Filial:</strong> {{ obj.filial }} </tr>
+                            <tr><strong>Colaborados:</strong> {{ obj.colab }} </tr>
+                            <tr><strong>Data Solicitação:</strong> {{ obj.data_solic }}</tr>
+                            <tr><strong>Autor:</strong> {{ obj.autor }}</tr>
+                            
+                             -->
+                        </table>
+                        <style>
+                            th{
+                                padding: 0 20px 0 5px;
+                                border: solid 2px lightgrey;
+                            }
+                            td {
+                                padding: 0 20px 0 5px;
+                                border: solid 2px lightgrey;
+                            }
+                        </style><br>
+                        <div style="width: 100%;">
+                            <h3>Itens solicitados</h3><br>
+                            <table style="margin: auto;">
+                                <thead>
+                                    <th>Item</th>
+                                    <th>Tamanho</th>
+                                    <th>Quantidade</th>
+                                </thead>
+                                <tbody>
+                                    {% for cart in obj.cart_set.all %}
+                                        {% for i in cart.cartitem_set.all %}
+                                        <tr>
+                                            <td>{{ i.desc }}</td>
+                                            <td style="text-align: center;">{{ i.tam }}</td>
+                                            <td style="text-align: center;" >{{ i.qty }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="container col">
+                    <strong>Enviar para:</strong><input type="email" name="e_to" autocomplete="off">
+                    <div>
+                        {{ editor.area|safe }}
+                    </div>
+                    <div>
+                        <input type="file" name="file" multiple style="display:block;border-radius:0;">
+                    </div>
                 </div>
             </div>
-            <div class="container col">
-                <div>
-                    {{ editor.area|safe }}
-                </div>
-                <div>
-                    <input type="file" name="file" multiple style="display:block;border-radius:0;">
-                </div>
-            </div>
-        </div>
-            <center><button class="col">enviar</button></center>
+                <center><button class="col">enviar</button></center>
         </form>
     </div>
     </section>

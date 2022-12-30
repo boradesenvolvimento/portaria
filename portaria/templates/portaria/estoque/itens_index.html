@@ -1,0 +1,357 @@
+    {% extends 'base.html' %}
+    {% block content %}
+    {% load groupscheck %}
+    <div class="container mt-5">
+    {% if auth_message %}
+        <p><strong>{{ auth_message }}</strong></p>
+    {% else %}
+    {% if request.user|has_group:"estoque" %}
+            {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+            {% endfor %}
+        <section class="container">
+            <div class="row" style="justify-content: space-between;">
+                <h2 class="title-cad col-3">Controle de Estoque</h2>
+                <div class="col" style="text-align:center;">
+                    {% if request.user|has_group:"estoque_main" %}
+                        <span>
+                            <label for="createitem">Cadastrar Item</label>
+                            <button id="addGroup" type="button">
+                                <ion-icon name="add-circle-outline"></ion-icon>
+                            </button>
+                        </span>
+                    {% endif %}
+                </div>
+                <div class="col-3">
+                    <form method="get">
+                        <input style="margin:auto;" type="text" id="buscaitem" name="buscaitem">
+                        <button type="submit" style="font-size:1.8rem;margin:auto;">
+                        <ion-icon name="search-circle-outline"></ion-icon></button>
+                    </form>
+                </div>
+            </div><hr>
+            <div id="addNewItem" class="modal">
+                <div class="modal-content" style="width: 45%;">
+                    <div>
+                        <span class="title-cad">Adicionar Item</span>
+                        <span class="close">&times;</span>
+                    </div><hr>
+                    <div>
+                        <form action="" id="formdata-id" method="post">
+                            {% csrf_token %}
+                            <input name="type" value="GROUP" hidden>
+                            <input name="name" type="text" placeholder="Nome do Item...">
+                            <button type="submit" style="display: inline;"> Adicionar </button>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+            <div class="row">
+                <table class="table1 table">
+                    <thead>
+                        <tr>
+                            <th scope="col" style="width:15%;">ID</th>
+                            <th scope="col" style="width:20%;">Grupo</th>
+                            <th scope="col" style="width:20%;">Item</th>
+                            <th scope="col" style="width:15%;">Validade</th>
+                            <th scope="col" style="width:15%;">Tamanho</th>
+                            <th scope="col" style="width:15%;">Quantidade</th>
+                            
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for q in itens %}
+                        <tr id="tabletkt" class="tabletkt" style="border-bottom: 1px dotted black">
+                            <td>{{ q.id }}</td>
+                            <td>{{ q.grupo }}</td>
+                            <td colspan="4">
+                                <table width="100%">
+                                    {% for item in q.item_set.all %}
+                                        <tr style="border-bottom: 1px solid grey; line-height: 25px;">
+                                            <td width="28%" style="vertical-align: top;">{{ item.desc }}</td>
+                                            <td width="20%" style="vertical-align: top;">{{ item.validade }} dias</td>
+                                            <td width="40%">
+                                                <table style="width: 100%; line-height: 25px;">
+                                                    {% for tam in item.tamanho_set.all|dictsort:"tam" %}
+                                                        <tr class="sizeRow">
+                                                            <td style="text-align: center; width: 20%;"> {{ tam.tam }} </td>
+                                                            <td style="width: 30%;"> </td>
+                                                            <td style="text-align: center; width: 25%;"> {{ tam.quantidade }} </td>
+                                                            <td style="text-align: center;"> 
+                                                                <button id="editSize" type="button" value="{{ forloop.counter }}" style="background-color: transparent;color: #0d6efd">
+                                                                    <ion-icon name="create-outline"></ion-icon> 
+                                                                </button>
+                                                            </td>
+
+                                                        </tr>
+                                                        
+                                                        <div id="editTam{{ forloop.counter }}" class="modal">
+                                                            <div class="modal-content" style="width: 45%;">
+                                                                <div class="modal-content" >
+                                                                    <div>
+                                                                        <span class="title-cad">Adicionar Tamanho</span>
+                                                                        <span class="close">&times;</span>
+                                                                    </div><hr>
+                                                                    <div>
+                                                                        <form action="" id="formdata-id" method="post">
+                                                                            {% csrf_token %}
+                                                                            <input name="type" value="EDITTAM" hidden>
+                                                                            <input name="item" value="{{tam.id}}" hidden>
+                                                                            <input name="tam" type="text" placeholder="Tamanho" value="{{ tam.tam }}">
+                                                                            <input name="qty" type="text" placeholder="Quantidade" value="{{ tam.quantidade }}">
+                                                                            <button type="submit" style="display: inline;"> Adicionar </button>
+                                                                        </form>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <style>
+                                                            .sizeRow{
+                                                                background-color: transparent;
+                                                            }
+                                                            .sizeRow:hover{
+                                                                background-color: rgba(128, 128, 128, 0.4);
+
+                                                                -webkit-transition: background-color 500ms linear;
+                                                                -ms-transition: background-color 500ms linear;
+                                                                transition: background-color 500ms linear;
+                                                            }
+                                                        </style>
+                                                    {% endfor %}
+                                                </table>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </table>
+                                <button id="addItem" type="button" value="{{ q.id }}" style="width:20px; height: 20px; border-radius:50%;"> + </button>
+                            </td>
+                            
+                            {% comment %} {% if request.user|has_group:"estoque_main" %}
+                            <td><button id="myBtn" type="button" value="{{ forloop.counter }}">
+                                <ion-icon name="create-outline"></ion-icon></button></td>
+                            {% endif %} {% endcomment %}
+                        </tr>
+                        <div id="addItem{{ q.id }}" class="modal">
+                            <div class="modal-content">
+                                <div>
+                                    <span class="title-cad">Itens Atuais</span>
+                                    <span class="close">&times;</span>
+                                </div><hr>
+                                    <div class="row">
+                                        <span> <h2> Grupo: </h2></span>
+                                        <ul style="list-style:none;">
+                                            <li><strong>ID:</strong> {{ q.id }}</li>
+                                            <li><strong>Grupo:</strong> {{ q.grupo }}</li>
+                                        </ul>
+                                        <h4> Itens: </h4>
+                                        {% for i in q.item_set.all %}
+                                            <div style="margin-left: 20px;">
+                                                
+                                                <h4 style="display: inline-block;">{{ i.desc }}</h4>
+                                                <p style="margin-left: 30px;">Validade: <b>{{ i.validade }}</b> dias</p>
+                                                
+                                                {% if i.tamanho_set.all %}
+                                                    <div class="addTable">
+                                                        <div class="table-row">
+                                                            <div class="table-col">Tamanho</div>
+                                                            <div class="table-col">Quantidade</div>
+                                                        </div>
+                                                        {% for tam in i.tamanho_set.all %}
+                                                            <div class="table-row">
+                                                                <div class="table-col"> {{ tam.tam }} </div>
+                                                                <div class="table-col"> {{ tam.quantidade }} </div>
+                                                            </div>
+                                                        {% endfor %}
+                                                    </div>
+                                                    
+                                                {% endif %}
+                                                <button id="addTam" type="button" value="{{ i.id }}" style="width:20px; height: 20px; border-radius:50%; display: inline-block;"> + </button>
+                                                <br>
+                                            </div>
+                                            <div id="addTam{{ i.id }}" class="modal">
+                                                <div class="modal-content" style="width: 45%;">
+                                                    <div>
+                                                        <span class="title-cad">Editar tamanho</span>
+                                                        <span class="close">&times;</span>
+                                                    </div><hr>
+                                                    <div>
+                                                        <form action="" id="formdata-id" method="post">
+                                                            {% csrf_token %}
+                                                            <input name="type" value="TAM" hidden>
+                                                            <input name="item" value="{{i.id}}" hidden>
+                                                            <input name="tam" type="text" placeholder="Tamanho">
+                                                            <input name="qty" type="text" placeholder="Quantidade">
+                                                            <button type="submit" style="display: inline;"> Salvar </button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                            
+                                        {% endfor %}
+                                        
+                                    
+                                    </div>
+                                    <br><hr>
+                                    <form action="" id="formdata-id" method="post">
+                                        {% csrf_token %}
+                                        <input name="obj" value="{{ q.id }}" hidden>
+                                        <input name="type" value="ITEM" hidden>
+                                        <h2> Adicionar Item </h2>
+                                        <div class="row">
+                                            <span>
+                                                <label for="desc">Item</label>
+                                                <input name="desc" id="desc" placeholder="Item..."><br>
+                                                <label for="validade">Validade (dias)</label>
+                                                <input type="number" name="validade" style="width: 7.5em;" placeholder="Validade">
+                                            </span>
+                                        </div>
+                                        <div class="row">
+                                            <center><button id="submiter" type="submit">Confirmar</button></center>
+                                        </div>
+                                    </form>
+                            </div>
+                        </div>
+                        
+                        
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        </section>
+    {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+    </div>
+    {% endif %}
+    <style>
+        .addTable {
+            display: table;
+            width: auto;
+            margin-left: 50px;
+        }
+
+        .table-row {
+            display: table-row;
+            width: auto;
+            clear: both;
+        }
+
+        .table-col {
+            float: left;
+            display: table-column;
+            width: 100px;
+            border: 1px solid #808080;
+        }
+    </style>
+    <script>
+        $(document).on('click', '#addGroup', function() {
+            var btn = $(this);
+            var but = $(this).val();
+            console.log(but);
+            var modal = document.getElementById("addNewItem");
+            var span = modal.getElementsByClassName("close")[0];
+            modal.style.display = "block";
+
+            span.onclick = function() {
+                modal.style.display = "none";
+            };
+            window.onclick = function(event) {
+                if (event.target == modal){
+                    modal.style.display = "none";
+                }
+            };
+        });
+        $(document).on('click', '#editSize', function() {
+            var btn = $(this);
+            var but = $(this).val();
+            console.log(but);
+            var modal = document.getElementById("editTam"+but);
+            var span = modal.getElementsByClassName("close")[0];
+            modal.style.display = "block";
+
+            span.onclick = function() {
+                modal.style.display = "none";
+            };
+            window.onclick = function(event) {
+                if (event.target == modal){
+                    modal.style.display = "none";
+                }
+            };
+        });
+        $(document).on('click', '#addItem', function() {
+            var btn = $(this);
+            var but = $(this).val();
+            console.log(but);
+            var modal = document.getElementById("addItem"+but);
+            var span = modal.getElementsByClassName("close")[0];
+            modal.style.display = "block";
+
+            span.onclick = function() {
+                modal.style.display = "none";
+            };
+            window.onclick = function(event) {
+                if (event.target == modal){
+                    modal.style.display = "none";
+                }
+            };
+        });
+        $(document).on('click', '#addTam', function() {
+            var btn = $(this);
+            var but = $(this).val();
+            console.log(but);
+            var modal = document.getElementById("addTam"+but);
+            var span = modal.getElementsByClassName("close")[0];
+            modal.style.display = "block";
+
+            span.onclick = function() {
+                modal.style.display = "none";
+            };
+            window.onclick = function(event) {
+                if (event.target == modal){
+                    modal.style.display = "none";
+                }
+            };
+        });
+        $(document).ready(function(){
+            $("#addTest").click(function(){
+                var btn = $(this);
+                var but = $(this).val();
+                var modal = document.getElementById("myModal"+but);
+                var span = modal.getElementsByClassName("close")[0];
+                modal.style.display = "block";
+
+                span.onclick = function() {
+                    modal.style.display = "none";
+                };
+                window.onclick = function(event) {
+                    if (event.target == modal){
+                        modal.style.display = "none";
+                    }
+                };
+            });
+            //$("#addItem").click(function(){
+                
+            //});
+            
+        });
+    </script>
+    <!--
+    <script>
+    $(function(){
+        var availableTags = [
+            {% for q in autocomplete %}
+                "{{ q.desc }} {{ q.tamanho }}",
+            {% endfor %}
+        ];
+        $('#buscaitem').autocomplete({source: availableTags});
+    });
+    </script>
+
+    -->
+    
+    {% endblock %}

@@ -116,7 +116,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'bora',
         'USER': get_secret('DB_USER'),
-        'PASSWORD': get_secret('DB_PASS'),
+       'PASSWORD': get_secret('DB_PASS'),
         'HOST': get_secret('DB_HOST'),
         'PORT': '3306',
     }

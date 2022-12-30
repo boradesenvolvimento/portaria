@@ -6,6 +6,61 @@
         <p><strong>{{ auth_message }}</strong></p>
     {% else %}
     {% if request.user|has_group:"estoque" %}
+        <style>
+            .chip {
+            display: inline-block;
+            padding: 0 25px;
+            height: 40px;
+            font-size: 14px;
+            line-height: 40px;
+            border-radius: 25px;
+            background-color: #f1f1f1;
+            }
+
+            .chip-icn {
+            float: left;
+            text-align: center;
+            background-color: rgb(156, 156, 156);
+            margin: 0 10px 0 -25px;
+            height: 40px;
+            width: 40px;
+            border-radius: 50%;
+            }
+            .chip-qty{
+                width: 100%;
+                color: #fff;
+            }
+            .closebtn {
+            padding-left: 10px;
+            color: rgb(62, 62, 62);
+            font-weight: bold;
+            float: right;
+            font-size: 20px;
+            cursor: pointer;
+            }
+
+            .closebtn:hover {
+            color: #000;
+            }
+            .addTable {
+                display: table;
+                width: auto;
+            }
+
+            .table-row {
+                display: table-row;
+                width: auto;
+                clear: both;
+            }
+
+            .table-col {
+                float: left;
+                text-align: center;
+                display: table-column;
+                width: 100px;
+                border: 1px solid #808080;
+            }
+        </style>
             {% for message in messages %}
             <div class="container-fluid p-0">
                 <div class="alert {{ message.tags }} alert-dismissible" role="alert">
@@ -15,48 +70,226 @@
             {% endfor %}
         <section class="container createtkt">
             <div class="row">
-                <h2 class="title-cad col-3">Controle de Estoque</h2>
-            </div><hr>
-            <div class="row">
-                <div class="col-4">
-                    {% if request.user|has_group:"estoque_rh" %}
-                    <div class="container createboxes">
-                        <label for="botao2">Nova solicitação</label>
-                        <a id="botao2" href="{% url 'portaria:estoque_nova_solic' %}"><button style="width:10rem;">Acessar</button></a>
-                    </div>
-                    {% endif %}
-                    <div class="container createboxes">
-                        <label for="botao3">Painel de Solicitações</label>
-                        <a id="botao3" href="{% url 'portaria:estoque_painel' %}"><button style="width:10rem;">Acessar</button></a>
-                    </div>
-                </div>
-                <div class="col-8 createboxes">
-                    <h2 class="title-cad">Metricas</h2>
+                <div class="col-12 createboxes">
+                    <h2 class="title-cad">Controle de estoque</h2>
                     <hr>
                     <div class="row">
-                        <div class="container col-4 card" style="width:auto;background:#e8eef5;border:solid 3px;border-radius:10px;">
-                                <div class="card-body" style="text-align:center;">
-                                    <h3 class="card-title">Em aberto</h3>
-                                    <p class="card-text">{{ metrics.aberto1|default_if_none:'0' }}</p>
-                                </div>
+                        <div class="col-4">
+                            <canvas id="metrics_chart"></canvas>
+                            {{ metrics|json_script:"metrics_obj" }}
                         </div>
-                        <div class="container col-4 card" style="width:auto;background:#e8eef5;border:solid 3px;border-radius:10px;">
-                                <div class="card-body" style="text-align:center;">
-                                    <h3 class="card-title">Aguardando confirmação</h3>
-                                    <p class="card-text">{{ metrics.ag_conf1|default_if_none:'0' }}</p>
-                                </div>
-                        </div>
-                        <div class="container col-4 card" style="width:auto;background:#e8eef5;border:solid 3px;border-radius:10px;">
-                                <div class="card-body" style="text-align:center;">
-                                    <h3 class="card-title">Concluído</h3>
-                                    <p class="card-text">{{ metrics.concluido1|default_if_none:'0' }}</p>
-                                </div>
+                        <div class="col-8">
+                            <canvas id="itens_solicitados"></canvas>
+                            {{ itens_solicitados|json_script:"itens_solic_obj" }}
                         </div>
                     </div>
+                    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+                    <script>
+                        const metrics_c = document.getElementById('metrics_chart');
+                        metrics_values = JSON.parse(document.getElementById('metrics_obj').textContent)
+                        new Chart(metrics_c, {
+                            type: 'doughnut',
+                            data: {
+                                labels: ['Abertas', 'Aguardando confirmação', 'Concluidas'],
+                                datasets: [{
+                                    label: '# de Solicitações',
+                                    data: Object.values(metrics_values),
+                                    borderWidth: 1
+                                }]
+                            },
+                            options: {
+                                plugins: {
+                                    title: {
+                                        display: true,
+                                        text: 'Solicitações',
+                                        font: {
+                                            size: 24,
+                                            color: "blue",
+                                        }
+                                    }
+                                },
+                                scales: {
+                                    y: {
+                                        display: false
+                                    },
+                                    x: {
+                                        display: false
+                                    }
+                                }
+                            }
+                        });
+
+                        const itens_solic_c = document.getElementById('itens_solicitados');
+                        itens_solic_values = JSON.parse(document.getElementById('itens_solic_obj').textContent)
+                        new Chart(itens_solic_c, {
+                          type: 'bar',
+                          data: {
+                            labels: Object.keys(itens_solic_values),
+                            datasets: [{
+                              data: Object.values(itens_solic_values),
+                              backgroundColor: [
+                                'rgba(145, 40, 252, 0.6)',
+                                ],
+                                borderColor: [
+                                'rgb(242, 39, 126)',
+                                ],
+                              borderWidth: 1
+                            }]
+                          },
+                          
+                          options: {
+                            responsive: true,
+                            plugins: {
+                                legend: {
+                                    display: false,
+                                },
+                              title: {
+                                display: true,
+                                text: 'Itens solicitados',
+                                font: {
+                                  size: 24,
+                                  color: "blue"
+                                }
+                              }
+                            },
+                            scales: {
+                              y: {
+                                beginAtZero: true
+                              },
+                              x: {
+                                display: true
+                              }
+                            }
+                            
+                          }
+                        });
+                    </script>
                 </div>
             </div>
+        </section><br>
+        <section class="container">
+            <span style="justify-content: space-between; display: flex;">
+                <span>
+                    <h2 class="title-cad">Painel de Solicitações</h2>
 
+                </span>
+                <span>
+                    {% if request.user|has_group:"estoque_rh" %}
+                        <div>
+                            <a id="botao2" href="{% url 'portaria:estoque_nova_solic' %}"><button style="padding: 3px 20px;">Nova solicitação</button></a>
+                        </div>
+                    {% endif %}
+                </span>
+                <span style="text-align:center;">
+                    <input style="margin:auto;" type="text" id="buscaitem">
+                    <button type="submit" style="font-size:1.8rem;margin:auto;"><ion-icon name="search-circle-outline"></ion-icon></button>
+                </span>
+            </span><hr>
+            <div class="row">
+                <table class="table1 table">
+                    <thead>
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">Filial</th>
+                            <th scope="col">Data Solicitado</th>
+                            <th scope="col">Solicitante</th>
+                            <th scope="col" style="width:10%;">Visualizar</th>
+                            {% if request.user|has_group:"estoque_main" %}
+                            <th scope="col" style="width:10%;">Editar</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for q in solics %}
+                        <tr class="tabletkt">
+                            <td>{{ q.id }}</td>
+                            <td>{{ q.get_filial_display }}</td>
+                            <td>{{ q.data_solic }}</td>
+                            <td>{{ q.autor }}</td>
+                            <td>
+                                <button type="button" id="seeDetails" value="{{ forloop.counter }}">
+                                    <ion-icon name="menu-outline"></ion-icon>
+                                </button>
+                            </td>
+                            {% if request.user|has_group:"estoque_main" %}
+                            <td>
+                                <a href="{% url 'portaria:estoque_detalhe' q.id %}">
+                                    <button><ion-icon name="eye-outline"></ion-icon></button>
+                                </a>
+                            </td>
+                            {% endif %}
+                        </tr>
+                        <div id="solicDetails{{ forloop.counter }}" class="modal">
+                            <div class="modal-content">
+                                <div style="width: 100%; display: flex; align-items: center ;justify-content: space-between;">
+                                    <div class="title-cad col" style="vertical-align: middle;">Itens Solicitados</div>
+                                    <div class="close" style="text-align: right; width: 20px;">&times;</div>
+                                </div>
+                                <div class="container tktcontainer" style="display: flex; justify-content: center;">
+                                    {% if q.cart_set.all %}
+                                        <div class="addTable">
+                                            <div class="table-row">
+                                                <div class="table-col" style="width: 15em;"><b>Item</b></div>
+                                                <div class="table-col"><b>Tamanho</b></div>
+                                                <div class="table-col"><b>Quantidade</b></div>
+                                            </div>
+                                            {% for cart in q.cart_set.all %}
+                                                {% for i in cart.cartitem_set.all %}
+                                                    <div class="table-row">
+                                                        <div class="table-col" style="width: 15em; text-align: left;"> {{ i.desc }}</div>
+                                                        <div class="table-col"> {{ i.tam }}</div>
+                                                        <div class="table-col"> {{ i.qty }} </div>
+                                                    </div>
+                                                {% endfor %}
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        <p style="margin: 0 0 0 0;">Nehum item solicitado.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </section>
+        <script>
+            $(document).on('click', '#newSolic', function() {
+                var btn = $(this);
+                var but = $(this).val();
+                console.log(but);
+                var modal = document.getElementById("newSolicForm");
+                var span = modal.getElementsByClassName("close")[0];
+                modal.style.display = "block";
+
+                span.onclick = function() {
+                    modal.style.display = "none";
+                };
+                window.onclick = function(event) {
+                    if (event.target == modal){
+                        modal.style.display = "none";
+                    }
+                };
+            });
+            $(document).on('click', '#seeDetails', function() {
+                var btn = $(this);
+                var but = $(this).val();
+                console.log(but);
+                var modal = document.getElementById("solicDetails"+but);
+                var span = modal.getElementsByClassName("close")[0];
+                modal.style.display = "block";
+
+                span.onclick = function() {
+                    modal.style.display = "none";
+                };
+                window.onclick = function(event) {
+                    if (event.target == modal){
+                        modal.style.display = "none";
+                    }
+                };
+            });
+        </script>
     {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
     </div>
     {% endif %}

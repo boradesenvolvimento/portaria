@@ -256,3 +256,16 @@ class UploadForm(forms.Form):
 #summernote
 class TextEditor(forms.Form):
     area = forms.CharField(widget=SummernoteWidget())
+
+class SolicEstoque(forms.Form):
+    filial = forms.CharField()
+    extra_field_count = forms.CharField(widget=forms.HiddenInput())
+
+    def __init__(self, *args, **kwargs):
+        extra_fields = kwargs.pop('extra', 0)
+        super(SolicEstoque, self).__init__(*args, **kwargs)
+        self.fields['extra_field_count'].initial = extra_fields
+
+        for index in range(int(extra_fields)):
+            self.fields['item_{index}'.format(index=index)] = \
+                forms.CharField()

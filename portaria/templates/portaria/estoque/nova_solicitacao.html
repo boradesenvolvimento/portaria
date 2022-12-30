@@ -13,27 +13,145 @@
             </div>
         </div>
         {% endfor %}
+        <style>
+            .selectors{
+                width: 25%; 
+                height: 50vh;
+                overflow-y: scroll;
+            }
+            .itens{
+                width: 75%;
+                height: 50vh;
+                overflow-y: scroll;
+                overflow-x: hidden;
+                text-align: center;
+                margin: 1rem;
+                border: 1px solid #808284;
+            }
+            #pushItem{
+                width: 2rem;
+                height: 2rem;
+                border-radius: 50%;
+            }
+            .chip {
+            display: inline-block;
+            padding: 0 25px;
+            height: 30px;
+            font-size: 14px;
+            line-height: 28px;
+            border-radius: 25px;
+            background-color: #f1f1f1;
+            }
+
+            .chip-icn {
+            float: left;
+            text-align: center;
+            background-color: rgb(180, 180, 180);
+            margin: 2px 10px 0 -23px;
+            height: 26px;
+            font-size: 16px;
+            width: 26px;
+            border-radius: 50%;
+            }
+            .chip-qty{
+                width: 100%;
+                /* color: #000; */
+                font-size: 16px;
+                line-height: 30px;
+            }
+            .closebtn {
+            padding-left: 10px;
+            color: rgb(62, 62, 62);
+            font-weight: bold;
+            float: right;
+            font-size: 16px;
+            line-height: 30px;
+            cursor: pointer;
+            }
+
+            .closebtn:hover {
+            color: #000;
+            }
+        </style>
+        <!-- <button id="newSolic" type="button">kbahgkasdvkhasdhasdasdasdbkasdbasdbjasdnbasdjbjblasdbjkasdjbkasdkjbbkjasdbkjads</button>
+        <div id="newSolicForm" class="modal">
+            <div class="modal-content" style="width: 70%;">
+                <div>
+                    <span class="title-cad">Nova solicitação</span>
+                    <span class="close">&times;</span>
+                </div><hr>
+                <div>
+                    <form action="" id="formdata-id" method="post">
+                        {% csrf_token %}
+                        <div class="row">
+                            <textarea name="itens" id="itens" cols="30" rows="10"></textarea>
+                            
+                        </div>
+                        <button>Click me if you can</button>
+                    </form>
+                    
+                </div>
+            </div>
+        </div><br>-->
     <section class="container createtkt">
         <div class="row">
             <h2 class="title-cad col-3">Solicitação de Estoque</h2>
         </div><hr>
         <div class="row">
-            <form method="post">{% csrf_token %}
-            <ul style="margin-left:5rem;list-style:none;">
-                <li>Item: <input type="text" id="buscaitem" name="buscaitem" onblur="getVal()"></li>
-                <li>Quantidade: <input type="text" name="quant"></li>
-                <li>Tamanho: <select id="gettam" name="tamanho">
-                                <option selected disabled>Selecione...</option>
-                             </select>
-                </li>
-                <li>Filial: <select name="filial">
-                    <option selected disabled>Selecione...</option>
-                    {% for k,v in filial %}
-                    <option value="{{ k }}">{{ v }}</option>
-                    {% endfor %}
-                </select></li>
-                <li><button>Enviar</button></li>
-            </ul>
+            <form method="post">
+                {% csrf_token %}
+                <div class="form" style="width: 100%; display: flex;">
+                    <div class="selectors">
+                        <div style="width: 100%;">
+                            <label for="filial">Filial:</label>
+                            <select name="filial" required>
+                                <option selected disabled value="">Selecione...</option>
+                                {% for k,v in filial %}
+                                    <option value="{{k}}">{{ v }}</option>
+                                {% endfor %}
+                            </select>
+                            <div>
+                                <label for="colab">Colaborador</label>
+                                <input type="text" name="colab" id="colab" />
+                            </div>
+                            <div id="itens-box">
+                                Itens:
+                                <ul id="item-list" style="margin-left: 5px;">
+                                </ul>
+
+                            </div><br>
+                        </div>
+                        <div>
+                            <textarea name="itensInput" id="itensInput"></textarea>
+                        </div>
+                    </div>
+                    <div class="itens">
+                        <div class="row">
+                            {% for group in itens %}
+                                {% for i in group.item_set.all %}
+                                    {% for t in i.tamanho_set.all %}
+                                        {% if t.quantidade %}
+                                            <div class="col-6">
+                                                <div class="row">
+                                                    <div class="col-8" style="margin-top: 8px; text-align: right;">
+                                                        <h4 id="desc{{t.id}}" style="display: inline;">{{i.desc}}</h4> - <h5 id="size{{t.id}}" style="display: inline;">{{t.tam}}</h5> (<h5 style="display: inline;" id="max-qty{{t.id}}">{{t.quantidade}}</h5>)
+                                                    </div>
+                                                    <div class="col-4" style="text-align: left;">
+                                                        <input style="width: 5rem; height: 2.5rem;" type="number" id="pushQty{{t.id}}">
+                                                        <button type="button" id="pushItem" value="{{t.id}}">+</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endfor %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div style="width: 25%; display: flex;">
+                    <button>Enviar</button>
+                </div>
             </form>
         </div>
     </section>
@@ -41,9 +159,73 @@
 </div>
 {% endif %}
 <script>
+    var list = [];
+    function add_chip(id, qty){
+        var newList = document.getElementById("item-list");
+        var desc = document.getElementById("desc"+id).textContent;
+        var tam = document.getElementById("size"+id).textContent;
+        var item = document.createElement('li');
+        item.innerHTML = `
+                            ${desc} - ${tam} (${qty}) <a href="#" onclick="popItem(${list.length}); return false;">X</a>
+                        `;
+        item.setAttribute("id", `item${list.length}`)
+        newList.appendChild(item);
+
+    }
+    function popItem(pos){
+        
+        let itensInput = $("#itensInput").val();
+        itensInput = itensInput.slice(0, -1);
+        let inputList = itensInput.split(',')
+        inputList.splice(pos, 1)
+        $('#itensInput').val(`${inputList.join()},`);
+
+        list.splice(pos, 1);
+        item = document.getElementById("item"+pos);
+        item.remove();
+
+    }
+    $(document).on('click', '#pushItem', function() {
+
+        var btn = $(this);
+        var tam_id = $(this).val();
+        var qty = document.getElementById("pushQty"+tam_id).value;
+        var max_qty = document.getElementById("max-qty"+tam_id).textContent;
+
+        if (qty){
+            if (Number(qty) > Number(max_qty)) {
+                
+                return alert('Quantidade inválida, por favor informe um valor menor')
+            }
+            if (list.includes(tam_id)){
+                return alert('O item já foi adicionado!')
+            }
+            add_chip(tam_id, qty)
+            list.push(tam_id)
+
+            
+            var item_i = document.getElementById("itensInput").value += `${tam_id} ${qty},`;
+        }
+        else{
+            alert('Selecione uma quantidade válida')
+
+        }
+        // var modal = document.getElementById("editTam"+but);
+        // var span = modal.getElementsByClassName("close")[0];
+        // modal.style.display = "block";
+
+        // span.onclick = function() {
+        //     modal.style.display = "none";
+        // };
+        // window.onclick = function(event) {
+        //     if (event.target == modal){
+        //         modal.style.display = "none";
+        //     }
+        // };
+    });
     $(function(){
         var availableTags = [];
-            {% for q in autocomplete %}
+            {% for q in itens %}
                 if(availableTags.indexOf("{{ q.desc }}") <= -1){
                     availableTags.push("{{ q.desc }}")
                 }else{}
@@ -53,7 +235,7 @@
     function getVal(){
         field = document.getElementById('buscaitem').value
         var availableTags = []
-        {% for q in autocomplete %}
+        {% for q in itens %}
             if("{{q}}" == field){
                 availableTags.push("{{ q.tamanho }}")
             }else{}

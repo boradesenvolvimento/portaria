@@ -13,11 +13,33 @@
                 </div>
             </div>
             {% endfor %}
+            <style>
+                .addTable {
+                    display: table;
+                    width: auto;
+                    padding: 30px;
+                }
+    
+                .table-row {
+                    display: table-row;
+                    width: auto;
+                    clear: both;
+                }
+    
+                .table-col {
+                    float: left;
+                    text-align: center;
+                    display: table-column;
+                    width: 100px;
+                    border: 1px solid #808080;
+                }
+            </style>
         <section class="container">
-            <div class="row">
-                <h2 class="title-cad col-3">Confirmar solicitações</h2>
-                <div class="col"></div>
-                <div class="col-3">
+            <div style="display: flex; justify-content: space-between;">
+                <div>
+                    <h2 class="title-cad">Confirmar solicitações</h2>
+                </div>
+                <div>
                     <form method="get">
                         <input style="margin:auto;" type="text" id="buscaitem" name="buscaitem">
                         <button type="submit" style="font-size:1.8rem;margin:auto;">
@@ -26,15 +48,13 @@
                 </div>
             </div><hr>
             <div class="row">
-                <table class="table1 table">
+                <table class="table1 table" style="width: 70%;">
                     <thead>
                         <tr>
                             <th scope="col" style="width:10%;">ID</th>
-                            <th scope="col">Descrição</th>
                             <th scope="col" style="width:10%;">Filial</th>
-                            <th scope="col">Quantidade</th>
-                            <th scope="col">Tamanho</th>
                             <th scope="col">Data Envio</th>
+                            <th scope="col">Itens</th>
                             <th scope="col">Confirmar</th>
                         </tr>
                     </thead>
@@ -42,17 +62,49 @@
                     {% for q in form %}
                         <tr class="tabletkt">
                             <th>{{ q.id }}</th>
-                            <th>{{ q.item }}</th>
                             <th>{{ q.get_filial_display }}</th>
-                            <th>{{ q.quant_solic }}</th>
-                            <th>{{ q.item.tamanho }}</th>
                             <th>{{ q.data_envio }}</th>
+                            <th>
+                                <button type="button" id="seeDetails" value="{{ forloop.counter }}">
+                                    <ion-icon name="menu-outline"></ion-icon>
+                                </button>
+                            </th>
                             <th><form method="post">{% csrf_token %}
                                 <input type="hidden" name="objid" value="{{ q.id }}">
                                 <button type="submit">
                                 <ion-icon name="checkmark-done-circle-outline"></ion-icon></ion-icon></button>
                             </form></th>
                         </tr>
+                        <div id="solicDetails{{ forloop.counter }}" class="modal">
+                            <div class="modal-content">
+                                <div style="width: 100%; display: flex; align-items: center ;justify-content: space-between;">
+                                    <div class="title-cad col" style="vertical-align: middle;">Itens Solicitados</div>
+                                    <div class="close" style="text-align: right; width: 20px;">&times;</div>
+                                </div>
+                                <div class="container tktcontainer" style="display: flex; justify-content: center;">
+                                    {% if q.cart_set.all %}
+                                        <div class="addTable">
+                                            <div class="table-row">
+                                                <div class="table-col" style="width: 15em;"><b>Item</b></div>
+                                                <div class="table-col"><b>Tamanho</b></div>
+                                                <div class="table-col"><b>Quantidade</b></div>
+                                            </div>
+                                            {% for cart in q.cart_set.all %}
+                                                {% for i in cart.cartitem_set.all %}
+                                                    <div class="table-row">
+                                                        <div class="table-col" style="width: 15em; text-align: left;"> {{ i.desc }}</div>
+                                                        <div class="table-col"> {{ i.tam }}</div>
+                                                        <div class="table-col"> {{ i.qty }} </div>
+                                                    </div>
+                                                {% endfor %}
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        <p style="margin: 0 0 0 0;">Nehum item solicitado.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
                     {% endfor %}
                     </tbody>
                 </table>
@@ -63,6 +115,23 @@
     </div>
     {% endif %}
     <script>
+        $(document).on('click', '#seeDetails', function() {
+            var btn = $(this);
+            var but = $(this).val();
+            console.log(but);
+            var modal = document.getElementById("solicDetails"+but);
+            var span = modal.getElementsByClassName("close")[0];
+            modal.style.display = "block";
+
+            span.onclick = function() {
+                modal.style.display = "none";
+            };
+            window.onclick = function(event) {
+                if (event.target == modal){
+                    modal.style.display = "none";
+                }
+            };
+        });
     $(document).ready(function(){
         $("button").click(function(){
             var btn = $(this);
