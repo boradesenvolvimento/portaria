@@ -1815,7 +1815,7 @@ def romxmltoexcel(*romaneio, tp_dld):
 #funcoes variadas
 @login_required
 def solictransfpalete(request):
-    mov_gar = '99'
+    mov_gar = '0'
     form = TPaletesForm()
     keyga = {k:v for k,v in GARAGEM_CHOICES}
     if request.method == 'POST':
@@ -1833,7 +1833,7 @@ def solictransfpalete(request):
                 x = PaleteControl.objects.filter(loc_atual=keyga[ori], tp_palete=tp_p).first()
                 solic = SolicMovPalete.objects.create(solic_id=solic_id, palete=x,data_solic=currentTime,origem=keyga[ori],destino=keyga[des],
                                          placa_veic=plc,autor=request.user)
-                PaleteControl.objects.filter(pk=x.id).update(loc_atual=keyga[mov_gar])
+                PaleteControl.objects.filter(pk=x.id).update(loc_atual=keyga['0'])
             messages.success(request, f'{qnt} palete transferido de {keyga[ori]} para {keyga[des]}')
             return redirect('portaria:transfdetalhe', solic_id=solic_id)
             #return render(request,'portaria/palete/transfpaletes.html', {'form':form})
@@ -1842,7 +1842,7 @@ def solictransfpalete(request):
             return render(request,'portaria/palete/transfpaletes.html', {'form':form})
     return render(request,'portaria/palete/transfpaletes.html', {'form':form})
 
-"""def transfdetalhe(request, solic_id):
+def transfdetalhe(request, solic_id):
     mov = SolicMovPalete.objects.filter(solic_id=solic_id).first()
     quantity = SolicMovPalete.objects.filter(solic_id=solic_id).values('solic_id').annotate(Count("solic_id"))
     qty = quantity[0]
@@ -1860,27 +1860,30 @@ def solictransfpalete(request):
     pdf = FPDF(orientation='P', unit='mm', format=(210, 297))
     pdf.add_page()
     pdf.ln()
-    barcode = EAN13(data['ID Solicitação'], writer=ImageWriter())
-    barcode.save('barcode')
-    pdf.image('./barcode.png', x=120, y=50, w=80, h=30)
+    #barcode = EAN13(data['ID Solicitação'], writer=ImageWriter())
+    #barcode.save('barcode')
+    #pdf.image('./barcode.png', x=120, y=50, w=80, h=30)
     pdf.ln()
     page_w = int(pdf.w)
     pdf.set_font("Arial", size = 20)
-    pdf.cell(w=page_w, h=5, txt='Solicitação de transferência', border=0, align='C')
+    pdf.cell(w=190, h=5, txt='Solicitação de transferência', border=0, align='C')
     pdf.ln(20)
-    pdf.set_font("Arial", size = 12)
+    pdf.set_font("Arial", size = 12, style= 'B')
+
     line_height = pdf.font_size * 2.5
     for k, v in data.items():
-        pdf.cell(35, line_height, k, border=1)
-        pdf.cell(65, line_height, str(v), border=1, ln=1)
+        pdf.set_font("Arial", size = 12, style= 'B')
+        pdf.cell(60, line_height, k, border=1) # com barcode = 35 e 65
+        pdf.set_font("Arial", size = 12)
+        pdf.cell(130, line_height, str(v), border=1, ln=1)
     pdf.output("GFG.pdf")
     with open("GFG.pdf", "rb") as f:
         response = HttpResponse(f.read(), content_type="application/pdf")
     f.close()
     os.remove("GFG.pdf")
-    os.remove("barcode.png")
+    #os.remove("barcode.png")
     response['Content-Disposition'] = 'filename=some_file.pdf'
-    return response"""
+    return response
     #response['Content-Disposition'] = "attachment; filename='GFG.pdf'"
     #return response
     #return HttpResponse('<h2> CARALHO DE FILHO DA PUTA DE TESTE DE CORNO AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</h2>')
@@ -1915,7 +1918,7 @@ def transfpalete(request):
         autor = request.POST.get('autor')
         movPalete = SolicMovPalete.objects.filter(solic_id=solic_id)
 
-        print(f'Quantidade recebida: {qnt}\nQuantidade Transferida: {movPalete.count()}')
+        print(f'Quantidade recebida: {qnt}\nQuantidade Transferida: {movPalete.count()}, DATA: {dt_solic}')
         if movPalete.count() == 0:
             messages.error(request, f'Não existem mais pallets disponíveis nessa transferência')
             return redirect('portaria:painelmov')
@@ -3187,32 +3190,32 @@ def printetiquetas(array):
 def mdfeporfilial(request):
     hoje = datetime.date.today()
     gachoices = GARAGEM_CHOICES
-    mailchoices = {'SPO': [''],
-                   'MG':  [''],
-                   'TMA': [''],
-                   'BMA': [''],
-                   'BPE': [''],
-                   'BPB': [''],
-                   'BAL': [''],
-                   'TCO': ['juliano.oliveira@borexpress.com.br', 'lino.loureiro@borexpress.com.br',
-                           'rogeria.loureiro@borexpress.com.br'],
-                   'VIX': ['mauricio@bora.com.br', 'ocorrenciavix@bora.com.br'],
-                   'UDI': ['marcus.silva@borexpress.com.br', 'tulio.pereira@borexpress.com.br'],
-                   'CTG': ['silvana.dily@borexpress.com.br', 'ygor.henrique@borexpress.com.br',
-                           'fausto@borexpress.com.br'],
-                   'MCZ': ['rafael@bora.com.br', 'elicarlos.santos@bora.com.br','valmir.silva@bora.com.br'],
-                   'SSA': ['jaqueline.santos@bora.com.br', 'fernando.malaquias@bora.com.br',
-                           'brandao.alan@bora.com.br', ],
-                   'NAT': ['ronnielly@bora.com.br', 'lindalva@bora.com.br', 'lidianne@bora.com.br'],
-                   'SLZ': ['felipe@bora.com.br'],
-                   'THE': ['felipe@bora.com.br'],
-                   'BEL': ['felipe@bora.com.br'],
-                   'VDC': ['jose.sousa@bora.com.br', 'fernando.sousa@bora.com.br'],
-                   'REC': ['cinthya.souza@bora.com.br', 'patricia.santos@bora.com.br', 'edvanio.silva@bora.com.br',
-                           'expedicao_rec@bora.com.br'],
-                   'AJU': ['victor.hugo@bora.com.br'],
-                   'JPA': ['patricia.lima@bora.com.br'],
-                   'FOR': ['luciano@bora.com.br', 'erlandia@bora.com.br']
+    mailchoices = {
+                    'SPO': [''],
+                    'MG':  [''],
+                    'TMA': [''],
+                    'BMA': [''],
+                    'BPE': [''],
+                    'BPB': [''],
+                    'BAL': [''],
+                    'TCO': ['juliano.oliveira@borexpress.com.br', 'lino.loureiro@borexpress.com.br',
+                            'rogeria.loureiro@borexpress.com.br'],
+                    'GVR': ['mauricio@bora.com.br'],
+                    'VIX': ['renata.cesario@bora.com.br'], 		
+                    'UDI': ['marcus.silva@borexpress.com.br', 'tulio.pereira@borexpress.com.br'],
+                    'CTG': ['ygor.henrique@borexpress.com.br','samuel.santos@borexpress.com.br','junior.moraes@borexpress.com.br'],
+                    'MCZ': ['rafael@bora.com.br', 'carlos.eduardo@bora.com.br','ronnielly@bora.com.br'],
+                    'SSA': ['jaqueline.santos@bora.com.br', 'brandao.alan@bora.com.br'],
+                    'NAT': ['ronnielly@bora.com.br', 'lindalva@bora.com.br', 'lidianne@bora.com.br'],
+                    'SLZ': ['felipe@bora.com.br'],
+                    'THE': ['felipe@bora.com.br'],
+                    'BEL': ['felipe@bora.com.br'],
+                    'VDC': ['jose.sousa@bora.com.br', 'fernando.sousa@bora.com.br',brandao.alan@bora.com.br],
+                    'REC': ['cinthya.souza@bora.com.br', 'patricia.santos@bora.com.br', 'edvanio.silva@bora.com.br',
+                            'expedicao_rec@bora.com.br','ronnielly@bora.com.br'],
+                    'AJU': ['luana.santos@bora.com.br','brandao.alan@bora.com.br'],
+                    'JPA': ['patricia.lima@bora.com.br','ronnielly@bora.com.br'],
+                    'FOR': ['luciano@bora.com.br', 'aldeci.oliveira@bora.com.br','ronnielly@bora.com.br']
                    }
     for k, v in gachoices:
         result = mailchoices.get(v, '')
@@ -3291,8 +3294,8 @@ def mdfeporfilial(request):
         cur.close()
         pdr = pd.DataFrame(res)
         if not pdr.empty:
-            #send = ['gabriel.torres@bora.com.br', 'alan@bora.com.br', 'gabriel.moura@bora.com.br',
-            #        'thiago@bora.com.br'] + result
+            send = ['gabriel.torres@bora.com.br', 'alan@bora.com.br', 'gabriel.moura@bora.com.br',
+                    'thiago@bora.com.br'] + result
             send = ['gabriel.torres@bora.com.br', 'alan@bora.com.br'] # test case
             #Separa congelado inicio
             if k in ('6','7'):
@@ -3304,9 +3307,9 @@ def mdfeporfilial(request):
                 else:
                     pdr = pdr.drop(row.index)
                     if not row.empty:
-                        #send2 = ['gabriel.torres@bora.com.br', 'alan@bora.com.br', 'gabriel.moura@bora.com.br',
-                        #         'thiago@bora.com.br'] + resultrec
-                        send2 = ['gabriel.torres@bora.com.br', 'alan@bora.com.br'] # test case
+                        send2 = ['gabriel.torres@bora.com.br', 'alan@bora.com.br', 'gabriel.moura@bora.com.br',
+                                 'thiago@bora.com.br'] + resultrec
+                        #send2 = ['gabriel.torres@bora.com.br', 'alan@bora.com.br'] # test case
                         msg = MIMEMultipart('related')
                         msg['From'] = get_secret('KH_MDFUSER')
                         msg['To'] = '; '.join(send2)

@@ -55,10 +55,11 @@
                                 <tr>
                                     <th scope="row">Data solicitação</th>
                                     <td> 
-                                        <input style="width: 80%" type="text" class="form-control" value="{{ solic.data_solic }}" disabled> 
+                                        <input style="width: 80%" type="text" class="form-control" value="{{ solic.data_solic }}" disabled>
+                                        <input name="data_solic" id="data_solic" type="datetime" value="{{ solic.data_solic }}" hidden>
                                     </td>
                                     <td> 
-                                        <input style="width: 80%" type="datetime" class="form-control" name="data_solic" id="data_solic" value="{% now 'd/m/Y G:i'%}" readonly> 
+                                        <input style="width: 80%" type="datetime" class="form-control" value="{% now 'd/m/Y G:i'%}" readonly> 
                                     </td>
                                 </tr>
                                 <tr>

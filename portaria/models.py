@@ -84,7 +84,7 @@ GARAGEM_CHOICES = [
         ('35', 'BAL'),
         ('36', 'THE'),
         ('40', 'FMA'),
-        ('99', 'MOV') # em movimento
+        ('0', 'MOV') # em movimento
     ]
 DEPARTAMENTO_CHOICES = [
         ('DIRETORIA', 'DIRETORIA'),
@@ -947,4 +947,4 @@ class Tamanho(models.Model):
     id = models.BigAutoField(primary_key=True)
     tam = models.CharField(max_length=5)
     quantidade = models.PositiveSmallIntegerField()
-    item = models.ForeignKey(Item, on_delete=CASCADE, null=True)
+    item = models.ForeignKey(Item, on_delete=CASCADE, null=True, blank=True)
