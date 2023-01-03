@@ -1557,6 +1557,7 @@ def painelromaneio(request):
                 romaneio = RomXML.objects.filter(id__in=romidd).annotate(
                     nf1=F('nota_fiscal'),volume1=F('volume'),uf1=F('uf'), rem=F('remetente')
                 )
+                print(romaneio.values())
             elif tp_dld == 'Remetente':
                 romaneio = SkuRefXML.objects.filter(xmlref__id__in=romidd).annotate(
                     municipio1=F('xmlref__municipio'), uf1=F('xmlref__uf'), codigo1=F('codigo'),
@@ -1649,7 +1650,6 @@ def entradaxml(request, args=None):
     if request.method == 'POST':
         files = request.FILES.getlist('getxml')
     else:
-        print('recebeu o arquivo')
         files = args
     for file in files:
         try:
@@ -1742,7 +1742,7 @@ def getFiles(*args):
     resp['Content-Disposition'] = f'attachment; filename={datetime.datetime.today()}.rar'
 
     return resp
-
+#romaneio para excel
 def romxmltoexcel(*romaneio, tp_dld):
     array = []
     roms = []
@@ -3732,7 +3732,6 @@ async def get_xmls_api(request):
     host = get_secret('EHOST_XML')
     user = get_secret('ESEND_XML')
     pasw = get_secret('EPASS_XML')
-    
     pp = poplib.POP3(host)
     pp.set_debuglevel(1)
     pp.user(user)
@@ -3740,21 +3739,27 @@ async def get_xmls_api(request):
     xmlsarray = []
     num_messages = len(pp.list()[1])
     for i in range(num_messages):
+        print('for num_messages')
         raw_email = b'\n'.join(pp.retr(i+1)[1])
         parsed_mail = email.message_from_bytes(raw_email)
         if parsed_mail.is_multipart():
+            print('email is multipart')
             for part in parsed_mail.walk():
+                print('for part in parsed_email')
                 filename = part.get_filename()
                 if re.findall(re.compile(r'\w+(?i:.xml|.XML)'), str(filename)):
+                    print('find xml')
                     xmlsarray.extend({part.get_payload(decode=True)})
         pp.dele(i+1)
     pp.quit()
     try:
+        print(xmlsarray)
         await entradaxml(request, args=xmlsarray)
     except Exception as e:
         print(f'Error: {e}, error_type: {type(e).__name__}')
+        return HttpResponse(f'<h2> Ocorreu um erro durante a consulta - XML </h2> <br> Erro: {e} <br> Tipo do erro: {type(e).__name__}')
         pass
-    return HttpResponse('done')
+    return HttpResponse('<h2>Consulta finalizada!</h2>')
 
 def compras_index(request):
     gachoices = GARAGEM_CHOICES

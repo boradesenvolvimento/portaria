@@ -18,7 +18,7 @@
                 <h2 class="title-cad col-3">Controle de Estoque</h2>
                 <div class="col" style="text-align:center;">
                     {% if request.user|has_group:"estoque_main" %}
-                    <label for="createitem">Cadastrar Item</label>
+                    <label for="createitem">Cadastrar Grupo</label>
                     <a href="{% url 'portaria:estoque_caditem' %}">
                         <button id="createitem"><ion-icon name="add-circle-outline"></ion-icon></button></a>
                     {% endif %}

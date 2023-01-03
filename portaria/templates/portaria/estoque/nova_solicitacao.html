@@ -178,8 +178,14 @@
         itensInput = itensInput.slice(0, -1);
         let inputList = itensInput.split(',')
         inputList.splice(pos, 1)
-        $('#itensInput').val(`${inputList.join()},`);
-
+        console.log(inputList)
+        console.log(inputList.length)
+        if (inputList.length > 0){
+            $('#itensInput').val(`${inputList.join()},`);
+        } else {
+            $('#itensInput').val('')
+        }
+        
         list.splice(pos, 1);
         item = document.getElementById("item"+pos);
         item.remove();

@@ -8,6 +8,32 @@
         display:block;
         border-radius:0;
     }
+    .form-label{
+        font-size: clamp(14px, 1.6rem, 2vw);
+        font-weight: 600;
+    }
+    .form-control{
+        margin: 0 0 10px 0;
+    }
+    .selector-option{
+        font-size: 1.6rem;
+    }
+    .wrapper{
+        width: 100%;
+        display: flex;
+        
+    }
+    .form{
+        width: 40%;
+        padding: 10px;
+        
+        background-color: yellow;
+    }
+    .message-box{
+        width: 60%;
+
+        background-color: violet;
+    }
 </style>
     <div class="container mt-4">
         {% for message in messages %}
@@ -18,6 +44,105 @@
             </div>
         {% endfor %}
         <h1>Funções<hr></h1>
+        <div>
+            <h2><b>Solicitação nº {{ obj.nr_solic }}</b></h2>
+        </div>
+        <div class="wrapper">
+            <div class="form">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div style="display: flex; justify-content: space-between;">
+                        <div class="form-group" style="width: 48%;">
+                            <label class="form-label" for="status">Status *</label>
+                            <select class="form-control" id="status" name="status">
+                                <option class="selector-option" label="{{ obj.status|default_if_none:'Não Cadastrado' }}"></option>
+                                {% for k,v in stschoices %}
+                                <option class="selector-option" value="{{ k }}"> {{ v }} </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group" style="width: 48%;">
+                            <label class="form-label" for="filial">Filial *</label>
+                            <select class="form-control" id="filial" name="filial">
+                                <option class="selector-option"  label="{{ obj.get_filial_display|default_if_none:'Não Cadastrado' }}"></option>
+                                {% for k,v in gachoices %}
+                                <option class="selector-option"  value="{{ v }}">{{ v }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <div class="form-group" style="width: 48%;">
+                            <label class="form-label" for="status">Departamento *</label>
+                            <select class="form-control" id="status" name="status">
+                                <option class="selector-option" label="{{ obj.departamento|default_if_none:'Não Cadastrado' }}"></option>
+                                {% for k,v in dpchoices %}
+                                <option class="selector-option" value="{{ k }}"> {{ v }} </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group" style="width: 48%;">
+                            <label class="form-label" for="filial">Responsável *</label>
+                            <select class="form-control" id="filial" name="filial">
+                                <option class="selector-option"  label="{{ obj.responsavel|default_if_none:'Não Cadastrado' }}"></option>
+                                {% for q in rpchoices %}
+                                <option class="selector-option"  value="{{ q.id }}">{{ q.username }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <div class="form-group" style="width: 48%;">
+                            <label class="form-label" for="status">Categoria *</label>
+
+                            <select class="form-control" id="categoria" name="categoria" onchange="DisplayInput();">
+                                <option class="selector-option" label="{{ obj.categoria }}">{{ obj.categoria }}</option>
+                                <option class="selector-option" label="ALMOXARIFADO">ALMOXARIFADO</option>
+                                <option class="selector-option" label="COTAÇÃO">COTAÇÃO</option>
+                                <option class="selector-option" label="NOTA FISCAL">NOTA FISCAL</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="width: 48%;">
+                            <label class="form-label" for="filial">Prazo</label>
+                            <select class="form-control" id="filial" name="filial">
+                                <option class="selector-option"  label="{{ obj.prazo_conclusao|default_if_none:'Não Cadastrado' }}"></option>
+                                {% for k,v in gachoices %}
+                                <option class="selector-option"  value="{{ v }}">{{ v }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="solicitante">Solicitante</label>
+                        <div style="display: flex;">
+                            <input style="
+                                margin: 0;
+                                padding: 1rem;
+                                border-radius: 0.8rem 0 0 0.8rem ;
+                                border-right: none;
+                            " 
+                            value="{{ obj.solicitante|default_if_none:'Não Cadastrado' }}" type="text" class="form-control" id="solicitante" aria-describedby="emailHelp" placeholder="Você não deveria estar vendo isso..." readonly>
+                            <a
+                            href="mailto:{{obj.email_solic}}"
+                            class="button" 
+                            style="
+                                margin: 0;
+                                padding: 1rem;
+                                border-radius: 0 0.8rem 0.8rem 0 ;
+                            "
+                            type="button"  
+                            ><ion-icon style="margin-top: -0.125em" name="mail-outline"></ion-icon>
+                            </a>
+                        </div>
+                        <small id="emailHelp" class="form-text text-muted">Pressione o botão para enviar um email ao solicitante.</small>
+                      </div>
+                </form>
+            </div>
+            <div class="message-box">
+                asd
+            </div>
+        </div>
+
         <div class="container viewmonit">
             <div class="tktcontainer">
                 <form method="post" enctype="multipart/form-data">{% csrf_token %}
