@@ -1825,6 +1825,16 @@ def solictransfpalete(request):
         plc = request.POST.get('placa_veic')
         tp_p = request.POST.get('tp_palete')
         if qnt <= PaleteControl.objects.filter(loc_atual=keyga[ori],tp_palete=tp_p).count():
+            #filtrar caminhão em movimento
+            placas = SolicMovPalete.objects.order_by('placa_veic').values('placa_veic')
+            print(placas)
+            plcs = []
+            for p in placas:
+                plcs.append(p.get('placa_veic'))
+            if plc in plcs:
+
+                messages.error(request, f'O veiculo de placa {plc} já está em movimento')
+                return redirect('portaria:paineltransf')
             currentTime = timezone.now()
             time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             solic_id = str(time).replace(':', '').replace(' ', '').replace('-', '') + plc[5:]
@@ -3296,7 +3306,7 @@ def mdfeporfilial(request):
         if not pdr.empty:
             send = ['gabriel.torres@bora.com.br', 'alan@bora.com.br', 'gabriel.moura@bora.com.br',
                     'thiago@bora.com.br'] + result
-            send = ['gabriel.torres@bora.com.br', 'alan@bora.com.br'] # test case
+            #send = ['gabriel.torres@bora.com.br', 'alan@bora.com.br']
             #Separa congelado inicio
             if k in ('6','7'):
                 resultrec = mailchoices.get('REC', '')
@@ -3309,7 +3319,7 @@ def mdfeporfilial(request):
                     if not row.empty:
                         send2 = ['gabriel.torres@bora.com.br', 'alan@bora.com.br', 'gabriel.moura@bora.com.br',
                                  'thiago@bora.com.br'] + resultrec
-                        #send2 = ['gabriel.torres@bora.com.br', 'alan@bora.com.br'] # test case
+                        #send2 = ['gabriel.torres@bora.com.br', 'alan@bora.com.br']
                         msg = MIMEMultipart('related')
                         msg['From'] = get_secret('KH_MDFUSER')
                         msg['To'] = '; '.join(send2)
