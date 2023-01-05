@@ -834,6 +834,19 @@ class SolicitacoesCompras(models.Model):
         ('FILIAIS', 'FILIAIS'),
         ('COMPRAS', 'COMPRAS')
     ]
+    FORMA_PGT_CHOICES = [
+        ('A_VISTA', 'A_VISTA'),
+        ('PARCELADO-2X', 'PARCELADO-2X'),
+        ('PARCELADO-3X', 'PARCELADO-3X'),
+        ('PARCELADO-4X', 'PARCELADO-4X'),
+        ('PARCELADO-5X', 'PARCELADO-5X'),
+        ('PARCELADO-6X', 'PARCELADO-6X'),
+        ('PARCELADO-7X', 'PARCELADO-7X'),
+        ('PARCELADO-8X', 'PARCELADO-8X'),
+        ('PARCELADO-9X', 'PARCELADO-9X'),
+        ('PARCELADO-10X', 'PARCELADO-10X'),
+        ('PARCELADO-11X', 'PARCELADO-11X'),
+    ]
     id = models.BigAutoField(primary_key=True)
     nr_solic = models.CharField(max_length=10)
     data = models.DateField()
@@ -843,6 +856,7 @@ class SolicitacoesCompras(models.Model):
     solicitante = models.CharField(max_length=100)
     email_solic = models.EmailField(max_length=255, blank=True, null=True)
     departamento = models.CharField(max_length=15, choices=DEPARTAMENTO_CHOICES, blank=True, null=True)
+    forma_pgt = models.CharField(max_length=15, choices=FORMA_PGT_CHOICES, blank=True, null=True)
     responsavel = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True, related_name='responsavelcompras')
     prazo_conclusao = models.DateField(blank=True, null=True)
     dt_vencimento = models.DateField(blank=True, null=True)

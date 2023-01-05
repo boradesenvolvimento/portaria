@@ -7,32 +7,77 @@
     input[type="file"]{
         display:block;
         border-radius:0;
+
     }
     .form-label{
         font-size: clamp(14px, 1.6rem, 2vw);
         font-weight: 600;
+
     }
     .form-control{
         margin: 0 0 10px 0;
+
     }
     .selector-option{
         font-size: 1.6rem;
+
+    }
+    .box-card{
+        border: 3px double black;
+        background-color: rgba(245, 249, 255, 0.805)
+
     }
     .wrapper{
         width: 100%;
         display: flex;
+
         
     }
     .form{
         width: 40%;
-        padding: 10px;
+        padding: 15px 40px 15px 15px;
         
-        background-color: yellow;
     }
     .message-box{
         width: 60%;
+        position: relative;
 
-        background-color: violet;
+    }
+    .message-box::before{
+        content: '';
+        position: absolute;
+        margin: auto;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        
+        height: 90%;
+        border-style: solid;
+        border-width: 1px;
+        border-image: linear-gradient(
+            to bottom,
+            rgba(0, 0, 0, 0),
+            grey 20% 80%,
+            rgba(0, 0, 0, 0)
+        ) 1 100%;
+        
+    }
+    .box{
+        width: 90%;
+        margin: 5% 5%;
+    }
+    .entry-file{
+        display: inline-block;
+        background-color: rgb(97, 97, 97);
+        padding: 2px;
+        border-radius: 5px;
+        margin-bottom: 10px;
+        margin-left: 5px;
+        transition: ease-in-out 200ms;
+    }
+    .entry-file:hover{
+        background-color: rgb(145, 145, 145);
+        
     }
 </style>
     <div class="container mt-4">
@@ -47,102 +92,242 @@
         <div>
             <h2><b>Solicitação nº {{ obj.nr_solic }}</b></h2>
         </div>
-        <div class="wrapper">
-            <div class="form">
-                <form method="post" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    <div style="display: flex; justify-content: space-between;">
-                        <div class="form-group" style="width: 48%;">
-                            <label class="form-label" for="status">Status *</label>
-                            <select class="form-control" id="status" name="status">
-                                <option class="selector-option" label="{{ obj.status|default_if_none:'Não Cadastrado' }}"></option>
-                                {% for k,v in stschoices %}
-                                <option class="selector-option" value="{{ k }}"> {{ v }} </option>
-                                {% endfor %}
-                            </select>
+        <div class="box-card">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="wrapper">
+                    <div class="form">
+                        <div style="display: flex; justify-content: space-between; margin-top: 5%;">
+                            <div class="form-group" style="width: 48%;">
+                                <label class="form-label" for="status">Status *</label>
+                                <select class="form-control" id="status" name="status">
+                                    <option class="selector-option" label="{{ obj.status|default_if_none:'Não Cadastrado' }}" hidden></option>
+                                    {% for k,v in stschoices %}
+                                    <option class="selector-option" value="{{ k }}"> {{ v }} </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group" style="width: 48%;">
+                                <label class="form-label" for="filial">Filial *</label>
+                                <select class="form-control" id="filial" name="filial">
+                                    <option class="selector-option"  label="{{ obj.get_filial_display|default_if_none:'Não Cadastrado' }}" hidden></option>
+                                    {% for k,v in gachoices %}
+                                    <option class="selector-option"  value="{{ v }}">{{ v }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
                         </div>
-                        <div class="form-group" style="width: 48%;">
-                            <label class="form-label" for="filial">Filial *</label>
-                            <select class="form-control" id="filial" name="filial">
-                                <option class="selector-option"  label="{{ obj.get_filial_display|default_if_none:'Não Cadastrado' }}"></option>
-                                {% for k,v in gachoices %}
-                                <option class="selector-option"  value="{{ v }}">{{ v }}</option>
-                                {% endfor %}
-                            </select>
+                        <div style="display: flex; justify-content: space-between;">
+                            <div class="form-group" style="width: 48%;">
+                                <label class="form-label" for="departamento">Departamento *</label>
+                                <select class="form-control" id="departamento" name="departamento">
+                                    <option class="selector-option" label="{{ obj.departamento|default_if_none:'Não Cadastrado' }}" hidden></option>
+                                    {% for k,v in dpchoices %}
+                                    <option class="selector-option" value="{{ k }}"> {{ v }} </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group" style="width: 48%;">
+                                <label class="form-label" for="responsavel">Responsável *</label>
+                                <select class="form-control" id="responsavel" name="responsavel">
+                                    <option class="selector-option"  label="{{ obj.responsavel|default_if_none:'Não Cadastrado' }}" hidden></option>
+                                    {% for q in rpchoices %}
+                                    <option class="selector-option"  value="{{ q.id }}">{{ q.username }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
                         </div>
-                    </div>
-                    <div style="display: flex; justify-content: space-between;">
-                        <div class="form-group" style="width: 48%;">
-                            <label class="form-label" for="status">Departamento *</label>
-                            <select class="form-control" id="status" name="status">
-                                <option class="selector-option" label="{{ obj.departamento|default_if_none:'Não Cadastrado' }}"></option>
-                                {% for k,v in dpchoices %}
-                                <option class="selector-option" value="{{ k }}"> {{ v }} </option>
-                                {% endfor %}
-                            </select>
+                        <div style="display: flex; justify-content: space-between;">
+                            <div class="form-group" style="width: 48%;">
+                                <label class="form-label" for="status">Categoria *</label>
+    
+                                <select class="form-control" id="categoria" name="categoria" onchange="DisplayInput();">
+                                    <option class="selector-option" label="{{ obj.categoria }}" hidden>{{ obj.categoria }}</option>
+                                    <option class="selector-option" label="ALMOXARIFADO">ALMOXARIFADO</option>
+                                    <option class="selector-option" label="COTAÇÃO">COTAÇÃO</option>
+                                    <option class="selector-option" label="NOTA FISCAL">NOTA FISCAL</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="width: 48%;">
+                                <label class="form-label" for="forma_pgt">Forma de pagamento</label>
+    
+                                <select class="form-control" id="forma_pgt" name="forma_pgt" onchange="DisplayInput();">                                    
+                                    <option class="selector-option" label="{{ obj.forma_pgt|default_if_none:'Não Selecionado' }}" hidden>{{ obj.forma_pgt }}</option>
+                                    <option class="selector-option" label="A VISTA">A_VISTA</option>
+                                    <option class="selector-option" label="PARCELADO 2x">PARCELADO-2X</option>
+                                    <option class="selector-option" label="PARCELADO 3x">PARCELADO-3X</option>
+                                    <option class="selector-option" label="PARCELADO 4x">PARCELADO-4X</option>
+                                    <option class="selector-option" label="PARCELADO 5x">PARCELADO-5X</option>
+                                    <option class="selector-option" label="PARCELADO 6x">PARCELADO-6X</option>
+                                    <option class="selector-option" label="PARCELADO 7x">PARCELADO-7X</option>
+                                    <option class="selector-option" label="PARCELADO 8x">PARCELADO-8X</option>
+                                    <option class="selector-option" label="PARCELADO 9x">PARCELADO-9X</option>
+                                    <option class="selector-option" label="PARCELADO 10x">PARCELADO-10X</option>
+                                    <option class="selector-option" label="PARCELADO 11x">PARCELADO-11X</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="form-group" style="width: 48%;">
-                            <label class="form-label" for="filial">Responsável *</label>
-                            <select class="form-control" id="filial" name="filial">
-                                <option class="selector-option"  label="{{ obj.responsavel|default_if_none:'Não Cadastrado' }}"></option>
-                                {% for q in rpchoices %}
-                                <option class="selector-option"  value="{{ q.id }}">{{ q.username }}</option>
-                                {% endfor %}
-                            </select>
+                        <div style="display: flex; justify-content: space-between;">
+                            <div class="form-group" style="width: 48%;">
+                                {% if not obj.prazo_conclusao %}
+                                    <label class="form-label" for="prazo_conclusao">Prazo</label>
+                                    <input class="form-control" type="date" readonly id="prazo_conclusao" name="prazo_conclusao">
+                                {% else %}
+                                    <label class="form-label" for="criado_em">Criado em</label>
+                                    <input class="form-control" value="{{ obj.pub_date|date:'Y-m-d' }}" type="date" readonly id="criado_em" name="criado_em">
+                                {% endif %}
+                            </div>
+                            <div class="form-group" style="width: 48%;">
+                                {% if not obj.dt_vencimento %}
+                                    <div id="display_dt_venc" style="display: none;">
+                                        <label class="form-label" for="dt_venc">Vencimento</label>
+                                        <input class="form-control" type="date" id="dt_venc" name="dt_venc">
+                                    </div>
+                                {% else %}
+                                    <div id="display_dt_venc">
+                                        <label class="form-label" for="dt_venc">Vencimento</label>
+                                        <input class="form-control" type="date" id="dt_venc" name="dt_venc" value="{{ obj.dt_vencimento|date:'Y-m-d' }}">
+                                    </div>
+                            </div>
                         </div>
-                    </div>
-                    <div style="display: flex; justify-content: space-between;">
-                        <div class="form-group" style="width: 48%;">
-                            <label class="form-label" for="status">Categoria *</label>
 
-                            <select class="form-control" id="categoria" name="categoria" onchange="DisplayInput();">
-                                <option class="selector-option" label="{{ obj.categoria }}">{{ obj.categoria }}</option>
-                                <option class="selector-option" label="ALMOXARIFADO">ALMOXARIFADO</option>
-                                <option class="selector-option" label="COTAÇÃO">COTAÇÃO</option>
-                                <option class="selector-option" label="NOTA FISCAL">NOTA FISCAL</option>
-                            </select>
+                        <div class="form-group" style="width: 100%;">
+                                    {% if obj.pago %}
+                                    <div class="alert alert-success">
+                                        Solicitação Paga
+                                    </div>
+                                    {% else %}
+                                        <div class="alert alert-{% if vencimento > 0 and vencimento < 4 %}warning{% elif vencimento > 3 %}success{% else %}danger{% endif %}">
+                                            {% if vencimento > 0 %} O boleto vai vencer em <b>{{ vencimento }}</b> dia(s)
+                                            {% elif vencimento < 0 %} O boleto venceu faz <b>{{ vencimento|invert }}</b> dia(s)
+                                            {% else %} O boleto vence hoje
+                                            {% endif %}
+                                        </div>
+                                    {% endif%}
+                                {% endif %}
+                            </div>
+                        <div>
+                            <div class="form-group">
+                                <label for="solicitante">Solicitante</label>
+                                <div style="display: flex;">
+                                    <input style="
+                                        margin: 0;
+                                        padding: 1rem;
+                                        border-radius: 0.8rem 0 0 0.8rem ;
+                                        border-right: none;
+                                        "
+                                        value="{{ obj.solicitante|default_if_none:'Não Cadastrado' }}" 
+                                        type="text" 
+                                        class="form-control" 
+                                        id="solicitante" 
+                                        aria-describedby="emailHelp" 
+                                        placeholder="Você não deveria estar vendo isso..." 
+                                        readonly
+                                    >
+                                    <a
+                                    href="mailto:{{obj.email_solic}}"
+                                    class="button" 
+                                    style="
+                                        margin: 0;
+                                        padding: 1rem;
+                                        border-radius: 0 0.8rem 0.8rem 0 ;
+                                    "
+                                    type="button"  
+                                    ><ion-icon style="margin-top: -0.125em" name="mail-outline"></ion-icon>
+                                    </a>
+                                </div>
+                                <small id="emailHelp" class="form-text text-muted">Pressione o botão para enviar um email ao solicitante.</small>
+                            </div>
                         </div>
-                        <div class="form-group" style="width: 48%;">
-                            <label class="form-label" for="filial">Prazo</label>
-                            <select class="form-control" id="filial" name="filial">
-                                <option class="selector-option"  label="{{ obj.prazo_conclusao|default_if_none:'Não Cadastrado' }}"></option>
-                                {% for k,v in gachoices %}
-                                <option class="selector-option"  value="{{ v }}">{{ v }}</option>
-                                {% endfor %}
-                            </select>
+                        <div>
+                            <div style="word-wrap: break-word;">
+                                {% if obj.anexo %}
+                                    <a href="/media/{{ obj.anexo }}" download>
+                                        <ion-icon size="large" name="document-attach-outline"></ion-icon>
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% if request.user|has_group:'compras-adm' %}
+                        <div>
+                            <h3>Observação:</h3>
+                            <textarea rows="3" cols="30" id="obs" name="obs" style="border:solid 1px; width: 100%; height: 200px; resize: none;">{% if obj.obs %}{{ obj.obs }}{% endif %}</textarea>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label for="solicitante">Solicitante</label>
-                        <div style="display: flex;">
-                            <input style="
-                                margin: 0;
-                                padding: 1rem;
-                                border-radius: 0.8rem 0 0 0.8rem ;
-                                border-right: none;
-                            " 
-                            value="{{ obj.solicitante|default_if_none:'Não Cadastrado' }}" type="text" class="form-control" id="solicitante" aria-describedby="emailHelp" placeholder="Você não deveria estar vendo isso..." readonly>
-                            <a
-                            href="mailto:{{obj.email_solic}}"
-                            class="button" 
-                            style="
-                                margin: 0;
-                                padding: 1rem;
-                                border-radius: 0 0.8rem 0.8rem 0 ;
-                            "
-                            type="button"  
-                            ><ion-icon style="margin-top: -0.125em" name="mail-outline"></ion-icon>
-                            </a>
+                    <div class="message-box">
+                        <div class="box">
+                            
+                                <h2>Cadastrar entradas</h2>
+                                <input type="hidden" name="obj_id" value="{{ obj.id }}">
+                                <div class="col">
+                                    {{ editor.area|safe }}
+                                </div>
+                                <div class="col-2" style="margin-left:2rem;">
+                                    <input type="file" name="file" multiple="" id="id_file">
+                                </div>
                         </div>
-                        <small id="emailHelp" class="form-text text-muted">Pressione o botão para enviar um email ao solicitante.</small>
-                      </div>
-                </form>
-            </div>
-            <div class="message-box">
-                asd
+                    </div>
+                    {% else %}
+                    </div>
+                    <div class="message-box">
+                        <div class="box">
+                            <h3>Observação:</h3>
+                            <textarea rows="3" cols="30" id="obs" name="obs" style="border:solid 1px; width: 100%; height: 250px; resize: none;">{% if obj.obs %}{{ obj.obs }}{% endif %}</textarea>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                <div style="width: 100%;">
+                    <div style="display: flex; justify-content: space-between; width: 30%; margin: 15px 30px 15px auto;">
+                        <div>
+                        </div>
+                        <div style="display: flex;">
+
+                            {% if obj.status == 'CONCLUIDO' and not obj.pago %}
+                                <button style="margin: 0 15px 0 auto; padding: 10px 30px;" type="submit" name="pago" value="1" {% if obj.pago %}disabled{% endif %}>Pago</button>
+                            {% endif %}
+                            
+                            <button style="margin: 0 15px 0 auto; display: flex; padding: 10px 30px;">Atualizar</button>
+                        </div>
+                        
+                    </div>
+                </div>
+                <hr>
+                <h2><b>Lista de itens</b></h2>
+                <ul>
+                    {% for q in obj.produtossolicitacoes_set.all %}
+                        <li>{{ q.produto }} - {{ q.qnt_itens }}un </li>
+                    {% endfor %}
+                </ul>
+            </form>
+        </div>
+        <div class="tktcontainer" style="background-color: rgba(245, 249, 255, 0.805); margin-top: 10px;">
+            <h2>Entradas</h2>
+            <hr>
+            <div class="row">
+                {% if entradas %}
+                    {% for q in entradas %}
+                        <div class="col-4" style="border: 1px solid grey; display: flex; flex-direction: column;">
+                            <p><b>ID entrada:</b> {{ q.id }}</p>
+                            <b>Observação:</b> <p style="word-break: break-all;">{{ q.obs|safe }}</p><br>
+                            <div style="margin-top: auto;">
+                                {% if q.file1 %}
+                                    <span class="entry-file"><a href="/media/{{ q.file1 }}" style="padding: 15px 0 6px 0" title="{{ q.file1|filename }}" download><ion-icon style="font-size: 30px; color: white;" name="document-outline"></ion-icon><small style="color: white; display: block; text-align: center; margin-top: -9px;">file 1</small></a></span>
+                                {% endif %}
+                                {% if q.file2 %}
+                                    <span class="entry-file"><a href="/media/{{ q.file2 }}" style="padding: 15px 0 6px 0" title="{{ q.file2|filename }}" download><ion-icon style="font-size: 30px; color: white;" name="document-outline"></ion-icon><small style="color: white; display: block; text-align: center; margin-top: -9px;">file 2</small></a></span>
+                                {% endif %}
+                                {% if q.file3 %}
+                                    <span class="entry-file"><a href="/media/{{ q.file3 }}" style="padding: 15px 0 6px 0" title="{{ q.file3|filename }}" download><ion-icon style="font-size: 30px; color: white;" name="document-outline"></ion-icon><small style="color: white; display: block; text-align: center; margin-top: -9px;">file 3</small></a></span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
             </div>
         </div>
-
+        <br>
+        <!--
         <div class="container viewmonit">
             <div class="tktcontainer">
                 <form method="post" enctype="multipart/form-data">{% csrf_token %}
@@ -287,7 +472,7 @@
                     {% endif %}
                 </div>
             </div>
-        </div>
+        </div>-->
     </div>
 {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
 <script>

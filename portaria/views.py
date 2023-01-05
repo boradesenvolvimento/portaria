@@ -3198,6 +3198,9 @@ def printetiquetas(array):
             print('finalizou sem "erros"')
 
 def mdfeporfilial(request):
+    sm = smtplib.SMTP('smtp.bora.tec.br', '587')
+    sm.set_debuglevel(1)
+    sm.login(get_secret('KH_MDFUSER'), get_secret('KH_MDFPASS'))
     hoje = datetime.date.today()
     gachoices = GARAGEM_CHOICES
     mailchoices = {
@@ -3220,7 +3223,7 @@ def mdfeporfilial(request):
                     'SLZ': ['felipe@bora.com.br'],
                     'THE': ['felipe@bora.com.br'],
                     'BEL': ['felipe@bora.com.br'],
-                    'VDC': ['jose.sousa@bora.com.br', 'fernando.sousa@bora.com.br',brandao.alan@bora.com.br],
+                    'VDC': ['jose.sousa@bora.com.br', 'fernando.sousa@bora.com.br', 'brandao.alan@bora.com.br'],
                     'REC': ['cinthya.souza@bora.com.br', 'patricia.santos@bora.com.br', 'edvanio.silva@bora.com.br',
                             'expedicao_rec@bora.com.br','ronnielly@bora.com.br'],
                     'AJU': ['luana.santos@bora.com.br','brandao.alan@bora.com.br'],
@@ -3305,8 +3308,11 @@ def mdfeporfilial(request):
         pdr = pd.DataFrame(res)
         if not pdr.empty:
             send = ['gabriel.torres@bora.com.br', 'alan@bora.com.br', 'gabriel.moura@bora.com.br',
-                    'thiago@bora.com.br'] + result
-            #send = ['gabriel.torres@bora.com.br', 'alan@bora.com.br']
+                    'thiago@bora.com.br', 'rafael.rocha@bora.com.br'] 
+            for i in result:
+                send.append(i)
+            print(send)
+            #send = ['gabriel.torres@bora.com.br']
             #Separa congelado inicio
             if k in ('6','7'):
                 resultrec = mailchoices.get('REC', '')
@@ -3318,7 +3324,10 @@ def mdfeporfilial(request):
                     pdr = pdr.drop(row.index)
                     if not row.empty:
                         send2 = ['gabriel.torres@bora.com.br', 'alan@bora.com.br', 'gabriel.moura@bora.com.br',
-                                 'thiago@bora.com.br'] + resultrec
+                                 'thiago@bora.com.br', 'rafael.rocha@bora.com.br']
+                        for i in result:
+                            send2.append(i)
+                        print(send2)
                         #send2 = ['gabriel.torres@bora.com.br', 'alan@bora.com.br']
                         msg = MIMEMultipart('related')
                         msg['From'] = get_secret('KH_MDFUSER')
@@ -3344,9 +3353,6 @@ def mdfeporfilial(request):
 
                         msg.attach(part)
                         try:
-                            sm = smtplib.SMTP('smtp.bora.tec.br', '587')
-                            sm.set_debuglevel(1)
-                            sm.login(get_secret('KH_MDFUSER'), get_secret('KH_MDFPASS'))
                             #sm.sendmail(get_secret('EUSER_MN'), send2, msg.as_string())
                             sm.sendmail(get_secret('KH_MDFUSER'), send2, msg.as_string())
                         except Exception as e:
@@ -3376,12 +3382,9 @@ def mdfeporfilial(request):
 
             msg.attach(part)
             try:
-                sm = smtplib.SMTP('smtp.bora.tec.br', '587')
-                sm.set_debuglevel(1)
-                sm.login(get_secret('KH_MDFUSER'), get_secret('KH_MDFPASS'))
                 sm.sendmail(get_secret('KH_MDFUSER'), send, msg.as_string())
             except Exception as e:
-                return HttpResponse(f'<h3> Falha no envio do email {k} para {send}, conteúdo: {msg.as_string()}</h3>')
+                return HttpResponse(f'<h3> Falha no envio do email {k} para {send},</h3><p>conteúdo: {msg.as_string()}</p><br><h3>Erro: {e} <br> Tipo: {type(e)}</h3>')
                 raise e
     return HttpResponse('<h3>Job finalizado!</h3>')
 
@@ -3451,6 +3454,12 @@ def bipagempalrel(request):
 def justificativa(request):
     gachoices = GARAGEM_CHOICES
     justchoices = JustificativaEntrega.JUSTIFICATIVA_CHOICES
+    today = datetime.datetime.now()
+    yesterday = today - datetime.timedelta(1)
+    today = today.strftime('%Y-%m-%d')
+    yesterday = yesterday.strftime('%Y-%m-%d')
+    print(today, type(today))
+    print(yesterday, type(yesterday))
     if request.method == 'GET':
         date1 = request.GET.get('data1')
         date2 = request.GET.get('data2')
@@ -3459,7 +3468,7 @@ def justificativa(request):
             form = JustificativaEntrega.objects.filter(id_garagem=filial, data_emissao__lte=date2, data_emissao__gte=date1,
                                                        confirmado=False)
             return render(request,'portaria/etc/justificativa.html', {'form':form,'gachoices':gachoices,
-                                                                      'justchoices':justchoices})
+                                                                      'justchoices':justchoices, 'today': today, 'yesterday': yesterday})
     if request.method == 'POST':
         lista = request.POST.getlist('counter')
         for q in lista:
@@ -3481,7 +3490,7 @@ def justificativa(request):
                     obj.save()
         messages.success(request, 'Justificativas cadastradas')
         return redirect('portaria:justificativa')
-    return render(request, 'portaria/etc/justificativa.html', {'gachoices': gachoices})
+    return render(request, 'portaria/etc/justificativa.html', {'gachoices': gachoices, 'today': today, 'yesterday': yesterday})
 
 def rel_justificativa(request):
     gachoices = GARAGEM_CHOICES
@@ -3710,7 +3719,9 @@ def insert_to_ocorrencias(data):
             obj['entrega'] = just[0]
             try:
                 kj = OcorrenciaEntrega.objects.get(**obj)
+                print('objects exists')
             except Exception as e:
+                print(f'creating object, error: {e}')
                 kj = OcorrenciaEntrega.objects.create(**obj)
     print('finalizou')
     
@@ -4109,10 +4120,12 @@ def edit_compras(request, id):
     stschoices = SolicitacoesCompras.STATUS_CHOICES
     dpchoices = SolicitacoesCompras.DEPARTAMENTO_CHOICES
     rpchoices = User.objects.filter(groups__name='compras').exclude(id=1)
+    print(obj.data, obj.email_solic)
     if request.method == 'POST':
         status = request.POST.get('status')
         filial = request.POST.get('filial')
         departamento = request.POST.get('departamento')
+        forma_pgt = request.POST.get('forma_pgt')
         responsavel = request.POST.get('responsavel')
         categoria = request.POST.get('categoria')
         prazo = request.POST.get('prazo_conclusao')
@@ -4121,12 +4134,14 @@ def edit_compras(request, id):
         obs = request.POST.get('obs')
         files = request.FILES.getlist('file')
         pago = request.POST.get('pago')
+        print(departamento)
         try:
             if status != '':
                 obj.status = status
                 messages.success(request, f'Status alterado para {status} com sucesso!')
             if filial != '': obj.filial = keyga[filial]
             if departamento != '': obj.departamento = departamento
+            if forma_pgt != '': obj.forma_pgt = forma_pgt
             if responsavel != '': obj.responsavel_id = responsavel
             if categoria != '': obj.categoria = categoria
             if dt_venc != '' and dt_venc is not None: obj.dt_vencimento = dt_venc
@@ -4140,12 +4155,15 @@ def edit_compras(request, id):
         else:
             obj.ultima_att = request.user
             obj.save()
+            print('novo objeto: ', obj.departamento)
             messages.info(request, f'Solicitação {obj.nr_solic} alterada com sucesso')
             return redirect('portaria:painel_compras')
     try:
         vencimento = (obj.dt_vencimento - datetime.date.today()).days
     except:
         vencimento = None
+
+    print(f'{obj.departamento} | {obj.dt_vencimento} | obj.pago')
 
     return render(request, 'portaria/etc/edit_compras.html', {'obj':obj, 'gachoices':gachoices, 'stschoices':stschoices,
                                                               'dpchoices':dpchoices, 'rpchoices':rpchoices,
