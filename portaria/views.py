@@ -1934,7 +1934,7 @@ def transfpalete(request):
             dt_receb = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             toDelete = []
             for q in range(0, qnt):
-                dt_parse = datetime.datetime.strptime(dt_solic, "%d/%m/%Y %I:%M")
+                dt_parse = datetime.datetime.strptime(dt_solic, "%d/%m/%Y %H:%M")
                 print(f'Informações do palet\niteração: {q}')
                 print(f'locatual: {movPalete[q]}\n ')
 
