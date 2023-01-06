@@ -133,6 +133,9 @@
                                             </td>
                                         </tr>
                                     {% endfor %}
+                                    {% if not q.item_set.all %}
+                                        <button id="addItem" type="button" value="{{ q.id }}" style="background-color: transparent;color: #0d6efd; bottom: -20px;"><ion-icon name="pencil-outline" size="small" style="bottom: -10px; vertical-align: middle;"></ion-icon></p></button>
+                                    {% endif %}
                                 </table>
                             </td>
                             
