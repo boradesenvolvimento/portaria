@@ -23,7 +23,9 @@
                     <select class="form-control" id="filial" name="filial" required>
                         <option selected disabled value="">--</option>
                         {% for k,v in filiais %}
-                            <option value="{{ k }}"> {{ v }} </option>
+                            {% if k != '0' %}
+                                <option value="{{ k }}"> {{ v }} </option>
+                            {% endif %}
                         {% endfor %}
                     </select>
                 </div>
