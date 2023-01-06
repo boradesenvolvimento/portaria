@@ -1815,7 +1815,7 @@ def romxmltoexcel(*romaneio, tp_dld):
 #funcoes variadas
 @login_required
 def solictransfpalete(request):
-    mov_gar = '0'
+    mov_gar = "0"
     form = TPaletesForm()
     keyga = {k:v for k,v in GARAGEM_CHOICES}
     if request.method == 'POST':
@@ -1843,7 +1843,7 @@ def solictransfpalete(request):
                 x = PaleteControl.objects.filter(loc_atual=keyga[ori], tp_palete=tp_p).first()
                 solic = SolicMovPalete.objects.create(solic_id=solic_id, palete=x,data_solic=currentTime,origem=keyga[ori],destino=keyga[des],
                                          placa_veic=plc,autor=request.user)
-                PaleteControl.objects.filter(pk=x.id).update(loc_atual=keyga['0'])
+                PaleteControl.objects.filter(pk=x.id).update(loc_atual=keyga["0"])
             messages.success(request, f'{qnt} palete transferido de {keyga[ori]} para {keyga[des]}')
             return redirect('portaria:transfdetalhe', solic_id=solic_id)
             #return render(request,'portaria/palete/transfpaletes.html', {'form':form})
@@ -1915,7 +1915,6 @@ def transfpalete(request):
             for q in quantity:
                 qty = q['solic_id__count']
             form = SolicMovPalete.objects.filter(solic_id=solic_id).first()
-            print(form)
             return render(request,'portaria/palete/recpaletes.html', {"solic": form, "qty": qty})
 
     if request.method == 'POST':
@@ -1928,13 +1927,11 @@ def transfpalete(request):
         autor = request.POST.get('autor')
         movPalete = SolicMovPalete.objects.filter(solic_id=solic_id)
 
-        print(f'Quantidade recebida: {qnt}\nQuantidade Transferida: {movPalete.count()}, DATA: {dt_solic}')
         if movPalete.count() == 0:
             messages.error(request, f'Não existem mais pallets disponíveis nessa transferência')
             return redirect('portaria:painelmov')
-        if qnt <= movPalete.count() or movPalete.count() == qnt:
+        if int(qnt) <= int(movPalete.count()) or int(movPalete.count()) == int(qnt):
             dt_receb = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            print(f'sizes movepalete: {movPalete.count()} qnt: {qnt}' )
             toDelete = []
             for q in range(0, qnt):
                 dt_parse = datetime.datetime.strptime(dt_solic, "%d/%m/%Y %I:%M")
@@ -1961,28 +1958,12 @@ def transfpalete(request):
                     toDelete.append(SolicMovPalete.objects.get(id=movPalete[q].id))
             for i in toDelete:
                 i.delete()
-            return render(request,'portaria/palete/recpaletes.html')
-        """
-        for q in range(0,qnt):
-                x = PaleteControl.objects.filter(loc_atual=keyga[ori], tp_palete=tp_p).first()
-                solic = SolicMovPalete.objects.create(solic_id=solic_id, palete=x,data_solic=currentTime,origem=keyga[ori],destino=keyga[des],
-                                         placa_veic=plc,autor=request.user)
-                PaleteControl.objects.filter(pk=x.id).update(loc_atual=keyga['MOV'])
-            messages.success(request, f'{qnt} palete transferido de {keyga[ori]} para {keyga[des]}')
-      
-
-        if qnt <= PaleteControl.objects.filter(loc_atual=keyga[ori],tp_palete=tp_p).count():
-            for q in range(0,qnt):
-                x = PaleteControl.objects.filter(loc_atual=keyga[ori], tp_palete=tp_p).first()
-                MovPalete.objects.create(palete=x,data_ult_mov=timezone.now(),origem=keyga[ori],destino=keyga[des],
-                                         placa_veic=plc,autor=request.user)
-                PaleteControl.objects.filter(pk=x.id).update(loc_atual=keyga[des])
-            messages.success(request, f'{qnt} palete transferido de {keyga[ori]} para {keyga[des]}')
-            return render(request,'portaria/palete/recfpaletes.html')
+            messages.success(request, 'Pallets recebidos com sucesso')
+            return redirect('portaria:painelmov')
+            #return render(request, 'portaria/palete/recpaletes.html')
         else:
-            messages.error(request,'Quantidade solicitada maior que a disponível')
+            messages.error(request, 'A quantidade recebida é superior ao que foi enviado')
             return render(request,'portaria/palete/recpaletes.html')
-        """
     return render(request,'portaria/palete/recpaletes.html')
 
 def painelmov(request):
@@ -4446,7 +4427,7 @@ def estoque_nova_solic(request):
             i = it.split(' ')
             print(i)
             tam = Tamanho.objects.get(id=int(i[0]))
-            CartItem.objects.create(cart=cart, tam_id=tam.id, desc=tam.item.desc, tam=tam.tam, qty=int(i[1]))
+            CartItem.objects.create(cart=cart, tam_id=tam.id, desc=tam.item.desc, ca=tam.item.ca, tam=tam.tam, qty=int(i[1]))
 
         return redirect('portaria:estoque_index')
     return render(request, 'portaria/estoque/nova_solicitacao.html', {'itens':itens, 'filial':filial})
@@ -4478,9 +4459,10 @@ def estoque_listagem_itens(request):
         if request.POST.get('type') == 'ITEM':
             estoque = request.POST.get('obj')
             desc = request.POST.get('desc')
+            ca = request.POST.get('ca')
             validade = request.POST.get('validade')
             estq = EstoqueItens.objects.get(id=int(estoque))
-            Item.objects.create(desc=desc, estoque=estq, validade=validade)
+            Item.objects.create(desc=desc, estoque=estq, ca=ca, validade=validade)
             messages.success(request, 'Item adicionado com sucesso!')
 
         if request.POST.get('type') == 'EDITTAM':
@@ -4507,11 +4489,46 @@ def estoque_detalhe(request, id):
                 myfile = request.FILES.getlist('file')
             else:
                 myfile = None
+                items = ''
+            for cart in item.cart_set.all():
+                for i in cart.cartitem_set.all():
+                    items += f'''
+                        <tr>
+                            <td style="text-align: center; padding: 0 5px;"> {i.desc} </td>
+                            <td style="text-align: center; padding: 0 5px;"> {i.ca} </td>
+                            <td style="text-align: center; padding: 0 5px;"> {i.tam} </td>
+                            <td style="text-align: center; padding: 0 5px;"> {i.qty} </td>
+                        </tr>
+
+                    '''
             area += f'''
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>CA</th>
+                            <th>Tamanho</th>
+                            <th>Quantidade</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {items}
+                    <tbody>
+                </table>
                 <br>
-                <a href="{request.build_absolute_uri(reverse('portaria:estoque_confirma_item'))}?buscaitem={item.id}">
-                <button style="background: #3485FF; color: #fff; font-family: 'Poppins', sans-serif; padding: 3px 20px;">Confirmar solicitação</button>
-                </a>
+                <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                    <tr>
+                        <td>
+                            <table border="0" cellspacing="0" cellpadding="0">
+                                <tr>
+                                    <td bgcolor="#3485FF" style="padding: 4px 16px; border-radius:4px">
+                                        <a href="{request.build_absolute_uri(reverse('portaria:estoque_confirma_item'))}?buscaitem={item.id}" target="_blank" style="font-size: 16px; mso-line-height-rule:exactly; line-height: 16px; font-family: 'Cabin',Arial, Helvetica, sans-serif; font-weight: 100; letter-spacing:0.025em; color: #ffffff; text-decoration: none; display: inline-block;">Confirmar solicitação</a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
             '''
             msg = MIMEMultipart()
             if myfile is not None:

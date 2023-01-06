@@ -55,9 +55,10 @@
                 <table class="table1 table">
                     <thead>
                         <tr>
-                            <th scope="col" style="width:15%;">ID</th>
-                            <th scope="col" style="width:20%;">Grupo</th>
-                            <th scope="col" style="width:20%;">Item</th>
+                            <th scope="col" style="width:5%;">ID</th>
+                            <th scope="col" style="width:10%;">Grupo</th>
+                            <th scope="col" style="width:15%;">Item</th>
+                            <th scope="col" style="width:15%;">CA</th>
                             <th scope="col" style="width:15%;">Validade</th>
                             <th scope="col" style="width:15%;">Tamanho</th>
                             <th scope="col" style="width:15%;">Quantidade</th>
@@ -67,27 +68,27 @@
                     <tbody>
                     {% for q in itens %}
                         <tr id="tabletkt" class="tabletkt" style="border-bottom: 1px dotted black">
-                            <td>{{ q.id }}</td>
-                            <td>{{ q.grupo }}</td>
-                            <td colspan="4">
+                            <td><span style="line-height: 42px;">{{ q.id }}</span></td>
+                            <td><span style="line-height: 42px;">{{ q.grupo }}</span></td>
+                            <td colspan="5">
                                 <table width="100%">
                                     {% for item in q.item_set.all %}
                                         <tr style="border-bottom: 1px solid grey; line-height: 25px;">
-                                            <td width="28%" style="vertical-align: top;">{{ item.desc }}</td>
-                                            <td width="20%" style="vertical-align: top;">{{ item.validade }} dias</td>
+                                            <td width="20%" style="vertical-align: top;"><span style="line-height: 40px;">{{ item.desc }} <button id="addItem" type="button" value="{{ q.id }}" style="background-color: transparent;color: #0d6efd; bottom: -20px;"><ion-icon name="pencil-outline" size="small" style="bottom: -10px; vertical-align: middle;"></ion-icon></p></button></span></td>
+                                            <td width="20%" style="vertical-align: top; " > <span style="line-height: 42px;">{{ item.ca }}</span> </td>
+                                            <td width="20%" style="vertical-align: top;"><span style="line-height: 42px;">{{ item.validade }}</span></td>
                                             <td width="40%">
                                                 <table style="width: 100%; line-height: 25px;">
                                                     {% for tam in item.tamanho_set.all|dictsort:"tam" %}
                                                         <tr class="sizeRow">
                                                             <td style="text-align: center; width: 20%;"> {{ tam.tam }} </td>
                                                             <td style="width: 30%;"> </td>
-                                                            <td style="text-align: center; width: 25%;"> {{ tam.quantidade }} </td>
+                                                            <td style="text-align: center; width: 25%;">{{ tam.quantidade }}</td>
                                                             <td style="text-align: center;"> 
                                                                 <button id="editSize" type="button" value="{{ forloop.counter }}" style="background-color: transparent;color: #0d6efd">
                                                                     <ion-icon name="create-outline"></ion-icon> 
                                                                 </button>
                                                             </td>
-
                                                         </tr>
                                                         
                                                         <div id="editTam{{ forloop.counter }}" class="modal">
@@ -123,12 +124,16 @@
                                                             }
                                                         </style>
                                                     {% endfor %}
+                                                    <hr>
+                                                    <tr style="border-top: 2px solid grey">
+                                                        <td style="padding-left: 20px;" colspan="2"> Total: </td>
+                                                        <td style="text-align: center" id="qty_total_{{forloop.counter}}"><td>
+                                                    <tr>
                                                 </table>
                                             </td>
                                         </tr>
                                     {% endfor %}
                                 </table>
-                                <button id="addItem" type="button" value="{{ q.id }}" style="width:20px; height: 20px; border-radius:50%;"> + </button>
                             </td>
                             
                             {% comment %} {% if request.user|has_group:"estoque_main" %}
@@ -207,8 +212,10 @@
                                             <span>
                                                 <label for="desc">Item</label>
                                                 <input name="desc" id="desc" placeholder="Item..."><br>
-                                                <label for="validade">Validade (dias)</label>
-                                                <input type="number" name="validade" style="width: 7.5em;" placeholder="Validade">
+                                                <label for="ca">CA</label>
+                                                <input name="ca" id="ca" placeholder="CA..."><br>
+                                                <label for="validade">Validade</label>
+                                                <input type="date" name="validade" style="width: 7.5em;" placeholder="Validade">
                                             </span>
                                         </div>
                                         <div class="row">
@@ -249,6 +256,26 @@
         }
     </style>
     <script>
+        $(document).ready(function(){
+            let itens = [];
+            let cur = 0;
+            {% for q in itens %}
+                {% for item in q.item_set.all %}
+                    itens.push(0);
+                    {% for tam in item.tamanho_set.all %}
+                        itens[cur] += {{tam.quantidade}};
+                    {% endfor %}
+                    cur += 1;
+                {% endfor %}
+            {% endfor %}
+            console.log(itens)
+            for (i = 0; i < itens.length; i++){
+                console.log(itens[i])
+                console.log(`qty_total_${i+1}`)
+                totalLabel = document.getElementById(`qty_total_${i+1}`).textContent=itens[i];
+
+            }
+        })
         $(document).on('click', '#addGroup', function() {
             var btn = $(this);
             var but = $(this).val();

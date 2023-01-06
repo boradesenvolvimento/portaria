@@ -29,7 +29,7 @@
             <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
             <div class="row">
-                <div class="col-5" style="overflow-y: scroll; height: 50vh;">
+                <div class="col-6" style="overflow-y: scroll; height: 50vh;">
                     <div style="width: 100%;">
                         <table style=" margin: 10px auto;">
                             <thead>
@@ -84,6 +84,7 @@
                             <table style="margin: auto;">
                                 <thead>
                                     <th>Item</th>
+                                    <th>CA</th>
                                     <th>Tamanho</th>
                                     <th>Quantidade</th>
                                 </thead>
@@ -92,6 +93,7 @@
                                         {% for i in cart.cartitem_set.all %}
                                         <tr>
                                             <td>{{ i.desc }}</td>
+                                            <td> {{ i.ca }} </td>
                                             <td style="text-align: center;">{{ i.tam }}</td>
                                             <td style="text-align: center;" >{{ i.qty }}</td>
                                         </tr>

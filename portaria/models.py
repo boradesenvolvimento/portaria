@@ -68,6 +68,7 @@ TIPO_DOCTO_CHOICES = (
     ('57', 'CTE')
 )
 GARAGEM_CHOICES = [
+        ('0', 'MOV'), # em movimento
         ('1' ,'SPO'),
         ('2' ,'REC'),
         ('3' ,'SSA'),
@@ -100,7 +101,6 @@ GARAGEM_CHOICES = [
         ('36','THE'),
         ('52','THE'),
         ('40','FMA'),
-        ('0', 'MOV') # em movimento
     ]
 DEPARTAMENTO_CHOICES = [
         ('DIRETORIA', 'DIRETORIA'),
@@ -963,6 +963,7 @@ class CartItem(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
     tam_id = models.PositiveBigIntegerField()
     desc = models.CharField(max_length=100)
+    ca = models.CharField(max_length=100)
     tam = models.CharField(max_length=5)
     qty = models.PositiveBigIntegerField()
 
@@ -970,7 +971,8 @@ class CartItem(models.Model):
 class Item(models.Model):
     id = models.BigAutoField(primary_key=True)
     desc = models.CharField(max_length=100)
-    validade = models.PositiveBigIntegerField()
+    validade = models.DateField()
+    ca = models.CharField(max_length=100)
     estoque = models.ForeignKey(EstoqueItens, on_delete=CASCADE, null=True, blank=True)
 
 class Tamanho(models.Model):
