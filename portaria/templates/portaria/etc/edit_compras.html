@@ -178,6 +178,7 @@
                                 {% endif %}
                             </div>
                             <div class="form-group" style="width: 48%;">
+                                
                                 {% if not obj.dt_vencimento %}
                                     <div id="display_dt_venc" style="display: none;">
                                         <label class="form-label" for="dt_venc">Vencimento</label>
@@ -186,7 +187,7 @@
                                 {% else %}
                                     <div id="display_dt_venc">
                                         <label class="form-label" for="dt_venc">Vencimento</label>
-                                        <input class="form-control" type="date" id="dt_venc" name="dt_venc" value="{{ obj.dt_vencimento|date:'Y-m-d' }}">
+                                        <input class="form-control" type="date" id="dt_venc" name="dt_venc" value="{{ obj.dt_vencimento|date:'Y-m-d' }}" />
                                     </div>
                             </div>
                         </div>
@@ -203,9 +204,9 @@
                                             {% else %} O boleto vence hoje
                                             {% endif %}
                                         </div>
-                                    {% endif%}
+                                    {% endif %}
                                 {% endif %}
-                            </div>
+                        </div>
                         <div>
                             <div class="form-group">
                                 <label for="solicitante">Solicitante</label>
@@ -327,152 +328,6 @@
             </div>
         </div>
         <br>
-        <!--
-        <div class="container viewmonit">
-            <div class="tktcontainer">
-                <form method="post" enctype="multipart/form-data">{% csrf_token %}
-                <div class="row">
-                    <div class="col-4">
-                    <h2>Solicitação nº {{ obj.nr_solic }}</h2>
-                    <ul>
-                        <li><div>Status:
-                        <select name="status">
-                            <option label="{{ obj.status|default_if_none:'Não Cadastrado' }}"></option>
-                            {% for k,v in stschoices %}
-                            <option value="{{ k }}">{{ v }}</option>
-                            {% endfor %}
-                        </select></div></li>
-                        <li><div>Filial:
-                        <select name="filial">
-                            <option label="{{ obj.get_filial_display|default_if_none:'Não Cadastrado' }}"></option>
-                            {% for k,v in gachoices %}
-                            <option value="{{ v }}">{{ v }}</option>
-                            {% endfor %}
-                        </select></div></li>
-                        <li><div>Departamento:
-                            <select name="departamento">
-                            <option label="{{ obj.departamento|default_if_none:'Não Cadastrado' }}"></option>
-                            {% for k,v in dpchoices %}
-                            <option value="{{ k }}">{{ v }}</option>
-                            {% endfor %}
-                        </select></div></li>
-                        <li><div>Responsável:
-                        <select name="responsavel">
-                            <option label="{{ obj.responsavel|default_if_none:'Não Cadastrado' }}"></option>
-                            {% for q in rpchoices %}
-                            <option value="{{ q.id }}">{{ q.username }}</option>
-                            {% endfor %}
-                        </select></div></li>
-                        <li><div>Categoria:
-                        <select name="categoria" id="categoria" onchange="DisplayInput();">
-                            <option label="{{ obj.categoria }}">{{ obj.categoria }}</option>
-                            <option label="ALMOXARIFADO">ALMOXARIFADO</option>
-                            <option label="COTAÇÃO">COTAÇÃO</option>
-                            <option label="NOTA FISCAL">NOTA FISCAL</option>
-                        </select></div></li>
-                        {% if not obj.prazo_conclusao %}<li><div><label for="prazo_conclusao">Prazo:</label>
-                            <input type="date" readonly id="prazo_conclusao" name="prazo_conclusao"></div></li>
-                        {% else %}
-                            <li><div><label for="criado_em">Criado em:</label>
-                            <input type="text" readonly id="criado_em" value="{{ obj.pub_date }}"></div></li>
-                        {% endif %}
-                        {% if not obj.dt_vencimento %}
-                            <div id="display_dt_venc" style="display:none;">
-                                <li>
-                                    <label for="dt_venc">Vencimento:</label>
-                                    <input type="date" id="dt_venc" name="dt_venc">
-                                </li>
-                            </div>
-                        {% elif vencimento > 0 %}
-                            <li>
-                                <div>
-                                    <p>O boleto vai vencer em <b>{{ vencimento }}</b> dias</P>
-                                </div>
-                            </li>
-                        {% elif vencimento < 0 %}
-                            <li>
-                                <div>
-                                    <p>O boleto venceu faz <b>{{ vencimento|invert }}</b>  dias</p>
-                                </div>
-                            </li>
-                        {% else %}
-                            <li>
-                                <div>
-                                    <p>O boleto vence <b>hoje</b></P>
-                                </div>
-                            </li>
-                        {% endif %}
-                        <li><div>Solicitante: {{ obj.solicitante|default_if_none:'Não Cadastrado' }} </div></li>
-                        <li><div style="word-wrap: break-word;">Anexo: {% if obj.anexo %}<a href="/media/{{ obj.anexo }}" download>{{ obj.anexo|filename }}</a>
-                            {% else %} nenhum anexo. {% endif %}
-                        </div></li>
-                        <li>
-                            <div style="word-wrap: break-word;">
-                                {% if obj.pago %}
-                                    Solicitação paga
-                                {% else %}
-                                    Aguardando pagamento
-                                {% endif %}
-                            </div>
-                        </li>
-                        <li><div><h3>Observação:</h3>
-                            <textarea rows="3" cols="30" id="obs" name="obs" style="border:solid 1px;">{% if obj.obs %}{{ obj.obs }}{% endif %}</textarea></div></li>
-                    </ul>
-                    </div>
-
-                    <div class="col-8">
-                    {% if request.user|has_group:'compras-adm' %}
-                        <h2>Cadastrar entradas</h2>
-                            <input type="hidden" name="obj_id" value="{{ obj.id }}">
-                            <div class="col">
-                                {{ editor.area|safe }}
-                            </div>
-                            <div class="col-2" style="margin-left:2rem;">
-                                <input type="file" name="file" multiple="" id="id_file">
-                            </div>
-                    {% endif %}
-                    </div>
-
-                        <div style="width:55%">
-                            {% if obj.status == 'CONCLUIDO'%}
-                                <button style="float:right;max-width:10rem;margin-top:1rem;" type="submit" name="pago" value="1" {% if obj.pago %}disabled{% endif %}>Pago</button>
-
-                            {% endif %}
-                            <button style="float:right;max-width:10rem;margin-top:1rem;" type="submit">Atualizar</button>
-                        </div>
-
-                </div>
-                </form>
-                <hr>
-                <h2>Lista de itens</h2>
-                <ul>
-                    {% for q in obj.produtossolicitacoes_set.all %}
-                        <li>{{ q.produto }} - {{ q.qnt_itens }}un </li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
-        <div class="container viewmonit">
-            <div class="tktcontainer">
-                <h2>Entradas</h2>
-                <hr>
-                <div class="row">
-                    {% if entradas %}
-                        {% for q in entradas %}
-                            <div class="container createboxes">
-                                <ul>
-                                    <li>ID entrada: {{ q.id }}</li>
-                                    <li>Observação: {{ q.obs|safe }}</li>
-                                    {% if q.file1 %}<li><a href="/media/{{ q.file1 }}" download>{{ q.file1|filename }}</a></li>{% endif %}
-                                    {% if q.file2 %}<li><a href="/media/{{ q.file2 }}" download>{{ q.file2|filename }}</a></li>{% endif %}
-                                    {% if q.file3 %}<li><a href="/media/{{ q.file3 }}" download>{{ q.file3|filename }}</a></li>{% endif %}
-                                </ul>
-                            </div>
-                        {% endfor %}
-                    {% endif %}
-                </div>
-            </div>
-        </div>-->
     </div>
 {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
 <script>

@@ -3818,31 +3818,38 @@ def compras_lancar_pedido(request):
                                        WHEN SO.STATUSSOLIC = 'F' THEN 'FECHADO'
                                    END STATUS,
                                    CASE
-                                       WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '1' THEN 'SPO'
-                                       WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '2' THEN 'REC'
-                                       WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '3' THEN 'SSA'
-                                       WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '4' THEN 'FOR'
-                                       WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '5' THEN 'MCZ'
-                                       WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '6' THEN 'NAT'
-                                       WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '7' THEN 'JPA'
-                                       WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '8' THEN 'AJU'
-                                       WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '9' THEN 'VDC'
-                                       WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '10' THEN 'MG'
-                                       WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '1' THEN 'CTG'
-                                       WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '2' THEN 'TCO'
-                                       WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '3' THEN 'UDI'
-                                       WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '4' THEN 'TMA'
-                                       WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '5' THEN 'VIX'
-                                       WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '6' THEN 'GVR'
-                                       WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '1' THEN 'BMA'
-                                       WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '2' THEN 'BPE'
-                                       WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '3' THEN 'BEL'
-                                       WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '4' THEN 'BPB'
-                                       WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '5' THEN 'SLZ'
-                                       WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '6' THEN 'BAL'
-                                       WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '7' THEN 'THE'
-                                       WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '8' THEN 'BMG'
-                                       WHEN SO.CODIGOEMPRESA = '4' AND SO.CODIGOFL = '1' THEN 'FMA'
+                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '1'  THEN 'SPO'          
+                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '2'  THEN 'REC'  
+                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '3'  THEN 'SSA'  
+                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '4'  THEN 'FOR'
+                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '5'  THEN 'MCZ'  
+                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '6'  THEN 'NAT'  
+                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '7'  THEN 'JPA'  
+                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '8'  THEN 'AJU'  
+                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '9'  THEN 'VDC'
+                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '10' THEN 'CTG' 
+                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '11' THEN 'GVR'
+                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '12' THEN 'VIX'
+                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '13' THEN 'TCO'                        
+                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '14' THEN 'UDI' 
+                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '50' THEN 'VIX'
+                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '20' THEN 'SPO'
+                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '21' THEN 'SPO'
+                                        WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '20' THEN 'CTG'
+                                        WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '21' THEN 'TCO'
+                                        WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '22' THEN 'UDI'                        
+                                        WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '23' THEN 'TMA'
+                                        WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '24' THEN 'VIX'   
+                                        WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '50' THEN 'VIX'                                
+                                        WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '30' THEN 'BMA'
+                                        WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '31' THEN 'BPE'
+                                        WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '32' THEN 'BEL'    
+                                        WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '33' THEN 'BPB'
+                                        WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '34' THEN 'SLZ'
+                                        WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '35' THEN 'BAL'
+                                        WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '36' THEN 'THE' 
+                                        WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '52' THEN 'THE'  
+                                        WHEN SO.CODIGOEMPRESA = '4' AND SO.CODIGOFL = '40' THEN 'FMA'
                                    END FILIAL,
                                    SO.USUARIO SOLICITANTE,
                                    CC.EMAIL
@@ -3882,31 +3889,38 @@ def compras_lancar_pedido(request):
                                        WHEN SO.STATUSSOLIC = 'F' THEN 'FECHADO'
                                    END STATUS,
                                    CASE
-                                       WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '1' THEN 'SPO'
-                                       WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '2' THEN 'REC'
-                                       WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '3' THEN 'SSA'
-                                       WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '4' THEN 'FOR'
-                                       WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '5' THEN 'MCZ'
-                                       WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '6' THEN 'NAT'
-                                       WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '7' THEN 'JPA'
-                                       WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '8' THEN 'AJU'
-                                       WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '9' THEN 'VDC'
-                                       WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '6' THEN 'GVR'
-                                       WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '10' THEN 'MG'
-                                       WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '1' THEN 'CTG'
-                                       WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '2' THEN 'TCO'
-                                       WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '3' THEN 'UDI'
-                                       WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '4' THEN 'TMA'
-                                       WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '5' THEN 'VIX'
-                                       WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '1' THEN 'BMA'
-                                       WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '2' THEN 'BPE'
-                                       WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '3' THEN 'BEL'
-                                       WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '4' THEN 'BPB'
-                                       WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '5' THEN 'SLZ'
-                                       WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '6' THEN 'BAL'
-                                       WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '7' THEN 'THE'
-                                       WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '8' THEN 'BMG'
-                                       WHEN SO.CODIGOEMPRESA = '4' AND SO.CODIGOFL = '1' THEN 'FMA'
+                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '1'  THEN 'SPO'          
+                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '2'  THEN 'REC'  
+                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '3'  THEN 'SSA'  
+                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '4'  THEN 'FOR'
+                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '5'  THEN 'MCZ'  
+                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '6'  THEN 'NAT'  
+                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '7'  THEN 'JPA'  
+                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '8'  THEN 'AJU'  
+                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '9'  THEN 'VDC'
+                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '10' THEN 'CTG' 
+                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '11' THEN 'GVR'
+                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '12' THEN 'VIX'
+                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '13' THEN 'TCO'                        
+                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '14' THEN 'UDI' 
+                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '50' THEN 'VIX'
+                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '20' THEN 'SPO'
+                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '21' THEN 'SPO'
+                                        WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '20' THEN 'CTG'
+                                        WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '21' THEN 'TCO'
+                                        WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '22' THEN 'UDI'                        
+                                        WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '23' THEN 'TMA'
+                                        WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '24' THEN 'VIX'   
+                                        WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '50' THEN 'VIX'                                
+                                        WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '30' THEN 'BMA'
+                                        WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '31' THEN 'BPE'
+                                        WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '32' THEN 'BEL'    
+                                        WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '33' THEN 'BPB'
+                                        WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '34' THEN 'SLZ'
+                                        WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '35' THEN 'BAL'
+                                        WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '36' THEN 'THE' 
+                                        WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '52' THEN 'THE'  
+                                        WHEN SO.CODIGOEMPRESA = '4' AND SO.CODIGOFL = '40' THEN 'FMA'
                                    END FILIAL,
                                    SO.USUARIO SOLICITANTE,
                                    CC.EMAIL
@@ -4007,56 +4021,70 @@ def compras_lancar_direto(request):
     return render(request, 'portaria/etc/lancardireto.html', {'filiais': keyga, 'deps': deps})
 
 def garagem_para_filial_praxio(garagem):
-    if garagem == 'SPO':
-        newga = {'empresa':'1', 'filial':'1'}
-    elif garagem == 'REC':
-        newga = {'empresa':'1', 'filial':'2'}
-    elif garagem == 'SSA':
-        newga = {'empresa':'1', 'filial':'3'}
+    if garagem == 'SPO':          
+        newga = {'empresa':'1', 'filial': '1'  } 
+    elif garagem == 'REC':  
+        newga = {'empresa':'1', 'filial': '2'  } 
+    elif garagem == 'SSA':  
+        newga = {'empresa':'1', 'filial': '3'  } 
     elif garagem == 'FOR':
-        newga = {'empresa':'1', 'filial':'4'}
-    elif garagem == 'MCZ':
-        newga = {'empresa':'1', 'filial':'5'}
-    elif garagem == 'NAT':
-        newga = {'empresa':'1', 'filial':'6'}
-    elif garagem == 'JPA':
-        newga = {'empresa':'1', 'filial':'7'}
-    elif garagem == 'AJU':
-        newga = {'empresa':'1', 'filial':'8'}
+        newga = {'empresa':'1', 'filial': '4'  } 
+    elif garagem == 'MCZ':  
+        newga = {'empresa':'1', 'filial': '5'  } 
+    elif garagem == 'NAT':  
+        newga = {'empresa':'1', 'filial': '6'  } 
+    elif garagem == 'JPA':  
+        newga = {'empresa':'1', 'filial': '7'  } 
+    elif garagem == 'AJU':  
+        newga = {'empresa':'1', 'filial': '8'  } 
     elif garagem == 'VDC':
-        newga = {'empresa':'1', 'filial':'9'}
-    elif garagem == 'MG':
-        newga = {'empresa':'1', 'filial':'10'}
-    elif garagem == 'CTG':
-        newga = {'empresa':'2', 'filial':'1'}
-    elif garagem == 'TCO':
-        newga = {'empresa':'2', 'filial':'2'}
-    elif garagem == 'UDI':
-        newga = {'empresa':'2', 'filial':'3'}
-    elif garagem == 'TMA':
-        newga = {'empresa':'2', 'filial':'4'}
-    elif garagem == 'VIX':
-        newga = {'empresa':'2', 'filial':'5'}
+        newga = {'empresa':'1', 'filial': '9'  } 
+    elif garagem == 'CTG': 
+        newga = {'empresa':'1', 'filial': '10' } 
     elif garagem == 'GVR':
-        newga = {'empresa':'2', 'filial':'6'}
+        newga = {'empresa':'1', 'filial': '11' } 
+    elif garagem == 'VIX':
+        newga = {'empresa':'1', 'filial': '12' } 
+    elif garagem == 'TCO':                        
+        newga = {'empresa':'1', 'filial': '13' } 
+    elif garagem == 'UDI': 
+        newga = {'empresa':'1', 'filial': '14' } 
+    elif garagem == 'VIX':
+        newga = {'empresa':'1', 'filial': '50' } 
+    elif garagem == 'SPO':
+        newga = {'empresa':'1', 'filial': '20' } 
+    elif garagem == 'SPO':
+        newga = {'empresa':'1', 'filial': '21' } 
+    elif garagem == 'CTG':
+        newga = {'empresa':'2', 'filial': '20' } 
+    elif garagem == 'TCO':
+        newga = {'empresa':'2', 'filial': '21' } 
+    elif garagem == 'UDI':                        
+        newga = {'empresa':'2', 'filial': '22' } 
+    elif garagem == 'TMA':
+        newga = {'empresa':'2', 'filial': '23' } 
+    elif garagem == 'VIX':   
+        newga = {'empresa':'2', 'filial': '24' } 
+    elif garagem == 'VIX':                                
+        newga = {'empresa':'2', 'filial': '50' } 
     elif garagem == 'BMA':
-        newga = {'empresa':'3', 'filial':'1'}
+        newga = {'empresa':'3', 'filial': '30' } 
     elif garagem == 'BPE':
-        newga = {'empresa':'3', 'filial':'2'}
-    elif garagem == 'BEL':
-        newga = {'empresa':'3', 'filial':'3'}
+        newga = {'empresa':'3', 'filial': '31' } 
+    elif garagem == 'BEL':    
+        newga = {'empresa':'3', 'filial': '32' } 
     elif garagem == 'BPB':
-        newga = {'empresa':'3', 'filial':'4'}
+        newga = {'empresa':'3', 'filial': '33' } 
     elif garagem == 'SLZ':
-        newga = {'empresa':'3', 'filial':'5'}
+        newga = {'empresa':'3', 'filial': '34' } 
     elif garagem == 'BAL':
-        newga = {'empresa':'3', 'filial':'6'}
-    elif garagem == 'THE':
-        newga = {'empresa':'3', 'filial':'7'}
-    elif garagem == 'BMG':
-        newga = {'empresa':'3', 'filial':'8'}
+        newga = {'empresa':'3', 'filial': '35' } 
+    elif garagem == 'THE': 
+        newga = {'empresa':'3', 'filial': '36' } 
+    elif garagem == 'THE':  
+        newga = {'empresa':'3', 'filial': '52' } 
     elif garagem == 'FMA':
-        newga = {'empresa':'4', 'filial':'1'}
+        newga = {'empresa':'4', 'filial': '40' } 
     return newga
 
 def painel_compras(request):
@@ -4110,6 +4138,9 @@ def painel_compras_concluido(request):
         return render(request, 'portaria/etc/painelcomprasconcluido.html', {'form':form})
     else:
         print('aaaa')
+
+def page_disabled(request, id):
+    return render(request, 'portaria/etc/page_disabled.html')
 
 def edit_compras(request, id):
     editor = TextEditor()

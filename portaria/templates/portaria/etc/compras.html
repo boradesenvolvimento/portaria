@@ -21,7 +21,9 @@
                     <select id="fil" name="filial">
                         <option selected disabled value="">--</option>
                         {% for k,v in gachoices %}
-                        <option value="{{k}}">{{ v }}</option>
+                            {% if k != "0" %}
+                                <option value="{{k}}">{{ v }}</option>
+                            {% endif %}
                         {% endfor %}
                     </select>
                     <label for="getid">Código Solicitação:</label>
