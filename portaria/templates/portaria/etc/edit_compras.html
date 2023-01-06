@@ -187,58 +187,57 @@
                                 {% else %}
                                     <div id="display_dt_venc">
                                         <label class="form-label" for="dt_venc">Vencimento</label>
-                                        <input class="form-control" type="date" id="dt_venc" name="dt_venc" value="{{ obj.dt_vencimento|date:'Y-m-d' }}" />
+                                        <input class="form-control" type="date" id="dt_venc" name="dt_venc" value="{{ obj.dt_vencimento|date:'Y-m-d' }}">
                                     </div>
                             </div>
                         </div>
-
-                        <div class="form-group" style="width: 100%;">
-                                    {% if obj.pago %}
-                                    <div class="alert alert-success">
-                                        Solicitação Paga
-                                    </div>
-                                    {% else %}
-                                        <div class="alert alert-{% if vencimento > 0 and vencimento < 4 %}warning{% elif vencimento > 3 %}success{% else %}danger{% endif %}">
-                                            {% if vencimento > 0 %} O boleto vai vencer em <b>{{ vencimento }}</b> dia(s)
-                                            {% elif vencimento < 0 %} O boleto venceu faz <b>{{ vencimento|invert }}</b> dia(s)
-                                            {% else %} O boleto vence hoje
-                                            {% endif %}
+                        <div style="display: flex; justify-content: space-between;">
+                            <div class="form-group" style="width: 100%;">
+                                        {% if obj.pago %}
+                                        <div class="alert alert-success">
+                                            Solicitação Paga
                                         </div>
+                                        {% else %}
+                                            <div class="alert alert-{% if vencimento > 0 and vencimento < 4 %}warning{% elif vencimento > 3 %}success{% else %}danger{% endif %}">
+                                                {% if vencimento > 0 %} O boleto vai vencer em <b>{{ vencimento }}</b> dia(s)
+                                                {% elif vencimento < 0 %} O boleto venceu faz <b>{{ vencimento|invert }}</b> dia(s)
+                                                {% else %} O boleto vence hoje
+                                                {% endif %}
+                                            </div>
+                                        {% endif %}
                                     {% endif %}
-                                {% endif %}
-                        </div>
-                        <div>
-                            <div class="form-group">
-                                <label for="solicitante">Solicitante</label>
-                                <div style="display: flex;">
-                                    <input style="
-                                        margin: 0;
-                                        padding: 1rem;
-                                        border-radius: 0.8rem 0 0 0.8rem ;
-                                        border-right: none;
-                                        "
-                                        value="{{ obj.solicitante|default_if_none:'Não Cadastrado' }}" 
-                                        type="text" 
-                                        class="form-control" 
-                                        id="solicitante" 
-                                        aria-describedby="emailHelp" 
-                                        placeholder="Você não deveria estar vendo isso..." 
-                                        readonly
-                                    >
-                                    <a
-                                    href="mailto:{{obj.email_solic}}"
-                                    class="button" 
-                                    style="
-                                        margin: 0;
-                                        padding: 1rem;
-                                        border-radius: 0 0.8rem 0.8rem 0 ;
-                                    "
-                                    type="button"  
-                                    ><ion-icon style="margin-top: -0.125em" name="mail-outline"></ion-icon>
-                                    </a>
-                                </div>
-                                <small id="emailHelp" class="form-text text-muted">Pressione o botão para enviar um email ao solicitante.</small>
                             </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="solicitante">Solicitante</label>
+                            <div style="display: flex;">
+                                <input style="
+                                    margin: 0;
+                                    padding: 1rem;
+                                    border-radius: 0.8rem 0 0 0.8rem ;
+                                    border-right: none;
+                                    "
+                                    value="{{ obj.solicitante|default_if_none:'Não Cadastrado' }}" 
+                                    type="text" 
+                                    class="form-control" 
+                                    id="solicitante" 
+                                    aria-describedby="emailHelp" 
+                                    placeholder="Você não deveria estar vendo isso..." 
+                                    readonly
+                                >
+                                <a
+                                href="mailto:{{obj.email_solic}}"
+                                class="button" 
+                                style="
+                                    margin: 0;
+                                    padding: 1rem;
+                                    border-radius: 0 0.8rem 0.8rem 0 ;
+                                "
+                                type="button"  
+                                ><ion-icon style="margin-top: -0.125em" name="mail-outline"></ion-icon>
+                                </a>
+                            </div>
+                            <small id="emailHelp" class="form-text text-muted">Pressione o botão para enviar um email ao solicitante.</small>
                         </div>
                         <div>
                             <div style="word-wrap: break-word;">
