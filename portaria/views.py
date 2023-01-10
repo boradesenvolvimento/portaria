@@ -3197,7 +3197,7 @@ def mdfeporfilial(request):
                     'GVR': ['mauricio@bora.com.br'],
                     'VIX': ['renata.cesario@bora.com.br'], 		
                     'UDI': ['marcus.silva@borexpress.com.br', 'tulio.pereira@borexpress.com.br'],
-                    'CTG': ['ygor.henrique@borexpress.com.br','samuel.santos@borexpress.com.br','junior.moraes@borexpress.com.br'],
+                    'CTG': ['ygor.henrique@borexpress.com.br','samuel.santos@borexpress.com.br','junior.morais@borexpress.com.br'],
                     'MCZ': ['rafael@bora.com.br', 'carlos.eduardo@bora.com.br','ronnielly@bora.com.br'],
                     'SSA': ['jaqueline.santos@bora.com.br', 'brandao.alan@bora.com.br'],
                     'NAT': ['ronnielly@bora.com.br', 'lindalva@bora.com.br', 'lidianne@bora.com.br'],
