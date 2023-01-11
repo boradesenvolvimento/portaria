@@ -37,6 +37,14 @@ TIPO_VIAGEM = (
     ('TRANSF', 'TRANSF'),
     ('NENHUM', 'NENHUM')
 )
+
+EMPRESA_CHOICES = (
+    ('1', 'BORA'),
+    ('2', 'TRANSERVO'),
+    ('3', 'BOURBON'),
+    ('4', 'TRANSFOOD')
+)
+
 TIPO_GARAGEM = (
     ('SPO', 'SPO'),
     ('REC', 'REC'),
@@ -69,6 +77,38 @@ TIPO_DOCTO_CHOICES = (
 )
 GARAGEM_CHOICES = [
         ('0', 'MOV'), # em movimento
+        ('11' ,'SPO'),
+        ('12' ,'REC'),
+        ('13' ,'SSA'),
+        ('14' ,'FOR'),
+        ('15' ,'MCZ'),
+        ('16' ,'NAT'),
+        ('17' ,'JPA'),
+        ('18' ,'AJU'),
+        ('19' ,'VDC'),
+        ('110','CTG'),
+        ('111','GVR'),
+        ('112','VIX'),
+        ('113','TCO'),
+        ('113','TCO'),
+        ('114','UDI'),
+        ('21', 'CTG'),
+        ('22', 'TCO'),
+        ('23', 'UDI'),
+        ('24', 'TMA'), 
+        ('25', 'VIX'),
+        ('26', 'GVR'),
+        ('31', 'BMA'), 
+        ('32', 'BPE'),
+        ('33', 'BEL'),
+        ('34', 'BPB'),
+        ('35', 'SLZ'),
+        ('36', 'BAL'),
+        ('37', 'THE'),
+        ('38', 'BMG'),
+        ('41', 'FMA'),
+    ]
+FILIAL_CHOICES = [
         ('1' ,'SPO'),
         ('2' ,'REC'),
         ('3' ,'SSA'),
@@ -82,25 +122,23 @@ GARAGEM_CHOICES = [
         ('11','GVR'),
         ('12','VIX'),
         ('13','TCO'),
+        ('13','TCO'),
         ('14','UDI'),
-        ('50','VIX'),
-        ('20','SPO'),
-        ('21','SPO'),
-        ('20','CTG'),
-        ('21','TCO'),
-        ('22','UDI'),
-        ('23','TMA'),
-        ('24','VIX'),
-        ('50','VIX'),
-        ('30','BMA'),
-        ('31','BPE'),
-        ('32','BEL'),
-        ('33','BPB'),
-        ('34','SLZ'),
-        ('35','BAL'),
-        ('36','THE'),
-        ('52','THE'),
-        ('40','FMA'),
+        ('1', 'CTG'),
+        ('2', 'TCO'),
+        ('3', 'UDI'),
+        ('4', 'TMA'), 
+        ('5', 'VIX'),
+        ('6', 'GVR'),
+        ('1', 'BMA'), 
+        ('2', 'BPE'),
+        ('3', 'BEL'),
+        ('4', 'BPB'),
+        ('5', 'SLZ'),
+        ('6', 'BAL'),
+        ('7', 'THE'),
+        ('8', 'BMG'),
+        ('1', 'FMA'),
     ]
 DEPARTAMENTO_CHOICES = [
         ('DIRETORIA', 'DIRETORIA'),
@@ -128,8 +166,8 @@ class Cadastro(models.Model):
     placa2 = models.CharField(max_length=7, blank=True)
     motorista = models.CharField(max_length=50)
     empresa = models.CharField(max_length=30)
-    origem = models.CharField(max_length=5, choices=TIPO_GARAGEM)
-    destino = models.CharField(max_length=5, choices=TIPO_GARAGEM, blank=True, null=True)
+    origem = models.CharField(max_length=3, choices=GARAGEM_CHOICES)
+    destino = models.CharField(max_length=3, choices=GARAGEM_CHOICES, blank=True, null=True)
     tipo_mot = models.CharField(max_length=11, choices=TIPO_MOT)
     tipo_viagem = models.CharField(max_length=10, choices=TIPO_VIAGEM)
     notas = models.IntegerField(blank=True, null=True)
@@ -151,7 +189,7 @@ class PaleteControl(models.Model):
         ('PBR','PBR')
     ]
     id = models.BigAutoField(primary_key=True)
-    loc_atual = models.CharField(max_length=3, choices=TIPO_GARAGEM)
+    loc_atual = models.CharField(max_length=3, choices=GARAGEM_CHOICES)
     tp_palete = models.CharField(max_length=4, choices=TIPO_PALETE_CHOICES)
     autor = models.ForeignKey(User, on_delete=models.PROTECT)
 
@@ -167,8 +205,8 @@ class SolicMovPalete(models.Model):
     solic_id = models.CharField(max_length=25)
     palete = models.ForeignKey(PaleteControl, on_delete=models.SET_NULL, null=True)
     data_solic = models.DateTimeField(default=timezone.now)
-    origem = models.CharField(max_length=3, choices=TIPO_GARAGEM)
-    destino = models.CharField(max_length=3, choices=TIPO_GARAGEM)
+    origem = models.CharField(max_length=3, choices=GARAGEM_CHOICES)
+    destino = models.CharField(max_length=3, choices=GARAGEM_CHOICES)
     placa_veic = models.CharField(max_length=7)
     autor = models.ForeignKey(User, on_delete=PROTECT)
 
@@ -182,8 +220,8 @@ class MovPalete(models.Model):
     palete = models.ForeignKey(PaleteControl, on_delete=models.SET_NULL, null=True)
     data_solic = models.DateTimeField()
     data_receb = models.DateTimeField()
-    origem = models.CharField(max_length=3, choices=TIPO_GARAGEM)
-    destino = models.CharField(max_length=3, choices=TIPO_GARAGEM)
+    origem = models.CharField(max_length=3, choices=GARAGEM_CHOICES)
+    destino = models.CharField(max_length=3, choices=GARAGEM_CHOICES)
     placa_veic = models.CharField(max_length=7)
     autor = models.ForeignKey(User, on_delete=PROTECT)
 
@@ -263,30 +301,6 @@ class Veiculos(models.Model):
        return self.prefixoveic
 
 class ChecklistFrota(models.Model):
-    GARAGEM_CHOICES = [
-        ('1', 'SPO'),
-        ('2', 'REC'),
-        ('3', 'SSA'),
-        ('4', 'FOR'),
-        ('5', 'MCZ'),
-        ('6', 'NAT'),
-        ('7', 'JPA'),
-        ('8', 'AJU'),
-        ('9', 'VDC'),
-        ('10', 'MG'),
-        ('20', 'CTG'),
-        ('21', 'TCO'),
-        ('22', 'UDI'),
-        ('23', 'TMA'),
-        ('24', 'VIX'),
-        ('30', 'BMA'),
-        ('31', 'BPE'),
-        ('32', 'BEL'),
-        ('33', 'BPB'),
-        ('34', 'SLZ'),
-        ('35', 'BAL'),
-        ('36', 'THE')
-    ]
 
     idchecklist = models.BigAutoField(primary_key=True)
     datachecklist = models.DateField(default=timezone.now)
@@ -297,7 +311,7 @@ class ChecklistFrota(models.Model):
     kmanterior = models.IntegerField()
     kmatual = models.IntegerField()
     horimetro = models.CharField(max_length=10)
-    filial = models.CharField(max_length=2, choices=GARAGEM_CHOICES)
+    filial = models.CharField(max_length=2, choices=FILIAL_CHOICES)
     p1_1 = models.BooleanField('Uniforme da Empresa')
     p1_2 = models.BooleanField('Motorista identificado por crachá')
     p2_1 = models.BooleanField('Lanterna do farol dianteiro funcionando?')
@@ -851,22 +865,25 @@ class SolicitacoesCompras(models.Model):
         ('COMPRAS', 'COMPRAS')
     ]
     FORMA_PGT_CHOICES = [
-        ('A_VISTA', 'A_VISTA'),
-        ('PARCELADO-2X', 'PARCELADO-2X'),
-        ('PARCELADO-3X', 'PARCELADO-3X'),
-        ('PARCELADO-4X', 'PARCELADO-4X'),
-        ('PARCELADO-5X', 'PARCELADO-5X'),
-        ('PARCELADO-6X', 'PARCELADO-6X'),
-        ('PARCELADO-7X', 'PARCELADO-7X'),
-        ('PARCELADO-8X', 'PARCELADO-8X'),
-        ('PARCELADO-9X', 'PARCELADO-9X'),
-        ('PARCELADO-10X', 'PARCELADO-10X'),
-        ('PARCELADO-11X', 'PARCELADO-11X'),
+        ('A_VISTA', 'A VISTA'),
+        ('PARCELADO-1X', 'PARCELADO 1X'),
+        ('PARCELADO-2X', 'PARCELADO 2X'),
+        ('PARCELADO-3X', 'PARCELADO 3X'),
+        ('PARCELADO-4X', 'PARCELADO 4X'),
+        ('PARCELADO-5X', 'PARCELADO 5X'),
+        ('PARCELADO-6X', 'PARCELADO 6X'),
+        ('PARCELADO-7X', 'PARCELADO 7X'),
+        ('PARCELADO-8X', 'PARCELADO 8X'),
+        ('PARCELADO-9X', 'PARCELADO 9X'),
+        ('PARCELADO-10X', 'PARCELADO 10X'),
+        ('PARCELADO-11X', 'PARCELADO 11X'),
     ]
     id = models.BigAutoField(primary_key=True)
     nr_solic = models.CharField(max_length=10)
     data = models.DateField()
     status = models.CharField(max_length=15)
+    empresa = models.CharField(max_length=2)
+    codigo_fl = models.CharField(max_length=2, null=True, blank=True)
     filial = models.CharField(max_length=3, choices=GARAGEM_CHOICES)
     categoria = models.CharField(max_length=15)
     solicitante = models.CharField(max_length=100)

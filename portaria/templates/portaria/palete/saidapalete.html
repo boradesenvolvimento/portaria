@@ -23,7 +23,9 @@
                     <tr><th>Quantidade:<input name="qnt" type="text"></th></tr>
                     <tr><th>Filial:<select name="fil">
                         {% for t,v in tp_fil %}
-                        <option value="{{ t }}">{{ v }}</option>
+                            {% if t != '0'%}
+                            <option value="{{ t }}">{{t}} - {{ v }}</option>
+                            {% endif %}
                         {% endfor %}
                     </select></th></tr>
                     <tr><th>Empresa:<input id="emp" type="text" name="emp"></tr>

@@ -97,8 +97,8 @@
                 {% csrf_token %}
                 <div class="wrapper">
                     <div class="form">
-                        <div style="display: flex; justify-content: space-between; margin-top: 5%;">
-                            <div class="form-group" style="width: 48%;">
+                        <div style="">
+                            <div class="form-group" style="width: 30%;">
                                 <label class="form-label" for="status">Status *</label>
                                 <select class="form-control" id="status" name="status">
                                     <option class="selector-option" label="{{ obj.status|default_if_none:'Não Cadastrado' }}" hidden></option>
@@ -107,12 +107,25 @@
                                     {% endfor %}
                                 </select>
                             </div>
-                            <div class="form-group" style="width: 48%;">
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-top: 5%;">
+                            <div class="form-group empresa-selector" style="width: 48%;">
+                                <label class="form-label" for="empresa">Empresa *</label>
+                                <select class="form-control" id="empresa" name="empresa" disabled>
+                                    <option class="selector-option" value="1"> 1 - BORA </option>
+                                    <option class="selector-option" value="2"> 2 - TRANSERVO </option>
+                                    <option class="selector-option" value="3"> 3 - BOURBON </option>
+                                    <option class="selector-option" value="4"> 4 - TRANSFOOD </option>
+                                </select>
+                            </div>
+                            <div class="form-group filial-selector" style="width: 48%;">
                                 <label class="form-label" for="filial">Filial *</label>
-                                <select class="form-control" id="filial" name="filial">
-                                    <option class="selector-option"  label="{{ obj.get_filial_display|default_if_none:'Não Cadastrado' }}" hidden></option>
-                                    {% for k,v in gachoices %}
-                                    <option class="selector-option"  value="{{ v }}">{{ v }}</option>
+                                <select class="form-control" id="filial" name="filial" disabled>
+                                    <option class="selector-option" value="{{obj.codigo_fl}}">{{obj.filial|slice:"1:"}} - {{ obj.get_filial_display }}</option>
+                                    {% for k,v in filchoices %}
+                                    {% if k != '0' %}
+                                        <option class="selector-option"  value="{{k}}">{{ k }} - {{ v }}</option>
+                                    {% endif %}
                                     {% endfor %}
                                 </select>
                             </div>
@@ -142,7 +155,10 @@
                                 <label class="form-label" for="status">Categoria *</label>
     
                                 <select class="form-control" id="categoria" name="categoria" onchange="DisplayInput();">
-                                    <option class="selector-option" label="{{ obj.categoria }}" hidden>{{ obj.categoria }}</option>
+                                    <option class="selector-option" label="{{ obj.categoria }}" hidden selected>{{ obj.categoria }}</option>
+                                    {% for k,v in fgtchoices %} 
+                                        <option class="selector-option" value="{{k}}">{{v}}</option>
+                                    {% endfor %}
                                     <option class="selector-option" label="ALMOXARIFADO">ALMOXARIFADO</option>
                                     <option class="selector-option" label="COTAÇÃO">COTAÇÃO</option>
                                     <option class="selector-option" label="NOTA FISCAL">NOTA FISCAL</option>
@@ -341,6 +357,9 @@
     });
 </script>
 <script>
+    $(document).ready(function() {
+        $("div.empresa-selector select").val({{obj.empresa}}).change()
+    })
     function DisplayInput(){
         key = document.getElementById('categoria');
         switchkey = key.options[key.selectedIndex].label

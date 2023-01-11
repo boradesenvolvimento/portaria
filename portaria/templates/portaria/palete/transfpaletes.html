@@ -13,24 +13,59 @@
     <div class="row linha-baixo mb-3">
             <h3 class="title-cad">Solicitar transferencia de paletes</h3>
 
-        </div>
+    </div>
+    <div class="row" style="width: 30%; margin: auto;">
+        <form method="post">
+            {% csrf_token %}
 
-    <div class="row">
-        <div class="container">
-        <form class="form-box" action="" method="post">
-                {% csrf_token %}
-                <table class="table1 col-11">
-                    <tr><th>Origem:{{ form.origem_ }}</th></tr>
-                    <tr><th>Destino:{{ form.destino_ }}</th></tr>
-                    <tr><th>Quantidade:{{ form.quantidade_ }}</th></tr>
-                    <tr><th>Placa Veic:{{ form.placa_veic }}</th></tr>
-                    <tr><th>Tipo:{{ form.tp_palete }}</th></tr>
-                    <tr><th><button type="submit" style="height:3.8rem;">
-                        <ion-icon style="font-size:2.8rem;" name="swap-vertical-outline"></ion-icon>
-                    </button></th></tr>
-                </table>
-            </form>
-        </div>
+            <div class="row">
+                <div class="form-group col-6">
+                    <label for="origem_">Origem</label>
+                    <select class="form-control" name="origem_" id="origem_">
+                        <option selected hidden>...</option>
+                        {% for k,v in gachoices %}
+                        {% if k != '0' %}
+                            <option value="{{k}}">{{k}} - {{v}}</option>
+                        {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group col-6">
+                    <label for="destino_">Destino</label>
+                    <select class="form-control" name="destino_" id="destino_">
+                        <option hidden selected>...</option>
+                        {% for k,v in gachoices %}
+                        {% if k != '0' %}
+                            <option value="{{k}}">{{k}} - {{v}}</option>
+                        {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+
+            </div>
+            <div class="row">
+                <div class="form-group col-8">
+                    <label for="quantidade_">Quantidade</label>
+                    <input type="number" class="form-control" id="quantidade_" name="quantidade_" placeholder="Quantidade">
+                </div>
+                <div class="form-group col-4">
+                    <label for="tipo_">Tipo</label>
+                    <select class="form-control" name="destino_" id="destino_">
+                        <option value="CHEP">CHEP</option>
+                        <option value="PBR">PBR</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group">
+                    <label for="placa_veic">Placa do veiculo</label>
+                    <input type="text" class="form-control" id="placa_veic" name="placa_veic" placeholder="AAA1111...">
+                </div>
+            </div>
+            <div class="row">
+                <button style="margin-left: auto; width: auto;"><ion-icon name="swap-horizontal-outline"></ion-icon></button>
+            </div>
+        </form>
     </div>
 </div>
 {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}

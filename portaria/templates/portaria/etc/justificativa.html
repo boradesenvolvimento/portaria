@@ -16,8 +16,8 @@
             </div>
             {% endfor %}
             <div class="row linha-baixo">
-                <h2 class="title-cad col-6">Justificativas</h2>
-                <div class="col-6">
+                <h2 class="title-cad col-5">Justificativas</h2>
+                <div class="col-7">
                     <form method="get">
                     <label for="dates">Período:</label>
                     <input type="date" name="data1" value="{{ yesterday }}">
@@ -26,7 +26,9 @@
                     <select name="filial" id="filial">
                         <option></option>
                         {% for t,p in gachoices %}
-                            <option value="{{ t }}">{{ p }}</option>
+                            {% if t != '0'%}
+                                <option value="{{ t }}">{{t}} - {{ p }}</option>
+                            {% endif %}
                         {% endfor %}
                     </select>
                     <button type="submit">Filtrar</button>

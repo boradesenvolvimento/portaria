@@ -105,8 +105,8 @@
                         <div style="width: 100%;">
                             <label for="filial">Filial:</label>
                             <select name="filial" required>
-                                <option selected disabled value="">Selecione...</option>
-                                {% for k,v in filial %}
+                                <option selected disabled value="">------</option>
+                                {% for k,v in filiais %}
                                     <option value="{{k}}">{{ v }}</option>
                                 {% endfor %}
                             </select>

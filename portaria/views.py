@@ -220,7 +220,7 @@ def cadpaletes(request):
                 nsal = Cliente.objects.filter(razao_social=emp).annotate(saldonew=Sum(F('saldo')+int(qnt)))
                 Cliente.objects.filter(razao_social=emp).update(saldo=nsal[0].saldonew)
                 for x in range(0,int(qnt)):
-                    PaleteControl.objects.create(loc_atual=keyga[fil], tp_palete=tp_p, autor=request.user)
+                    PaleteControl.objects.create(loc_atual=fil, tp_palete=tp_p, autor=request.user)
                     if x == 2000: break
                 messages.success(request, f'{qnt} Paletes foram cadastrados com sucesso')
     return render(request, 'portaria/palete/cadpaletes.html', {'tp_fil':tp_fil, 'tp_emp':tp_emp})
@@ -1818,6 +1818,7 @@ def solictransfpalete(request):
     mov_gar = "0"
     form = TPaletesForm()
     keyga = {k:v for k,v in GARAGEM_CHOICES}
+    gachoices = GARAGEM_CHOICES
     if request.method == 'POST':
         ori = request.POST.get('origem_')
         des = request.POST.get('destino_')
@@ -1849,8 +1850,8 @@ def solictransfpalete(request):
             #return render(request,'portaria/palete/transfpaletes.html', {'form':form})
         else:
             messages.error(request,'Quantidade solicitada maior que a disponível')
-            return render(request,'portaria/palete/transfpaletes.html', {'form':form})
-    return render(request,'portaria/palete/transfpaletes.html', {'form':form})
+            return render(request,'portaria/palete/transfpaletes.html', {'form':form, 'gachoices': gachoices})
+    return render(request,'portaria/palete/transfpaletes.html', {'form':form, 'gachoices': gachoices})
 
 def transfdetalhe(request, solic_id):
     mov = SolicMovPalete.objects.filter(solic_id=solic_id).first()
@@ -3764,7 +3765,7 @@ async def get_xmls_api(request):
     return HttpResponse('<h2>Consulta finalizada!</h2>')
 
 def compras_index(request):
-    gachoices = GARAGEM_CHOICES
+    filchoices = FILIAL_CHOICES
     item_solicitante = SolicitacoesCompras.objects.exclude(Q(status='CONCLUIDO') | Q(status='CANCELADO'))\
         .filter(data__month=datetime.datetime.now().month,data__year=datetime.datetime.now().year).values('responsavel__username')\
         .annotate(total=Count('responsavel'))
@@ -3772,7 +3773,7 @@ def compras_index(request):
         concl=Count('id', filter=Q(status='CONCLUIDO')),
         andam=Count('id',filter=(Q(status='ANDAMENTO') | Q(status='APROVADO') | Q(status='ABERTO'))),
         ).aggregate(concluido=Sum('concl'), andamento=Sum('andam'))
-    return render(request, 'portaria/etc/compras.html', {'gachoices':gachoices,'item_solicitante':item_solicitante,
+    return render(request, 'portaria/etc/compras.html', {'filchoices':filchoices,'item_solicitante':item_solicitante,
                                                          'metrics':metrics})
 
 def compras_lancar_pedido(request):
@@ -3780,10 +3781,11 @@ def compras_lancar_pedido(request):
     gakey = {k: v for k, v in GARAGEM_CHOICES}
     if request.method == 'POST':
         idsolic = request.POST.get('getid')
+        empresa = request.POST.get('empresa')
         fil = request.POST.get('filial')
         anexo = request.FILES.get('getanexo')
-        newga = garagem_para_filial_praxio(gakey[fil])
         if idsolic:
+            print(f'gakey: {gakey[empresa+fil]}')
             conn = conndb()
             cur = conn.cursor()
             try:
@@ -3798,40 +3800,7 @@ def compras_lancar_pedido(request):
                                        WHEN SO.STATUSSOLIC = 'P' THEN 'APROVADO'
                                        WHEN SO.STATUSSOLIC = 'F' THEN 'FECHADO'
                                    END STATUS,
-                                   CASE
-                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '1'  THEN 'SPO'          
-                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '2'  THEN 'REC'  
-                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '3'  THEN 'SSA'  
-                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '4'  THEN 'FOR'
-                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '5'  THEN 'MCZ'  
-                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '6'  THEN 'NAT'  
-                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '7'  THEN 'JPA'  
-                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '8'  THEN 'AJU'  
-                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '9'  THEN 'VDC'
-                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '10' THEN 'CTG' 
-                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '11' THEN 'GVR'
-                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '12' THEN 'VIX'
-                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '13' THEN 'TCO'                        
-                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '14' THEN 'UDI' 
-                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '50' THEN 'VIX'
-                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '20' THEN 'SPO'
-                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '21' THEN 'SPO'
-                                        WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '20' THEN 'CTG'
-                                        WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '21' THEN 'TCO'
-                                        WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '22' THEN 'UDI'                        
-                                        WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '23' THEN 'TMA'
-                                        WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '24' THEN 'VIX'   
-                                        WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '50' THEN 'VIX'                                
-                                        WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '30' THEN 'BMA'
-                                        WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '31' THEN 'BPE'
-                                        WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '32' THEN 'BEL'    
-                                        WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '33' THEN 'BPB'
-                                        WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '34' THEN 'SLZ'
-                                        WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '35' THEN 'BAL'
-                                        WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '36' THEN 'THE' 
-                                        WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '52' THEN 'THE'  
-                                        WHEN SO.CODIGOEMPRESA = '4' AND SO.CODIGOFL = '40' THEN 'FMA'
-                                   END FILIAL,
+                                   SO.CODIGOFL FILIAL,
                                    SO.USUARIO SOLICITANTE,
                                    CC.EMAIL
                             FROM
@@ -3840,14 +3809,21 @@ def compras_lancar_pedido(request):
                                 EST_CADMATERIAL CM,
                                 CTR_CADASTRODEUSUARIOS CC
                             WHERE
-                                SO.CODIGOEMPRESA = {newga['empresa']}             AND
-                                SO.CODIGOFL = {newga['filial']}                   AND
-                                SO.NUMEROSOLIC = CIS.NUMEROSOLIC AND
-                                SO.STATUSSOLIC = 'P'                      AND    
-                                SO.DATASOLIC BETWEEN ((SYSDATE)-30) AND (SYSDATE) AND    
-                                CM.CODIGOMATINT = CIS.CODIGOMATINT                AND
-                                SO.NUMEROSOLIC = {idsolic}                        AND
-                                CC.USUARIO = SO.USUARIO
+                                    SO.CODIGOEMPRESA = {empresa}
+                                AND
+                                	SO.CODIGOFL = {fil}                  
+                                AND
+                                	SO.NUMEROSOLIC = CIS.NUMEROSOLIC 
+                                AND
+                                	SO.STATUSSOLIC = 'P'                      
+                                AND    
+                                	SO.DATASOLIC BETWEEN ((SYSDATE)-30) AND (SYSDATE) 
+                                AND    
+                                	CM.CODIGOMATINT = CIS.CODIGOMATINT                
+                                AND
+                                	SO.NUMEROSOLIC = {idsolic}                        
+                                AND
+                                	CC.USUARIO = SO.USUARIO
                             GROUP BY
                                   SO.NUMEROSOLIC,
                                   CM.DESCRICAOMAT,
@@ -3869,40 +3845,7 @@ def compras_lancar_pedido(request):
                                        WHEN SO.STATUSSOLIC = 'P' THEN 'APROVADO'
                                        WHEN SO.STATUSSOLIC = 'F' THEN 'FECHADO'
                                    END STATUS,
-                                   CASE
-                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '1'  THEN 'SPO'          
-                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '2'  THEN 'REC'  
-                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '3'  THEN 'SSA'  
-                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '4'  THEN 'FOR'
-                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '5'  THEN 'MCZ'  
-                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '6'  THEN 'NAT'  
-                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '7'  THEN 'JPA'  
-                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '8'  THEN 'AJU'  
-                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '9'  THEN 'VDC'
-                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '10' THEN 'CTG' 
-                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '11' THEN 'GVR'
-                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '12' THEN 'VIX'
-                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '13' THEN 'TCO'                        
-                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '14' THEN 'UDI' 
-                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '50' THEN 'VIX'
-                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '20' THEN 'SPO'
-                                        WHEN SO.CODIGOEMPRESA = '1' AND SO.CODIGOFL = '21' THEN 'SPO'
-                                        WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '20' THEN 'CTG'
-                                        WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '21' THEN 'TCO'
-                                        WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '22' THEN 'UDI'                        
-                                        WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '23' THEN 'TMA'
-                                        WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '24' THEN 'VIX'   
-                                        WHEN SO.CODIGOEMPRESA = '2' AND SO.CODIGOFL = '50' THEN 'VIX'                                
-                                        WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '30' THEN 'BMA'
-                                        WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '31' THEN 'BPE'
-                                        WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '32' THEN 'BEL'    
-                                        WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '33' THEN 'BPB'
-                                        WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '34' THEN 'SLZ'
-                                        WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '35' THEN 'BAL'
-                                        WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '36' THEN 'THE' 
-                                        WHEN SO.CODIGOEMPRESA = '3' AND SO.CODIGOFL = '52' THEN 'THE'  
-                                        WHEN SO.CODIGOEMPRESA = '4' AND SO.CODIGOFL = '40' THEN 'FMA'
-                                   END FILIAL,
+                                   SO.CODIGOFL FILIAL,
                                    SO.USUARIO SOLICITANTE,
                                    CC.EMAIL
                             FROM
@@ -3910,13 +3853,19 @@ def compras_lancar_pedido(request):
                                 CPR_SOLICOUTROS SCO,
                                 CTR_CADASTRODEUSUARIOS CC
                             WHERE
-                                SO.CODIGOEMPRESA = {newga['empresa']}             AND
-                                SO.CODIGOFL = {newga['filial']}                   AND
-                                SO.NUMEROSOLIC = SCO.NUMEROSOLIC                  AND
-                                SCO.STATUSSOLOUTROS = 'P'                         AND    
-                                SO.DATASOLIC BETWEEN ((SYSDATE)-30) AND (SYSDATE) AND
-                                SO.NUMEROSOLIC = {idsolic}                        AND
-                                CC.USUARIO = SO.USUARIO                           
+                                    SO.CODIGOEMPRESA = {empresa}
+                                AND
+                            		SO.CODIGOFL = {fil}                
+                            	AND
+                                	SO.NUMEROSOLIC = SCO.NUMEROSOLIC                  
+                                AND
+                                	SCO.STATUSSOLOUTROS = 'P'                         
+                                AND    
+                                	SO.DATASOLIC BETWEEN ((SYSDATE)-30) AND (SYSDATE) 
+                                AND
+                                	SO.NUMEROSOLIC = {idsolic}                        
+                                AND
+                                	CC.USUARIO = SO.USUARIO                           
                             GROUP BY
                                   SO.NUMEROSOLIC,
                                   SCO.DESCRICAOSOLOUTROS,
@@ -3939,11 +3888,11 @@ def compras_lancar_pedido(request):
                     print(res)
                     for q in res:
                         try:
-                            obj = SolicitacoesCompras.objects.get(filial=keyga[q['filial']],nr_solic=q['nr_solicitacao'])
+                            obj = SolicitacoesCompras.objects.get(empresa= empresa, filial= fil, nr_solic=q['nr_solicitacao'])
                         except ObjectDoesNotExist:
                             obj = SolicitacoesCompras.objects.create(
                                 nr_solic=q['nr_solicitacao'], data=q['data'], status=q['status'],
-                                filial=keyga[q['filial']],
+                                filial= (empresa+fil), empresa= empresa, codigo_fl = fil,
                                 solicitante=q['solicitante'], autor=request.user, email_solic=q['email'], anexo=anexo
                             )
                             prod = ProdutosSolicitacoes.objects.create(produto=q['produto'],
@@ -3983,7 +3932,8 @@ def compras_lancar_direto(request):
                 nr_solic=idsolic, 
                 data=data, 
                 status='CONCLUIDO',
-                filial=fil,
+                codigo_dl = fil,
+                filial=gakey[fil],
                 categoria=categoria,
                 solicitante=solicitante, 
                 autor=request.user,
@@ -4078,7 +4028,7 @@ def painel_compras(request):
             if filtertype == 'filial':
                 filter = filter.upper()
                 keyga = {v:k for k,v in GARAGEM_CHOICES}
-                form = SolicitacoesCompras.objects.filter(filial=keyga[filter]).order_by('pub_date')
+                form = SolicitacoesCompras.objects.filter(filial=filter).order_by('pub_date')
             elif filtertype == 'solicitante':
                 filter = filter.upper()
                 form = SolicitacoesCompras.objects.filter(solicitante=filter).order_by('pub_date')
@@ -4104,7 +4054,7 @@ def painel_compras_concluido(request):
                     if filtertype == 'filial':
                         filter = filter.upper()
                         keyga = {v: k for k, v in GARAGEM_CHOICES}
-                        form = SolicitacoesCompras.objects.filter(filial=keyga[filter]).order_by('pub_date')
+                        form = SolicitacoesCompras.objects.filter(filial=filter).order_by('pub_date')
                     elif filtertype == 'solicitante':
                         filter = filter.upper()
                         form = SolicitacoesCompras.objects.filter(solicitante=filter).order_by('pub_date')
@@ -4127,14 +4077,18 @@ def edit_compras(request, id):
     editor = TextEditor()
     obj = get_object_or_404(SolicitacoesCompras, pk=id)
     entradas = SolicitacoesEntradas.objects.filter(cpr_ref=obj)
-    gachoices = GARAGEM_CHOICES
-    keyga = {k:v for v,k in gachoices}
+    filchoices = FILIAL_CHOICES
+    empchoices = EMPRESA_CHOICES
+    filkey = {v:k for v,k in filchoices}
+    empkey = {v:k for v,k in empchoices}
     stschoices = SolicitacoesCompras.STATUS_CHOICES
     dpchoices = SolicitacoesCompras.DEPARTAMENTO_CHOICES
+    pgtchoices = SolicitacoesCompras.FORMA_PGT_CHOICES
     rpchoices = User.objects.filter(groups__name='compras').exclude(id=1)
     print(obj.data, obj.email_solic)
     if request.method == 'POST':
         status = request.POST.get('status')
+        empresa = request.POST.get('empresa')
         filial = request.POST.get('filial')
         departamento = request.POST.get('departamento')
         forma_pgt = request.POST.get('forma_pgt')
@@ -4151,7 +4105,8 @@ def edit_compras(request, id):
             if status != '':
                 obj.status = status
                 messages.success(request, f'Status alterado para {status} com sucesso!')
-            if filial != '': obj.filial = keyga[filial]
+            if empresa != '': obj.empresa = empresa
+            if filial != '': obj.filial = filial
             if departamento != '': obj.departamento = departamento
             if forma_pgt != '': obj.forma_pgt = forma_pgt
             if responsavel != '': obj.responsavel_id = responsavel
@@ -4177,8 +4132,8 @@ def edit_compras(request, id):
 
     print(f'{obj.departamento} | {obj.dt_vencimento} | obj.pago')
 
-    return render(request, 'portaria/etc/edit_compras.html', {'obj':obj, 'gachoices':gachoices, 'stschoices':stschoices,
-                                                              'dpchoices':dpchoices, 'rpchoices':rpchoices,
+    return render(request, 'portaria/etc/edit_compras.html', {'obj':obj, 'filchoices':filchoices, 'stschoices':stschoices,
+                                                              'dpchoices':dpchoices, 'rpchoices':rpchoices, 'empchoices': empchoices,
                                                               'entradas':entradas, 'editor':editor, 'vencimento': vencimento})
 
 def insert_entradas_cpr(request, obj, textarea, files):
@@ -4409,16 +4364,16 @@ def estoque_confirma_item(request):
     return render(request, 'portaria/estoque/confirmasolicitacao.html', {'form':form})
 
 def estoque_nova_solic(request):
-    keyga = {k: v for k, v in GARAGEM_CHOICES}
+    tipoga = {k: v for k, v in TIPO_GARAGEM}
     itens = EstoqueItens.objects.all()
     
-    filial = GARAGEM_CHOICES
+    filiais = TIPO_GARAGEM
     if request.method == 'POST':
         fil = request.POST.get('filial')
         itens_re = request.POST.get('itensInput')
         colab = request.POST.get('colab')
         print(fil, itens_re)
-        obj = EstoqueSolicitacoes.objects.create(filial=fil, colab=colab, data_solic=timezone.now(), autor=request.user)
+        obj = EstoqueSolicitacoes.objects.create(filial=tipoga[fil], colab=colab, data_solic=timezone.now(), autor=request.user)
         cart = Cart.objects.create(solic=obj)
 
         itens = itens_re[:-1]
@@ -4430,7 +4385,7 @@ def estoque_nova_solic(request):
             CartItem.objects.create(cart=cart, tam_id=tam.id, desc=tam.item.desc, ca=tam.item.ca, tam=tam.tam, qty=int(i[1]))
 
         return redirect('portaria:estoque_index')
-    return render(request, 'portaria/estoque/nova_solicitacao.html', {'itens':itens, 'filial':filial})
+    return render(request, 'portaria/estoque/nova_solicitacao.html', {'itens':itens, 'filiais':filiais})
 
 def estoque_listagem_itens(request):
     itens = EstoqueItens.objects.all().order_by('grupo')

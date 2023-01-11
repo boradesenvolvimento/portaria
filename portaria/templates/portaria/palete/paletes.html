@@ -21,7 +21,9 @@
                     <select name="filial">
                         <option></option>
                         {% for t,p in tp_fil %}
-                            <option value="{{ t }}">{{ p }}</option>
+                        {% if t != '0'%}
+                            <option value="{{ t }}">{{ t }} - {{ p }}</option>
+                        {% endif %}
                         {% endfor %}
                     </select>
                     <button type="submit">Filtrar</button>
@@ -32,7 +34,7 @@
             {% for palete in form %}
             <div class="card border-dark text-center" style="width: 13rem; margin-top: 3rem;">
                 <div class="card-header">
-                    <h3 class="card-title">{{ palete.loc_atual}}</h3>
+                    <h3 class="card-title">{{ palete.loc_atual }}</h3>
                 </div>
                 <div class="card-body text-dark">
                     <p>PBR:<strong>{{ palete.pbr }}</strong></p>
