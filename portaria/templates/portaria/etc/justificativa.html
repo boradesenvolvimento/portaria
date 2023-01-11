@@ -16,12 +16,19 @@
             </div>
             {% endfor %}
             <div class="row linha-baixo">
-                <h2 class="title-cad col-5">Justificativas</h2>
-                <div class="col-7">
+                <h2 class="title-cad col-3">Justificativas</h2>
+                <div class="col-9">
                     <form method="get">
                     <label for="dates">Período:</label>
                     <input type="date" name="data1" value="{{ yesterday }}">
                     <input type="date" name="data2" value="{{ today }}">
+                    <label for="empresa">Empresa:</label>
+                    <select name="empresa" id="empresa">
+                        <option></option>
+                        {% for k,v in empchoices %}
+                            <option value="{{ k }}">{{ k }} - {{ v }}</option>
+                        {% endfor %}
+                    </select>
                     <label for="filial">Filial:</label>
                     <select name="filial" id="filial">
                         <option></option>

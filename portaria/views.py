@@ -3434,7 +3434,8 @@ def bipagempalrel(request):
     return redirect('portaria:etqrelatorio')
 
 def justificativa(request):
-    gachoices = GARAGEM_CHOICES
+    gachoices = FILIAL_CHOICES
+    empchoices = EMPRESA_CHOICES
     justchoices = JustificativaEntrega.JUSTIFICATIVA_CHOICES
     today = datetime.datetime.now()
     yesterday = today - datetime.timedelta(1)
@@ -3445,12 +3446,14 @@ def justificativa(request):
     if request.method == 'GET':
         date1 = request.GET.get('data1')
         date2 = request.GET.get('data2')
+        emp = request.GET.get('empresa')
         filial = request.GET.get('filial')
-        if date1 and date2 and filial:
-            form = JustificativaEntrega.objects.filter(id_garagem=filial, data_emissao__lte=date2, data_emissao__gte=date1,
+        if date1 and date2 and emp and filial:
+            print('Querring values', emp, filial)
+            form = JustificativaEntrega.objects.filter(empresa=emp, filial=filial, data_emissao__lte=date2, data_emissao__gte=date1,
                                                        confirmado=False)
             return render(request,'portaria/etc/justificativa.html', {'form':form,'gachoices':gachoices,
-                                                                      'justchoices':justchoices, 'today': today, 'yesterday': yesterday})
+                                                                      'justchoices':justchoices, 'today': today, 'yesterday': yesterday, 'empchoices': empchoices})
     if request.method == 'POST':
         lista = request.POST.getlist('counter')
         for q in lista:
@@ -3472,7 +3475,7 @@ def justificativa(request):
                     obj.save()
         messages.success(request, 'Justificativas cadastradas')
         return redirect('portaria:justificativa')
-    return render(request, 'portaria/etc/justificativa.html', {'gachoices': gachoices, 'today': today, 'yesterday': yesterday})
+    return render(request, 'portaria/etc/justificativa.html', {'gachoices': gachoices, 'today': today, 'yesterday': yesterday, 'empchoices': empchoices})
 
 def rel_justificativa(request):
     gachoices = GARAGEM_CHOICES
