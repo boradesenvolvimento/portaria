@@ -3891,7 +3891,7 @@ def compras_lancar_pedido(request):
                     print(res)
                     for q in res:
                         try:
-                            obj = SolicitacoesCompras.objects.get(empresa= empresa, filial= fil, nr_solic=q['nr_solicitacao'])
+                            obj = SolicitacoesCompras.objects.get(nr_solic=q['nr_solicitacao'])
                         except ObjectDoesNotExist:
                             obj = SolicitacoesCompras.objects.create(
                                 nr_solic=q['nr_solicitacao'], data=q['data'], status=q['status'],
