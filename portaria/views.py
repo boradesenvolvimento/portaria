@@ -1850,6 +1850,9 @@ def solictransfpalete(request):
             return redirect('portaria:transfdetalhe', solic_id=solic_id)
             #return render(request,'portaria/palete/transfpaletes.html', {'form':form})
         else:
+            print(keyga[ori])
+            print(tp_p)
+            print(PaleteControl.objects.filter(loc_atual=keyga[ori], tp_palete=tp_p).count())
             messages.error(request,'Quantidade solicitada maior que a disponível')
             return render(request,'portaria/palete/transfpaletes.html', {'form':form, 'gachoices': gachoices})
     return render(request,'portaria/palete/transfpaletes.html', {'form':form, 'gachoices': gachoices})
