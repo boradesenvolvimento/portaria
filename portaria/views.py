@@ -207,6 +207,7 @@ def cadpaletes(request):
     keyga = {k: v for k, v in GARAGEM_CHOICES}
     if request.method == 'POST':
         qnt = request.POST.get('qnt')
+        empresa = request.POST.get('empresa')
         fil = request.POST.get('fil')
         emp = request.POST.get('emp')
         tp_p = request.POST.get('tp_p')
@@ -220,7 +221,7 @@ def cadpaletes(request):
                 nsal = Cliente.objects.filter(razao_social=emp).annotate(saldonew=Sum(F('saldo')+int(qnt)))
                 Cliente.objects.filter(razao_social=emp).update(saldo=nsal[0].saldonew)
                 for x in range(0,int(qnt)):
-                    PaleteControl.objects.create(loc_atual=fil, tp_palete=tp_p, autor=request.user)
+                    PaleteControl.objects.create(loc_atual=keyga[empresa+fil], tp_palete=tp_p, autor=request.user)
                     if x == 2000: break
                 messages.success(request, f'{qnt} Paletes foram cadastrados com sucesso')
     return render(request, 'portaria/palete/cadpaletes.html', {'tp_fil':tp_fil, 'tp_emp':tp_emp})
