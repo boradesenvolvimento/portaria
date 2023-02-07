@@ -2941,13 +2941,16 @@ def chamadoreadmail(request):
         #pp.login(e_user, e_pass)
 
         num_messages = len(pp.list()[1]) #conta quantos emails existem na caixa
+        print(f'messages: {num_messages}')
         for i in range(num_messages):
             rr = random.random()
             attatch = ''
             e_cc_a = ''
             try:
+                print('parsing email...')
                 raw_email = b'\n'.join(pp.retr(i+1)[1]) #pega email
                 parsed_email = email.message_from_bytes(raw_email, policy=policy.compat32)
+                print('email parsed...')
             except Exception as e:
                 print(f'Error type:{type(e).__name__}, error: {e}')
             else:
