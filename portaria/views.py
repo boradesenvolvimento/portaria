@@ -2919,9 +2919,7 @@ def chamadoreadmail(request):
     service = ''
     hoje = datetime.date.today()
     host = 'pop.kinghost.net'
-    mails = ['chamado.praxio@bora.tec.br', 'chamado.juridico@bora.tec.br','chamado.manutencao@bora.tec.br', 
-            'chamado.almoxarifado@bora.tec.br', 'chamado.comprovantes@bora.tec.br', 
-            'chamado.fiscal@bora.tec.br', 'chamado.descarga@bora.tec.br']
+    mails = ['chamado.praxio2@bora.tec.br']
     for e_user in mails:
         e_pass = 'Bor4@123' #'Bor@456987'
         pattern1 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
