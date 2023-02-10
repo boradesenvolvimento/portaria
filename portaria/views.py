@@ -20,7 +20,7 @@ from io import BytesIO
 from zipfile import ZipFile
 from fpdf import FPDF
 #from barcode import EAN13
-#from barcode.writer import ImageWriter
+from barcode.writer import ImageWriter
 
 import numpy as np
 import pandas as pd
@@ -65,6 +65,9 @@ from .dbtest import conndb
 from .models import * #Cadastro, PaletControl, ChecklistFrota, Veiculos, NfServicoPj
 from .forms import * #CadastroForm, isPlacaForm, DateForm, FilterForm, TPaletsForm, TIPO_GARAGEM, ChecklistForm
 from mysite.settings import get_secret
+
+# Gerador de código de barras
+from barcode import Code39, EAN13
 
 
 def cardusuario(request):
@@ -1861,6 +1864,7 @@ def transfdetalhe(request, solic_id):
     mov = SolicMovPalete.objects.filter(solic_id=solic_id).first()
     quantity = SolicMovPalete.objects.filter(solic_id=solic_id).values('solic_id').annotate(Count("solic_id"))
     qty = quantity[0]
+
     data = {
         "ID Solicitação": mov.solic_id,
         "Origem": mov.origem,
@@ -1871,13 +1875,15 @@ def transfdetalhe(request, solic_id):
         "Autor": mov.autor.username
     }
 
-    titles = ["ID Solicitação", "Origem", "Destino", "Placa Veículo", "Data Solicitação", "Quantidade"]
+    titles = ["ID Solicitação", "Origem", "Destino", "Placa Veículo", "Data Solicitação", "Quantidade", "Código de Barras"]
+
+    #Gerar código de barras
     pdf = FPDF(orientation='P', unit='mm', format=(210, 297))
     pdf.add_page()
     pdf.ln()
-    #barcode = EAN13(data['ID Solicitação'], writer=ImageWriter())
-    #barcode.save('barcode')
-    #pdf.image('./barcode.png', x=120, y=50, w=80, h=30)
+    barcode = Code39(data['ID Solicitação'], writer=ImageWriter(), add_checksum=False)
+    barcode.save('barcode')
+    pdf.image('./barcode.png', x=48, y=120, w=120, h=30) # Tamanho e posição
     pdf.ln()
     page_w = int(pdf.w)
     pdf.set_font("Arial", size = 20)

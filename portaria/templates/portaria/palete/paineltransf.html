@@ -37,7 +37,7 @@
                                 <td style="width: 10%;" > {{ q.destino }} </td>
                                 <td style="width: 10%;" > {{ q.placa_veic }} </td>
                                 <td style="width: 10%;" > {{ q.autor__username }} </td>
-                                <td style="width: 10%;" ><a href="{% url 'portaria:transfdetalhe' solic_id=q.solic_id %}">informações</a></td>
+                                <td style="width: 10%;" ><a href="{% url 'portaria:transfdetalhe' solic_id=q.solic_id %}"  target="_blank">Informações</a></td>
 
                             </tr>
                         {% endfor %}
