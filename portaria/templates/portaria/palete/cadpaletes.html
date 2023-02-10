@@ -39,24 +39,37 @@
                             <label for="fil">Filial:</label>
                             <select id="fil" name="fil">
                                 <option selected disabled value="">--</option>
-                                <option value="1"> 1 </option>
-                                <option value="2"> 2 </option>
-                                <option value="3"> 3 </option>
-                                <option value="4"> 4 </option>
-                                <option value="5"> 5 </option>
-                                <option value="6"> 6 </option>
-                                <option value="7"> 7 </option>
-                                <option value="8"> 8 </option>
-                                <option value="9"> 9 </option>
-                                <option value="10"> 10 </option>
-                                <option value="11"> 11 </option>
-                                <option value="12"> 12 </option>
-                                <option value="13"> 13 </option>
-                                <option value="14"> 14 </option>
+                                <option value="1"> 1-SPO </option>
+                                <option value="2"> 2-REC </option>
+                                <option value="3"> 3-SSA </option>
+                                <option value="4"> 4-FOR </option>
+                                <option value="5"> 5-MCZ </option>
+                                <option value="6"> 6-NAT </option>
+                                <option value="7"> 7-JPA </option>
+                                <option value="8"> 8-AJU </option>
+                                <option value="9"> 9-VDC </option>
+                                <option value="10"> 10-CTG </option>
+                                <option value="11"> 11-GVR </option>
+                                <option value="12"> 12-VIX </option>
+                                <option value="13"> 13-TCO </option>
+                                <option value="14"> 14-UDI </option>
                             </select>
                         </th>
                     </tr>
-                    <tr><th>Razão social:<input id="emp" type="text" name="emp"></th></tr>
+                    <!--Campo antigo que precisa digitar-->
+                    <!--<tr><th>Razão social:<input id="emp" type="text" name="emp"></th></tr>-->
+                    <!--FIM Campo antigo-->
+                    <tr>
+                        <th>
+                            <label for="emp">Razão Social</label>
+                            <select name="emp" id="emp">
+                                <option selected hidden>--</option>
+                                {% for e in tp_emp %}
+                                    <option value="{{ e }}">{{ e }}</option>
+                                {% endfor %}
+                            </select>
+                        </th>
+                    </tr>
                     <tr><th>Tipo:<select name="tp_p">
                         <option value="PBR">PBR</option>
                         <option value="CHEP">CHEP</option>

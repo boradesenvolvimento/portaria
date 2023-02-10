@@ -189,7 +189,6 @@ def paleteview(request):
     keyga = {k:v for k,v in GARAGEM_CHOICES}
     tp_fil = GARAGEM_CHOICES
     tp_fil.pop()
-    print(tp_fil)
     tp_emp = Cliente.objects.values_list('razao_social', flat=True)
     form = PaleteControl.objects.values('loc_atual').\
         annotate(pbr=Count('id', filter=Q(tp_palete='PBR')),chep=Count('id', filter=Q(tp_palete='CHEP'))).\
@@ -212,7 +211,7 @@ def cadpaletes(request):
         qnt = request.POST.get('qnt')
         empresa = request.POST.get('empresa')
         fil = request.POST.get('fil')
-        emp = request.POST.get('emp')
+        emp = request.POST.get('emp') # Razao Social
         tp_p = request.POST.get('tp_p')
         if qnt and fil and emp and tp_p:
             try:
@@ -224,6 +223,7 @@ def cadpaletes(request):
                 nsal = Cliente.objects.filter(razao_social=emp).annotate(saldonew=Sum(F('saldo')+int(qnt)))
                 Cliente.objects.filter(razao_social=emp).update(saldo=nsal[0].saldonew)
                 for x in range(0,int(qnt)):
+                    print(fil)
                     PaleteControl.objects.create(loc_atual=keyga[empresa+fil], tp_palete=tp_p, autor=request.user)
                     if x == 2000: break
                 messages.success(request, f'{qnt} Paletes foram cadastrados com sucesso')
@@ -240,7 +240,7 @@ def saidapalete(request):
     keyga = {k: v for k, v in GARAGEM_CHOICES}
     if request.method == 'POST':
         qnt = int(request.POST.get('qnt'))
-        fil = request.POST.get('fil')
+        fil = str(request.POST.get('fil'))
         emp = request.POST.get('emp')
         tp_p = request.POST.get('tp_p')
         if qnt and fil and emp and tp_p:
@@ -1829,6 +1829,11 @@ def solictransfpalete(request):
         qnt = int(request.POST.get('quantidade_'))
         plc = request.POST.get('placa_veic')
         tp_p = request.POST.get('tp_palete')
+
+        if ori or des == '...':
+            messages.error(request, 'O campo Origem ou Destino devem ter um valor válido!')
+            return redirect('portaria:solicpaletes')
+
         if qnt <= PaleteControl.objects.filter(loc_atual=keyga[ori],tp_palete=tp_p).count():
             #filtrar caminhão em movimento
             placas = SolicMovPalete.objects.order_by('placa_veic').values('placa_veic')
@@ -1843,13 +1848,13 @@ def solictransfpalete(request):
             currentTime = timezone.now()
             time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             solic_id = str(time).replace(':', '').replace(' ', '').replace('-', '') + plc[5:]
-            print(solic_id) 
             for q in range(0,qnt):
                 x = PaleteControl.objects.filter(loc_atual=keyga[ori], tp_palete=tp_p).first()
                 solic = SolicMovPalete.objects.create(solic_id=solic_id, palete=x,data_solic=currentTime,origem=keyga[ori],destino=keyga[des],
                                          placa_veic=plc,autor=request.user)
+                print('SOLIC= ',solic)
                 PaleteControl.objects.filter(pk=x.id).update(loc_atual=keyga["0"])
-            messages.success(request, f'{qnt} palete transferido de {keyga[ori]} para {keyga[des]}')
+            messages.success(request, f'{qnt} palete(s) | Aguardando o recebimento de paletes de {keyga[ori]} para {keyga[des]}')
             return redirect('portaria:transfdetalhe', solic_id=solic_id)
             #return render(request,'portaria/palete/transfpaletes.html', {'form':form})
         else:
@@ -1884,6 +1889,7 @@ def transfdetalhe(request, solic_id):
     barcode = Code39(data['ID Solicitação'], writer=ImageWriter(), add_checksum=False)
     barcode.save('barcode')
     pdf.image('./barcode.png', x=48, y=120, w=120, h=30) # Tamanho e posição
+    pdf.image('portaria/static/images/logo.png', x=70, y=220, w=60, h=30)
     pdf.ln()
     page_w = int(pdf.w)
     pdf.set_font("Arial", size = 20)

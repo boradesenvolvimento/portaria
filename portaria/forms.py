@@ -47,8 +47,14 @@ class CadastroForm(forms.ModelForm):
         ]
 
 class TPaletesForm(forms.Form):
-    origem_ = forms.ChoiceField(choices=GARAGEM_CHOICES)
-    destino_ = forms.ChoiceField(choices=GARAGEM_CHOICES)
+    origem_ = forms.ChoiceField(
+        choices=GARAGEM_CHOICES,
+        required=True
+    )
+    destino_ = forms.ChoiceField(
+        choices=GARAGEM_CHOICES,
+        required=True
+    )
     quantidade_ = forms.IntegerField()
     placa_veic = forms.CharField(max_length=7)
     tp_palete = forms.ChoiceField(choices=PaleteControl.TIPO_PALETE_CHOICES)
