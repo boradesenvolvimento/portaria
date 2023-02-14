@@ -1830,10 +1830,6 @@ def solictransfpalete(request):
         plc = request.POST.get('placa_veic')
         tp_p = request.POST.get('tp_palete')
 
-        print(ori, des)
-
-        
-
         if qnt <= PaleteControl.objects.filter(loc_atual=keyga[ori],tp_palete=tp_p).count():
             #filtrar caminhão em movimento
             placas = SolicMovPalete.objects.order_by('placa_veic').values('placa_veic')
