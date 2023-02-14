@@ -6,6 +6,10 @@
     .smallcap td{
         font-size:11px;
     }
+
+    .data-input{
+        padding: 6px;
+    }
 </style>
         <div class="container mt-5">
             {% for message in messages %}
@@ -17,11 +21,11 @@
             {% endfor %}
             <div class="row linha-baixo">
                 <h2 class="title-cad col-3">Justificativas</h2>
-                <div class="col-9">
+                <div class="col-10">
                     <form method="get">
                     <label for="dates">Período:</label>
-                    <input type="date" name="data1" value="{{ yesterday }}">
-                    <input type="date" name="data2" value="{{ today }}">
+                    <input class="data-input" type="date" name="data1" value="{{ yesterday }}">
+                    <input class="data-input" type="date" name="data2" value="{{ today }}">
                     <label for="empresa">Empresa:</label>
                     <select name="empresa" id="empresa">
                         <option></option>
@@ -38,7 +42,7 @@
                             {% endif %}
                         {% endfor %}
                     </select>
-                    <button type="submit">Filtrar</button>
+                    <button style="padding: 15px 40px;" type="submit">Filtrar</button>
                     </form>
                 </div>
             </div>
@@ -63,31 +67,35 @@
 
                 {% for f in form %}
                     <tr class="smallcap" style="{% if f.recusa %}background-color: #ff000091;{% endif %}" >
-
-                        <td>{{ f.conhecimento }}</td>
-                        <td>{{ f.data_emissao }}</td>
-                        <td>{{ f.remetente }}</td>
-                        <td>{{ f.destinatario }}</td>
-                        <td>{{ f.peso }}</td>
-                        <td>{{ f.lead_time }}</td>
-                        <td>{{ f.em_aberto }}</td>
-                        <td>{{ f.local_entreg }}</td>
-                        <td>{{ f.nota_fiscal|truncatechars:'100' }}</td>
-                        <td><select name="ocor{{ forloop.counter0 }}" style="font-size:10px;">
-                            <option selected disabled value="">--</option>
-                            {% for k,v in justchoices %}
-                            <option value="{{ k }}">{{ v }}</option>
-                            {% endfor %}
-                            </select>
-                            <input type="hidden" name="idobj{{ forloop.counter0 }}" value="{{ f.id }}">
-                            <input type="hidden" name="counter" value="{{ forloop.counter0 }}">
-                        </td>
+                        <!--Inicio IF-->
+                        {% if f.em_aberto >= 1   %}
+                            <!--Só vai trazer os dados que tenha dias Em aberto que seja 0 ou menor-->
+                            <td>{{ f.conhecimento }}</td>
+                            <td>{{ f.data_emissao }}</td>
+                            <td>{{ f.remetente }}</td>
+                            <td>{{ f.destinatario }}</td>
+                            <td>{{ f.peso }}</td>
+                            <td>{{ f.lead_time }}</td>
+                            <td>{{ f.em_aberto }}</td>
+                            <td>{{ f.local_entreg }}</td>
+                            <td>{{ f.nota_fiscal|truncatechars:'100' }}</td>
+                            <td><select name="ocor{{ forloop.counter0 }}" style="font-size:10px;">
+                                    <option selected disabled value="">--</option>
+                                    {% for k,v in justchoices %}
+                                        <option value="{{ k }}">{{ v }}</option>
+                                    {% endfor %}
+                                </select>
+                                <input type="hidden" name="idobj{{ forloop.counter0 }}" value="{{ f.id }}">
+                                <input type="hidden" name="counter" value="{{ forloop.counter0 }}">
+                            </td>
                         <td><label style="font-size:2.4rem;cursor:pointer;margin-top:5px;" for="file{{ forloop.counter0 }}"><ion-icon name="cloud-upload-outline"></ion-icon></label>
                             <input type="file" id="file{{ forloop.counter0 }}" name="file{{ forloop.counter0 }}">
                         </td>
                         <td>
                             <button style="font-size:1.4rem;" type="button" id="myBtn" value="{{ forloop.counter }}"><ion-icon name="list"></ion-icon></button>
                         </td>
+                        <!--FIM IF-->
+                        {% endif %}
                     </tr>
                         <div id="myModal{{ forloop.counter }}" class="modal">
                             <div class="modal-content">

@@ -1830,9 +1830,9 @@ def solictransfpalete(request):
         plc = request.POST.get('placa_veic')
         tp_p = request.POST.get('tp_palete')
 
-        if ori or des == '...':
-            messages.error(request, 'O campo Origem ou Destino devem ter um valor válido!')
-            return redirect('portaria:solicpaletes')
+        print(ori, des)
+
+        
 
         if qnt <= PaleteControl.objects.filter(loc_atual=keyga[ori],tp_palete=tp_p).count():
             #filtrar caminhão em movimento
@@ -1874,7 +1874,7 @@ def transfdetalhe(request, solic_id):
         "ID Solicitação": mov.solic_id,
         "Origem": mov.origem,
         "Destino": mov.destino,
-        "Placa do Veículo": mov.placa_veic,
+        "Placa do Veículo": upper(mov.placa_veic),
         "Data Solicitação": datetime.datetime.strftime(mov.data_solic, "%d/%m/%Y %H:%m"),
         "Quantidade": qty['solic_id__count'],
         "Autor": mov.autor.username
@@ -2159,7 +2159,10 @@ def get_palete_csv(request):
     array = []
     date1 = request.POST.get('date1')
     date2 = request.POST.get('date2')
-    palete = MovPalete.objects.filter(data_ult_mov__lte=date2, data_ult_mov__gte=date1)
+    print(date1)
+    print(date2)
+    palete = MovPalete.objects.filter(data_ult_mov=date2, data_ult_mov__gte=date1) # Para funcionar colocar data_receb e data_solic
+    print('PALETE: ',palete)
     if palete:
         for q in palete:
             array.append({'origem':q.origem, 'destino':q.destino, 'data_ult_mov':q.data_ult_mov, 'placa':q.placa_veic,
@@ -3458,8 +3461,7 @@ def justificativa(request):
     yesterday = today - datetime.timedelta(1)
     today = today.strftime('%Y-%m-%d')
     yesterday = yesterday.strftime('%Y-%m-%d')
-    print(today, type(today))
-    print(yesterday, type(yesterday))
+    
     if request.method == 'GET':
         date1 = request.GET.get('data1')
         date2 = request.GET.get('data2')
@@ -3469,8 +3471,17 @@ def justificativa(request):
             print('Querring values', emp, filial)
             form = JustificativaEntrega.objects.filter(empresa=emp, filial=filial, data_emissao__lte=date2, data_emissao__gte=date1,
                                                        confirmado=False)
-            return render(request,'portaria/etc/justificativa.html', {'form':form,'gachoices':gachoices,
-                                                                      'justchoices':justchoices, 'today': today, 'yesterday': yesterday, 'empchoices': empchoices})
+
+            return render(request,'portaria/etc/justificativa.html', 
+                            {
+                                'form':form,'gachoices':gachoices,
+                                'justchoices':justchoices, 
+                                'today': today, 
+                                'yesterday': yesterday, 
+                                'empchoices': empchoices
+                            }
+                        )
+
     if request.method == 'POST':
         lista = request.POST.getlist('counter')
         for q in lista:
@@ -3500,8 +3511,10 @@ def rel_justificativa(request):
         if 'pivot_rel_just' in request.POST:
             date1 = request.POST.get('date1')
             date2 = request.POST.get('date2')
+
             try:
                 response = pivot_rel_just(date1=date1, date2=date2)
+                
             except Exception as e:
                 print(f'Error: {e}, error_type:{type(e).__name__}')
             else:
@@ -3732,15 +3745,24 @@ def pivot_rel_just(date1, date2):
     gachoices = GARAGEM_CHOICES
     dictga = {k:v for k,v in gachoices}
     compare_date = datetime.datetime.strptime('0001-01-01', '%Y-%m-%d')
-    qs = JustificativaEntrega.objects.filter(data_emissao__lte=date2, data_emissao__gte=date1)
+    if date1 and date2:
+        qs = JustificativaEntrega.objects.filter(data_emissao__lte=date2, data_emissao__gte=date1)
+    else:
+        qs = JustificativaEntrega.objects.all()
+
     for q in qs:
-        array.append({'ID_GARAGEM':dictga[q.id_garagem],'CONHECIMENTO':q.conhecimento, 'TIPO_DOC': q.tipo_doc,
+        
+        # O erro está no campo ID_Garagem
+        # Verificar se o correto é (dictga:q.id_garagem ou q.id_garagem)
+
+        array.append({'ID_GARAGEM':q.id_garagem,'CONHECIMENTO':q.conhecimento, 'TIPO_DOC': q.tipo_doc,
                       'DATA_EMISSAO':q.data_emissao,'REMETENTE':q.remetente,'DESTINATARIO':q.destinatario,
                       'PESO':q.peso, 'LEAD_TIME':q.lead_time,'EM_ABERTO':q.em_aberto,'LOCAL_ENTREGA':q.local_entreg,
                       'NOTA_FISCAL':q.nota_fiscal,'COD_JUST':q.cod_just,'DESC_JUST':q.desc_just,
                       'AUTOR':q.autor,
                       'DATA_ENTREGA': 'NAO ENTREGUE' if q.data_entrega == compare_date.date() else q.data_entrega
                       })
+
     pdr = pd.DataFrame(array)
     buffer = io.BytesIO(pdr.to_string().encode('utf-8'))
     pdr.to_excel(buffer, engine='xlsxwriter', index=False)

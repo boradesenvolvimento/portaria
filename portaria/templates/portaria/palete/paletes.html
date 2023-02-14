@@ -49,8 +49,8 @@
             <form class="form-box" action="{% url 'portaria:get_palete_csv' %}" method="post">
                 {% csrf_token %}
                 <h3 class="title-cad">Exportar CSV</h3>
-                <input type="date" name="date1" placeholder="Data Inicio">
-                <input type="date" name="date2" placeholder="Data Final">
+                <input type="date" style="padding: 10px;" name="date1" placeholder="Data Inicio">
+                <input type="date" style="padding: 10px;" name="date2" placeholder="Data Final">
                 <button type="submit" style="height:3.4rem;"><ion-icon style="font-size:2.4rem;" name="download-outline"></ion-icon></button>
             </form>
         </div>
