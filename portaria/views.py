@@ -1830,9 +1830,6 @@ def solictransfpalete(request):
         plc = request.POST.get('placa_veic')
         tp_p = request.POST.get('tp_palete')
 
-        if ori or des == '...':
-            messages.error(request, 'O campo Origem ou Destino devem ter um valor válido!')
-            return redirect('portaria:solicpaletes')
 
         if qnt <= PaleteControl.objects.filter(loc_atual=keyga[ori],tp_palete=tp_p).count():
             #filtrar caminhão em movimento
