@@ -508,7 +508,7 @@ def feriasagen(request, idfpj):
             agenparse2 = datetime.datetime.strptime(agen2, '%Y-%m-%d').date()
             feriaspj.objects.filter(pk=fer.id).update(agendamento_ini=agenparse1, agendamento_fim=agenparse2)
         except ValueError:
-            messages.error(request, 'Por favor digite uma data válida')
+            messages.error(request, 'Por favor, digite uma data válida')
             return render(request, 'portaria/pj/agendamento.html', {'fer':fer})
         else:
             messages.success(request, 'Agendamento feito com sucesso')
@@ -678,7 +678,7 @@ def manusaida(request, osid):
                                       'vlpeca':vlpeca[i].replace(',','.'), 'prod':prod[i], 'forn':forn[i],
                                       'localmanu':localmanu[i], 'feito':int(feito[i])})
                 except ValueError as e:
-                    messages.error(request, 'Por favor digite uma data válida')
+                    messages.error(request, 'Por favor, digite uma data válida')
                     return render(request, 'portaria/frota/manusaida.html',{'get_os':get_os})
                 else:
                     between_days = (date_dtsaida - get_os.dt_entrada).days
@@ -1833,7 +1833,6 @@ def solictransfpalete(request):
         if qnt <= PaleteControl.objects.filter(loc_atual=keyga[ori],tp_palete=tp_p).count():
             #filtrar caminhão em movimento
             placas = SolicMovPalete.objects.order_by('placa_veic').values('placa_veic')
-            print(placas)
             plcs = []
             for p in placas:
                 plcs.append(p.get('placa_veic'))
@@ -1848,7 +1847,7 @@ def solictransfpalete(request):
                 x = PaleteControl.objects.filter(loc_atual=keyga[ori], tp_palete=tp_p).first()
                 solic = SolicMovPalete.objects.create(solic_id=solic_id, palete=x,data_solic=currentTime,origem=keyga[ori],destino=keyga[des],
                                          placa_veic=plc,autor=request.user)
-                print('SOLIC= ',solic)
+               
                 PaleteControl.objects.filter(pk=x.id).update(loc_atual=keyga["0"])
             messages.success(request, f'{qnt} palete(s) | Aguardando o recebimento de paletes de {keyga[ori]} para {keyga[des]}')
             return redirect('portaria:transfdetalhe', solic_id=solic_id)
@@ -2155,13 +2154,24 @@ def get_palete_csv(request):
     array = []
     date1 = request.POST.get('date1')
     date2 = request.POST.get('date2')
+    
     print(date1)
     print(date2)
-    palete = MovPalete.objects.filter(data_ult_mov=date2, data_ult_mov__gte=date1) # Para funcionar colocar data_receb e data_solic
-    print('PALETE: ',palete)
+    # Maneira que encontrei de fazer funcionar
+    #palete = MovPalete.objects.all() # Tirar da formação do CSV data_ult_mov
+    # OU
+    # Gerar CSV e fazer filtragem por Filial
+
+    # Código que estava os campos estão errados
+    palete = MovPalete.objects.filter(data_solic=date1, data_receb=date2)
+
+    # Funciona mas não tem o campo de filtragem
+    #palete = MovPalete.objects.filter(data_solic=date2, data_receb=date1) # Para funcionar colocar data_receb e data_solic - data_ult_mov | data_ult_mov__gte
+    
     if palete:
+        print('Entrou no IF')
         for q in palete:
-            array.append({'origem':q.origem, 'destino':q.destino, 'data_ult_mov':q.data_ult_mov, 'placa':q.placa_veic,
+            array.append({'origem':q.origem, 'destino':q.destino, 'data_ult_mov':q.data_solic, 'placa':q.placa_veic,
                           'autor':q.autor, 'tipo': q.palete.tp_palete if q.palete else 'DEVOLVIDO'})
         df = pd.DataFrame(array)
         buffer = io.BytesIO(df.to_string().encode('utf-8'))
@@ -2185,7 +2195,7 @@ def get_manu_csv(request):
         dateparse = datetime.datetime.strptime(data1, '%Y-%m-%d')
         dateparse1 = datetime.datetime.strptime(data2, '%Y-%m-%d')
     except ValueError:
-        messages.error(request,'Por favor digite uma data válida')
+        messages.error(request,'Por favor, digite uma data válida')
         return redirect('portaria:manutencaofrota')
     else:
 
@@ -2286,7 +2296,7 @@ def get_checklist_csv(request):
         ini = datetime.datetime.strptime(request.POST.get('dataini'), '%Y-%m-%d').date()
         fim = datetime.datetime.strptime(request.POST.get('datafim'), '%Y-%m-%d').date()
     except ValueError:
-        messages.error(request, 'Por favor digite uma data válida')
+        messages.error(request, 'Por favor, digite uma data válida')
         return redirect('portaria:frota')
     else:
         query = ChecklistFrota.objects.filter(datachecklist__lte=fim,datachecklist__gte=ini)
@@ -2310,7 +2320,7 @@ def get_ferias_csv(request):
         ini = datetime.datetime.strptime(request.POST.get('dataini'), '%Y-%m-%d').date()
         fim = datetime.datetime.strptime(request.POST.get('datafim'), '%Y-%m-%d').date()
     except ValueError:
-        messages.error(request, 'Por favor digite uma data válida')
+        messages.error(request, 'Por favor, digite uma data válida')
         return redirect('portaria:feriaspjv')
     else:
         response = HttpResponse(content_type='text/csv',

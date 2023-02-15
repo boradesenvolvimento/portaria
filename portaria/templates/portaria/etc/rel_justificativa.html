@@ -18,8 +18,8 @@
                     <h2>Porcentagem entregas</h2>
                     <form method="post" id="pivot_rel_just" enctype='multipart/form-data'>{% csrf_token %}
                         <input type="hidden" name="pivot_rel_just" value="pivot_rel_just">
-                        <p>Pesquisar por <strong>TODO</strong> os período (sem filtro):<button type="submit">Download Todo Período</button><br></p>
-                        
+                        <label>Pesquisar por <strong>TODO</strong> o período (sem filtro):<button type="submit">Download Todo Período</button><br></label>
+                        <br>
                         <label for="periodo">Pesquisar por Período:</label>
                         <input style="padding: 6px;" type="date" name="date1" id="periodo">
                         <input style="padding: 6px;" type="date" name="date2">

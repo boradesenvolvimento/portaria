@@ -3,16 +3,26 @@
  {% load groupscheck %}
  <script src="{% static 'notifications/notify.js' %}" type="text/javascript"></script>
 
-  <nav class="navbar navbar-expand-lg navbar-light mb-2" style="background-color: #3188E8;">
+ <style>
+  .navbar.custom {
+    width: 100%;  
+    margin: 0 auto;
+  }
+  .navbar .navbar-nav {
+    display: inline-flex;
+  }
+ </style>
+
+  <nav class="navbar navbar-expand-lg navbar-light mb-2 custom" style="background-color: #3188E8;">
       <div class="container-fluid">
       <a class="navbar-brand" href="/portaria/">
           <img src="{% static 'images/logo.png' %}">
       </a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
-    </button>
-      <div class="collapse navbar-collapse menutext-navbar" id="navbarSupportedContent">
-        <ul class="navbar-nav">
+      </button>
+      <div style="width:100%; margin: 0 auto;" class="collapse navbar-collapse menutext-navbar conteudo" id="navbarSupportedContent">
+        <ul class="navbar-nav align-items-center">
           <li class="nav-item">
             <a class="nav-link1" aria-current="page" href="/portaria/">Home</a>
           </li>
