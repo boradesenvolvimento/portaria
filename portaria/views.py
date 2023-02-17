@@ -223,7 +223,7 @@ def cadpaletes(request):
                 nsal = Cliente.objects.filter(razao_social=emp).annotate(saldonew=Sum(F('saldo')+int(qnt)))
                 Cliente.objects.filter(razao_social=emp).update(saldo=nsal[0].saldonew)
                 for x in range(0,int(qnt)):
-                    print(fil)
+
                     PaleteControl.objects.create(loc_atual=keyga[empresa+fil], tp_palete=tp_p, autor=request.user)
                     if x == 2000: break
                 messages.success(request, f'{qnt} Paletes foram cadastrados com sucesso')
