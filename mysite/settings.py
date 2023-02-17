@@ -47,12 +47,12 @@ SECRET_KEY = get_secret('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 
 #develop
-DEBUG = True
-ALLOWED_HOSTS = []
+#DEBUG = True
+#ALLOWED_HOSTS = []
 
-'''#production
+#production
 DEBUG = False
-ALLOWED_HOSTS = ["www.bora.tec.br","www.bora.tec.br/portaria", "bora.tec.br", "bora.tec.br/portaria"]'''
+ALLOWED_HOSTS = ["www.bora.tec.br","www.bora.tec.br/portaria", "bora.tec.br", "bora.tec.br/portaria"]
 
 # Application definition
 
@@ -103,14 +103,14 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
 #develop
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
+#DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.sqlite3',
+#        'NAME': BASE_DIR / 'db.sqlite3',
+#    }
+#}
 
-'''#production
+#production
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -120,7 +120,7 @@ DATABASES = {
         'HOST': get_secret('DB_HOST'),
         'PORT': '3306',
     }
-}'''
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
