@@ -1883,8 +1883,8 @@ def transfdetalhe(request, solic_id):
     pdf.ln()
     barcode = Code39(data['ID Solicitação'], writer=ImageWriter(), add_checksum=False)
     barcode.save('barcode')
-    pdf.image('./barcode.png', x=48, y=120, w=120, h=30) # Tamanho e posição
-    pdf.image('portaria/static/images/logo.png', x=70, y=220, w=60, h=30)
+    pdf.image('./barcode.png', x=48, y=120, w=120, h=30) # Posição(x, y) Tamanho(w, h)
+    pdf.image('portaria/static/images/logo.png', x=78, y=230, w=60, h=30)
     pdf.ln()
     page_w = int(pdf.w)
     pdf.set_font("Arial", size = 20)
@@ -2162,8 +2162,8 @@ def get_palete_csv(request):
     # OU
     # Gerar CSV e fazer filtragem por Filial
 
-    # Código que estava os campos estão errados
-    palete = MovPalete.objects.filter(data_solic=date1, data_receb=date2)
+    # Código original do Gabriel que estava os campos estão errados
+    palete = MovPalete.objects.filter(data_ult_mov__lte=date2, data_ult_mov__gte=date1)
 
     # Funciona mas não tem o campo de filtragem
     #palete = MovPalete.objects.filter(data_solic=date2, data_receb=date1) # Para funcionar colocar data_receb e data_solic - data_ult_mov | data_ult_mov__gte
@@ -2171,7 +2171,7 @@ def get_palete_csv(request):
     if palete:
         print('Entrou no IF')
         for q in palete:
-            array.append({'origem':q.origem, 'destino':q.destino, 'data_ult_mov':q.data_solic, 'placa':q.placa_veic,
+            array.append({'origem':q.origem, 'destino':q.destino, 'data_ult_mov':q.data_ult_mov, 'placa':q.placa_veic,
                           'autor':q.autor, 'tipo': q.palete.tp_palete if q.palete else 'DEVOLVIDO'})
         df = pd.DataFrame(array)
         buffer = io.BytesIO(df.to_string().encode('utf-8'))

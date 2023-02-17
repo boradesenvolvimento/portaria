@@ -34,10 +34,10 @@
                                 <label for='getnf'>Nota Fiscal</label>
                                 <input type='text' name='getnf' id='getnf'>
                             </td>
-                            <td><a href="#" id="btnAdiciona" class="button">Add+</a></td>
+                            <td><a style='margin-left: -490px;' href="#" id="btnAdiciona" class="btn btn-outline-success">+Add NF</a></td>
                         </tr>
                     </table>
-                <input type="submit" class="button">
+                <input style="padding:6px 30px" type="submit" class="button">
                 <input type="hidden" id="setCount" name="setcount">
                 </form>
             </div>
@@ -73,7 +73,7 @@ $( document ).ready(function() {
         html += "<tr id='"+idNum+"'><td><label for='getcte"+idNum+"'>Nota Fiscal "+idContador+"</label>"
         html += "<input type='text' name='getnf' id='getnf'>"
         html += "</td>"
-        html += "<td><button class='btn' onclick='exclui("+idNum+")' type='button'>Excluir</button></td></tr>";
+        html += "<td><button style='margin-left: -490px;' class='btn btn-danger' onclick='exclui("+idNum+")' type='button'>Excluir NF</button></td></tr>";
 
         $("#addHTML").append(html);
         document.getElementById('setCount').value = idContador;
