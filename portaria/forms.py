@@ -5,7 +5,8 @@ from django.forms import Textarea, DateField
 from django_summernote.widgets import SummernoteWidget
 
 from .models import Cadastro, TIPO_GARAGEM, ChecklistFrota, NfServicoPj, ManutencaoFrota, ServJoinManu, feriaspj, \
-    FuncPj, Motorista, Veiculos, Cliente, PaleteControl, TipoServicosManut, RegistraTerceirizados, GARAGEM_CHOICES
+    FuncPj, Motorista, Veiculos, Cliente, PaleteControl, TipoServicosManut, RegistraTerceirizados, GARAGEM_CHOICES, \
+        DisponibilidadeFrota, STATUS_FROTA_CHOICES
 
 
 #forms
@@ -45,6 +46,26 @@ class CadastroForm(forms.ModelForm):
             'hr_saida',
             'autor'
         ]
+
+class DisponibilidadeFrotaForm(forms.ModelForm):
+    class Meta:
+        model = DisponibilidadeFrota
+        fields = [
+            'placa',
+            'filial',
+            'data_previsao',
+            'observacao',
+            'autor',
+            'data_finalizacao',
+            'data_inicio',
+            'ordem_servico',
+            'status',
+        ]
+        widgets = {
+            'data_inicio': DateInput(),
+            'data_finalizacao': DateInput(),
+            'data_previsao': DateInput()
+        }
 
 class TPaletesForm(forms.Form):
     origem_ = forms.ChoiceField(
