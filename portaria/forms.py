@@ -47,6 +47,7 @@ class CadastroForm(forms.ModelForm):
             'autor'
         ]
 
+
 class DisponibilidadeFrotaForm(forms.ModelForm):
     class Meta:
         model = DisponibilidadeFrota

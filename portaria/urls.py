@@ -20,6 +20,7 @@ urlpatterns = [
     path('paletes/painelcliente', views.paletecliente, name='paletecliente'),
     path('paletes/saidapaletes', views.saidapalete, name='saidapalete'),
     path('frota/disponibilidade-frota', views.disponiblidade_frota, name='disponiblidade_frota'),
+    path('frota/disponibilidade-frota?<str:filial>', views.disponiblidade_frota, name='disponiblidade_frota'),
     #path('frota/', views.frota, name='frota'),
     #path('frota/<str:placa_id>&<moto_id>/checklist/', views.checklistfrota, name='checklistfrota'),
     #path('frota/checklistview/', views.checklistview, name='checklistview'),

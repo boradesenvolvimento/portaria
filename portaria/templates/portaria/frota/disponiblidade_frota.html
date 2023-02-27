@@ -3,24 +3,75 @@
 {% load static %}
 {% load groupscheck %}
 {% if request.user|has_group:"frota" %}
+
+<style>
+    #select-placa {
+        display: inline-block;
+        vertical-align: top;
+        overflow: hidden;
+        border: solid grey 1px;
+      }
+      #select-placa select {
+        padding: 10px;
+        margin: -5px -20px -5px -5px;
+      }
+</style>
 <div class="container mt-5">
     <div class="row">
-        <h1 class="title-cad linha-baixo">{{ kevin }}</h1>
+        <h1 class="title-cad linha-baixo">Disponibilidade Frota</h1>
     </div>
-    <form role="form" method="POST">
+    <!--Pegando valor da filial-->
+    <form method="GET">
+        <div id="refresh">
+            <h2 class="title-cad col-4">Escolha a Filial para Começar</h2>
+            <th name="filial" id="filial">{{ form.filial }}</th>
+            <button id="click" style="height:3.4rem;">Selecionar</button>
+        </div>
+    </form>
+    <!--Pegando valor da filial-->
+
+    <!--Fazendo reload apenas na DIV-->
+    <script>
+        $('#click').click(function(){
+        var div=$('#refresh').html();
+        $.ajax({
+            method: 'get',
+            dataType: 'json'
+        })
+        .done(function(data) {
+    if(data.success=='ok'){
+            $('#refresh').html(div);
+    }else{
+    // show errors.
+    }
+        })
+        .fail(function() {
+            console.log("error");
+        })
+        .always(function() {
+            console.log("complete");
+        });
+        });
+    </script>
+    <!--FIM Fazendo reload apenas na DIV-->
+
+    <form id="formulario" role="form" method="POST">
         {% csrf_token %}
+        <hr>
         <table>
             <tbody>
-                <tr>
-                    <th>Filial</th><th>{{ form.filial }}</th>
-                </tr>
                 {% if form.filial %}
-                    <tr><strong>Placa</strong>
-                        <select name="placa">
+                <h3><strong>Filial Selecionada: {{ get_filial }}</strong></h3>
+                <hr>
+                    <tr>
+                        <!--INÍCIO Placa dos veículos-->
+                        <h3 name="escolha_placa"><strong>Escolha a Placa:</strong></h3>
+                        <select id="select-placa" name="placa">
                             {% for placa in lista_certa %}
                                 <option value="{{ placa }}">{{ placa }}</option>
                             {% endfor %}
                         </select>
+                        <!--FIM Placa dos veículos-->
                     </tr>
                     <tr>
                         <th>Status Veículo: </th><th>{{ form.status }}</th>
