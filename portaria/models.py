@@ -209,6 +209,8 @@ class SolicMovPalete(models.Model):
     destino = models.CharField(max_length=3, choices=GARAGEM_CHOICES)
     placa_veic = models.CharField(max_length=7)
     autor = models.ForeignKey(User, on_delete=PROTECT)
+    motorista = models.CharField(max_length=35, blank=True)
+    conferente = models.CharField(max_length=35, blank=True)
 
     def __str__(self):
         return str(self.solic_id)
@@ -880,13 +882,13 @@ class SolicitacoesCompras(models.Model):
     ]
     id = models.BigAutoField(primary_key=True)
     nr_solic = models.CharField(max_length=10)
-    data = models.DateField()
-    status = models.CharField(max_length=15)
-    empresa = models.CharField(max_length=2)
+    data = models.DateField(null=True)
+    status = models.CharField(max_length=15, null=True)
+    empresa = models.CharField(max_length=2, null=True)
     codigo_fl = models.CharField(max_length=2, null=True, blank=True)
     filial = models.CharField(max_length=3, choices=GARAGEM_CHOICES)
-    categoria = models.CharField(max_length=15)
-    solicitante = models.CharField(max_length=100)
+    categoria = models.CharField(max_length=15, null=True)
+    solicitante = models.CharField(max_length=100, null=True)
     email_solic = models.EmailField(max_length=255, blank=True, null=True)
     departamento = models.CharField(max_length=15, choices=DEPARTAMENTO_CHOICES, blank=True, null=True)
     forma_pgt = models.CharField(max_length=15, choices=FORMA_PGT_CHOICES, blank=True, null=True)

@@ -58,6 +58,8 @@ class TPaletesForm(forms.Form):
     quantidade_ = forms.IntegerField()
     placa_veic = forms.CharField(max_length=7)
     tp_palete = forms.ChoiceField(choices=PaleteControl.TIPO_PALETE_CHOICES)
+    motorista = forms.CharField(max_length=35)
+    conferente = forms.CharField(max_length=35)
 
 class FuncPjForm(forms.ModelForm):
     class Meta:
