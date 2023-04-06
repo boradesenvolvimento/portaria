@@ -1,4 +1,4 @@
-#imports geral
+#edimports geral
 import asyncio
 import io
 import json
@@ -2938,11 +2938,11 @@ def chamadoreadmail(request):
         print('Logado com sucesso')
 
         #pp = imaplib.IMAP4_SSL(host)
-        #pp.login(e_user, e_pass)
 
         num_messages = len(pp.list()[1]) #conta quantos emails existem na caixa
-        print(f'messages: {num_messages}')
+
         for i in range(num_messages):
+	    
             rr = random.random()
             attatch = ''
             e_cc_a = ''
@@ -2950,10 +2950,11 @@ def chamadoreadmail(request):
                 print('parsing email...')
                 raw_email = b'\n'.join(pp.retr(i+1)[1]) #pega email
                 parsed_email = email.message_from_bytes(raw_email, policy=policy.compat32)
-                print('email parsed...')
+                #print('email parsed...')
             except Exception as e:
                 print(f'Error type:{type(e).__name__}, error: {e}')
             else:
+                #print('email is multipart?', parsed_email.is_multipart())
                 if parsed_email.is_multipart():
                     #caminha pelas partes do email e armazena dados e arquivos
                     for part in parsed_email.walk():
@@ -2974,15 +2975,21 @@ def chamadoreadmail(request):
                         if ctype == 'text/html' and 'attatchment' not in cdispo:
                             htbody = part.get_payload(decode=True)
                         filename = part.get_filename()
+                        #print('if have filename...')
                         if filename:
+                            #print('have filename')
                             filename = decode_header(filename)
+                            #print('filename: ', filename)
                             try:
                                 filename = filename[0][0].decode(cs)
                             except:
                                 filename = filename[0][0]
                             path = settings.STATIC_ROOT + '/chamados/' + str(hoje) + '/'
+                            #print('path: ', path)
                             locimg = os.path.join(path, filename)
+                            #print('locimg complete...')
                             if os.path.exists(os.path.join(path)):
+                                # print('os.path exists')
                                 fp = open(locimg, 'wb')
                                 fp.write(part.get_payload(decode=True))
                                 fp.close()
@@ -2992,12 +2999,18 @@ def chamadoreadmail(request):
                                 except Exception as e:
                                     os.rename(locimg, os.path.join(path, (str(rr) + filename + str(random.randint(1,100)))))
                             else:
-                                os.mkdir(path=path)
-                                os.chmod(path, 0o777)
-                                fp = open(locimg, 'wb')
-                                fp.write(part.get_payload(decode=True))
-                                fp.close()
-                                os.chmod(locimg, 0o777)
+                                try:
+                                    os.mkdir(path)
+                                    #print('creating directory...')
+                                    os.chmod(path, 0o777)
+                                    #print('give permission...')
+                                    fp = open(locimg, 'wb')
+                                    fp.write(part.get_payload(decode=True))
+                                    fp.close()
+                                    os.chmod(locimg, 0o777)
+                                    
+                                except Exception as e:
+                                    print('error on creating erro:', e)
                                 try:
                                     os.rename(locimg, os.path.join(path, (str(rr) + filename)))
                                 except Exception as e:
@@ -3006,6 +3019,7 @@ def chamadoreadmail(request):
                             aa = '<div class="mailattatch"><a href="'+item+'" download><img src="/static/images/downicon.png" width="40"><p>'+filename[:-4]+'</p></a></div>'
                             attatch += aa
                 else:
+                    
                     body = parsed_email.get_payload(decode=True)
                     htbody = body
                     cs = parsed_email.get_charsets()
@@ -3014,6 +3028,7 @@ def chamadoreadmail(request):
                             continue
                         else:
                             cs = q
+                
                 #pega parametros do email
                 e_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
                 e_title_unencoded = decode_header(parsed_email['Subject'])
@@ -3056,6 +3071,7 @@ def chamadoreadmail(request):
                     service = 'ALMOXARIFADOS'
                 if 'chamado.compras@bora.tec.br' in get_serv:
                     service = 'COMPRAS'
+                print(service)
                 e_id = parsed_email['Message-ID'].strip()
                 e_ref = parsed_email['References']
                 if e_ref is None: e_ref = e_id
@@ -3069,6 +3085,7 @@ def chamadoreadmail(request):
                 #separa conteudo email, e pega attatchments
                 e_body = body.decode(cs)
                 w_body = '<div class="container chmdimg">' + htbody.decode(cs) + '</div>'
+                print('stating find pattern')
                 if re.findall(pattern2, w_body):
                     for q in re.findall(pattern2, w_body):
                         new = re.findall(pattern1, q)
@@ -3104,18 +3121,21 @@ def chamadoreadmail(request):
                         else:
                             w_body = w_body.replace(q, new_cid)
                             e_body = e_body.replace(q, new_cid)
+                print('creating ticket')
                 try:
                     form = EmailChamado.objects.filter(email_id=inreply[0])
-                    
                 except Exception as e:
                     print(e)
                 else:
                     if form.exists():
+                        print('form exists')
                         try:
                             tkt = TicketChamado.objects.get(pk=form[0].tkt_ref_id)
+                            print(tkt.msg_id, tkt.nome_tkt)
                         except Exception as e:
                             print(f'Error:{e}, error_type:{type(e).__name__}')
                         else:
+                            print('updating chamado')
                             if form[0].ult_resp is not None:
                                 aa = '<hr>' + e_body + '<p>Anterior</p><hr>' + form[0].ult_resp
                                 bb = '<hr>' + e_from + ' -- ' + e_date + '<br>' + w_body + '<br>' + attatch + '<p>Anterior</p><hr>' + form[0].ult_resp_html
@@ -3124,11 +3144,15 @@ def chamadoreadmail(request):
                                 bb = '<hr>' + e_from + ' -- ' + e_date + '<br>' + w_body + '<br>' + attatch
                             form.update(ult_resp=aa, ult_resp_html=bb, ult_resp_dt=e_date)
                     else:
-                        newtkt = TicketChamado.objects.create(solicitante=e_from, servico=service, nome_tkt=e_title,
-                                                              dt_abertura=e_date, status='ABERTO', msg_id=e_id)
-                        mensagem = '<hr>' + e_from + ' -- ' + e_date + w_body + attatch
-                        newmail = EmailChamado.objects.create(assunto=e_title, mensagem=mensagem, cc=e_cc_a, dt_envio=e_date,
-                                                              email_id=e_id, tkt_ref=newtkt)
+                        try:
+                            print('form dont exist')
+                            newtkt = TicketChamado.objects.create(solicitante=e_from, servico=service, nome_tkt=e_title,
+                                                                  dt_abertura=e_date, status='ABERTO', msg_id=e_id)
+                            mensagem = '<hr>' + e_from + ' -- ' + e_date + w_body + attatch
+                            newmail = EmailChamado.objects.create(assunto=e_title, mensagem=mensagem, cc=e_cc_a, dt_envio=e_date,
+                                                                  email_id=e_id, tkt_ref=newtkt)
+                        except Exception as e:
+                            print('error: ', e, 'type: ', type(e).__name__)
             pp.dele(i + 1)
         pp.quit()
     return HttpResponse('<h2>Job done!</h2>')
@@ -3790,14 +3814,17 @@ def compras_lancar_pedido(request):
     keyga = {v: k for k, v in GARAGEM_CHOICES}
     gakey = {k: v for k, v in GARAGEM_CHOICES}
     if request.method == 'POST':
+        print('lançando pedido...')
         idsolic = request.POST.get('getid')
         empresa = request.POST.get('empresa')
         fil = request.POST.get('filial')
         anexo = request.FILES.get('getanexo')
         if idsolic:
             print(f'gakey: {gakey[empresa+fil]}')
+            print('stating db conmection...')
             conn = conndb()
             cur = conn.cursor()
+            print('execute db select')
             try:
                 cur.execute(f"""
                             SELECT 
@@ -3892,6 +3919,7 @@ def compras_lancar_pedido(request):
             except Exception as e:
                 messages.error(f'Error:{e}, error_type:{type(e).__name__}')
             else:
+                print('feching results...')
                 res = dictfetchall(cur)
                 cur.close()
                 if res:
@@ -3919,6 +3947,35 @@ def compras_lancar_pedido(request):
                 else:
                     messages.error(request, 'Não encontrado solicitação com este número.')
         return redirect('portaria:compras_index')
+
+
+def compras_lancar_pedido_temp(request):
+    keyga = {v: k for k, v in GARAGEM_CHOICES}
+    gakey = {k: v for k, v in GARAGEM_CHOICES}
+    if request.method == 'POST':
+        print('compras lancar pedido temporario')
+        idsolic = request.POST.get('getid')
+        empresa = request.POST.get('empresa')
+        fil = request.POST.get('filial')
+        anexo = request.FILES.get('getanexo')
+        if idsolic:
+            print(f'gakey: {gakey[empresa+fil]}')
+            try:
+                obj = SolicitacoesCompras.objects.get(nr_solic=idsolic)
+            except ObjectDoesNotExist:
+                obj = SolicitacoesCompras.objects.create(
+                    nr_solic=idsolic, 
+                    filial= (empresa+fil), 
+                    empresa= empresa,
+                    codigo_fl = fil,
+                    autor=request.user, 
+                    anexo=anexo
+                )
+                obj.anexo = anexo
+                obj.ultima_att = request.user
+                obj.save()
+            messages.success(request, f'Solicitação cadastrada com sucesso!')
+    return redirect('portaria:compras_index')
 
 def compras_lancar_direto(request):
     keyga = GARAGEM_CHOICES
@@ -4085,7 +4142,10 @@ def page_disabled(request, id):
 
 def edit_compras(request, id):
     editor = TextEditor()
-    obj = get_object_or_404(SolicitacoesCompras, pk=id)
+    obj_b = get_object_or_404(SolicitacoesCompras, pk=id)
+    print(id)
+    obj = SolicitacoesCompras.objects.get(id=int(id))
+    print(f'Object: {obj}')
     entradas = SolicitacoesEntradas.objects.filter(cpr_ref=obj)
     filchoices = FILIAL_CHOICES
     empchoices = EMPRESA_CHOICES
@@ -4095,11 +4155,12 @@ def edit_compras(request, id):
     dpchoices = SolicitacoesCompras.DEPARTAMENTO_CHOICES
     pgtchoices = SolicitacoesCompras.FORMA_PGT_CHOICES
     rpchoices = User.objects.filter(groups__name='compras').exclude(id=1)
-    print(obj.data, obj.email_solic)
+    print(f'obj: {obj.data} | email_solic: {obj.email_solic}')
     if request.method == 'POST':
+        print('fetch items')
         status = request.POST.get('status')
-        empresa = request.POST.get('empresa')
-        filial = request.POST.get('filial')
+        #empresa = request.POST.get('empresa')
+        #filial = request.POST.get('filial')
         departamento = request.POST.get('departamento')
         forma_pgt = request.POST.get('forma_pgt')
         responsavel = request.POST.get('responsavel')
@@ -4111,12 +4172,13 @@ def edit_compras(request, id):
         files = request.FILES.getlist('file')
         pago = request.POST.get('pago')
         print(departamento)
+        print('fetch all')
         try:
             if status != '':
                 obj.status = status
                 messages.success(request, f'Status alterado para {status} com sucesso!')
-            if empresa != '': obj.empresa = empresa
-            if filial != '': obj.filial = filial
+            #if empresa != '': obj.empresa = empresa
+            #if filial != '': obj.filial = filial
             if departamento != '': obj.departamento = departamento
             if forma_pgt != '': obj.forma_pgt = forma_pgt
             if responsavel != '': obj.responsavel_id = responsavel
@@ -4126,15 +4188,21 @@ def edit_compras(request, id):
             if obs != '' and obs is not None: obj.obs = obs
             if textarea and textarea != '<p><br></p>': insert_entradas_cpr(request, obj, textarea, files)
             if obj.pago != pago and pago is not None: obj.pago = pago
+            print('try complete')
         except Exception as e:
             print(f'err:{e}, err_t:{type(e).__name__}')
             raise e
         else:
-            obj.ultima_att = request.user
-            obj.save()
-            print('novo objeto: ', obj.departamento)
-            messages.info(request, f'Solicitação {obj.nr_solic} alterada com sucesso')
-            return redirect('portaria:painel_compras')
+            try:
+
+                obj.ultima_att = request.user
+                obj.save()
+                print('novo objeto: ', obj.departamento)
+                messages.info(request, f'Solicitação {obj.nr_solic} alterada com sucesso')
+                return redirect('portaria:painel_compras')
+            except Exception as e:
+                print(f'err: {e}, err_type:{type(e).__name__}')
+                return redirect('portaria:painel_compras')
     try:
         vencimento = (obj.dt_vencimento - datetime.date.today()).days
     except:

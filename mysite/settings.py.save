@@ -220,7 +220,7 @@ SUMMERNOTE_CONFIG = {
         'lang': 'pt-BR',
         'codemirror': {
             'mode': 'htmlmixed',
-            'lineNumbers': 'true',
+asdasdasdsa            'lineNumbers': 'true',
             # You have to include theme file in 'css' or 'css_for_inplace' before using it.
             'theme': 'monokai',
         },
