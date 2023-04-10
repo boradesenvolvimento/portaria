@@ -1829,6 +1829,8 @@ def solictransfpalete(request):
         qnt = int(request.POST.get('quantidade_'))
         plc = request.POST.get('placa_veic')
         tp_p = request.POST.get('tp_palete')
+        motorista = request.POST.get('motorista')
+        conferente = request.POST.get('conferente')
 
         if qnt <= PaleteControl.objects.filter(loc_atual=keyga[ori],tp_palete=tp_p).count():
             #filtrar caminhão em movimento
@@ -1846,7 +1848,7 @@ def solictransfpalete(request):
             for q in range(0,qnt):
                 x = PaleteControl.objects.filter(loc_atual=keyga[ori], tp_palete=tp_p).first()
                 solic = SolicMovPalete.objects.create(solic_id=solic_id, palete=x,data_solic=currentTime,origem=keyga[ori],destino=keyga[des],
-                                         placa_veic=plc,autor=request.user)
+                                         placa_veic=plc,autor=request.user,motorista=motorista,conferente=conferente)
                
                 PaleteControl.objects.filter(pk=x.id).update(loc_atual=keyga["0"])
             messages.success(request, f'{qnt} palete(s) | Aguardando o recebimento de paletes de {keyga[ori]} para {keyga[des]}')
@@ -1872,10 +1874,12 @@ def transfdetalhe(request, solic_id):
         "Placa do Veículo": upper(mov.placa_veic),
         "Data Solicitação": datetime.datetime.strftime(mov.data_solic, "%d/%m/%Y %H:%m"),
         "Quantidade": qty['solic_id__count'],
-        "Autor": mov.autor.username
+        "Autor": mov.autor.username,
+        "Motorista": mov.motorista,
+        "Conferente": mov.conferente
     }
 
-    titles = ["ID Solicitação", "Origem", "Destino", "Placa Veículo", "Data Solicitação", "Quantidade", "Código de Barras"]
+    titles = ["ID Solicitação", "Origem", "Destino", "Placa Veículo", "Data Solicitação", "Quantidade", "Código de Barras", "Motorista", "Conferente"]
 
     #Gerar código de barras
     pdf = FPDF(orientation='P', unit='mm', format=(210, 297))
@@ -1883,13 +1887,13 @@ def transfdetalhe(request, solic_id):
     pdf.ln()
     barcode = Code39(data['ID Solicitação'], writer=ImageWriter(), add_checksum=False)
     barcode.save('barcode')
-    pdf.image('./barcode.png', x=48, y=120, w=120, h=30) # Posição(x, y) Tamanho(w, h)
-    pdf.image('portaria/static/images/logo.png', x=78, y=230, w=60, h=30)
+    pdf.image('./barcode.png', x=48, y=150, w=120, h=30) # Posição(x, y) Tamanho(w, h)
+    pdf.image('portaria/static/images/logo.png', x=160, y=10, w=35, h=17.5)
     pdf.ln()
     page_w = int(pdf.w)
     pdf.set_font("Arial", size = 20)
-    pdf.cell(w=190, h=5, txt='Solicitação de transferência', border=0, align='C')
-    pdf.ln(20)
+    pdf.cell(w=190, h=25, txt='Solicitação de transferência', border=0, align='C')
+    pdf.ln(30)
     pdf.set_font("Arial", size = 12, style= 'B')
 
     line_height = pdf.font_size * 2.5
