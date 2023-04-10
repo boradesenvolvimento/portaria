@@ -157,6 +157,12 @@ DEPARTAMENTO_CHOICES = [
         ('FILIAIS', 'FILIAIS'),
         ('COMPRAS', 'COMPRAS')
     ]
+
+STATUS_FROTA_CHOICES = [
+    ('PARADO', 'CORRETIVA'), #VERMELHO
+    ('ATENCAO', 'PREVENTIVA'), #AMARELO
+    ('FUNCIONANDO', 'FUNCIONANDO') #VERDE
+]
 # Create your models here.
 
 
@@ -379,6 +385,70 @@ class ChecklistFrota(models.Model):
 
     def __str__(self):
        return str(self.idchecklist)
+
+class DisponibilidadeFrota(models.Model):
+    id = models.BigAutoField(
+        primary_key=True,
+        unique=True,
+    )
+    autor = models.ForeignKey(
+        User,
+        default=None,
+        on_delete=models.PROTECT,
+        blank=True, 
+        null=True
+    )
+    placa = models.CharField(
+        'Placa-Veículo', 
+        max_length=8,
+    )
+    filial = models.CharField(
+        'Filial',
+        choices=TIPO_GARAGEM, 
+        max_length=3, 
+        blank=True, 
+        null=True,
+    )
+    status = models.CharField(
+        'Status',
+        max_length=50,
+        choices=STATUS_FROTA_CHOICES,
+        blank=False,
+    )
+    data_inicio = models.DateField(
+        'Data Início Serviço',
+        blank=True,
+        default=None
+    )
+    data_previsao = models.DateField(
+        'Data Previsão',
+        default=timezone.now,
+        blank=True
+    )
+    data_finalizacao = models.DateField(
+        'Data finalização Serviço',
+        blank=True,
+        default=None,
+    )
+    observacao = models.TextField(
+        'Observação',
+        max_length=255,
+        default=None,
+    )
+    ordem_servico = models.CharField(
+        'Ordem de Serviço',
+        max_length=255,
+        default=None,
+    )
+
+    class Meta:
+        verbose_name = 'ChecklistFrota'
+        verbose_name_plural = 'ChecklistFrota'
+
+    def __str__(self):
+        return str(self.placa)
+    
+
 
 class TipoServicosManut(models.Model):
     id = models.BigAutoField(primary_key=True)

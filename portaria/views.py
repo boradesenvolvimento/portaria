@@ -64,6 +64,7 @@ from cx_Oracle import DatabaseError as cxerr
 from .dbtest import conndb
 from .models import * #Cadastro, PaletControl, ChecklistFrota, Veiculos, NfServicoPj
 from .forms import * #CadastroForm, isPlacaForm, DateForm, FilterForm, TPaletsForm, TIPO_GARAGEM, ChecklistForm
+from .forms import DisponibilidadeFrotaForm
 from mysite.settings import get_secret
 
 # Gerador de código de barras
@@ -806,6 +807,75 @@ class ManutencaoListView(generic.ListView):
         context['form'] = data
         context['metrics'] = metrics
         return context
+
+@login_required
+def disponiblidade_frota(request):
+    if request.user.is_authenticated:
+        get_filial = request.GET.get('filial')
+
+        print('FILIAL: ', get_filial)
+        if get_filial == 'SPO':
+            get_filial = 'SP'
+
+        if get_filial is None:
+            get_filial = ''
+
+        filial_selecionada = get_filial
+        autor = request.user
+
+        # Carregando Excel
+        df = pd.read_excel(r'C:\Users\renan.amarantes\Dropbox\FROTA\ipva 2023.xlsx')
+
+        form = DisponibilidadeFrotaForm(request.POST)
+
+        filial = [f'{filial_selecionada}'] # Aqui vai ficar a filial escolhida pelo usuário
+        filial_filtrada = df[df['FILIAL'].isin(filial)]
+
+        lista_placa_filial = [] # Lista de Placas já filtrada
+
+        
+
+        for placa_ in filial_filtrada['PLACA VEÍCULO']:
+            lista_placa_filial.append(placa_)
+
+        lista_certa = lista_placa_filial
+
+        if request.method == 'POST':    
+            placa = request.POST.get('placa')
+            print('Esse é o erro:', form.errors)
+            print('PLACA: ', placa)
+            if form.is_valid():
+                print('ENTROU NO IF')
+                upplaca = upper(placa)
+                filial_select = get_filial
+                if filial_select == 'SP':
+                    filial_select = 'SPO'
+                
+                order = form.save(commit=False)
+                data_inicio = form.cleaned_data['data_inicio']
+                data_previsao = form.cleaned_data['data_previsao']
+                data_finalizacao = form.cleaned_data['data_finalizacao']
+                order.data_inicio =data_inicio
+                order.data_previsao = data_previsao
+                order.data_finalizacao = data_finalizacao
+                order.autor = autor
+                order.placa = upplaca
+                order.filial = filial_select
+                
+                order.save()
+                messages.success(request, 'Veículo cadastrado com Sucesso!')
+                print('AAAAAAAAAAAAAAAAAAAAAAAA')
+                return render(request, 'portaria/frota/disponiblidade_frota.html')
+            else:
+                print('ENTROU NO ELSE')
+        return render(request, 'portaria/frota/disponiblidade_frota.html', {'form': form, 
+        'lista_certa': lista_certa, 'get_filial': get_filial})
+
+    else:
+        print('ENTROU no ELSE 2')
+        auth_message = 'Usuário não autenticado, por favor logue novamente'
+        return render(request, 'portaria/portaria/cadastroentrada.html', {'auth_message': auth_message})
+
 
 
 @login_required
@@ -3930,12 +4000,16 @@ def compras_lancar_pedido(request):
                                   CC.EMAIL
                             """)
             except cxerr:
+                print('CHEGOU NO FINAL DA QUERY')
                 messages.error(request, 'Não encontrado solicitação com este número.')
             except Exception as e:
+                print('AQUI É o EROOO===',e)
                 messages.error(f'Error:{e}, error_type:{type(e).__name__}')
             else:
+                print('Entrou no ELSE')
                 res = dictfetchall(cur)
                 cur.close()
+                print('AQUI É o RES: ',res)
                 if res:
                     print(res)
                     for q in res:
