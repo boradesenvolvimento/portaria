@@ -4033,11 +4033,8 @@ def compras_lancar_pedido(request):
                 print('AQUI É o EROOO===',e)
                 messages.error(f'Error:{e}, error_type:{type(e).__name__}')
             else:
-<<<<<<< HEAD
                 print('feching results...')
-=======
                 print('Entrou no ELSE')
->>>>>>> fea4da59f46ccd8070989a6f0ea7805ec3b5d5d4
                 res = dictfetchall(cur)
                 cur.close()
                 print('AQUI É o RES: ',res)
