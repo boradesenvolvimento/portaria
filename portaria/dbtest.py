@@ -1,4 +1,5 @@
 import cx_Oracle
+import oracledb
 import json
 import os
 from django.conf import settings
@@ -15,10 +16,31 @@ def get_secret(setting, secrets=secrets):
     except KeyError:
         raise ImproperlyConfigured(f"Set the {setting} setting")
 print('iniciando conexão')
+
+#def conndb():
+#    try:
+#        oracledb.init_oracle_client()
+#        print('connecting...')
+#        cp = oracledb.ConnectParams()
+#        cp.parse_connect_string("152.67.34.112:1521/orapdb1.subnetprax02.vcnpraxioocisp0.oraclevcn.com")
+#        connection = oracledb.connect(user="CONSULTA142", password="BORA241", params=cp)
+#    except Exception as e:
+#        print(e)
+#        raise e
+#    else:
+#        return connection
+
 def conndb():
     try:
-        conn = cx_Oracle.connect(get_secret('ORA_UID'),get_secret('ORA_PWD'), cx_Oracle.makedsn(get_secret('ORA_HOST'), '1521', None, get_secret('ORA_XE')))
+        oracledb.init_oracle_client()
+        print('iniciando conexão...')
+        cp = oracledb.ConnectParams()
+        cp.parse_connect_string("152.67.34.112:1521/aa36d94fc8025453e05381ee640a120e.subnetprax02.vcnpraxioocisp0.oraclevcn.com")
+        connection = oracledb.connect(user="CONSULTA142", password="BORA241", params=cp)
+
     except Exception as e:
+        print(e)
         raise e
     else:
-        return conn
+        return connection
+

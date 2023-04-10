@@ -952,6 +952,15 @@ class SolicitacoesCompras(models.Model):
     ]
     id = models.BigAutoField(primary_key=True)
     nr_solic = models.CharField(max_length=10)
+<<<<<<< HEAD
+    data = models.DateField(null=True, blank=True)
+    status = models.CharField(max_length=15, null=True, blank=True)
+    empresa = models.CharField(max_length=2)
+    codigo_fl = models.CharField(max_length=2, null=True, blank=True)
+    filial = models.CharField(max_length=3, choices=GARAGEM_CHOICES)
+    categoria = models.CharField(max_length=15, null=True, blank=True)
+    solicitante = models.CharField(max_length=100, null=True, blank=True)
+=======
     data = models.DateField(null=True)
     status = models.CharField(max_length=15, null=True)
     empresa = models.CharField(max_length=2, null=True)
@@ -959,6 +968,7 @@ class SolicitacoesCompras(models.Model):
     filial = models.CharField(max_length=3, choices=GARAGEM_CHOICES)
     categoria = models.CharField(max_length=15, null=True)
     solicitante = models.CharField(max_length=100, null=True)
+>>>>>>> fea4da59f46ccd8070989a6f0ea7805ec3b5d5d4
     email_solic = models.EmailField(max_length=255, blank=True, null=True)
     departamento = models.CharField(max_length=15, choices=DEPARTAMENTO_CHOICES, blank=True, null=True)
     forma_pgt = models.CharField(max_length=15, choices=FORMA_PGT_CHOICES, blank=True, null=True)
