@@ -20,7 +20,7 @@ from io import BytesIO
 from zipfile import ZipFile
 from fpdf import FPDF
 #from barcode import EAN13
-#from barcode.writer import ImageWriter
+from barcode.writer import ImageWriter
 
 import numpy as np
 import pandas as pd
@@ -64,7 +64,11 @@ from cx_Oracle import DatabaseError as cxerr
 from .dbtest import conndb
 from .models import * #Cadastro, PaletControl, ChecklistFrota, Veiculos, NfServicoPj
 from .forms import * #CadastroForm, isPlacaForm, DateForm, FilterForm, TPaletsForm, TIPO_GARAGEM, ChecklistForm
+from .forms import DisponibilidadeFrotaForm
 from mysite.settings import get_secret
+
+# Gerador de código de barras
+from barcode import Code39, EAN13
 
 
 def cardusuario(request):
@@ -186,7 +190,6 @@ def paleteview(request):
     keyga = {k:v for k,v in GARAGEM_CHOICES}
     tp_fil = GARAGEM_CHOICES
     tp_fil.pop()
-    print(tp_fil)
     tp_emp = Cliente.objects.values_list('razao_social', flat=True)
     form = PaleteControl.objects.values('loc_atual').\
         annotate(pbr=Count('id', filter=Q(tp_palete='PBR')),chep=Count('id', filter=Q(tp_palete='CHEP'))).\
@@ -209,7 +212,7 @@ def cadpaletes(request):
         qnt = request.POST.get('qnt')
         empresa = request.POST.get('empresa')
         fil = request.POST.get('fil')
-        emp = request.POST.get('emp')
+        emp = request.POST.get('emp') # Razao Social
         tp_p = request.POST.get('tp_p')
         if qnt and fil and emp and tp_p:
             try:
@@ -221,6 +224,7 @@ def cadpaletes(request):
                 nsal = Cliente.objects.filter(razao_social=emp).annotate(saldonew=Sum(F('saldo')+int(qnt)))
                 Cliente.objects.filter(razao_social=emp).update(saldo=nsal[0].saldonew)
                 for x in range(0,int(qnt)):
+
                     PaleteControl.objects.create(loc_atual=keyga[empresa+fil], tp_palete=tp_p, autor=request.user)
                     if x == 2000: break
                 messages.success(request, f'{qnt} Paletes foram cadastrados com sucesso')
@@ -237,7 +241,7 @@ def saidapalete(request):
     keyga = {k: v for k, v in GARAGEM_CHOICES}
     if request.method == 'POST':
         qnt = int(request.POST.get('qnt'))
-        fil = request.POST.get('fil')
+        fil = str(request.POST.get('fil'))
         emp = request.POST.get('emp')
         tp_p = request.POST.get('tp_p')
         if qnt and fil and emp and tp_p:
@@ -505,7 +509,7 @@ def feriasagen(request, idfpj):
             agenparse2 = datetime.datetime.strptime(agen2, '%Y-%m-%d').date()
             feriaspj.objects.filter(pk=fer.id).update(agendamento_ini=agenparse1, agendamento_fim=agenparse2)
         except ValueError:
-            messages.error(request, 'Por favor digite uma data válida')
+            messages.error(request, 'Por favor, digite uma data válida')
             return render(request, 'portaria/pj/agendamento.html', {'fer':fer})
         else:
             messages.success(request, 'Agendamento feito com sucesso')
@@ -675,7 +679,7 @@ def manusaida(request, osid):
                                       'vlpeca':vlpeca[i].replace(',','.'), 'prod':prod[i], 'forn':forn[i],
                                       'localmanu':localmanu[i], 'feito':int(feito[i])})
                 except ValueError as e:
-                    messages.error(request, 'Por favor digite uma data válida')
+                    messages.error(request, 'Por favor, digite uma data válida')
                     return render(request, 'portaria/frota/manusaida.html',{'get_os':get_os})
                 else:
                     between_days = (date_dtsaida - get_os.dt_entrada).days
@@ -803,6 +807,75 @@ class ManutencaoListView(generic.ListView):
         context['form'] = data
         context['metrics'] = metrics
         return context
+
+@login_required
+def disponiblidade_frota(request):
+    if request.user.is_authenticated:
+        get_filial = request.GET.get('filial')
+
+        print('FILIAL: ', get_filial)
+        if get_filial == 'SPO':
+            get_filial = 'SP'
+
+        if get_filial is None:
+            get_filial = ''
+
+        filial_selecionada = get_filial
+        autor = request.user
+
+        # Carregando Excel
+        df = pd.read_excel(r'C:\Users\renan.amarantes\Dropbox\FROTA\ipva 2023.xlsx')
+
+        form = DisponibilidadeFrotaForm(request.POST)
+
+        filial = [f'{filial_selecionada}'] # Aqui vai ficar a filial escolhida pelo usuário
+        filial_filtrada = df[df['FILIAL'].isin(filial)]
+
+        lista_placa_filial = [] # Lista de Placas já filtrada
+
+        
+
+        for placa_ in filial_filtrada['PLACA VEÍCULO']:
+            lista_placa_filial.append(placa_)
+
+        lista_certa = lista_placa_filial
+
+        if request.method == 'POST':    
+            placa = request.POST.get('placa')
+            print('Esse é o erro:', form.errors)
+            print('PLACA: ', placa)
+            if form.is_valid():
+                print('ENTROU NO IF')
+                upplaca = upper(placa)
+                filial_select = get_filial
+                if filial_select == 'SP':
+                    filial_select = 'SPO'
+                
+                order = form.save(commit=False)
+                data_inicio = form.cleaned_data['data_inicio']
+                data_previsao = form.cleaned_data['data_previsao']
+                data_finalizacao = form.cleaned_data['data_finalizacao']
+                order.data_inicio =data_inicio
+                order.data_previsao = data_previsao
+                order.data_finalizacao = data_finalizacao
+                order.autor = autor
+                order.placa = upplaca
+                order.filial = filial_select
+                
+                order.save()
+                messages.success(request, 'Veículo cadastrado com Sucesso!')
+                print('AAAAAAAAAAAAAAAAAAAAAAAA')
+                return render(request, 'portaria/frota/disponiblidade_frota.html')
+            else:
+                print('ENTROU NO ELSE')
+        return render(request, 'portaria/frota/disponiblidade_frota.html', {'form': form, 
+        'lista_certa': lista_certa, 'get_filial': get_filial})
+
+    else:
+        print('ENTROU no ELSE 2')
+        auth_message = 'Usuário não autenticado, por favor logue novamente'
+        return render(request, 'portaria/portaria/cadastroentrada.html', {'auth_message': auth_message})
+
 
 
 @login_required
@@ -1826,10 +1899,12 @@ def solictransfpalete(request):
         qnt = int(request.POST.get('quantidade_'))
         plc = request.POST.get('placa_veic')
         tp_p = request.POST.get('tp_palete')
+        motorista = request.POST.get('motorista')
+        conferente = request.POST.get('conferente')
+
         if qnt <= PaleteControl.objects.filter(loc_atual=keyga[ori],tp_palete=tp_p).count():
             #filtrar caminhão em movimento
             placas = SolicMovPalete.objects.order_by('placa_veic').values('placa_veic')
-            print(placas)
             plcs = []
             for p in placas:
                 plcs.append(p.get('placa_veic'))
@@ -1840,13 +1915,13 @@ def solictransfpalete(request):
             currentTime = timezone.now()
             time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             solic_id = str(time).replace(':', '').replace(' ', '').replace('-', '') + plc[5:]
-            print(solic_id) 
             for q in range(0,qnt):
                 x = PaleteControl.objects.filter(loc_atual=keyga[ori], tp_palete=tp_p).first()
                 solic = SolicMovPalete.objects.create(solic_id=solic_id, palete=x,data_solic=currentTime,origem=keyga[ori],destino=keyga[des],
-                                         placa_veic=plc,autor=request.user)
+                                         placa_veic=plc,autor=request.user,motorista=motorista,conferente=conferente)
+               
                 PaleteControl.objects.filter(pk=x.id).update(loc_atual=keyga["0"])
-            messages.success(request, f'{qnt} palete transferido de {keyga[ori]} para {keyga[des]}')
+            messages.success(request, f'{qnt} palete(s) | Aguardando o recebimento de paletes de {keyga[ori]} para {keyga[des]}')
             return redirect('portaria:transfdetalhe', solic_id=solic_id)
             #return render(request,'portaria/palete/transfpaletes.html', {'form':form})
         else:
@@ -1861,28 +1936,34 @@ def transfdetalhe(request, solic_id):
     mov = SolicMovPalete.objects.filter(solic_id=solic_id).first()
     quantity = SolicMovPalete.objects.filter(solic_id=solic_id).values('solic_id').annotate(Count("solic_id"))
     qty = quantity[0]
+
     data = {
         "ID Solicitação": mov.solic_id,
         "Origem": mov.origem,
         "Destino": mov.destino,
-        "Placa do Veículo": mov.placa_veic,
+        "Placa do Veículo": upper(mov.placa_veic),
         "Data Solicitação": datetime.datetime.strftime(mov.data_solic, "%d/%m/%Y %H:%m"),
         "Quantidade": qty['solic_id__count'],
-        "Autor": mov.autor.username
+        "Autor": mov.autor.username,
+        "Motorista": mov.motorista,
+        "Conferente": mov.conferente
     }
 
-    titles = ["ID Solicitação", "Origem", "Destino", "Placa Veículo", "Data Solicitação", "Quantidade"]
+    titles = ["ID Solicitação", "Origem", "Destino", "Placa Veículo", "Data Solicitação", "Quantidade", "Código de Barras", "Motorista", "Conferente"]
+
+    #Gerar código de barras
     pdf = FPDF(orientation='P', unit='mm', format=(210, 297))
     pdf.add_page()
     pdf.ln()
-    #barcode = EAN13(data['ID Solicitação'], writer=ImageWriter())
-    #barcode.save('barcode')
-    #pdf.image('./barcode.png', x=120, y=50, w=80, h=30)
+    barcode = Code39(data['ID Solicitação'], writer=ImageWriter(), add_checksum=False)
+    barcode.save('barcode')
+    pdf.image('./barcode.png', x=48, y=150, w=120, h=30) # Posição(x, y) Tamanho(w, h)
+    pdf.image('portaria/static/images/logo.png', x=160, y=10, w=35, h=17.5)
     pdf.ln()
     page_w = int(pdf.w)
     pdf.set_font("Arial", size = 20)
-    pdf.cell(w=190, h=5, txt='Solicitação de transferência', border=0, align='C')
-    pdf.ln(20)
+    pdf.cell(w=190, h=25, txt='Solicitação de transferência', border=0, align='C')
+    pdf.ln(30)
     pdf.set_font("Arial", size = 12, style= 'B')
 
     line_height = pdf.font_size * 2.5
@@ -2147,8 +2228,22 @@ def get_palete_csv(request):
     array = []
     date1 = request.POST.get('date1')
     date2 = request.POST.get('date2')
+    
+    print(date1)
+    print(date2)
+    # Maneira que encontrei de fazer funcionar
+    #palete = MovPalete.objects.all() # Tirar da formação do CSV data_ult_mov
+    # OU
+    # Gerar CSV e fazer filtragem por Filial
+
+    # Código original do Gabriel que estava os campos estão errados
     palete = MovPalete.objects.filter(data_ult_mov__lte=date2, data_ult_mov__gte=date1)
+
+    # Funciona mas não tem o campo de filtragem
+    #palete = MovPalete.objects.filter(data_solic=date2, data_receb=date1) # Para funcionar colocar data_receb e data_solic - data_ult_mov | data_ult_mov__gte
+    
     if palete:
+        print('Entrou no IF')
         for q in palete:
             array.append({'origem':q.origem, 'destino':q.destino, 'data_ult_mov':q.data_ult_mov, 'placa':q.placa_veic,
                           'autor':q.autor, 'tipo': q.palete.tp_palete if q.palete else 'DEVOLVIDO'})
@@ -2174,7 +2269,7 @@ def get_manu_csv(request):
         dateparse = datetime.datetime.strptime(data1, '%Y-%m-%d')
         dateparse1 = datetime.datetime.strptime(data2, '%Y-%m-%d')
     except ValueError:
-        messages.error(request,'Por favor digite uma data válida')
+        messages.error(request,'Por favor, digite uma data válida')
         return redirect('portaria:manutencaofrota')
     else:
 
@@ -2275,7 +2370,7 @@ def get_checklist_csv(request):
         ini = datetime.datetime.strptime(request.POST.get('dataini'), '%Y-%m-%d').date()
         fim = datetime.datetime.strptime(request.POST.get('datafim'), '%Y-%m-%d').date()
     except ValueError:
-        messages.error(request, 'Por favor digite uma data válida')
+        messages.error(request, 'Por favor, digite uma data válida')
         return redirect('portaria:frota')
     else:
         query = ChecklistFrota.objects.filter(datachecklist__lte=fim,datachecklist__gte=ini)
@@ -2299,7 +2394,7 @@ def get_ferias_csv(request):
         ini = datetime.datetime.strptime(request.POST.get('dataini'), '%Y-%m-%d').date()
         fim = datetime.datetime.strptime(request.POST.get('datafim'), '%Y-%m-%d').date()
     except ValueError:
-        messages.error(request, 'Por favor digite uma data válida')
+        messages.error(request, 'Por favor, digite uma data válida')
         return redirect('portaria:feriaspjv')
     else:
         response = HttpResponse(content_type='text/csv',
@@ -2919,9 +3014,7 @@ def chamadoreadmail(request):
     service = ''
     hoje = datetime.date.today()
     host = 'pop.kinghost.net'
-    mails = ['chamado.praxio@bora.tec.br', 'chamado.juridico@bora.tec.br','chamado.manutencao@bora.tec.br', 
-            'chamado.almoxarifado@bora.tec.br', 'chamado.comprovantes@bora.tec.br', 
-            'chamado.fiscal@bora.tec.br', 'chamado.descarga@bora.tec.br']
+    mails = ['chamado.praxio2@bora.tec.br']
     for e_user in mails:
         e_pass = 'Bor4@123' #'Bor@456987'
         pattern1 = re.compile(r'[^\"]+(?i:jpeg|jpg|gif|png|bmp)')
@@ -3472,8 +3565,7 @@ def justificativa(request):
     yesterday = today - datetime.timedelta(1)
     today = today.strftime('%Y-%m-%d')
     yesterday = yesterday.strftime('%Y-%m-%d')
-    print(today, type(today))
-    print(yesterday, type(yesterday))
+    
     if request.method == 'GET':
         date1 = request.GET.get('data1')
         date2 = request.GET.get('data2')
@@ -3483,8 +3575,17 @@ def justificativa(request):
             print('Querring values', emp, filial)
             form = JustificativaEntrega.objects.filter(empresa=emp, filial=filial, data_emissao__lte=date2, data_emissao__gte=date1,
                                                        confirmado=False)
-            return render(request,'portaria/etc/justificativa.html', {'form':form,'gachoices':gachoices,
-                                                                      'justchoices':justchoices, 'today': today, 'yesterday': yesterday, 'empchoices': empchoices})
+
+            return render(request,'portaria/etc/justificativa.html', 
+                            {
+                                'form':form,'gachoices':gachoices,
+                                'justchoices':justchoices, 
+                                'today': today, 
+                                'yesterday': yesterday, 
+                                'empchoices': empchoices
+                            }
+                        )
+
     if request.method == 'POST':
         lista = request.POST.getlist('counter')
         for q in lista:
@@ -3514,8 +3615,10 @@ def rel_justificativa(request):
         if 'pivot_rel_just' in request.POST:
             date1 = request.POST.get('date1')
             date2 = request.POST.get('date2')
+
             try:
                 response = pivot_rel_just(date1=date1, date2=date2)
+                
             except Exception as e:
                 print(f'Error: {e}, error_type:{type(e).__name__}')
             else:
@@ -3746,15 +3849,24 @@ def pivot_rel_just(date1, date2):
     gachoices = GARAGEM_CHOICES
     dictga = {k:v for k,v in gachoices}
     compare_date = datetime.datetime.strptime('0001-01-01', '%Y-%m-%d')
-    qs = JustificativaEntrega.objects.filter(data_emissao__lte=date2, data_emissao__gte=date1)
+    if date1 and date2:
+        qs = JustificativaEntrega.objects.filter(data_emissao__lte=date2, data_emissao__gte=date1)
+    else:
+        qs = JustificativaEntrega.objects.all()
+
     for q in qs:
-        array.append({'ID_GARAGEM':dictga[q.id_garagem],'CONHECIMENTO':q.conhecimento, 'TIPO_DOC': q.tipo_doc,
+        
+        # O erro está no campo ID_Garagem
+        # Verificar se o correto é (dictga:q.id_garagem ou q.id_garagem)
+
+        array.append({'ID_GARAGEM':q.id_garagem,'CONHECIMENTO':q.conhecimento, 'TIPO_DOC': q.tipo_doc,
                       'DATA_EMISSAO':q.data_emissao,'REMETENTE':q.remetente,'DESTINATARIO':q.destinatario,
                       'PESO':q.peso, 'LEAD_TIME':q.lead_time,'EM_ABERTO':q.em_aberto,'LOCAL_ENTREGA':q.local_entreg,
                       'NOTA_FISCAL':q.nota_fiscal,'COD_JUST':q.cod_just,'DESC_JUST':q.desc_just,
                       'AUTOR':q.autor,
                       'DATA_ENTREGA': 'NAO ENTREGUE' if q.data_entrega == compare_date.date() else q.data_entrega
                       })
+
     pdr = pd.DataFrame(array)
     buffer = io.BytesIO(pdr.to_string().encode('utf-8'))
     pdr.to_excel(buffer, engine='xlsxwriter', index=False)
@@ -3915,13 +4027,20 @@ def compras_lancar_pedido(request):
                                   CC.EMAIL
                             """)
             except cxerr:
+                print('CHEGOU NO FINAL DA QUERY')
                 messages.error(request, 'Não encontrado solicitação com este número.')
             except Exception as e:
+                print('AQUI É o EROOO===',e)
                 messages.error(f'Error:{e}, error_type:{type(e).__name__}')
             else:
+<<<<<<< HEAD
                 print('feching results...')
+=======
+                print('Entrou no ELSE')
+>>>>>>> fea4da59f46ccd8070989a6f0ea7805ec3b5d5d4
                 res = dictfetchall(cur)
                 cur.close()
+                print('AQUI É o RES: ',res)
                 if res:
                     print(res)
                     for q in res:

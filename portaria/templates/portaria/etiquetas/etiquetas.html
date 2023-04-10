@@ -17,7 +17,7 @@
             <section>
                 <div class="container">
                     <div class="row">
-                    <h2>Lançar etiquetas</h2>
+                    <h2><strong>Lançar etiquetas</strong></h2>
                     </div><hr>
                     <div class="row">
                         <form method="post">
@@ -56,10 +56,11 @@
                                     <input type="text" name="getnota" id="getnota">
                                 </td>
                             </tr>
-                                <td><a href="#" id="btnAdiciona" class="button">Add+</a></td>
+                                <td><a href="#" id="btnAdiciona" class="btn btn-outline-success">+Add CTE</a></td>
 
                         </table>
-                    <input type="submit" class="button">
+                        <br>
+                    <input style="padding:6px 30px" type="submit" class="button">
                     <input type="hidden" id="setCount" name="setcount">
                     </form>
                 </div>
@@ -92,9 +93,9 @@
 
 			var html = "";
 			html += "<tr id='"+idNum+"'><td><label for='getcte"+idNum+"'>CTE "+idContador+"</label>"
-			html += "<input type='text' name='getcte' id='getcte"+idNum+"'>"
+			html += "<input style='padding:6px;' type='text' name='getcte' id='getcte"+idNum+"'>"
 			html += "</td>"
-			html += "<td><button class='btn' onclick='exclui("+idNum+")' type='button'>Excluir</button></td></tr>";
+			html += "<td><button style='margin-left: -550px;' class='btn btn-danger' onclick='exclui("+idNum+")' type='button'>Excluir CTE</button></td></tr>";
 
 			$("#addHTML").append(html);
 			document.getElementById('setCount').value = idContador;

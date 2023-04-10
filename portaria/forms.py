@@ -5,7 +5,8 @@ from django.forms import Textarea, DateField
 from django_summernote.widgets import SummernoteWidget
 
 from .models import Cadastro, TIPO_GARAGEM, ChecklistFrota, NfServicoPj, ManutencaoFrota, ServJoinManu, feriaspj, \
-    FuncPj, Motorista, Veiculos, Cliente, PaleteControl, TipoServicosManut, RegistraTerceirizados, GARAGEM_CHOICES
+    FuncPj, Motorista, Veiculos, Cliente, PaleteControl, TipoServicosManut, RegistraTerceirizados, GARAGEM_CHOICES, \
+        DisponibilidadeFrota, STATUS_FROTA_CHOICES
 
 
 #forms
@@ -46,12 +47,41 @@ class CadastroForm(forms.ModelForm):
             'autor'
         ]
 
+
+class DisponibilidadeFrotaForm(forms.ModelForm):
+    class Meta:
+        model = DisponibilidadeFrota
+        fields = [
+            'placa',
+            'filial',
+            'data_previsao',
+            'observacao',
+            'autor',
+            'data_finalizacao',
+            'data_inicio',
+            'ordem_servico',
+            'status',
+        ]
+        widgets = {
+            'data_inicio': DateInput(),
+            'data_finalizacao': DateInput(),
+            'data_previsao': DateInput()
+        }
+
 class TPaletesForm(forms.Form):
-    origem_ = forms.ChoiceField(choices=GARAGEM_CHOICES)
-    destino_ = forms.ChoiceField(choices=GARAGEM_CHOICES)
+    origem_ = forms.ChoiceField(
+        choices=GARAGEM_CHOICES,
+        required=True
+    )
+    destino_ = forms.ChoiceField(
+        choices=GARAGEM_CHOICES,
+        required=True
+    )
     quantidade_ = forms.IntegerField()
     placa_veic = forms.CharField(max_length=7)
     tp_palete = forms.ChoiceField(choices=PaleteControl.TIPO_PALETE_CHOICES)
+    motorista = forms.CharField(max_length=35)
+    conferente = forms.CharField(max_length=35)
 
 class FuncPjForm(forms.ModelForm):
     class Meta:

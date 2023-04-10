@@ -16,7 +16,7 @@
         <div class="row linha-baixo">
             <h2 class="title-cad col-3">Buscar Funcionário</h2>
             <form method="get" class="col-7">
-                <input name="srcfunc" type="text">
+                <input style="padding: 6px" placeholder="Digite o Nome" name="srcfunc" type="text">
                 <button type="submit" style="height:3.4rem;"><ion-icon style="font-size:2.4rem;" name="search-sharp"></ion-icon></button>
             </form>
             {% if request.user|has_group:'adm_rh' %}

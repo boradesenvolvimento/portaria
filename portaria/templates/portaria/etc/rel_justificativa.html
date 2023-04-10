@@ -18,10 +18,12 @@
                     <h2>Porcentagem entregas</h2>
                     <form method="post" id="pivot_rel_just" enctype='multipart/form-data'>{% csrf_token %}
                         <input type="hidden" name="pivot_rel_just" value="pivot_rel_just">
-                        <label for="periodo">Período:</label>
-                        <input type="date" name="date1" id="periodo">
-                        <input type="date" name="date2">
-                        <button type="submit">Download</button>
+                        <label>Pesquisar por <strong>TODO</strong> o período (sem filtro):<button style="padding:17px 30px;" type="submit">Download Todo Período</button><br></label>
+                        <br>
+                        <label for="periodo">Pesquisar por Período:</label>
+                        <input style="padding: 6px;" type="date" name="date1" id="periodo">
+                        <input style="padding: 6px;" type="date" name="date2">
+                        <button style="padding:17px 30px;" type="submit">Download</button>
                     </form>
                 </div>
             </div>
@@ -29,7 +31,7 @@
             <div class="container">
                 <div class="linha-baixo">
                     <h2>Confirmar Justificativas</h2>
-                    <a class="col" href="{% url 'portaria:confirmjust' %}"><button type="button">Acessar</button></a>
+                    <a class="col" href="{% url 'portaria:confirmjust' %}"><button style="padding:17px 30px;" type="button">Acessar</button></a>
                 </div>
             </div>
             {% endif %}

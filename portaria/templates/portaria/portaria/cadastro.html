@@ -1,6 +1,13 @@
     {% extends 'base.html' %}
     {% block content %}
     {% load groupscheck %}
+
+    <style>
+        .data{
+            padding: 6px;
+        }
+    </style>
+
     <div class="container mt-5">
     {% if auth_message %}
         <p><strong>{{ auth_message }}</strong></p>
@@ -48,8 +55,8 @@
                             {% endfor %}
                         </select>
                         Ou período:
-                        <input type="date" placeholder="Data inicio" name="dataIni" id="id_date">
-                        <input type="date" placeholder="Data final" name="dataFim" id="id_date1">
+                        <input type="date" class="data" placeholder="Data inicio" name="dataIni" id="id_date">
+                        <input type="date" class="data" placeholder="Data final" name="dataFim" id="id_date1">
                         <button type="submit" style="height:3.8rem;"><ion-icon style="font-size:28px;" name="download-outline"></ion-icon></button>
                         <h6>Exporte por filial, periodo ou ambos</h6>
                     </form>

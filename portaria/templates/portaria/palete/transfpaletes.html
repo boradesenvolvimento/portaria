@@ -9,7 +9,7 @@
                     {{ message }}
                 </div>
             </div>
-            {% endfor %}
+        {% endfor %}
     <div class="row linha-baixo mb-3">
             <h3 class="title-cad">Solicitar transferencia de paletes</h3>
 
@@ -22,11 +22,11 @@
                 <div class="form-group col-6">
                     <label for="origem_">Origem</label>
                     <select class="form-control" name="origem_" id="origem_">
-                        <option selected hidden>...</option>
+                        <option selected hidden placeholder=>...</option>
                         {% for k,v in gachoices %}
-                        {% if k != '0' %}
-                            <option value="{{k}}">{{k}} - {{v}}</option>
-                        {% endif %}
+                            {% if k != '0' %}
+                                <option value="{{k}}">{{k}} - {{v}}</option>
+                            {% endif %}
                         {% endfor %}
                     </select>
                 </div>
@@ -36,7 +36,7 @@
                         <option hidden selected>...</option>
                         {% for k,v in gachoices %}
                         {% if k != '0' %}
-                            <option value="{{k}}">{{k}} - {{v}}</option>
+                            <option required value="{{k}}">{{k}} - {{v}}</option>
                         {% endif %}
                         {% endfor %}
                     </select>
@@ -63,7 +63,21 @@
                 </div>
             </div>
             <div class="row">
-                <button style="margin-left: auto; width: auto;"><ion-icon name="swap-horizontal-outline"></ion-icon></button>
+                <div class="form-group">
+                    <label for="motorista">Motorista</label>
+                    <input type="text" class="form-control" id="motorista" name="motorista" placeholder="Nome do motorista">
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group">
+                    <label for="conferente">Conferente</label>
+                    <input type="text" class="form-control" id="conferente" name="conferente" placeholder="Nome do conferente">
+                </div>
+            </div>
+            <div class="row">
+                <button style="margin-left: auto; width: auto;">
+                    <ion-icon name="swap-horizontal-outline"></ion-icon>
+                </button>
             </div>
         </form>
     </div>

@@ -33,7 +33,19 @@
                 <form method="post">{% csrf_token %}
                     <table class="table table1">
                         <thead>
-                            <th>#</th>
+                            <!--JavaScript para selecionar todos-->
+                            <!--Começo JS Select ALL-->
+                            <script language="JavaScript">
+                                function toggle(source) {
+                                    checkboxes = document.getElementsByName('romid');
+                                    for(var i=0, n=checkboxes.length;i<n;i++) {
+                                      checkboxes[i].checked = source.checked;
+                                    }
+                                  }
+                            </script>
+                            <!--Fim JS Select ALL-->
+
+                            <th><input type="checkbox" id='romid' onClick="toggle(this)">SELECIONAR TODOS</th>
                             <th>CTE</th>
                             <th>NOTAS</th>
                             <th>JUSTIFICATIVA</th>

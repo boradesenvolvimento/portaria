@@ -48,12 +48,12 @@ SECRET_KEY = get_secret('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 
 #develop
-#DEBUG = True
-#ALLOWED_HOSTS = []
+DEBUG = True
+ALLOWED_HOSTS = []
 
 #production
-DEBUG = False
-ALLOWED_HOSTS = ["www.bora.tec.br","www.bora.tec.br/portaria", "bora.tec.br", "bora.tec.br/portaria"]
+#DEBUG = False
+#ALLOWED_HOSTS = ["www.bora.tec.br","www.bora.tec.br/portaria", "bora.tec.br", "bora.tec.br/portaria"]
 
 # Application definition
 
@@ -104,24 +104,24 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
 #develop
-#DATABASES = {
-#    'default': {
-#        'ENGINE': 'django.db.backends.sqlite3',
-#        'NAME': BASE_DIR / 'db.sqlite3',
-#    }
-#}
-
-#production
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'bora',
-        'USER': get_secret('DB_USER'),
-        'PASSWORD': get_secret('DB_PASS'),
-        'HOST': get_secret('DB_HOST'),
-        'PORT': '3306',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+#production
+#DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.mysql',
+#        'NAME': 'bora',
+#        'USER': get_secret('DB_USER'),
+#        'PASSWORD': get_secret('DB_PASS'),
+#        'HOST': get_secret('DB_HOST'),
+#        'PORT': '3306',
+#    }
+#}
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
@@ -195,6 +195,8 @@ EMAIL_HOST_USER = get_secret('E_UMAIL')
 EMAIL_HOST_PASSWORD = get_secret('E_UPASS')
 
 DJANGO_NOTIFICATIONS_CONFIG = {'USE_JSONFIELD': True}
+
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 10240 # corrigindo erro de número máximo dentro do campo de data
 
 #summernote
 X_FRAME_OPTIONS = 'SAMEORIGIN'
