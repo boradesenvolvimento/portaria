@@ -15,6 +15,8 @@ import os.path
 from pathlib import Path
 import MySQLdb
 import cx_Oracle
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
 from django.urls import reverse_lazy
 from django.core.management.utils import get_random_secret_key
 from django.contrib.messages import constants as messages
@@ -30,6 +32,23 @@ MESSAGE_TAGS = {
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+#SENTRY
+sentry_sdk.init(
+    dsn="https://57f3c9112832408f8089af5b13fbaf21@o4504995984506880.ingest.sentry.io/4504995986276352",
+    integrations=[
+        DjangoIntegration(),
+    ],
+
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    # We recommend adjusting this value in production.
+    traces_sample_rate=1.0,
+
+    # If you wish to associate users to errors (assuming you are using
+    # django.contrib.auth) you may enable sending PII data.
+    send_default_pii=True
+)
 
 with open(os.path.join(BASE_DIR, 'secrets.json')) as secret_file:
     secrets = json.load(secret_file)
@@ -184,7 +203,6 @@ LOGOUT_REDIRECT_URL = '/portaria/'
 # Simplified static file serving.
 # https://warehouse.python.org/project/whitenoise/
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
 
 #EMAIL CONFIG
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
