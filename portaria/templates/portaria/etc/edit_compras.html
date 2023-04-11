@@ -309,13 +309,13 @@
                         
                     </div>
                 </div>
-                <hr>
+                {% comment %} <hr>
                 <h2><b>Lista de itens</b></h2>
                 <ul>
                     {% for q in obj.produtossolicitacoes_set.all %}
                         <li>{{ q.produto }} - {{ q.qnt_itens }}un </li>
                     {% endfor %}
-                </ul>
+                </ul> {% endcomment %}
             </form>
         </div>
         <div class="tktcontainer" style="background-color: rgba(245, 249, 255, 0.805); margin-top: 10px;">
