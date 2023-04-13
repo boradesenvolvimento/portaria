@@ -17,6 +17,42 @@
     color: black;
     background-color: rgba(211,211,211,0.3);
   }
+  th, td {
+    border-bottom: 1px solid #ddd;
+  }
+  table {
+    width: 100vw;
+
+  }
+  th {
+    width: 25vw;
+    text-align: center
+  }
+  td {
+    text-align: center
+  }
+  .input-modal {
+    margin-top: 15px;
+  }
+
+  @media (max-width: 800px)
+  {
+    .obrigatorio {
+      margin-top: 35px;
+    }
+    .w3-modal {
+      padding: 5vh 8vw 0 0;
+    }
+    .input-modal {
+      margin: 0 0 2vh 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .button-model {
+      margin-bottom: 2vh
+    }
+  }
+
     #select-placa {
         display: inline-block;
         vertical-align: top;
@@ -64,7 +100,7 @@
     <!--Pegando valor da filial-->
     <form method="GET">
       <div id="refresh">
-          <h3 class="title-cad col-4">Escolha a Filial para Começar</h3>
+          <h3 class="title-cad">Escolha a Filial para Começar</h3>
           <select id="filiais" name="filiais">
             <option selected disabled value="">--</option>
             {% for filial in filiais %}
@@ -77,81 +113,80 @@
     <form id="formulario" role="form" method="POST">
         {% csrf_token %}
         <hr>
-        <table>
-            <tbody>
-                {% if filial %}
-                <div class="row" style="margin-left: 6rem">
-                      <table class="table">
-                        <thead>
-                          <tr>
-                            <th>Placa Veículo</th>
-                            <th>Tipo Veiculo</th>
-                            <th>Parado</th>
-                            <th>Preventivo</th>
-                            <th>Liberado</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {% for veiculo in veiculos %}
-                          {% if not veiculo.prefixoveic in placas_movimentos%}
-                          <tr
-                            class="smallcap"
-                          >
-                            <td>{{ veiculo.prefixoveic }}</td>
-                            <td>{{ veiculo.codigotpveic }}</td>
-                            <td>
-                              <button class="button vermelho" id="botao_vermelho" name="botao_vermelho" type="reset"
-                              onclick="
-                                document.getElementById('id1').style.display='block';
-                                document.getElementById('vermelho').value = {{veiculo.codigoveic}};
-                                "></button>
-                            </td>
-                            <td>
-                              <button class="button amarelo" id="botao_amarelo" name="botao_amarelo" type="reset" 
-                              onclick="
-                                document.getElementById('id2').style.display='block';
-                                document.getElementById('amarelo').value = {{veiculo.codigoveic}};
-                                "></button>
-                            </td>
-                            <td>
-                              <button class="button verde" id="verde" name="verde" type="submit" value="{{veiculo.codigoveic}}"
-                              onclick="
-                                document.getElementById('formulario').reset();
-                                "></button>
-                            </td>
-                          </tr>
-                          {% endif%}
-                          {% endfor %}
-                        </tbody>
-                      </table>
-                  </div>
-                {% endif %}
-            </tbody>
-        </table>
+            {% if filial %}
+            <div class="row" style="margin: 0 0.5rem">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Placa Veículo</th>
+                        <th>Tipo Veiculo</th>
+                        <th>Parado</th>
+                        <th>Preventivo</th>
+                        <th>Liberado</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for veiculo in veiculos %}
+                      {% if not veiculo.prefixoveic in placas_movimentos%}
+                      <tr
+                        
+                      >
+                        <td>{{ veiculo.prefixoveic }}</td>
+                        <td>{{ veiculo.codigotpveic }}</td>
+                        <td>
+                          <button class="button vermelho" id="botao_vermelho" name="botao_vermelho" type="reset"
+                          onclick="
+                            document.getElementById('id1').style.display='block';
+                            document.getElementById('vermelho').value = {{veiculo.codigoveic}};
+                            "></button>
+                        </td>
+                        <td>
+                          <button class="button amarelo" id="botao_amarelo" name="botao_amarelo" type="reset" 
+                          onclick="
+                            document.getElementById('id2').style.display='block';
+                            document.getElementById('amarelo').value = {{veiculo.codigoveic}};
+                            "></button>
+                        </td>
+                        <td>
+                          <button class="button verde" id="verde" name="verde" type="submit" value="{{veiculo.codigoveic}}"
+                          onclick="
+                            document.getElementById('formulario').reset();
+                            "></button>
+                        </td>
+                      </tr>
+                      {% endif%}
+                      {% endfor %}
+                    </tbody>
+                  </table>
+              </div>
+            {% endif %}
     </form>
 </div>
 
 <div id="id1" class="w3-modal">
-  <div class="w3-modal-content">
-    <div class="w3-container" style="padding: 20px;">
+  <div class="w3-modal-content" style="width: 80vw; margin: 0 10vw;">
+    <div class="w3-container">
       <span onclick="
       document.getElementById('id1').style.display='none';
       document.getElementById('formulario2').reset();" class="w3-button w3-display-topright">&times;</span>
-      <h3>Formulário Obrigatório</h3>
+      <h3 class="obrigatorio">Formulário Obrigatório</h3>
       <form id="formulario2" role="form" method="POST">
         {% csrf_token %}
         <input class="none" type="text" id="vermelho" name="vermelho" value=""/>
         <br/>
-        <label for="observacao">Observação:</label>
-        <input type="text" name="observacao" id="observacao" onfocus="this.value=''" required>
-        <br/>
-        <label for="ordem_servico">Ordem de Serviço:</label>
-        <input type="number" name="ordem_servico" id="ordem_servico" onfocus="this.value=''" required>
-        <br/>
-        <label for="data_liberacao">Data Liberação:</label>
-        <input type="date" min="{{hoje}}" value="{{hoje}}" name="data_liberacao" id="data_liberacao" onfocus="this.value=''" required>
-        <br/>
-        <div style="display:flex;flex-direction:row-reverse;">
+        <div class="input-modal">
+          <label for="observacao">Observação:</label>
+          <input type="text" name="observacao" id="observacao" onfocus="this.value=''" required>
+        </div>
+        <div class="input-modal">
+          <label for="ordem_servico">Ordem de Serviço:</label>
+          <input type="number" name="ordem_servico" id="ordem_servico" onfocus="this.value=''" required>
+        </div>
+        <div class="input-modal">
+          <label for="data_liberacao">Data Liberação:</label>
+          <input type="date" min="{{hoje}}" value="{{hoje}}" name="data_liberacao" id="data_liberacao" onfocus="this.value=''" required>
+        </div>
+        <div class="button-modal" style="display:flex;flex-direction:row-reverse;">
           <button type="submit" onclick="
             document.getElementById('id1').style.display='none';
           ">Enviar</button>
@@ -162,7 +197,7 @@
 </div>
 
 <div id="id2" class="w3-modal">
-  <div class="w3-modal-content">
+  <div class="w3-modal-content" style="width: 80vw; margin: 0 10vw;">
     <div class="w3-container" style="padding: 20px;">
       <span onclick="
       document.getElementById('id2').style.display='none'
@@ -171,20 +206,21 @@
       <form id="formulario3" role="form" method="POST">
         {% csrf_token %}
         <input class="none" type="text" id="amarelo" name="amarelo" value="{{veiculo.codigoveic}}"/>
-        <br/>
-        <label for="observacao">Observação:</label>
-        <input type="text" name="observacao" id="observacao" onfocus="this.value=''" required>
-        <br/>
-        <label for="ordem_servico">Ordem de Serviço:</label>
-        <input type="number" name="ordem_servico" id="ordem_servico" onfocus="this.value=''" required>
-        <br/>
-        <label for="data_previsao">Data Previsão:</label>
-        <input type="date" min="{{hoje}}" value="{{hoje}}" name="data_previsao" id="data_previsao" required>
-        <br/>
+        <div class="input-modal">
+          <label for="observacao">Observação:</label>
+          <input type="text" name="observacao" id="observacao" onfocus="this.value=''" required>
+        </div>
+        <div class="input-modal">
+          <label for="ordem_servico">Ordem de Serviço:</label>
+          <input type="number" name="ordem_servico" id="ordem_servico" onfocus="this.value=''" required>
+        </div>
+        <div class="input-modal">
+          <label for="data_previsao">Data Previsão:</label>
+          <input type="date" min="{{hoje}}" value="{{hoje}}" name="data_previsao" id="data_previsao" required>
+        </div>
         <div style="display:flex;flex-direction:row-reverse;">
           <button type="submit" onclick="
           document.getElementById('id2').style.display='none';
-
           ">Enviar</button>
         </div>
       </form>
