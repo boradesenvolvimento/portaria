@@ -823,13 +823,28 @@ def disponibilidade_frota(request: WSGIRequest) -> HttpResponse:
 
         placas = {movimento.placa for movimento in movimentos}
 
+        bloqueio_parado = []
+        bloqueio_preventivo = []
         for veiculo in veiculos:
-            veiculo.codigotpveic = Veiculos.CODIGOTPVEIC_CHOICES[int(veiculo.codigotpveic) -1][1]
+            
+            # Verificando qual foi o ultimo movimento do veiculo e bloqueando escolha
+            movimento = veiculo.ultimo_dispo_frota
+            if movimento:
+                if movimento.status == "PARADO":
+                    dias_restantes = (movimento.data_liberacao - datetime.date.today()).days
+                    if dias_restantes >= 0: bloqueio_parado.append(veiculo)
+
+                if movimento.status == "PREVENTIVO":
+                    dias_restantes = (movimento.data_previsao - datetime.date.today()).days
+                    if dias_restantes >= 0: bloqueio_preventivo.append(veiculo)
+            
+            # Transformando numero em um codigo
+            veiculo.codigotpveic = Veiculos.CODIGOTPVEIC_CHOICES[int(veiculo.codigotpveic) - 1][1]
         
         if request.method == 'POST':
             dict: dict = request.POST.dict() #Transformando o request em dict
-            cor: str = [*dict][1] # Selecionando a cor vinda do request
-            veiculo: Veiculos = Veiculos.objects.get(codigoveic=dict[cor])
+            cor: str = [*dict][1] # Selecionando a cor vinda do request 
+            veiculo: Veiculos = Veiculos.objects.get(codigoveic=dict[cor]) # {'COR SELECIONADA': CODIGOVEIC}
 
             service = DisponibilidadeFrotaService()
             funcoes = {
@@ -846,13 +861,15 @@ def disponibilidade_frota(request: WSGIRequest) -> HttpResponse:
             return HttpResponseRedirect(f'/frota/disponibilidade-frota?filiais={filial_selecionada}')
 
         return render(request, 'portaria/frota/disponibilidade_frota.html',
-                    {'filiais': filiais, 'veiculos': veiculos, 'placas_movimentos': placas, 'filial': filial_selecionada, 'hoje': hoje})
+                    {'filiais': filiais, 'veiculos': veiculos, 'placas_movimentos': placas,
+                     'filial': filial_selecionada, 'hoje': hoje,
+                     'bloqueio_vermelho': bloqueio_parado,
+                     'bloqueio_amarelo': bloqueio_preventivo})
     else:
         auth_message = 'Usuário não autenticado, por favor logue novamente'
         return render(request, 'portaria/portaria/cadastroentrada.html', {'auth_message': auth_message})
 
 class DisponibilidadeFrotaService():
-
     @staticmethod
     def funcionando(request: WSGIRequest, veiculo: Veiculos) -> bool:
         movimento = {
@@ -860,10 +877,10 @@ class DisponibilidadeFrotaService():
             "filial": veiculo.filial,
             "status": "FUNCIONANDO",
             "data_preenchimento": datetime.date.today(),
-            "autor_id": request.user.id
+            "autor_id": request.user.id,
         }
 
-        return DisponibilidadeFrotaService.criar_movimento(movimento) 
+        return DisponibilidadeFrotaService.criar_movimento(movimento, veiculo) 
 
     @staticmethod
     def preventivo(request: WSGIRequest, veiculo: Veiculos) -> bool:
@@ -876,10 +893,10 @@ class DisponibilidadeFrotaService():
             "data_previsao": dict.get('data_previsao') or datetime.date.today(),
             "observacao": dict.get('observacao'),
             "ordem_servico": dict.get('ordem_servico'),
-            "autor_id": request.user.id
+            "autor_id": request.user.id,
         }
 
-        return DisponibilidadeFrotaService.criar_movimento(movimento)        
+        return DisponibilidadeFrotaService.criar_movimento(movimento, veiculo)        
 
     @staticmethod
     def parado(request: WSGIRequest, veiculo: Veiculos) -> bool:
@@ -892,20 +909,23 @@ class DisponibilidadeFrotaService():
             "data_liberacao": dict.get('data_liberacao') or datetime.date.today(),
             "observacao": dict.get('observacao'),
             "ordem_servico": dict.get('ordem_servico'),
-            "autor_id": request.user.id
+            "autor_id": request.user.id,
         }
 
-        return DisponibilidadeFrotaService.criar_movimento(movimento)
+        return DisponibilidadeFrotaService.criar_movimento(movimento, veiculo)
 
     @staticmethod
-    def criar_movimento(movimento):
+    def criar_movimento(movimento: dict, veiculo: Veiculos):
         try:
-            DisponibilidadeFrota.objects.create(**movimento)
+            movimento_criado = DisponibilidadeFrota.objects.create(**movimento)
+
+            veiculo.ultimo_dispo_frota = movimento_criado
+            veiculo.save()
 
             return True
         
         except Exception as e:
-            print("Erro ao criar DISPONIBILIDADE FROTA - VERMELHO", e)
+            print(f"Erro ao criar DISPONIBILIDADE FROTA - {movimento.status}", e)
             return False
 
 
