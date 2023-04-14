@@ -113,7 +113,7 @@
             </li>
           </ul>
         </div>
-        {% endif %} {% comment %} {% if request.user|has_group:"frota" %}
+        {% endif %} {% if request.user|has_group:"frota" %}
         <div class="dropdown">
           <button
             class="dropdown-toggle menutext-navbar nav-link1"
@@ -132,28 +132,28 @@
           >
             <li class="nav-item">
               {% if request.user|has_group:"frota-staff" %}
-              <a class="nav-link1" href="{# url 'portaria:frota' #}"
+              {% comment %} <a class="nav-link1" href="{% url 'portaria:frota' %}"
                 >Checklist</a
               >
-              <a class="nav-link1" href="{# url 'portaria:manutencaofrota' #}"
+              <a class="nav-link1" href="{% url 'portaria:manutencaofrota' %}"
                 >Manutencao</a
               >
-              <a class="nav-link1" href="{# url 'portaria:frotacadastros' #}"
+              <a class="nav-link1" href="{% url 'portaria:frotacadastros' %}"
                 >Cadastros</a
-              >
+              > {% endcomment %}
               <a
                 class="nav-link1"
-                href="{% url 'portaria:disponiblidade_frota' %}"
+                href="{% url 'portaria:disponibilidade_frota' %}"
                 >Disp. Frota</a
               >
               {% endif %}
-              <a class="nav-link1" href="{# url 'portaria:agendamentomanu' #}"
+              {% comment %} <a class="nav-link1" href="{% url 'portaria:agendamentomanu' %}"
                 >Agendamento</a
-              >
+              > {% endcomment %}
             </li>
           </ul>
         </div>
-        {% endif %} {% endcomment %} {% if request.user|has_group:"servicopj" %}
+        {% endif %} {% if request.user|has_group:"servicopj" %}
         <div class="dropdown">
           <button
             class="dropdown-toggle menutext-navbar nav-link1"
