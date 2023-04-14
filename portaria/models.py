@@ -256,7 +256,62 @@ class Motorista(models.Model):
 
     def __str__(self):
        return self.nome
+class DisponibilidadeFrota(models.Model):
+    id = models.BigAutoField(
+        primary_key=True,
+        unique=True
+    )
+    autor = models.ForeignKey(
+        User,
+        default=None,
+        on_delete=models.PROTECT,
+    )
+    placa = models.CharField(
+        'Placa-Veículo', 
+        max_length=8,
+    )
+    filial = models.CharField(
+        'Filial',
+        choices=TIPO_GARAGEM, 
+        max_length=3
+    )
+    status = models.CharField(
+        'Status',
+        max_length=20
+    )
+    data_preenchimento = models.DateField(
+        'Data preenchimento serviço',
+        blank=True,
+        null=True
+    )
+    data_previsao = models.DateField(
+        'Data Previsão',
+        blank=True,
+        null=True
+    )
+    data_liberacao = models.DateField(
+        'Data liberação serviço',
+        blank=True,
+        null=True
+    )
+    observacao = models.TextField(
+        'Observação',
+        max_length=255,
+        null=True
+    )
+    ordem_servico = models.CharField(
+        'Ordem de Serviço',
+        max_length=255,
+        null=True
+    )
 
+    class Meta:
+        verbose_name = 'DisponibilidadeFrota'
+        verbose_name_plural = 'DisponibilidadeFrota'
+
+    def __str__(self):
+        return str(self.placa)
+    
 class Veiculos(models.Model):
     CODIGOTPVEIC_CHOICES = [
         ('1', 'VAN-PASSAGEIROS'),
@@ -284,6 +339,7 @@ class Veiculos(models.Model):
     obsveic = models.CharField(max_length=30, blank=True, null=True)
     renavanveic = models.CharField(max_length=11, validators=[only_int])
     modeloveic = models.CharField(max_length=20)
+    ultimo_dispo_frota = models.ForeignKey(DisponibilidadeFrota, on_delete=models.PROTECT, null=True)
 
     class Meta:
         verbose_name = 'Veiculos'
@@ -370,61 +426,7 @@ class ChecklistFrota(models.Model):
     def __str__(self):
        return str(self.idchecklist)
 
-class DisponibilidadeFrota(models.Model):
-    id = models.BigAutoField(
-        primary_key=True,
-        unique=True
-    )
-    autor = models.ForeignKey(
-        User,
-        default=None,
-        on_delete=models.PROTECT,
-    )
-    placa = models.CharField(
-        'Placa-Veículo', 
-        max_length=8,
-    )
-    filial = models.CharField(
-        'Filial',
-        choices=TIPO_GARAGEM, 
-        max_length=3
-    )
-    status = models.CharField(
-        'Status',
-        max_length=20
-    )
-    data_preenchimento = models.DateField(
-        'Data preenchimento serviço',
-        blank=True,
-        null=True
-    )
-    data_previsao = models.DateField(
-        'Data Previsão',
-        blank=True,
-        null=True
-    )
-    data_liberacao = models.DateField(
-        'Data liberação serviço',
-        blank=True,
-        null=True
-    )
-    observacao = models.TextField(
-        'Observação',
-        max_length=255,
-        null=True
-    )
-    ordem_servico = models.CharField(
-        'Ordem de Serviço',
-        max_length=255,
-        null=True
-    )
 
-    class Meta:
-        verbose_name = 'DisponibilidadeFrota'
-        verbose_name_plural = 'DisponibilidadeFrota'
-
-    def __str__(self):
-        return str(self.placa)
     
 
 
