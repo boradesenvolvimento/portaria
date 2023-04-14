@@ -40,7 +40,6 @@ TIPO_VIAGEM = (
 
 EMPRESA_CHOICES = (
     ('1', 'BORA'),
-    ('2', 'TRANSERVO'),
     ('3', 'BOURBON'),
     ('4', 'TRANSFOOD')
 )
@@ -90,14 +89,7 @@ GARAGEM_CHOICES = [
         ('111','GVR'),
         ('112','VIX'),
         ('113','TCO'),
-        ('113','TCO'),
         ('114','UDI'),
-        ('21', 'CTG'),
-        ('22', 'TCO'),
-        ('23', 'UDI'),
-        ('24', 'TMA'), 
-        ('25', 'VIX'),
-        ('26', 'GVR'),
         ('31', 'BMA'), 
         ('32', 'BPE'),
         ('33', 'BEL'),
@@ -122,14 +114,7 @@ FILIAL_CHOICES = [
         ('11','GVR'),
         ('12','VIX'),
         ('13','TCO'),
-        ('13','TCO'),
         ('14','UDI'),
-        ('1', 'CTG'),
-        ('2', 'TCO'),
-        ('3', 'UDI'),
-        ('4', 'TMA'), 
-        ('5', 'VIX'),
-        ('6', 'GVR'),
         ('1', 'BMA'), 
         ('2', 'BPE'),
         ('3', 'BEL'),
@@ -262,7 +247,7 @@ class Motorista(models.Model):
     cidade = models.CharField(max_length=20)
     UF = models.CharField(max_length=2)
     cep = models.CharField(max_length=8, validators=[only_int])
-    data_nasc = models.DateField()
+    data_nasc = models.DateField(null=True, blank=True)
 
     class Meta:
         verbose_name = 'Motorista'
@@ -274,22 +259,21 @@ class Motorista(models.Model):
 
 class Veiculos(models.Model):
     CODIGOTPVEIC_CHOICES = [
-        ('1', 'CAMINHÃO TOCO 3/4'),
-        ('2', 'CAMINHÃO TOCO'),
-        ('3', 'CAMINHÃO 3/4'),
-        ('4', 'CAMINHONETE/UTILITARIO'),
-        ('5', 'CAMINHÃO TRUCK'),
-        ('6', 'PASSEIO'),
-        ('7', 'CAVALO'),
-        ('8', 'CARRETA'),
-        ('9', 'CAMINHÃO BI TRUCK '),
-        ('10', 'CAVALO '),
-        ('11', 'CAMINHAO LEVE'),
-        ('12', 'SEMI ROBOQUE'),
-        ('13', 'CAMINHÃO FURGÃO'),
-        ('14', 'CAMINHÃO TRUCK '),
-        ('15', 'CAMINHOTE'),
-        ('16', 'CAMINHONETE/FURGAO')
+        ('1', 'VAN-PASSAGEIROS'),
+        ('2', 'CAMINHAO'),
+        ('3', 'CAVALO'),
+        ('4', 'CARRETA'),
+        ('5', 'VUC-MINI CAMINHAO'),
+        ('6', 'BI TRUCK'),
+        ('7', 'TOCO'),
+        ('8', '3/4'),
+        ('9', 'TRUCK'),
+        ('10', 'VEICULO APOIO'),
+        ('11', 'PASSAGEIRO'),
+        ('12', 'PASSAGEIRO MOVEL'),
+        ('13', 'VW/24.280 CRM 6X2'),
+        ('14', 'FIORINO'),
+        ('15', 'HR')
     ]
 
     codigoveic = models.BigAutoField(primary_key=True)
@@ -389,14 +373,12 @@ class ChecklistFrota(models.Model):
 class DisponibilidadeFrota(models.Model):
     id = models.BigAutoField(
         primary_key=True,
-        unique=True,
+        unique=True
     )
     autor = models.ForeignKey(
         User,
         default=None,
         on_delete=models.PROTECT,
-        blank=True, 
-        null=True
     )
     placa = models.CharField(
         'Placa-Veículo', 
@@ -405,45 +387,41 @@ class DisponibilidadeFrota(models.Model):
     filial = models.CharField(
         'Filial',
         choices=TIPO_GARAGEM, 
-        max_length=3, 
-        blank=True, 
-        null=True,
+        max_length=3
     )
     status = models.CharField(
         'Status',
-        max_length=50,
-        choices=STATUS_FROTA_CHOICES,
-        blank=False,
+        max_length=20
     )
-    data_inicio = models.DateField(
-        'Data Início Serviço',
+    data_preenchimento = models.DateField(
+        'Data preenchimento serviço',
         blank=True,
-        default=None
+        null=True
     )
     data_previsao = models.DateField(
         'Data Previsão',
-        default=timezone.now,
-        blank=True
-    )
-    data_finalizacao = models.DateField(
-        'Data finalização Serviço',
         blank=True,
-        default=None,
+        null=True
+    )
+    data_liberacao = models.DateField(
+        'Data liberação serviço',
+        blank=True,
+        null=True
     )
     observacao = models.TextField(
         'Observação',
         max_length=255,
-        default=None,
+        null=True
     )
     ordem_servico = models.CharField(
         'Ordem de Serviço',
         max_length=255,
-        default=None,
+        null=True
     )
 
     class Meta:
-        verbose_name = 'ChecklistFrota'
-        verbose_name_plural = 'ChecklistFrota'
+        verbose_name = 'DisponibilidadeFrota'
+        verbose_name_plural = 'DisponibilidadeFrota'
 
     def __str__(self):
         return str(self.placa)

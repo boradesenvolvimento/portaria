@@ -46,6 +46,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
+from django.core.handlers.wsgi import WSGIRequest
 from django.core.mail import send_mail
 from django.db import IntegrityError
 from django.db.models import Count, Sum, F, Q, Value, Subquery, CharField, ExpressionWrapper, IntegerField, \
@@ -257,10 +258,11 @@ def saidapalete(request):
 @login_required
 def frota(request):
     form = ChecklistFrota.objects.all()
-    motos = Motorista.objects.all()
+    motoristas = Motorista.objects.all()
     if request.method == "GET":
         pla = request.GET.get('placa_')
         mot = request.GET.get('moto_')
+        # ipdb.set_trace()
         if pla and mot != 'Selecione...':
             try:
                 pla1 = Veiculos.objects.get(prefixoveic=pla)
@@ -272,11 +274,11 @@ def frota(request):
                 return redirect('portaria:checklistfrota', placa_id=pla1, moto_id=mot1.codigomot)
         elif pla and mot == 'Selecione...':
             messages.error(request, 'Insira o motorista')
-            return render(request, 'portaria/frota/frota.html',{'form':form, 'motos':motos})
+            return render(request, 'portaria/frota/frota.html',{'form':form, 'motos':motoristas})
         elif mot and not pla:
             messages.error(request, 'Insira a placa')
-            return render(request, 'portaria/frota/frota.html',{'form':form, 'motos':motos})
-    return render(request, 'portaria/frota/frota.html',{'form':form, 'motos':motos})
+            return render(request, 'portaria/frota/frota.html',{'form':form, 'motos':motoristas})
+    return render(request, 'portaria/frota/frota.html',{'form':form, 'motos':motoristas})
 
 @login_required
 def checklistfrota(request, placa_id, moto_id):
@@ -810,73 +812,101 @@ class ManutencaoListView(generic.ListView):
         return context
 
 @login_required
-def disponiblidade_frota(request):
+def disponibilidade_frota(request: WSGIRequest) -> HttpResponse:
     if request.user.is_authenticated:
-        get_filial = request.GET.get('filial')
+        hoje = datetime.date.today().strftime("%Y-%m-%d")
+        filiais = [value for _, value in FILIAL_CHOICES]
+        filial_selecionada = request.GET.get('filiais')
 
-        print('FILIAL: ', get_filial)
-        if get_filial == 'SPO':
-            get_filial = 'SP'
+        veiculos: list[Veiculos] = list(Veiculos.objects.filter(filial=filial_selecionada))
+        movimentos: list[DisponibilidadeFrota] = list(DisponibilidadeFrota.objects.filter(filial=filial_selecionada, data_preenchimento=hoje))
 
-        if get_filial is None:
-            get_filial = ''
+        placas = {movimento.placa for movimento in movimentos}
 
-        filial_selecionada = get_filial
-        autor = request.user
-
-        # Carregando Excel
-        df = pd.read_excel(r'C:\Users\renan.amarantes\Dropbox\FROTA\ipva 2023.xlsx')
-
-        form = DisponibilidadeFrotaForm(request.POST)
-
-        filial = [f'{filial_selecionada}'] # Aqui vai ficar a filial escolhida pelo usuário
-        filial_filtrada = df[df['FILIAL'].isin(filial)]
-
-        lista_placa_filial = [] # Lista de Placas já filtrada
-
+        for veiculo in veiculos:
+            veiculo.codigotpveic = Veiculos.CODIGOTPVEIC_CHOICES[int(veiculo.codigotpveic) -1][1]
         
+        if request.method == 'POST':
+            dict: dict = request.POST.dict() #Transformando o request em dict
+            cor: str = [*dict][1] # Selecionando a cor vinda do request
+            veiculo: Veiculos = Veiculos.objects.get(codigoveic=dict[cor])
 
-        for placa_ in filial_filtrada['PLACA VEÍCULO']:
-            lista_placa_filial.append(placa_)
+            service = DisponibilidadeFrotaService()
+            funcoes = {
+                "vermelho": service.parado,
+                "amarelo": service.preventivo,
+                "verde": service.funcionando
+            }
 
-        lista_certa = lista_placa_filial
+            resultado = funcoes[cor](request, veiculo)
 
-        if request.method == 'POST':    
-            placa = request.POST.get('placa')
-            print('Esse é o erro:', form.errors)
-            print('PLACA: ', placa)
-            if form.is_valid():
-                print('ENTROU NO IF')
-                upplaca = upper(placa)
-                filial_select = get_filial
-                if filial_select == 'SP':
-                    filial_select = 'SPO'
-                
-                order = form.save(commit=False)
-                data_inicio = form.cleaned_data['data_inicio']
-                data_previsao = form.cleaned_data['data_previsao']
-                data_finalizacao = form.cleaned_data['data_finalizacao']
-                order.data_inicio =data_inicio
-                order.data_previsao = data_previsao
-                order.data_finalizacao = data_finalizacao
-                order.autor = autor
-                order.placa = upplaca
-                order.filial = filial_select
-                
-                order.save()
-                messages.success(request, 'Veículo cadastrado com Sucesso!')
-                print('AAAAAAAAAAAAAAAAAAAAAAAA')
-                return render(request, 'portaria/frota/disponiblidade_frota.html')
-            else:
-                print('ENTROU NO ELSE')
-        return render(request, 'portaria/frota/disponiblidade_frota.html', {'form': form, 
-        'lista_certa': lista_certa, 'get_filial': get_filial})
+            if not resultado:
+                messages.error(request, 'Erro ao cadastrar Movimento')
+            
+            return HttpResponseRedirect(f'/frota/disponibilidade-frota?filiais={filial_selecionada}')
 
+        return render(request, 'portaria/frota/disponibilidade_frota.html',
+                    {'filiais': filiais, 'veiculos': veiculos, 'placas_movimentos': placas, 'filial': filial_selecionada, 'hoje': hoje})
     else:
-        print('ENTROU no ELSE 2')
         auth_message = 'Usuário não autenticado, por favor logue novamente'
         return render(request, 'portaria/portaria/cadastroentrada.html', {'auth_message': auth_message})
 
+class DisponibilidadeFrotaService():
+
+    @staticmethod
+    def funcionando(request: WSGIRequest, veiculo: Veiculos) -> bool:
+        movimento = {
+            "placa": veiculo.prefixoveic,
+            "filial": veiculo.filial,
+            "status": "FUNCIONANDO",
+            "data_preenchimento": datetime.date.today(),
+            "autor_id": request.user.id
+        }
+
+        return DisponibilidadeFrotaService.criar_movimento(movimento) 
+
+    @staticmethod
+    def preventivo(request: WSGIRequest, veiculo: Veiculos) -> bool:
+        dict = request.POST.dict()
+        movimento = {
+            "placa": veiculo.prefixoveic,
+            "filial": veiculo.filial,
+            "status": "PREVENTIVO",
+            "data_preenchimento": datetime.date.today(),
+            "data_previsao": dict.get('data_previsao') or datetime.date.today(),
+            "observacao": dict.get('observacao'),
+            "ordem_servico": dict.get('ordem_servico'),
+            "autor_id": request.user.id
+        }
+
+        return DisponibilidadeFrotaService.criar_movimento(movimento)        
+
+    @staticmethod
+    def parado(request: WSGIRequest, veiculo: Veiculos) -> bool:
+        dict = request.POST.dict()
+        movimento = {
+            "placa": veiculo.prefixoveic,
+            "filial": veiculo.filial,
+            "status": "PARADO",
+            "data_preenchimento": datetime.date.today(),
+            "data_liberacao": dict.get('data_liberacao') or datetime.date.today(),
+            "observacao": dict.get('observacao'),
+            "ordem_servico": dict.get('ordem_servico'),
+            "autor_id": request.user.id
+        }
+
+        return DisponibilidadeFrotaService.criar_movimento(movimento)
+
+    @staticmethod
+    def criar_movimento(movimento):
+        try:
+            DisponibilidadeFrota.objects.create(**movimento)
+
+            return True
+        
+        except Exception as e:
+            print("Erro ao criar DISPONIBILIDADE FROTA - VERMELHO", e)
+            return False
 
 
 @login_required

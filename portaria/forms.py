@@ -57,14 +57,14 @@ class DisponibilidadeFrotaForm(forms.ModelForm):
             'data_previsao',
             'observacao',
             'autor',
-            'data_finalizacao',
-            'data_inicio',
+            'data_liberacao',
+            'data_preenchimento',
             'ordem_servico',
             'status',
         ]
         widgets = {
-            'data_inicio': DateInput(),
-            'data_finalizacao': DateInput(),
+            'data_preenchimento': DateInput(),
+            'data_liberacao': DateInput(),
             'data_previsao': DateInput()
         }
 
