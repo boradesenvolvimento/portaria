@@ -33,23 +33,6 @@ MESSAGE_TAGS = {
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-#SENTRY
-sentry_sdk.init(
-    dsn="https://57f3c9112832408f8089af5b13fbaf21@o4504995984506880.ingest.sentry.io/4504995986276352",
-    integrations=[
-        DjangoIntegration(),
-    ],
-
-    # Set traces_sample_rate to 1.0 to capture 100%
-    # of transactions for performance monitoring.
-    # We recommend adjusting this value in production.
-    traces_sample_rate=1.0,
-
-    # If you wish to associate users to errors (assuming you are using
-    # django.contrib.auth) you may enable sending PII data.
-    send_default_pii=True
-)
-
 with open(os.path.join(BASE_DIR, 'secrets.json')) as secret_file:
     secrets = json.load(secret_file)
 
@@ -66,13 +49,42 @@ def get_secret(setting, secrets=secrets):
 SECRET_KEY = get_secret('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 
-#develop
-# DEBUG = True
-# ALLOWED_HOSTS = []
+develop = True
 
-#production
-DEBUG = False
-ALLOWED_HOSTS = ["www.bora.tec.br","www.bora.tec.br/portaria", "bora.tec.br", "bora.tec.br/portaria"]
+if develop:
+    DEBUG = True
+    ALLOWED_HOSTS = []
+
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+else:
+    DEBUG = False
+    ALLOWED_HOSTS = ["www.bora.tec.br","www.bora.tec.br/portaria", "bora.tec.br", "bora.tec.br/portaria"]
+
+    DATABASES = {
+    'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'bora',
+            'USER': get_secret('DB_USER'),
+            'PASSWORD': get_secret('DB_PASS'),
+            'HOST': get_secret('DB_HOST'),
+            'PORT': '3306',
+        }
+    }
+
+    sentry_sdk.init(
+        dsn="https://57f3c9112832408f8089af5b13fbaf21@o4504995984506880.ingest.sentry.io/4504995986276352",
+        integrations=[
+            DjangoIntegration(),
+        ],
+        traces_sample_rate=1.0,
+        send_default_pii=True
+    )
+
 
 # Application definition
 
@@ -118,29 +130,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'mysite.wsgi.application'
-
-# Database
-# https://docs.djangoproject.com/en/3.2/ref/settings/#databases
-
-#develop
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
-
-#production
-DATABASES = {
-   'default': {
-       'ENGINE': 'django.db.backends.mysql',
-       'NAME': 'bora',
-       'USER': get_secret('DB_USER'),
-       'PASSWORD': get_secret('DB_PASS'),
-       'HOST': get_secret('DB_HOST'),
-       'PORT': '3306',
-   }
-}
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
