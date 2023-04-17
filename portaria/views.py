@@ -818,7 +818,7 @@ def disponibilidade_frota(request: WSGIRequest) -> HttpResponse:
         filiais = [value for _, value in FILIAL_CHOICES]
         filial_selecionada = request.GET.get('filiais')
 
-        veiculos: list[Veiculos] = list(Veiculos.objects.filter(filial=filial_selecionada))
+        veiculos: list[Veiculos] = list(Veiculos.objects.filter(filial=filial_selecionada).order_by('prefixoveic'))
         movimentos: list[DisponibilidadeFrota] = list(DisponibilidadeFrota.objects.filter(filial=filial_selecionada, data_preenchimento=hoje))
 
         placas = {movimento.placa for movimento in movimentos}
@@ -3623,9 +3623,11 @@ def justificativa(request):
         emp = request.GET.get('empresa')
         filial = request.GET.get('filial')
         if date1 and date2 and emp and filial:
-            print('Querring values', emp, filial)
             form = JustificativaEntrega.objects.filter(empresa=emp, filial=filial, data_emissao__lte=date2, data_emissao__gte=date1,
                                                        confirmado=False)
+            
+            for f in form:
+                f.em_aberto = (f.lead_time - datetime.date.today()).days
 
             return render(request,'portaria/etc/justificativa.html', 
                             {
