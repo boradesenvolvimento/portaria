@@ -3676,7 +3676,7 @@ def rel_justificativa(request):
     return render(request, 'portaria/etc/rel_justificativa.html', {'gachoices': gachoices})
 
 def confirmjust(request):
-    gachoices = GARAGEM_CHOICES
+    gachoices = FILIAL_CHOICES
     form = JustificativaEntrega.objects.filter(cod_just__isnull=False, desc_just__isnull=False, confirmado=False)
     if request.method == 'GET':
         date1 = request.GET.get('data1')
