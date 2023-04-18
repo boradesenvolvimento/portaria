@@ -2,8 +2,12 @@ import cx_Oracle
 import oracledb
 import json
 import os
+import django
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mysite.settings")
+django.setup()
 
 base_dir = settings.BASE_DIR
 
@@ -15,8 +19,7 @@ def get_secret(setting, secrets=secrets):
         return secrets[setting]
     except KeyError:
         raise ImproperlyConfigured(f"Set the {setting} setting")
-print('iniciando conexão')
-
+    
 #def conndb():
 #    try:
 #        oracledb.init_oracle_client()
@@ -31,12 +34,13 @@ print('iniciando conexão')
 #        return connection
 
 def conndb():
+    print('CONEXAO: INICIANDO')
     try:
         oracledb.init_oracle_client()
-        print('iniciando conexão...')
         cp = oracledb.ConnectParams()
         cp.parse_connect_string("152.67.34.112:1521/aa36d94fc8025453e05381ee640a120e.subnetprax02.vcnpraxioocisp0.oraclevcn.com")
         connection = oracledb.connect(user="CONSULTA142", password="BORA241", params=cp)
+        print('CONEXAO: FINALIZADO')
 
     except Exception as e:
         print(e)
