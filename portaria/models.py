@@ -856,8 +856,7 @@ class JustificativaEntrega(models.Model):
         ('151', 'GRADE FIXA'),
         ('152', 'DEVOLUÇÃO TOTAL '),
         ('153', 'ATRASO NA TRANSFERENCIA'),
-        ('154', 'CUSTO'),
-        ('155', 'OCORRENCIA OPERACIONAL INTERNA')
+        ('154', 'CUSTO')
     )
     empresa = models.CharField(max_length=5)
     filial = models.CharField(max_length=5)

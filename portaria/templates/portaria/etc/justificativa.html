@@ -47,79 +47,83 @@
                 </div>
             </div>
             <div class="row" style="margin-left: 6rem;">
-            <form method="post" id="formgroup" enctype="multipart/form-data">{% csrf_token %}
-            <table class="table">
-                <thead>
-                <tr>
-                    <th>CTE</th>
-                    <th>Emissão</th>
-                    <th>Remetente</th>
-                    <th>Destinatário</th>
-                    <th>Peso</th>
-                    <th>LeadTime</th>
-                    <th>Em Aberto</th>
-                    <th>Entrega</th>
-                    <th>Nota Fiscal</th>
-                    <th>Justificativa</th>
-                </tr>
-                </thead>
-                <tbody>
-
-                {% for f in form %}
-                    <tr class="smallcap" style="{% if f.desc_just %}background-color: #eefb54;{% endif %} {% if f.recusa %}background-color: #ff000091;{% endif %}" >
-                        <!--Inicio IF-->
-                        {% if f.em_aberto >= 1 %}
-                            <!--Só vai trazer os dados que tenha dias Em aberto que seja 0 ou menor-->
-                            <td>{{ f.conhecimento }}</td>
-                            <td>{{ f.data_emissao }}</td>
-                            <td>{{ f.remetente }}</td>
-                            <td>{{ f.destinatario }}</td>
-                            <td>{{ f.peso }}</td>
-                            <td>{{ f.lead_time }}</td>
-                            <td style="{% if f.em_aberto == 999 %} background-color: #ff000091; {% endif %}">{{ f.em_aberto }}</td>
-                            <td>{{ f.local_entreg }}</td>
-                            <td>{{ f.nota_fiscal|truncatechars:'100' }}</td>
-                            <td><select name="ocor{{ forloop.counter0 }}" style="font-size:10px;">
-                                    <option selected disabled value="">--</option>
-                                    {% for k,v in justchoices %}
-                                        <option value="{{ k }}">{{ v }}</option>
-                                    {% endfor %}
-                                </select>
-                                <input type="hidden" name="idobj{{ forloop.counter0 }}" value="{{ f.id }}">
-                                <input type="hidden" name="counter" value="{{ forloop.counter0 }}">
-                            </td>
-                        <td><label style="font-size:2.4rem;cursor:pointer;margin-top:5px;" for="file{{ forloop.counter0 }}"><ion-icon name="cloud-upload-outline"></ion-icon></label>
-                            <input type="file" id="file{{ forloop.counter0 }}" name="file{{ forloop.counter0 }}">
-                        </td>
-                        <td>
-                            <button style="font-size:1.4rem;" type="button" id="myBtn" value="{{ forloop.counter }}"><ion-icon name="list"></ion-icon></button>
-                        </td>
-                        <!--FIM IF-->
-                        {% endif %}
+            <form method="post" id="formgroup" enctype="multipart/form-data">
+            {% csrf_token %}
+                {% if form %}
+                    <button class="col-1" style="margin-top: 3vh;" type="submit">Lançar</button>
+                {% endif %}
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>CTE</th>
+                        <th>Emissão</th>
+                        <th>Remetente</th>
+                        <th>Destinatário</th>
+                        <th>Peso</th>
+                        <th>LeadTime</th>
+                        <th>Em Aberto</th>
+                        <th>Entrega</th>
+                        <th>Nota Fiscal</th>
+                        <th>Justificativa</th>
                     </tr>
-                        <div id="myModal{{ forloop.counter }}" class="modal">
-                            <div class="modal-content">
-                                <div>
-                                    <span class="title-cad">Ocorrências</span>
-                                    <span class="close col">&times;</span>
-                                </div>
-                                <div class="container tktcontainer">
-                                    {% if f.ocorrenciaentrega_set.all %}
-                                    <ul>
-                                    {% for q in f.ocorrenciaentrega_set.all %}
-                                        <li><p style="margin: 0 0 0 0;">Descrição: <strong>{{ q.desc_ocor }}</strong> -
-                                            Data:<strong>{{ q.data_ocorrencia }}</strong></p></li>
-                                    {% endfor %}
-                                    </ul>
-                                    {% else %}
-                                        <p style="margin: 0 0 0 0;">Nenhuma ocorrencia encontrada.</p>
-                                    {% endif %}
+                    </thead>
+                    <tbody>
+
+                    {% for f in form %}
+                        <tr class="smallcap" style="{% if f.desc_just %}background-color: #eefb54;{% endif %} {% if f.recusa %}background-color: #ff000091;{% endif %}" >
+                            <!--Inicio IF-->
+                            {% if f.em_aberto >= 1 %}
+                                <!--Só vai trazer os dados que tenha dias Em aberto que seja 0 ou menor-->
+                                <td>{{ f.conhecimento }}</td>
+                                <td>{{ f.data_emissao }}</td>
+                                <td>{{ f.remetente }}</td>
+                                <td>{{ f.destinatario }}</td>
+                                <td>{{ f.peso }}</td>
+                                <td>{{ f.lead_time }}</td>
+                                <td style="{% if f.em_aberto == 999 %} background-color: #ff000091; {% endif %}">{{ f.em_aberto }}</td>
+                                <td>{{ f.local_entreg }}</td>
+                                <td>{{ f.nota_fiscal|truncatechars:'100' }}</td>
+                                <td><select name="ocor{{ forloop.counter0 }}" style="font-size:10px;">
+                                        <option selected disabled value="">--</option>
+                                        {% for k,v in justchoices %}
+                                            <option value="{{ k }}">{{ v }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <input type="hidden" name="idobj{{ forloop.counter0 }}" value="{{ f.id }}">
+                                    <input type="hidden" name="counter" value="{{ forloop.counter0 }}">
+                                </td>
+                            <td><label style="font-size:2.4rem;cursor:pointer;margin-top:5px;" for="file{{ forloop.counter0 }}"><ion-icon name="cloud-upload-outline"></ion-icon></label>
+                                <input type="file" id="file{{ forloop.counter0 }}" name="file{{ forloop.counter0 }}">
+                            </td>
+                            <td>
+                                <button style="font-size:1.4rem;" type="button" id="myBtn" value="{{ forloop.counter }}"><ion-icon name="list"></ion-icon></button>
+                            </td>
+                            <!--FIM IF-->
+                            {% endif %}
+                        </tr>
+                            <div id="myModal{{ forloop.counter }}" class="modal">
+                                <div class="modal-content">
+                                    <div>
+                                        <span class="title-cad">Ocorrências</span>
+                                        <span class="close col">&times;</span>
+                                    </div>
+                                    <div class="container tktcontainer">
+                                        {% if f.ocorrenciaentrega_set.all %}
+                                        <ul>
+                                        {% for q in f.ocorrenciaentrega_set.all %}
+                                            <li><p style="margin: 0 0 0 0;">Descrição: <strong>{{ q.desc_ocor }}</strong> -
+                                                Data:<strong>{{ q.data_ocorrencia }}</strong></p></li>
+                                        {% endfor %}
+                                        </ul>
+                                        {% else %}
+                                            <p style="margin: 0 0 0 0;">Nenhuma ocorrencia encontrada.</p>
+                                        {% endif %}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                {% endfor %}
-                </tbody>
-            </table>
+                    {% endfor %}
+                    </tbody>
+                </table>
                 <button class="col-1" type="submit">Lançar</button>
             </form>
 
