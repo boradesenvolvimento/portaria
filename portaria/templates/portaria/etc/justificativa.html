@@ -66,9 +66,9 @@
                 <tbody>
 
                 {% for f in form %}
-                    <tr class="smallcap" style="{% if f.recusa %}background-color: #ff000091;{% endif %}" >
+                    <tr class="smallcap" style="{% if f.desc_just %}background-color: #eefb54;{% endif %} {% if f.recusa %}background-color: #ff000091;{% endif %}" >
                         <!--Inicio IF-->
-                        {% if f.em_aberto >= 1   %}
+                        {% if f.em_aberto >= 1 %}
                             <!--Só vai trazer os dados que tenha dias Em aberto que seja 0 ou menor-->
                             <td>{{ f.conhecimento }}</td>
                             <td>{{ f.data_emissao }}</td>
@@ -76,7 +76,7 @@
                             <td>{{ f.destinatario }}</td>
                             <td>{{ f.peso }}</td>
                             <td>{{ f.lead_time }}</td>
-                            <td>{{ f.em_aberto }}</td>
+                            <td style="{% if f.em_aberto == 999 %} background-color: #ff000091; {% endif %}">{{ f.em_aberto }}</td>
                             <td>{{ f.local_entreg }}</td>
                             <td>{{ f.nota_fiscal|truncatechars:'100' }}</td>
                             <td><select name="ocor{{ forloop.counter0 }}" style="font-size:10px;">
