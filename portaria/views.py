@@ -262,7 +262,6 @@ def frota(request):
     if request.method == "GET":
         pla = request.GET.get('placa_')
         mot = request.GET.get('moto_')
-        # ipdb.set_trace()
         if pla and mot != 'Selecione...':
             try:
                 pla1 = Veiculos.objects.get(prefixoveic=pla)
@@ -3912,7 +3911,6 @@ def compras_lancar_pedido(request):
         fil = request.POST.get('filial')
         anexo = request.FILES.get('getanexo')
         if idsolic:
-            # if anexo:
             try:
                 obj = SolicitacoesCompras.objects.create(
                     nr_solic=int(idsolic), data=datetime.datetime.now(), status="ANDAMENTO",
@@ -3920,22 +3918,9 @@ def compras_lancar_pedido(request):
                 )
                 obj.save()
                 messages.success(request, f'Solicitação cadastrada com sucesso!')
-                # prod = ProdutosSolicitacoes.objects.create(produto=q['produto'],
-                #                                                     qnt_itens=int(q['qtd_itens']),
-                #                                                     solic_ref=obj)
             except Exception as e:
                 print('AQUI É o EROOO===',e)
                 messages.error(f'Error:{e}, error_type:{type(e).__name__}')
-            # else:
-            #     print("passei ali")
-            #     # prod = ProdutosSolicitacoes.objects.create(produto=q['produto'],
-            #     #                                             qnt_itens=int(q['qtd_itens']),
-            #     #                                             solic_ref=obj)
-            #     obj.anexo = anexo
-            #     obj.ultima_att = request.user
-            #     obj.save()
-            # else:
-            #     messages.error(request, f'Arquivo em anexo é obrigatório.')
         else:
             messages.error(request, 'Não encontrado solicitação com este número.')
         return redirect('portaria:compras_index')
@@ -4011,7 +3996,7 @@ def compras_lancar_direto(request):
     return render(request, 'portaria/etc/lancardireto.html', {'filiais': keyga, 'deps': deps})
 
 def garagem_para_filial_praxio(garagem):
-    if garagem == 'SPO':          
+    if garagem == 'SPO':
         newga = {'empresa':'1', 'filial': '1'  } 
     elif garagem == 'REC':  
         newga = {'empresa':'1', 'filial': '2'  } 
@@ -4084,19 +4069,17 @@ def painel_compras(request):
         filter = request.GET.get('filter')
         filtertype = request.GET.get('filtertype')
         if filter:
-            if filtertype == 'filial':
+            try:
                 filter = filter.upper()
-                keyga = {v:k for k,v in GARAGEM_CHOICES}
-                form = SolicitacoesCompras.objects.filter(filial=filter).order_by('pub_date')
-            elif filtertype == 'solicitante':
-                filter = filter.upper()
-                form = SolicitacoesCompras.objects.filter(solicitante=filter).order_by('pub_date')
-            elif filtertype == 'codigo':
-                form = SolicitacoesCompras.objects.filter(nr_solic=filter).order_by('pub_date')
-            elif filtertype == 'departamento':
-                filter = filter.upper()
-                form = SolicitacoesCompras.objects.filter(departamento=filter).order_by('pub_date')
-            else:
+                tipo_filtro = {
+                    "filial": {"filial": filter},
+                    "solicitante": {"solicitante": filter},
+                    "codigo": {"nr_solic": filter},
+                    "departamento": {"departamento": filter},
+                }
+
+                form = SolicitacoesCompras.objects.filter(**tipo_filtro[filtertype]).order_by('pub_date')
+            except Exception:
                 messages.error(request, 'Selecione algum filtro.')
     return render(request, 'portaria/etc/painelcompras.html', {'form':form})
 
@@ -4134,10 +4117,9 @@ def page_disabled(request, id):
 
 def edit_compras(request, id):
     editor = TextEditor()
-    obj_b = get_object_or_404(SolicitacoesCompras, pk=id)
+    obj = get_object_or_404(SolicitacoesCompras, id=id)
     print(id)
-    obj = SolicitacoesCompras.objects.get(id=int(id))
-    print(f'Object: {obj}')
+    # obj = SolicitacoesCompras.objects.get(id=int(id))
     entradas = SolicitacoesEntradas.objects.filter(cpr_ref=obj)
     filchoices = FILIAL_CHOICES
     empchoices = EMPRESA_CHOICES
@@ -4149,22 +4131,19 @@ def edit_compras(request, id):
     rpchoices = User.objects.filter(groups__name='compras').exclude(id=1)
     print(f'obj: {obj.data} | email_solic: {obj.email_solic}')
     if request.method == 'POST':
-        print('fetch items')
         status = request.POST.get('status')
         #empresa = request.POST.get('empresa')
         #filial = request.POST.get('filial')
         departamento = request.POST.get('departamento')
-        forma_pgt = request.POST.get('forma_pgt')
         responsavel = request.POST.get('responsavel')
         categoria = request.POST.get('categoria')
+        forma_pgt = request.POST.get('forma_pgt')
         prazo = request.POST.get('prazo_conclusao')
         dt_venc = request.POST.get('dt_venc')
         textarea = request.POST.get('area')
         obs = request.POST.get('obs')
         files = request.FILES.getlist('file')
         pago = request.POST.get('pago')
-        print(departamento)
-        print('fetch all')
         try:
             if status != '':
                 obj.status = status
