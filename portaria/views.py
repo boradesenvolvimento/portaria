@@ -62,6 +62,8 @@ from xml.dom import minidom
 
 from xlsxwriter import Workbook
 from cx_Oracle import DatabaseError as cxerr
+
+from envia_email import envia_email
 #imports django projeto
 from .dbtest import conndb
 from .models import * #Cadastro, PaletControl, ChecklistFrota, Veiculos, NfServicoPj
@@ -3910,11 +3912,12 @@ def compras_lancar_pedido(request):
         empresa = request.POST.get('empresa')
         fil = request.POST.get('filial')
         anexo = request.FILES.get('getanexo')
+        usuario = User.objects.get
         if idsolic:
             try:
                 obj = SolicitacoesCompras.objects.create(
                     nr_solic=int(idsolic), data=datetime.datetime.now(), status="ANDAMENTO",
-                    filial=empresa+fil, empresa=empresa, codigo_fl = fil, autor=request.user, anexo=anexo
+                    filial=empresa+fil, empresa=empresa, codigo_fl = fil, autor=request.user, anexo=anexo,
                 )
                 obj.save()
                 messages.success(request, f'Solicitação cadastrada com sucesso!')
@@ -4132,14 +4135,13 @@ def edit_compras(request, id):
     print(f'obj: {obj.data} | email_solic: {obj.email_solic}')
     if request.method == 'POST':
         status = request.POST.get('status')
-        #empresa = request.POST.get('empresa')
-        #filial = request.POST.get('filial')
         departamento = request.POST.get('departamento')
         responsavel = request.POST.get('responsavel')
         categoria = request.POST.get('categoria')
         forma_pgt = request.POST.get('forma_pgt')
         prazo = request.POST.get('prazo_conclusao')
         dt_venc = request.POST.get('dt_venc')
+        get_anexo = request.FILES.get('getanexo')
         textarea = request.POST.get('area')
         obs = request.POST.get('obs')
         files = request.FILES.getlist('file')
@@ -4154,12 +4156,32 @@ def edit_compras(request, id):
             if forma_pgt != '': obj.forma_pgt = forma_pgt
             if responsavel != '': obj.responsavel_id = responsavel
             if categoria != '': obj.categoria = categoria
+            if get_anexo != '': obj.anexo = get_anexo
             if dt_venc != '' and dt_venc is not None: obj.dt_vencimento = dt_venc
             if prazo != '' and prazo is not None: obj.prazo_conclusao = prazo
             if obs != '' and obs is not None: obj.obs = obs
             if textarea and textarea != '<p><br></p>': insert_entradas_cpr(request, obj, textarea, files)
             if obj.pago != pago and pago is not None: obj.pago = pago
-            print('try complete')
+
+
+            entradas = SolicitacoesEntradas.objects.filter(cpr_ref=obj)
+            resp = ""
+            if obj.responsavel: resp = obj.responsavel.first_name
+            corpo_email = {
+                "status": obj.status,
+                "departamento": obj.departamento,
+                "responsavel": resp,
+                "categoria": obj.categoria,
+                "data": obj.pub_date.strftime('%d-%m-%Y'),
+                "nr_pedido": obj.nr_solic,
+                "email_solicitante": obj.email_solic,
+                "observacao": obj.obs,
+                "entradas": entradas
+            }
+            envio = envia_email(corpo_email)
+            if envio: messages.info(request, f'Email enviado com sucesso!')
+            else: messages.info(request, f'Ocorreu uma falha ao enviar o email')
+
         except Exception as e:
             print(f'err:{e}, err_t:{type(e).__name__}')
             raise e

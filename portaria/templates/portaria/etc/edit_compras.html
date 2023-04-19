@@ -222,6 +222,7 @@
                                     {% endif %}
                             </div>
                         </div>
+                        {% comment %} {% if obj.solicitante %} {% endcomment %}
                         <div class="form-group" hidden>
                             <label for="solicitante">Solicitante</label>
                             <div style="display: flex;">
@@ -253,12 +254,16 @@
                             </div>
                             <small id="emailHelp" class="form-text text-muted">Pressione o botão para enviar um email ao solicitante.</small>
                         </div>
+                        {% comment %} {% endif %} {% endcomment %}
                         <div>
-                            <div style="word-wrap: break-word;">
+                            <div style="word-wrap: break-word;" >
                                 {% if obj.anexo %}
                                     <a href="/media/{{ obj.anexo }}" download>
                                         <ion-icon size="large" name="document-attach-outline"></ion-icon>
                                     </a>
+                                {% else %}
+                                    <label for="getanexo" style="font-size:2.4rem;cursor:pointer;"><ion-icon name="attach-outline"></ion-icon></label>
+                                    <input type="file" name="getanexo" id="getanexo">
                                 {% endif %}
                             </div>
                         </div>
