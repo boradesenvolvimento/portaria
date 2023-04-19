@@ -3912,12 +3912,16 @@ def compras_lancar_pedido(request):
         empresa = request.POST.get('empresa')
         fil = request.POST.get('filial')
         anexo = request.FILES.get('getanexo')
-        usuario = User.objects.get
+        usuario: list[User] = User.objects.filter(id=request.user.id)
+        if usuario:
+            username = usuario[0].username.split(".")[0].upper()
+            email = usuario[0].email
         if idsolic:
             try:
                 obj = SolicitacoesCompras.objects.create(
                     nr_solic=int(idsolic), data=datetime.datetime.now(), status="ANDAMENTO",
                     filial=empresa+fil, empresa=empresa, codigo_fl = fil, autor=request.user, anexo=anexo,
+                    solicitante=username or None, email_solic=email or None
                 )
                 obj.save()
                 messages.success(request, f'Solicitação cadastrada com sucesso!')
@@ -4121,7 +4125,6 @@ def page_disabled(request, id):
 def edit_compras(request, id):
     editor = TextEditor()
     obj = get_object_or_404(SolicitacoesCompras, id=id)
-    print(id)
     # obj = SolicitacoesCompras.objects.get(id=int(id))
     entradas = SolicitacoesEntradas.objects.filter(cpr_ref=obj)
     filchoices = FILIAL_CHOICES
@@ -4176,7 +4179,7 @@ def edit_compras(request, id):
                 "nr_pedido": obj.nr_solic,
                 "email_solicitante": obj.email_solic,
                 "observacao": obj.obs,
-                "entradas": entradas
+                "entradas": entradas,
             }
             envio = envia_email(corpo_email)
             if envio: messages.info(request, f'Email enviado com sucesso!')

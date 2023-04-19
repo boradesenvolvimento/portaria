@@ -44,7 +44,7 @@ def envia_email(data: dict):
     Bora Desenvolvimento.
                 """,
                 "from_email": "solicitacoes.compra@bora.tec.br",
-                "recipient_list": ["davi.bezerra@bora.com.br"],
+                "recipient_list": [data['email_solicitante']],
             }
         send_mail(**body_email)
         return True
