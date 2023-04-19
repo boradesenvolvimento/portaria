@@ -113,7 +113,6 @@
                                 <label class="form-label" for="empresa">Empresa *</label>
                                 <select class="form-control" id="empresa" name="empresa" disabled>
                                     <option class="selector-option" value="1"> 1 - BORA </option>
-                                    <option class="selector-option" value="2"> 2 - TRANSERVO </option>
                                     <option class="selector-option" value="3"> 3 - BOURBON </option>
                                     <option class="selector-option" value="4"> 4 - TRANSFOOD </option>
                                 </select>
@@ -153,7 +152,6 @@
                         <div style="display: flex; justify-content: space-between;">
                             <div class="form-group" style="width: 48%;">
                                 <label class="form-label" for="status">Categoria *</label>
-    
                                 <select class="form-control" id="categoria" name="categoria" onchange="DisplayInput();">
                                     <option class="selector-option" label="{{ obj.categoria }}" hidden selected>{{ obj.categoria }}</option>
                                     {% for k,v in fgtchoices %} 
@@ -166,7 +164,6 @@
                             </div>
                             <div class="form-group" style="width: 48%;">
                                 <label class="form-label" for="forma_pgt">Forma de pagamento</label>
-    
                                 <select class="form-control" id="forma_pgt" name="forma_pgt" onchange="DisplayInput();">                                    
                                     <option class="selector-option" label="{{ obj.forma_pgt|default_if_none:'Não Selecionado' }}" hidden>{{ obj.forma_pgt }}</option>
                                     <option class="selector-option" label="A VISTA">A_VISTA</option>
