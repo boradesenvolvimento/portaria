@@ -4183,8 +4183,8 @@ def edit_compras(request, id):
                 "entradas": entradas,
             }
             envio = envia_email(corpo_email)
-            if envio: messages.info(request, f'Email enviado com sucesso!')
-            else: messages.info(request, f'Ocorreu uma falha ao enviar o email')
+            # if envio: messages.info(request, f'Email enviado com sucesso!')
+            # else: messages.info(request, f'Ocorreu uma falha ao enviar o email')
 
         except Exception as e:
             print(f'err:{e}, err_t:{type(e).__name__}')
