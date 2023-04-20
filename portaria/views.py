@@ -3861,7 +3861,7 @@ def compras_lancar_pedido(request):
         #                                WHEN SO.STATUSSOLIC = 'F' THEN 'FECHADO'
         #                            END STATUS,
         #                            SO.CODIGOFL FILIAL,
-        #                            SO.USUARIO SOLICITANTE,
+        #                           SO.USUARIO SOLICITANTE,
         #                            CC.EMAIL
         #                     FROM
         #                         CPR_SOLICITACAO SO,
@@ -4171,6 +4171,7 @@ def edit_compras(request, id):
             resp = ""
             if obj.responsavel: resp = obj.responsavel.first_name
             corpo_email = {
+                "subject": f"Atualização da Solicitação: {obj.nr_solic}",
                 "status": obj.status,
                 "departamento": obj.departamento,
                 "responsavel": resp,
