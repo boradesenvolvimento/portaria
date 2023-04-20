@@ -4159,7 +4159,7 @@ def edit_compras(request, id):
             if forma_pgt != '': obj.forma_pgt = forma_pgt
             if responsavel != '': obj.responsavel_id = responsavel
             if categoria != '': obj.categoria = categoria
-            if get_anexo != '': obj.anexo = get_anexo
+            if get_anexo != '' and bool(get_anexo) is True: obj.anexo = get_anexo
             if dt_venc != '' and dt_venc is not None: obj.dt_vencimento = dt_venc
             if prazo != '' and prazo is not None: obj.prazo_conclusao = prazo
             if obs != '' and obs is not None: obj.obs = obs
