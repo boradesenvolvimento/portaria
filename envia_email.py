@@ -23,7 +23,7 @@ def envia_email(data: dict):
             escrita = escrita.replace('&nbsp;', '')
 
         body_email = {
-            "subject": f"Atualização da Solicitação: {data['nr_pedido']}",
+            "subject": {data['subject']},
             "message": f"""
     STATUS: {data['status']}
     SOLICITAÇÃO: {data['nr_pedido']}
