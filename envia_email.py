@@ -23,7 +23,7 @@ def envia_email(data: dict):
             escrita = escrita.replace('&nbsp;', '')
 
         body_email = {
-            "subject": {data['subject']},
+            "subject": data['subject'],
             "message": f"""
     STATUS: {data['status']}
     SOLICITAÇÃO: {data['nr_pedido']}
@@ -43,11 +43,14 @@ def envia_email(data: dict):
     Atenciosamente,
     Bora Desenvolvimento.
                 """,
-                "from_email": "solicitacoes.compra@bora.tec.br",
+                "from_email": "compras@bora.tec.br",
                 "recipient_list": [data['email_solicitante']],
             }
         send_mail(**body_email)
         return True
     except Exception as e:
-        print(e)
+        arquivo = open('fail_email.txt', 'a')
+        arquivo.write(e)
+        arquivo.close()
+
         return False
