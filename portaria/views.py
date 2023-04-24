@@ -49,6 +49,7 @@ from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.core.handlers.wsgi import WSGIRequest
 from django.core.mail import send_mail
 from django.db import IntegrityError
+from django.db.models.query import QuerySet
 from django.db.models import Count, Sum, F, Q, Value, Subquery, CharField, ExpressionWrapper, IntegerField, \
     DateTimeField
 from django.db.models.functions import Coalesce, TruncDate, Cast, TruncMinute, Lower
@@ -3624,8 +3625,13 @@ def justificativa(request):
         emp = request.GET.get('empresa')
         filial = request.GET.get('filial')
         if date1 and date2 and emp and filial:
+            # query = JustificativaEntrega.objects.filter(empresa=emp, filial=filial, data_emissao__lte=date2, data_emissao__gte=date1,
+            #                                            confirmado=False).query
+            # query.group_by = ['id_garagem']
+            # form = QuerySet(query=query,model=JustificativaEntrega)
+
             form = JustificativaEntrega.objects.filter(empresa=emp, filial=filial, data_emissao__lte=date2, data_emissao__gte=date1,
-                                                       confirmado=False).order_by("-em_aberto")
+                                                       confirmado=False).order_by("id_garagem", "lead_time")
             
             return render(request,'portaria/etc/justificativa.html', 
                             {
@@ -4182,9 +4188,9 @@ def edit_compras(request, id):
                 "observacao": obj.obs,
                 "entradas": entradas,
             }
-            # envio = envia_email(corpo_email)
-            # if envio: messages.info(request, f'Email enviado com sucesso!')
-            # else: messages.info(request, f'Ocorreu uma falha ao enviar o email')
+            envio = envia_email(corpo_email)
+            if envio: messages.info(request, f'Email enviado com sucesso!')
+            else: messages.info(request, f'Ocorreu uma falha ao enviar o email')
 
         except Exception as e:
             print(f'err:{e}, err_t:{type(e).__name__}')
