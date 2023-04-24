@@ -3630,7 +3630,7 @@ def justificativa(request):
             # query.group_by = ['id_garagem']
             # form = QuerySet(query=query,model=JustificativaEntrega)
 
-            form = JustificativaEntrega.objects.filter(empresa=emp, filial=filial, data_emissao__lte=date2, data_emissao__gte=date1,
+            form = JustificativaEntrega.objects.filter(id_empresa=emp, id_filial=filial, data_emissao__lte=date2, data_emissao__gte=date1,
                                                        confirmado=False).order_by("id_garagem", "lead_time")
             
             return render(request,'portaria/etc/justificativa.html', 
