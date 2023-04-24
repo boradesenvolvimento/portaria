@@ -858,8 +858,8 @@ class JustificativaEntrega(models.Model):
         ('153', 'ATRASO NA TRANSFERENCIA'),
         ('154', 'CUSTO')
     )
-    empresa = models.CharField(max_length=5)
-    filial = models.CharField(max_length=5)
+    id_empresa = models.CharField(max_length=5)
+    id_filial = models.CharField(max_length=5)
     garagem = models.CharField(max_length=5)
     id_garagem = models.CharField(max_length=5)
     conhecimento = models.CharField(max_length=15)
