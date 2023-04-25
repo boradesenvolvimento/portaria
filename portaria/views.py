@@ -3611,8 +3611,7 @@ def bipagempalrel(request):
     return redirect('portaria:etqrelatorio')
 
 def justificativa(request):
-    gachoices = FILIAL_CHOICES
-    empchoices = EMPRESA_CHOICES
+    garagem_choices = GARAGEM_CHOICES
     justchoices = JustificativaEntrega.JUSTIFICATIVA_CHOICES
     today = datetime.datetime.now()
     yesterday = today - datetime.timedelta(1)
@@ -3622,24 +3621,17 @@ def justificativa(request):
     if request.method == 'GET':
         date1 = request.GET.get('data1')
         date2 = request.GET.get('data2')
-        emp = request.GET.get('empresa')
-        filial = request.GET.get('filial')
-        if date1 and date2 and emp and filial:
-            # query = JustificativaEntrega.objects.filter(empresa=emp, filial=filial, data_emissao__lte=date2, data_emissao__gte=date1,
-            #                                            confirmado=False).query
-            # query.group_by = ['id_garagem']
-            # form = QuerySet(query=query,model=JustificativaEntrega)
-
-            form = JustificativaEntrega.objects.filter(id_empresa=emp, id_filial=filial, data_emissao__lte=date2, data_emissao__gte=date1,
-                                                       confirmado=False).order_by("id_garagem", "lead_time")
+        garagem = request.GET.get('garagem')
+        if date1 and date2 and garagem:
+            form = JustificativaEntrega.objects.filter(id_garagem=garagem, data_emissao__lte=date2, data_emissao__gte=date1,
+                                                       confirmado=False).order_by("lead_time")
             
             return render(request,'portaria/etc/justificativa.html', 
                             {
-                                'form':form,'gachoices':gachoices,
+                                'form':form,'garagem_choices':garagem_choices,
                                 'justchoices':justchoices, 
                                 'today': today, 
-                                'yesterday': yesterday, 
-                                'empchoices': empchoices
+                                'yesterday': yesterday
                             }
                         )
 
@@ -3664,7 +3656,7 @@ def justificativa(request):
                     obj.save()
         messages.success(request, 'Justificativas cadastradas')
         return redirect('portaria:justificativa')
-    return render(request, 'portaria/etc/justificativa.html', {'gachoices': gachoices, 'today': today, 'yesterday': yesterday, 'empchoices': empchoices})
+    return render(request, 'portaria/etc/justificativa.html', {'garagem_choices': garagem_choices, 'today': today, 'yesterday': yesterday})
 
 def rel_justificativa(request):
     gachoices = GARAGEM_CHOICES

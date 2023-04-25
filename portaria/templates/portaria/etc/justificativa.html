@@ -26,20 +26,11 @@
                     <label for="dates">Período:</label>
                     <input class="data-input" type="date" name="data1" value="{{ yesterday }}">
                     <input class="data-input" type="date" name="data2" value="{{ today }}">
-                    <label for="empresa">Empresa:</label>
-                    <select name="empresa" id="empresa">
+                    <label for="garagem">Garagem:</label>
+                    <select name="garagem" id="garagem">
                         <option></option>
-                        {% for k,v in empchoices %}
+                        {% for k,v in garagem_choices %}
                             <option value="{{ k }}">{{ k }} - {{ v }}</option>
-                        {% endfor %}
-                    </select>
-                    <label for="filial">Filial:</label>
-                    <select name="filial" id="filial">
-                        <option></option>
-                        {% for t,p in gachoices %}
-                            {% if t != '0'%}
-                                <option value="{{ t }}">{{t}} - {{ p }}</option>
-                            {% endif %}
                         {% endfor %}
                     </select>
                     <button style="padding: 15px 40px;" type="submit">Filtrar</button>
