@@ -18,8 +18,8 @@ async def get_justificativas():
     print("JUSTIFICATIVA: INICIANDO QUERY")
     cur.execute(f"""
                     SELECT 
-                           F1.EMPRESA empresa,
-                           F1.FILIAL filial,
+                           F1.EMPRESA id_empresa,
+                           F1.FILIAL id_filial,
                            F1.GARAGEM garagem,
                            F1.ID_GARAGEM id_garagem, 
                            DECODE(F1.TIPO_DOCTO, 8, 'NFS', 'CTE') tipo_doc,
@@ -116,8 +116,8 @@ def insert_to_justificativa(data):
     for obj in data:
         try:
             justificativa = JustificativaEntrega.objects.get(
-                empresa=obj['empresa'], 
-                filial=obj['filial'], 
+                id_empresa=obj['id_empresa'], 
+                id_filial=obj['id_filial'], 
                 garagem=obj['garagem'],
                 tipo_doc=obj['tipo_doc'],
                 conhecimento=obj['conhecimento']
@@ -151,8 +151,8 @@ async def get_ocorrencias():
     print("OCORRENCIAS: INICIANDO QUERY")
     cur.execute(f"""
                     SELECT DISTINCT
-                           A1.EMPRESA empresa,
-                           A1.FILIAL filial,
+                           A1.EMPRESA id_empresa,
+                           A1.FILIAL id_filial,
                            A1.GARAGEM garagem,
                            A1.NUMERO_CTRC conhecimento,
                            A1.TIPO_DOCTO tp_doc,
@@ -182,7 +182,7 @@ async def get_ocorrencias():
 @sync_to_async
 def insert_to_ocorrencias(data):
     for obj in data:
-        just = JustificativaEntrega.objects.filter(empresa=obj['empresa'], filial=obj['filial'],
+        just = JustificativaEntrega.objects.filter(id_empresa=obj['id_empresa'], id_filial=obj['id_filial'],
                                                    garagem=obj['garagem'],
                                                    conhecimento=obj['conhecimento'])
         if just:
@@ -195,4 +195,4 @@ def insert_to_ocorrencias(data):
                 print('Error:%s, error_type:%s' %(e, type(e)))
 
 asyncio.run(get_justificativas())
-asyncio.run(get_ocorrencias())
+# asyncio.run(get_ocorrencias())
