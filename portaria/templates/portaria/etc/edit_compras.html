@@ -120,12 +120,7 @@
                             <div class="form-group filial-selector" style="width: 48%;">
                                 <label class="form-label" for="filial">Filial *</label>
                                 <select class="form-control" id="filial" name="filial" disabled>
-                                    <option class="selector-option" value="{{obj.codigo_fl}}">{{obj.filial|slice:"1:"}} - {{ obj.get_filial_display }}</option>
-                                    {% for k,v in filchoices %}
-                                    {% if k != '0' %}
-                                        <option class="selector-option"  value="{{k}}">{{ k }} - {{ v }}</option>
-                                    {% endif %}
-                                    {% endfor %}
+                                    <option class="selector-option" value="{obj.filial.id_filial}}">{{obj.filial.id_filial}} - {{ obj.filial.sigla }}</option>
                                 </select>
                             </div>
                         </div>

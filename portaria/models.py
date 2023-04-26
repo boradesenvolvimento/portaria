@@ -424,10 +424,16 @@ class ChecklistFrota(models.Model):
 
     def __str__(self):
        return str(self.idchecklist)
-
-
     
-
+class Filiais(models.Model):
+    id = models.IntegerField(primary_key=True)
+    id_empresa = models.IntegerField()
+    id_filial = models.IntegerField()
+    id_garagem = models.IntegerField(unique=True)
+    sigla = models.CharField(max_length=3, unique=True)
+    nome = models.CharField(max_length=50, unique=True)
+    uf = models.CharField(max_length=2)
+    cnpj = models.CharField(max_length=14, unique=True)
 
 class TipoServicosManut(models.Model):
     id = models.BigAutoField(primary_key=True)
@@ -935,7 +941,6 @@ class SolicitacoesCompras(models.Model):
     status = models.CharField(max_length=15, null=True)
     empresa = models.CharField(max_length=2, null=True)
     codigo_fl = models.CharField(max_length=2, null=True, blank=True)
-    filial = models.CharField(max_length=3, choices=GARAGEM_CHOICES)
     categoria = models.CharField(max_length=15, null=True)
     solicitante = models.CharField(max_length=100, null=True)
     email_solic = models.EmailField(max_length=255, blank=True, null=True)
@@ -951,6 +956,7 @@ class SolicitacoesCompras(models.Model):
     ultima_att = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ultimaattcompras',
                                    blank=True, null=True)
     pago = models.BooleanField(null=True, blank=True, default=False)
+    filial = models.ForeignKey(Filiais, on_delete=models.PROTECT, blank=True, null=True)
 
     def __str__(self):
         return self.nr_solic
