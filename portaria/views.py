@@ -4210,53 +4210,50 @@ def edit_compras(request, id):
                                                               'entradas':entradas, 'editor':editor, 'vencimento': vencimento})
 
 def insert_entradas_cpr(request, obj, textarea, files):
-    if request.method == 'POST':
-        if obj and textarea and textarea != '<p><br></p>':
-            try:
-                entrada = SolicitacoesEntradas.objects.create(obs=textarea, cpr_ref=obj, ultima_att=request.user)
-                if files:   
-                    cont = 1
-                    for q in files:
-                        if cont == 1:
-                            entrada.file1 = q
-                        elif cont == 2:
-                            entrada.file2 = q
-                        elif cont == 3:
-                            entrada.file3 = q
-                        cont += 1
-                    entrada.save()
-            except Exception as e:
-                print(f'Error:{e}, error_type:{type(e).__name__}')
-                messages.error(request,'Whoops, something went wrong :/')
-                raise e
-            else:
-                file1 = None
-                file2 = None
-                file3 = None
-                itens = [i.produto for i in obj.produtossolicitacoes_set.all()]
-                text = f'''
-                    Solicitação: {obj.nr_solic} <br>
-                    Categoria: {obj.categoria} <br>
-                    Data: {obj.data} <br>
-                    Status: {obj.status} <br>
-                    Responsável: {obj.responsavel} <br>
-                    Itens solicitados:<br>
-                '''
-                for q in itens:
-                    text += f'{q} <br>'
-                text += f'{entrada.obs}'
-                if entrada.file1:
-                    file1 = entrada.file1
-                if entrada.file2:
-                    file2 = entrada.file2
-                if entrada.file3:
-                    file3 = entrada.file3
-                text += '<br>Atenciosamente,<br>Bora Desenvolvimento.'
-                try:
-                    sendmail_compras(obj.email_solic, text, file1=file1, file2=file2, file3=file3)
-                except:
-                    pass
-                messages.success(request, 'Cadastrado com sucesso')
+    if obj:
+        try:
+            entrada = {
+                "obs": textarea,
+                "cpr_ref": obj,
+                "ultima_att": request.user
+            }
+            if len(files) > 0:   
+                for index in range(len(files)):
+                    entrada[f"file{index + 1}"] = files[index]
+
+            SolicitacoesEntradas.objects.create(**entrada)
+        except Exception as e:
+            print(f'Error:{e}, error_type:{type(e).__name__}')
+            messages.error(request,'Ops, algo deu errado :(')
+            raise e
+        messages.success(request, 'Cadastrado com sucesso :)')
+        # else:
+        #     file1 = None
+        #     file2 = None
+        #     file3 = None
+        #     itens = [i.produto for i in obj.produtossolicitacoes_set.all()]
+        #     text = f'''
+        #         Solicitação: {obj.nr_solic} <br>
+        #         Categoria: {obj.categoria} <br>
+        #         Data: {obj.data} <br>
+        #         Status: {obj.status} <br>
+        #         Responsável: {obj.responsavel} <br>
+        #         Itens solicitados:<br>
+        #     '''
+        #     for q in itens:
+        #         text += f'{q} <br>'
+        #     text += f'{entrada.obs}'
+        #     if entrada.file1:
+        #         file1 = entrada.file1
+        #     if entrada.file2:
+        #         file2 = entrada.file2
+        #     if entrada.file3:
+        #         file3 = entrada.file3
+        #     text += '<br>Atenciosamente,<br>Bora Desenvolvimento.'
+        #     try:
+        #         sendmail_compras(obj.email_solic, text, file1=file1, file2=file2, file3=file3)
+        #     except:
+        #         pass
 
 def sendmail_compras(to, text, file1, file2, file3):
     fromm = 'bora@bora.tec.br' ########### alterar
