@@ -164,7 +164,7 @@ async def get_ocorrencias():
                          ACA002 A2
                     WHERE
                          A1.COD_OCORRENCIA = A2.CODIGO                    AND
-                         A1.DATA_CADASTRO BETWEEN ((SYSDATE)-1) AND (SYSDATE)                        
+                         A1.DATA_CADASTRO BETWEEN ((SYSDATE)-2) AND (SYSDATE)                        
                     """)
     res = dictfetchall(cur)
     print(f"OCORRENCIAS: LEN({len(res)})")
@@ -195,4 +195,4 @@ def insert_to_ocorrencias(data):
                 print('Error:%s, error_type:%s' %(e, type(e)))
 
 asyncio.run(get_justificativas())
-# asyncio.run(get_ocorrencias())
+asyncio.run(get_ocorrencias())
