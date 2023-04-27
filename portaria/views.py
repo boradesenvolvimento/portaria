@@ -2038,11 +2038,21 @@ def transfdetalhe(request, solic_id):
     #return HttpResponse('<h2> CARALHO DE FILHO DA PUTA DE TESTE DE CORNO AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</h2>')
 
 def paineltransf(request):
-    form = (SolicMovPalete.objects.order_by('data_solic')\
-        .values('placa_veic', 'solic_id', 'origem', 'destino', 'data_solic', 'autor__username')\
-        .annotate(quantity=Count('solic_id'))
-    )
-    return render(request, 'portaria/palete/paineltransf.html', {'form': form})
+    origem = request.GET.get('origem')
+    destino = request.GET.get('destino')
+    placa_veiculo = request.GET.get('placa_veiculo')
+    autor = request.GET.get('autor')
+
+    filtro = {"palete__loc_atual": "MOV"}
+    if not origem is None: filtro["origem"] = origem
+    if not destino is None: filtro["destino"] = destino
+    if not placa_veiculo is None and not placa_veiculo is "": filtro["placa_veic"] = placa_veiculo
+    if not autor is None and not autor is "": filtro["autor__username"] = autor
+
+    form = SolicMovPalete.objects.filter(**filtro).values('solic_id', 'destino', 'origem', 'placa_veic', 'data_solic', 'autor__username').annotate(quantity=Count('solic_id')).order_by('data_solic')
+    filiais = Filiais.objects.all()
+
+    return render(request, 'portaria/palete/paineltransf.html', {'form': form, 'filiais': filiais})
 
 @login_required
 def transfpalete(request):
@@ -2106,13 +2116,27 @@ def transfpalete(request):
     return render(request,'portaria/palete/recpaletes.html')
 
 def painelmov(request):
-    #placas = SolicMovPalete.objects.filter(id=1354).values('autor__username')
-    #print(placas)
-    form = (MovPalete.objects.order_by('data_solic')\
-        .values('placa_veic', 'solic_id', 'origem', 'destino', 'data_solic', 'data_receb', 'autor__username')\
-        .annotate(quantity=Count('solic_id'))
-    )
-    return render(request, 'portaria/palete/painelmov.html', {'form': form})
+    data_solic = request.GET.get('data_solic')
+    data_receb = request.GET.get('data_receb')
+    origem = request.GET.get('origem')
+    destino = request.GET.get('destino')
+    placa_veiculo = request.GET.get('placa_veiculo')
+    autor = request.GET.get('autor')
+
+    today = datetime.datetime.now().strftime('%Y-%m-%d')
+
+    filtro = {}
+    if not data_solic is None and not data_solic is "": filtro["data_solic"] = data_solic
+    if not data_receb is None and not data_receb is "": filtro["data_receb"] = data_receb
+    if not origem is None: filtro["origem"] = origem
+    if not destino is None: filtro["destino"] = destino
+    if not placa_veiculo is None and not placa_veiculo is "": filtro["placa_veic"] = placa_veiculo
+    if not autor is None and not autor is "": filtro["autor__username"] = autor
+    
+    form = MovPalete.objects.filter(**filtro).values('solic_id', 'destino', 'origem', 'placa_veic', 'data_solic', 'data_receb', 'autor__username').annotate(quantity=Count('solic_id')).order_by('data_solic')
+    filiais = Filiais.objects.all()
+
+    return render(request, 'portaria/palete/painelmov.html', {'form': form, 'filiais': filiais, 'today': today})
 
 @login_required
 def get_nfpj_mail(request):

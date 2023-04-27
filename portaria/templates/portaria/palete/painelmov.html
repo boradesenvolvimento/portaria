@@ -11,7 +11,40 @@
             </div>
         {% endfor %}
         <div class="row linha-baixo mb-4">
-            <h3 class="title-cad">Transferências em andamento</h3>
+            <div>
+                <h3 class="title-cad">Transferências em andamento</h3>
+            </div>
+            <div>
+                <form method="GET">
+                    {% comment %} <div>
+                        <label for="data_solic">Data Solicitação:</label>
+                        <input class="data-input" type="date" name="data_solic">
+                        <label for="data_receb">Data Recebimento:</label>
+                        <input class="data-input" type="date" name="data_receb">
+                        <div> {% endcomment %}
+                        <label for="origem">Origem:</label>
+                        <select id="origem" name="origem">
+                            <option selected disabled value="">--</option>
+                            {% for filial in filiais %}
+                            <option value="{{ filial.sigla }}">{{ filial.sigla }}</option>
+                            {% endfor %}                
+                        </select>
+                        <label for="destino">Destino:</label>
+                        <select id="destino" name="destino">
+                            <option selected disabled value="">--</option>
+                            {% for filial in filiais %}
+                            <option value="{{ filial.sigla }}">{{ filial.sigla }}</option>
+                            {% endfor %}                
+                        </select>
+                            <label for="placa_veiculo">Placa:</label>
+                            <input style="width:10vw" id="placa_veiculo" name="placa_veiculo" type="text">
+                            <label for="autor">Autor:</label>
+                            <input style="width:13vw" id="autor" name="autor" type="text">
+                        {% comment %} </div>
+                    </div> {% endcomment %}
+                    <button style="padding: 15px 40px;" type="submit">Filtrar</button>
+                <form>
+            </div>
         </div>
 
         <div class="container linha-baixo d-flex justify-content-center" style="width: 100%;">
@@ -30,7 +63,7 @@
                 <tbody>
                         {% for q in form %}
                             <tr>
-                                <td style="width: 14%;" > {{ q.quantity }} </td>
+                                <td style="width: 12%;" > {{ q.quantity }} </td>
                                 <td style="width: 14%;" > {{ q.data_solic }} </td>
                                 <td style="width: 14%;" > {{ q.data_receb }} </td>
                                 <td style="width: 10%;" > {{ q.origem }} </td>

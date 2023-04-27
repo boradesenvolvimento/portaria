@@ -16,28 +16,32 @@
                 <h3 class="title-cad">Transferências em andamento</h3>
             </div>
             <div>
-                <label for="origem">Origem:</label>
-                <select id="origem" name="origem">
-                    <option selected disabled value="">--</option>
-                    {% for filial in filiais %}
-                      <option value="{{ filial }}">{{ filial }}</option>
-                    {% endfor %}                
-                  </select>
-                <label for="destino">Destino:</label>
-                <select id="destino" name="destino">
-                    <option selected disabled value="">--</option>
-                    {% for filial in filiais %}
-                      <option value="{{ filial }}">{{ filial }}</option>
-                    {% endfor %}                
-                  </select>
-                <label for="placa_veiculo">Placa:</label>
-                <input name="qnt" type="text">
-                <button style="padding: 15px 40px;" type="submit">Filtrar</button>
+                <form method="GET">
+                    <label for="origem">Origem:</label>
+                    <select id="origem" name="origem">
+                        <option selected disabled value="">--</option>
+                        {% for filial in filiais %}
+                            <option value="{{ filial.sigla }}">{{ filial.sigla }}</option>
+                        {% endfor %}                
+                    </select>
+                    <label for="destino">Destino:</label>
+                    <select id="destino" name="destino">
+                        <option selected disabled value="">--</option>
+                        {% for filial in filiais %}
+                            <option value="{{ filial.sigla }}">{{ filial.sigla }}</option>
+                        {% endfor %}                
+                    </select>
+                    <label for="placa_veiculo">Placa:</label>
+                    <input style="width:10vw" id="placa_veiculo" name="placa_veiculo" type="text">
+                    <label for="autor">Autor:</label>
+                    <input style="width:13vw" id="autor" name="autor" type="text">
+                    <button style="padding: 15px 40px;" type="submit">Filtrar</button>
+                <form>
             </div>
         </div>
 
-        <div style="width: 100%;overflow:auto;margin: 0 3rem 0 1rem;">
-            <table class="table tablecli">
+        <div class="container linha-baixo d-flex justify-content-center" style="width: 100%;">
+            <table class="table tablecli" style="width: 100%;">
                 <thead>
                     <tr>
                         <th>Qtde. de pallets</th>
@@ -52,13 +56,13 @@
                 <tbody>
                         {% for q in form %}
                             <tr>
-                                <td> {{ q.quantity }} </td>
-                                <td> {{ q.data_solic }} </td>
-                                <td> {{ q.origem }} </td>
-                                <td> {{ q.destino }} </td>
-                                <td> {{ q.placa_veic }} </td>
-                                <td> {{ q.autor__username }} </td>
-                                <td><a href="{% url 'portaria:transfdetalhe' solic_id=q.solic_id %}" target="_blank">Informações</a></td>
+                                <td style="width: 12%;" > {{ q.quantity }} </td>
+                                <td style="width: 14%;" > {{ q.data_solic }} </td>
+                                <td style="width: 10%;" > {{ q.origem }} </td>
+                                <td style="width: 10%;" > {{ q.destino }} </td>
+                                <td style="width: 10%;" > {{ q.placa_veic }} </td>
+                                <td style="width: 10%;" > {{ q.autor__username }} </td>
+                                <td style="width: 10%;" ><a href="{% url 'portaria:transfdetalhe' solic_id=q.solic_id %}" target="_blank">Informações</a></td>
                             </tr>
                         {% endfor %}
                 </tbody>
