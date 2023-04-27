@@ -61,7 +61,7 @@
                         <td>{{ q.data }}</td>
                         <td>{{ q.pub_date }}</td>
                         <td>{{ q.status }}</td>
-                        <td>{{ q.get_filial_display }}</td>
+                        <td>{{ q.filial.sigla }}</td>
                         <td>{{ q.solicitante }}</td>
                         <td>{{ q.responsavel|default_if_none:'Não Cadastrado' }}</td>
                         <td><button type="button" id="myBtn" value="{{ forloop.counter }}"><ion-icon name="list"></ion-icon></button></td>

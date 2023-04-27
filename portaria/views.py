@@ -3787,9 +3787,6 @@ def compras_index(request):
                                                          'metrics':metrics})
 
 def compras_lancar_pedido(request):
-    keyga = {v: k for k, v in GARAGEM_CHOICES}
-    gakey = {k: v for k, v in GARAGEM_CHOICES}
-    if request.method == 'POST':
         # print('lançando pedido...')
         # idsolic = request.POST.get('getid')
         # empresa = request.POST.get('empresa')
@@ -3905,20 +3902,22 @@ def compras_lancar_pedido(request):
         #         if res:
         #             print(res)
         #             for q in res:
-        print('lançando pedido...')
+    if request.method == 'POST':
         idsolic = request.POST.get('getid')
         empresa = request.POST.get('empresa')
         fil = request.POST.get('filial')
         anexo = request.FILES.get('getanexo')
+
         usuario: list[User] = User.objects.filter(id=request.user.id)
         if usuario:
             username = usuario[0].username.split(".")[0].upper()
             email = usuario[0].email
         if idsolic:
             try:
+                filial = Filiais.objects.get(id_empresa=empresa, id_filial=fil)
                 obj = SolicitacoesCompras.objects.create(
                     nr_solic=int(idsolic), data=datetime.datetime.now(), status="ANDAMENTO",
-                    filial=empresa+fil, empresa=empresa, codigo_fl = fil, autor=request.user, anexo=anexo,
+                    filial=filial, empresa=empresa, codigo_fl = fil, autor=request.user, anexo=anexo,
                     solicitante=username or None, email_solic=email or None
                 )
                 obj.save()
@@ -4070,6 +4069,7 @@ def garagem_para_filial_praxio(garagem):
 def painel_compras(request):
     CharField.register_lookup(Lower)
     form = SolicitacoesCompras.objects.all().exclude(Q(status='CONCLUIDO') | Q(status='CANCELADO')).order_by('data')
+
     if request.method == 'GET':
         filter = request.GET.get('filter')
         filtertype = request.GET.get('filtertype')
@@ -4100,7 +4100,6 @@ def painel_compras_concluido(request):
                 if filter:
                     if filtertype == 'filial':
                         filter = filter.upper()
-                        keyga = {v: k for k, v in GARAGEM_CHOICES}
                         form = SolicitacoesCompras.objects.filter(filial=filter).order_by('pub_date')
                     elif filtertype == 'solicitante':
                         filter = filter.upper()
