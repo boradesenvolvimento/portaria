@@ -37,10 +37,8 @@
                     <label for="origem_">Origem</label>
                     <select class="form-control" name="origem_" id="origem_">
                         <option selected hidden placeholder=>...</option>
-                        {% for k,v in gachoices %}
-                            {% if k != '0' %}
-                                <option value="{{k}}">{{k}} - {{v}}</option>
-                            {% endif %}
+                        {% for g in garagem %}
+                            <option value="{{g.sigla}}">{{g.id_garagem}} - {{g.sigla}}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -48,10 +46,8 @@
                     <label for="destino_">Destino</label>
                     <select class="form-control" name="destino_" id="destino_">
                         <option hidden selected>...</option>
-                        {% for k,v in gachoices %}
-                        {% if k != '0' %}
-                            <option required value="{{k}}">{{k}} - {{v}}</option>
-                        {% endif %}
+                        {% for g in garagem %}
+                            <option required value="{{g.sigla}}">{{g.id_garagem}} - {{g.sigla}}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -65,8 +61,8 @@
                 <div class="form-group col-4">
                     <label for="tipo_">Tipo</label>
                     <select class="form-control" name="tp_palete" id="tp_palete">
-                        <option value="CHEP">CHEP</option>
                         <option value="PBR">PBR</option>
+                        <option value="CHEP">CHEP</option>
                     </select>
                 </div>
             </div>
