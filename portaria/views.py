@@ -1945,7 +1945,8 @@ def solictransfpalete(request):
     mov_gar = "0"
     form = TPaletesForm()
     keyga = {k:v for k,v in GARAGEM_CHOICES}
-    gachoices = GARAGEM_CHOICES
+    garagem = Filiais.objects.values('sigla', 'id_garagem')
+    
     if request.method == 'POST':
         ori = request.POST.get('origem_')
         des = request.POST.get('destino_')
@@ -1955,26 +1956,27 @@ def solictransfpalete(request):
         motorista = request.POST.get('motorista')
         conferente = request.POST.get('conferente')
 
-        if qnt <= PaleteControl.objects.filter(loc_atual=keyga[ori],tp_palete=tp_p).count():
+        if qnt <= PaleteControl.objects.filter(loc_atual=ori,tp_palete=tp_p).count():
             #filtrar caminhão em movimento
-            placas = SolicMovPalete.objects.order_by('placa_veic').values('placa_veic')
-            plcs = []
-            for p in placas:
-                plcs.append(p.get('placa_veic'))
-            if plc in plcs:
+            # placas = SolicMovPalete.objects.order_by('placa_veic').values('placa_veic')
+            # plcs = []
+            # for p in placas:
+            #     plcs.append(p.get('placa_veic'))
+            # if plc in plcs:
 
-                messages.error(request, f'O veiculo de placa {plc} já está em movimento')
-                return redirect('portaria:paineltransf')
+            #     messages.error(request, f'O veiculo de placa {plc} já está em movimento')
+            #     return redirect('portaria:paineltransf')
+
             currentTime = timezone.now()
             time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             solic_id = str(time).replace(':', '').replace(' ', '').replace('-', '') + plc[5:]
             for q in range(0,qnt):
-                x = PaleteControl.objects.filter(loc_atual=keyga[ori], tp_palete=tp_p).first()
-                solic = SolicMovPalete.objects.create(solic_id=solic_id, palete=x,data_solic=currentTime,origem=keyga[ori],destino=keyga[des],
+                x = PaleteControl.objects.filter(loc_atual=ori, tp_palete=tp_p).first()
+                solic = SolicMovPalete.objects.create(solic_id=solic_id, palete=x,data_solic=currentTime,origem=ori,destino=des,
                                          placa_veic=plc,autor=request.user,motorista=motorista,conferente=conferente)
                
-                PaleteControl.objects.filter(pk=x.id).update(loc_atual=keyga["0"])
-            messages.success(request, f'{qnt} palete(s) | Aguardando o recebimento de paletes de {keyga[ori]} para {keyga[des]}')
+                PaleteControl.objects.filter(pk=x.id).update(loc_atual="MOV")
+            messages.success(request, f'{qnt} palete(s) | Aguardando o recebimento de paletes de {ori} para {des}')
             return redirect('portaria:transfdetalhe', solic_id=solic_id)
             #return render(request,'portaria/palete/transfpaletes.html', {'form':form})
         else:
@@ -1982,8 +1984,8 @@ def solictransfpalete(request):
             print(tp_p)
             print(PaleteControl.objects.filter(loc_atual=keyga[ori], tp_palete=tp_p).count())
             messages.error(request,'Quantidade solicitada maior que a disponível')
-            return render(request,'portaria/palete/transfpaletes.html', {'form':form, 'gachoices': gachoices})
-    return render(request,'portaria/palete/transfpaletes.html', {'form':form, 'gachoices': gachoices})
+            return render(request,'portaria/palete/transfpaletes.html', {'form':form, 'garagem': garagem})
+    return render(request,'portaria/palete/transfpaletes.html', {'form':form, 'garagem': garagem})
 
 def transfdetalhe(request, solic_id):
     mov = SolicMovPalete.objects.filter(solic_id=solic_id).first()
