@@ -303,12 +303,7 @@ class DisponibilidadeFrota(models.Model):
         max_length=255,
         null=True
     )
-    ativo = models.BooleanField(
-        'Ativo',
-        default=True,
-        null=True,
-        blank=True
-    )
+
 
     class Meta:
         verbose_name = 'DisponibilidadeFrota'
@@ -345,6 +340,7 @@ class Veiculos(models.Model):
     renavanveic = models.CharField(max_length=11, validators=[only_int])
     modeloveic = models.CharField(max_length=20)
     ultimo_dispo_frota = models.ForeignKey(DisponibilidadeFrota, on_delete=models.PROTECT, null=True)
+    ativo = models.BooleanField('Ativo',default=True,null=True,blank=True)
 
     class Meta:
         verbose_name = 'Veiculos'
