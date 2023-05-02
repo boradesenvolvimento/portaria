@@ -303,6 +303,12 @@ class DisponibilidadeFrota(models.Model):
         max_length=255,
         null=True
     )
+    ativo = models.BooleanField(
+        'Ativo',
+        default=True,
+        null=True,
+        blank=True
+    )
 
     class Meta:
         verbose_name = 'DisponibilidadeFrota'
