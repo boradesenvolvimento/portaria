@@ -127,7 +127,7 @@
                     </thead>
                     <tbody>
                       {% for veiculo in veiculos %}
-                      {% if not veiculo.prefixoveic in placas_movimentos and veiculo.ativo%}
+                      {% if not veiculo.prefixoveic in placas_movimentos or veiculo.ultimo_dispo_frota is Null and veiculo.ativo%}
                       <tr>
                         <td>{{ veiculo.prefixoveic }}</td>
                         <td>{{ veiculo.codigotpveic }}</td>
