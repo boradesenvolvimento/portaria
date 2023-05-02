@@ -887,8 +887,8 @@ class JustificativaEntrega(models.Model):
     autor = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
 
 class OcorrenciaEntrega(models.Model):
-    empresa = models.CharField(max_length=5)
-    filial = models.CharField(max_length=5)
+    id_empresa = models.CharField(max_length=5)
+    id_filial = models.CharField(max_length=5)
     garagem = models.CharField(max_length=5)
     conhecimento = models.CharField(max_length=15)
     tp_doc = models.CharField(max_length=5)
@@ -1037,7 +1037,7 @@ class CartItem(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
     tam_id = models.PositiveBigIntegerField()
     desc = models.CharField(max_length=100)
-    ca = models.CharField(max_length=100)
+    ca = models.CharField(max_length=100, null=True)
     tam = models.CharField(max_length=5)
     qty = models.PositiveBigIntegerField()
 
@@ -1046,7 +1046,7 @@ class Item(models.Model):
     id = models.BigAutoField(primary_key=True)
     desc = models.CharField(max_length=100)
     validade = models.DateField()
-    ca = models.CharField(max_length=100)
+    ca = models.CharField(max_length=100, null=True)
     estoque = models.ForeignKey(EstoqueItens, on_delete=CASCADE, null=True, blank=True)
 
 class Tamanho(models.Model):
