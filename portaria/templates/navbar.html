@@ -19,7 +19,7 @@
   style="background-color: #3188e8"
 >
   <div class="container-fluid">
-    <a class="navbar-brand" href="/portaria/">
+    <a class="navbar-brand" href="/">
       <img src="{% static 'images/logo.png' %}" />
     </a>
     <button
@@ -40,7 +40,7 @@
     >
       <ul class="navbar-nav align-items-center">
         <li class="nav-item">
-          <a class="nav-link1" aria-current="page" href="/portaria/">Home</a>
+          <a class="nav-link1" aria-current="page" href="/">Home</a>
         </li>
         {% if request.user|has_group:"portaria" %}
         <div class="dropdown">
