@@ -49,9 +49,13 @@
                     <th>Bco:{{ q.banco }} | Ag:{{ q.ag }} | Cc:{{ q.conta }}</th>
                     <th><button type="submit" style="height:3.4rem;"><a href="{% url 'portaria:cadservicospj' q.id %}" style="color:white;font-size:2.4rem;"><ion-icon name="cash-outline"></ion-icon></a></button></th>
                 {% if request.user|has_group:"adm_rh" %}
-                    <th><button type="submit" style="height:3.4rem;">
-                        <a style="color:white;font-size:2.4rem;" href="/portaria/atualizar-funcionariopj/?func={{q.id}}"><ion-icon name="create-outline"></ion-icon></a>
-                    </button></th>
+                    <th>
+                        <button type="submit" style="height:3.4rem;">
+                            <a style="color:white;font-size:2.4rem;" href="/atualizar-funcionariopj/?func={{q.id}}">
+                                <ion-icon name="create-outline"/>
+                            </a>
+                        </button>
+                    </th>
                 {% endif %}
                 </tr>
         {% endfor %}

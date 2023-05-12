@@ -6,7 +6,7 @@ from django_summernote.widgets import SummernoteWidget
 
 from .models import Cadastro, TIPO_GARAGEM, ChecklistFrota, NfServicoPj, ManutencaoFrota, ServJoinManu, feriaspj, \
     FuncPj, Motorista, Veiculos, Cliente, PaleteControl, TipoServicosManut, RegistraTerceirizados, GARAGEM_CHOICES, \
-        DisponibilidadeFrota, STATUS_FROTA_CHOICES
+        DisponibilidadeFrota, STATUS_FROTA_CHOICES, BonusPJ, ContratoPJ
 
 
 #forms
@@ -89,7 +89,9 @@ class FuncPjForm(forms.ModelForm):
         fields = [
             'filial',
             'nome',
+            'cargo',
             'salario',
+            'pix',
             'adiantamento',
             'ajuda_custo',
             'cpf_cnpj',
@@ -99,8 +101,12 @@ class FuncPjForm(forms.ModelForm):
             'conta',
             'op',
             'email',
-            'ativo'
+            'ativo',
+            'admissao'
         ]
+        widgets = {
+            'admissao': DateInput(),
+        }
 
 class MotoristaForm(forms.ModelForm):
     class Meta:
@@ -264,10 +270,41 @@ class feriaspjForm(forms.ModelForm):
             'valor_integral',
             'valor_parcial1',
             'valor_parcial2',
+            'observacao'
         ]
         widgets = {
             'ultimas_ferias_ini': DateInput(),
             'ultimas_ferias_fim': DateInput(),
+        }
+
+class BonusPJForm(forms.ModelForm):
+    class Meta:
+        model = BonusPJ
+        fields = [
+            'funcionario',
+            'valor_pagamento',
+            'data_pagamento',
+            'observacao',
+        ]
+        widgets = {
+            'data_pagamento': DateInput(),
+        }
+
+class ContratoPJForm(forms.ModelForm):
+    class Meta:
+        model = ContratoPJ
+        fields = [
+            'funcionario',
+            'inicio_contrato',
+            'final_contrato',
+            'data_reajuste',
+            'valor_reajuste',
+            'observacao',
+        ]
+        widgets = {
+            'inicio_contrato': DateInput(),
+            'final_contrato': DateInput(),
+            'data_reajuste': DateInput(),
         }
 
 class InsertTerceirizados(forms.ModelForm):

@@ -15,7 +15,7 @@
                     <label for="dt_pgmt">Data pagamento:</label>
                     <input class="col" type="date" id="dt_pgmt" name="dt_pgmt">
                     <input type="submit" class="button col-3" name="adiantamento" value="adiantamento">
-                    <input type="submit" class="button col-3" name="total" value="total">
+                    {% comment %} <input type="submit" class="button col-3" name="total" value="total"> {% endcomment %}
 
                 </form>
             </div>
@@ -23,14 +23,16 @@
                     <button onclick="isactive()" class="button">Enviar emails</button>
             </div>
             <div class="col-2">
-                <button class="button"><a href="{% url 'portaria:get_nfpj_csv' %}" style="text-decoration:none;color:white;">Exportar CSV</a></button>
+                <button class="button">
+                    <a href="{% url 'portaria:get_nfpj_csv' %}" style="text-decoration:none;color:white;">Exportar CSV</a>
+                </button>
             </div>
         </div>
         <div class="row">
         <table class="table">
             <thead>
                 <tr>
-                    <th class="title-cad"><strong>Total de Registros: {{ arrya|length }}</strong></th>
+                    <th class="title-cad"><strong>Total de Registros: {{ array|length }}</strong></th>
                 </tr>
                 <tr>
                     <th class="title-cad">Nome</th>
@@ -38,15 +40,15 @@
                     <th class="title-cad">Faculdade</th>
                     <th class="title-cad">Ajuda de Custo</th>
                     <th class="title-cad">Aux Moradia</th>
-                    <th class="title-cad">Adiantamento</th>
                     <th class="title-cad">Cred Convenio</th>
                     <th class="title-cad">Outros Cred</th>
+                    <th class="title-cad">Adiantamento</th>
                     <th class="title-cad">Desc Convenio</th>
                     <th class="title-cad">Outros Desc</th>
                     <th class="title-cad">Total a Pagar</th>
                 </tr>
             </thead>
-        {% for q in arrya|dictsort:"nome" %}
+        {% for q in array|dictsort:"nome" %}
             <tbody>
                 <tr>
                     <th>{{ q.nome|upper }}</th>
@@ -54,9 +56,9 @@
                     <th>R$ {{ q.faculdade|floatformat:2 }}</th>
                     <th>R$ {{ q.ajuda_custo|floatformat:2 }}</th>
                     <th>R$ {{ q.aux_moradia|floatformat:2 }}</th>
-                    <th>R$ {{ q.adiantamento|floatformat:2 }}</th>
                     <th>R$ {{ q.cred_convenio|floatformat:2 }}</th>
                     <th>R$ {{ q.outros_cred|floatformat:2 }}</th>
+                    <th>R$ {{ q.adiantamento|floatformat:2 }}</th>
                     <th>R$ {{ q.desc_convenio|floatformat:2 }}</th>
                     <th>R$ {{ q.outros_desc|floatformat:2 }}</th>
                     <th>R$ {{ q.total|floatformat:2 }}</th>

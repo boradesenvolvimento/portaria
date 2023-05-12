@@ -352,16 +352,18 @@ def atualizarfunc(request):
 def servicospj(request):
     func = request.GET.get('nomefunc')
     filter = request.GET.get('filter')
-    qnt_funcs = FuncPj.objects.filter(ativo=True).order_by('nome')
     if func:
-        qnt_funcs = FuncPj.objects.all().filter(nome__icontains=func, ativo=True)
+        qnt_funcs = FuncPj.objects.filter(nome__icontains=func, ativo=True)
     elif filter:
         qnt_funcs = FuncPj.objects.all().filter(ativo=True).order_by(filter)
+    else:
+        qnt_funcs = FuncPj.objects.filter(ativo=True).order_by('nome')
+
     return render(request, 'portaria/pj/servicospj.html', {'qnt_funcs': qnt_funcs})
 
 @login_required
 def consultanfpj(request):
-    arrya = []
+    array = []
     qnt_funcs = FuncPj.objects.filter(ativo=True)
     for q in qnt_funcs:
         query = FuncPj.objects.filter(pk=q.id) \
@@ -373,8 +375,8 @@ def consultanfpj(request):
             outros_desc=Coalesce(Sum('nfservicopj__outros_desc', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)),Value(0.0)),
             ) \
             .annotate(total=((F('salario') + F('ajuda_custo') + F('faculdade') + F('cred_convenio') + F('outros_cred') + F('aux_moradia')) - (F('adiantamento') + F('desc_convenio') + F('outros_desc'))))
-        arrya.extend(query)
-    return render(request, 'portaria/pj/consultanfpj.html', {'arrya': arrya})
+        array.extend(query)
+    return render(request, 'portaria/pj/consultanfpj.html', {'array': array})
 
 @login_required
 def cadservicospj(request, args):
@@ -471,6 +473,118 @@ def feriascad(request):
 
     return render(request,'portaria/pj/feriascad.html', {'form':form})
 
+def bonuspj(request):
+    return render(request,'portaria/pj/bonuspj.html')
+
+def bonuscadpj(request):
+    form = BonusPJForm
+    if request.method == 'POST':
+        form = BonusPJForm(request.POST or None)
+        if form.is_valid():
+            bonus = form.save(commit=False)
+            bonus.autor = request.user
+            bonus.save()
+            
+            messages.success(request, 'Cadastrado com sucesso!')
+            return redirect('portaria:bonuspj')
+        messages.error(request, 'Ocorreu erro ao cadastrar!')
+
+    return render(request,'portaria/pj/bonuscadpj.html', {'form':form})
+
+def bonusviewpj(request):
+    hoje = datetime.date.today()
+    nome = request.POST.get('textbox')
+    option = request.POST.get('option')
+    mostrar = True
+
+    order_by = "data_pagamento"
+    filter = {
+        "cancelado": False
+    }
+
+    if nome:
+        filter['funcionario__nome__contains'] = nome
+    if option == "Quitado":
+        filter['quitado'] = True
+        mostrar = False
+    else:
+        filter['quitado'] = False
+    if option == "Bônus vencido":
+        filter['data_pagamento__lte'] = hoje
+    if option == "Próximos do vencimento":
+        filter['data_pagamento__gte'] = hoje
+
+    bonus = BonusPJ.objects.filter(**filter).order_by(order_by)
+
+    return render(request, 'portaria/pj/bonusviewpj.html', {'bonus': bonus, 'mostrar': mostrar})
+
+def bonusquit(request, idbpj):
+    bonus = get_object_or_404(BonusPJ, pk=idbpj)
+    try:
+        BonusPJ.objects.filter(pk=bonus.id).update(quitado=True, data_quitacao=timezone.now())
+    except ObjectDoesNotExist:
+        messages.error(request, 'Erro')
+        return redirect('portaria:bonusviewpj')
+    else:
+        messages.success(request, f'Férias quitadas para o funcionário {bonus.funcionario.nome}')
+        return redirect('portaria:bonusviewpj')
+    
+def contratopj(request):
+    return render(request,'portaria/pj/contratopj.html')
+
+def contratocadpj(request):
+    form = ContratoPJForm
+    hoje = datetime.date.today()
+    if request.method == 'POST':
+        anexo = request.POST.get('getanexo')
+        form = ContratoPJForm(request.POST or None)
+        try:
+            if form.is_valid():
+                contrato = form.save(commit=False)
+                contrato.autor = request.user
+                contrato.save()
+
+                cont = ContratoPJ.objects.get(id=contrato.id)
+                cont.anexo = hoje.strftime('contrato/%Y/%m/%d/') + anexo
+                cont.save()
+                
+                messages.success(request, 'Cadastrado com sucesso!')
+                return redirect('portaria:contratopj')
+        except Exception as e:
+            messages.error(request, 'Ocorreu erro ao cadastrar!')
+
+    return render(request,'portaria/pj/contratocadpj.html', {'form':form})
+
+def contratoviewpj(request):
+    hoje = datetime.date.today()
+    nome = request.POST.get('textbox')
+    option = request.POST.get('option')
+
+    order_by = "final_contrato"
+    filter = {}
+
+    if nome:
+        filter['funcionario__nome__contains'] = nome
+    if option == "Bônus vencido":
+        filter['data_pagamento__lte'] = hoje
+    if option == "Próximos do vencimento":
+        filter['data_pagamento__gte'] = hoje
+
+    contratos = ContratoPJ.objects.filter(**filter).order_by(order_by)
+
+    return render(request, 'portaria/pj/contratoviewpj.html', {'contratos': contratos})
+
+# def bonusquit(request, idbpj):
+#     bonus = get_object_or_404(BonusPJ, pk=idbpj)
+#     try:
+#         BonusPJ.objects.filter(pk=bonus.id).update(quitado=True, data_quitacao=timezone.now())
+#     except ObjectDoesNotExist:
+#         messages.error(request, 'Erro')
+#         return redirect('portaria:bonusviewpj')
+#     else:
+#         messages.success(request, f'Férias quitadas para o funcionário {bonus.funcionario.nome}')
+#         return redirect('portaria:bonusviewpj')
+
 def feriasview(request):
     hoje = datetime.date.today()
     dias = hoje + datetime.timedelta(days=60)
@@ -531,6 +645,7 @@ def feriasquit(request, idfpj):
     else:
         messages.success(request, f'Férias quitadas para o funcionário {fer}')
         return redirect('portaria:feriasview')
+
 
 def frotacadastros(request):
     return render(request, 'portaria/frota/frotacadastros.html')
@@ -2147,40 +2262,51 @@ def get_nfpj_mail(request):
     dt_1 = request.POST.get('periodo1')
     dt_2 = request.POST.get('periodo2')
     dt_pgmt = request.POST.get('dt_pgmt')
+    dt_1 = datetime.datetime.strptime(dt_1 + " 00:00:00", '%Y-%m-%d %H:%M:%S')
+    dt_2 = datetime.datetime.strptime(dt_2 + " 00:00:00", '%Y-%m-%d %H:%M:%S')
+    dt_pgmt = datetime.datetime.strptime(dt_pgmt + " 00:00:00", '%Y-%m-%d %H:%M:%S')
+
     text = ""
     title = ''
     if a:
         title = 'NF'
         qs = FuncPj.objects.filter(ativo=True)
-        text = '''
-                Favor emitir a nf. de prestação serviços
-                Período de: {16} a {17}
-                Valor do Serviço: R$ {2:.2f}
-                Prêmios: R$ {6:.2f}
-                Ajuda de custo: R$ {4:.2f}
-                Auxilio moradia: R$ {19:.2f}
-                Forma de Pagamento: R$ {10:.2f}
-                Data de pagamento {18}
-                Serviço Prestado no {0}
-                Dados Bancários: Banco {12} Ag. {13} C.c. {14}
-                CPF: {11}
+        text = '''Favor emitir a NF. de Prestação Serviços
+
+    Período de: {16} à {17}
+    Valor do Serviço: R$ {2:.2f}
+    Ajuda de custo: R$ {4:.2f}
+    Forma de Pagamento: R$ {10:.2f}
+    Data de pagamento: {18}
+    Serviço Prestado em: {0}
+    Dados Bancários: 
+        Banco : {12}
+        Ag    : {13}
+        C.c.  : {14}
+    CPF/ CNPJ: {11}
+    PIX: {20}
                 '''
     if b:
         title = 'NF ADIANTAMENTO'
         qs = FuncPj.objects.filter(ativo=True, adiantamento__gt=0)
-        text = """ 
-                Prestação de Serviços 
-                Período de: {16} até {17}
-                Valor do Serviço: R$ {7:.2f}
-                Forma de Pagamento: R$ {7:.2f}
-                Data de pagamento:  {18}
-                Serviço Prestado em {0}
-                Dados Bancários: Banco {12} Ag. {13} C.c. {14}
-                CPF: {11}
-                Favor enviar a nf até {18}.
-                Att
+        text = """Prestação de Serviços 
+
+    Período de: {16} até {17}
+    Valor do Serviço: R$ {7:.2f}
+    Data de pagamento: {18}
+    Serviço Prestado em: {0}
+    Dados Bancários: 
+        Banco : {12}
+        Ag    : {13}
+        C.c.  : {14}
+    CPF/ CNPJ: {11}
+    PIX: {20}
+
+Favor enviar a NF até {18}.
+
+Att
                 """
-    arrya = []
+    array = []
     for q in qs:
         query = FuncPj.objects.filter(pk=q.id) \
             .annotate(
@@ -2191,28 +2317,34 @@ def get_nfpj_mail(request):
              desc_convenio=Coalesce(Sum('nfservicopj__desc_convenio', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)), Value(0.0)),
              outros_desc=Coalesce(Sum('nfservicopj__outros_desc',filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)), Value(0.0)),
              ).annotate(total=(F('salario') + F('ajuda_custo') + F('faculdade') + F('cred_convenio') + F('outros_cred') + F('aux_moradia') ) - (F('adiantamento') + F('desc_convenio') + F('outros_desc')))
-        arrya.extend(query)
-    for q in arrya:
+        array.extend(query)
+    for q in array:
         try:
             send_mail(
                 subject=title,
                 message=text.format(
                     q.filial, q.nome, q.salario, q.faculdade, q.ajuda_custo, q.cred_convenio,
                     q.outros_cred, q.adiantamento, q.desc_convenio, q.outros_desc, q.total,
-                    q.cpf_cnpj, q.banco, q.ag, q.conta, q.op, dt_1, dt_2, dt_pgmt, q.aux_moradia
+                    q.cpf_cnpj, q.banco, q.ag, q.conta, q.op,
+                    dt_1.strftime('%d/%m/%Y'), dt_2.strftime('%d/%m/%Y'), dt_pgmt.strftime('%d/%m/%Y'),
+                    q.aux_moradia, q.pix or "Não Informado"
                 ),
                 from_email=settings.EMAIL_HOST_USER,
-                recipient_list=[q.email]
+                # recipient_list=[q.email]
+                recipient_list=['davi.bezerra@bora.com.br']
             )
             MailsPJ.objects.create(funcionario_id=q.id, data_pagamento=datetime.datetime.strptime(dt_pgmt,'%Y-%m-%d'),
                                    mensagem=text.format(
                     q.filial, q.nome, q.salario, q.faculdade, q.ajuda_custo, q.cred_convenio,
                     q.outros_cred, q.adiantamento, q.desc_convenio, q.outros_desc, q.total,
-                    q.cpf_cnpj, q.banco, q.ag, q.conta, q.op, dt_1, dt_2, dt_pgmt, q.aux_moradia
+                    q.cpf_cnpj, q.banco, q.ag, q.conta, q.op, dt_1, dt_2, dt_pgmt, q.aux_moradia, q.pix
                 ))
+            print("passei2")
         except Exception as e:
             print(e)
-    return redirect('portaria:index')
+        break
+        
+    return redirect('portaria:consultanfpj')
 
 def get_pj13_mail(request):
     getperiod = request.POST.get('period')
@@ -2409,7 +2541,8 @@ def mailferias(request,idfpj):
                                         Valor a receber: {valor}
                                     ''',
             from_email=settings.EMAIL_HOST_USER,
-            recipient_list=[func.email]
+            # recipient_list=[func.email]
+            recipient_list=["davi.bezerra@bora.com.br"]
         )
 
     except ValueError:
@@ -2427,7 +2560,7 @@ def get_nfpj_csv(request):
     writer = csv.writer(response)
     writer.writerow(['nome','cpf/cnpj','salario','ajuda de custo','adiantamento','credito convenio','outros creditos',
                      'desconto convenio','outros descontos','total a pagar'])
-    arrya = []
+    array = []
     qnt_funcs = FuncPj.objects.filter(ativo=True)
     for q in qnt_funcs:
         query = FuncPj.objects.filter(pk=q.id) \
@@ -2438,8 +2571,8 @@ def get_nfpj_csv(request):
             desc_convenio=Coalesce(Sum('nfservicopj__desc_convenio', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)), Value(0.0)),
             outros_desc=Coalesce(Sum('nfservicopj__outros_desc', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)), Value(0.0)),) \
             .annotate(total=((F('salario') + F('ajuda_custo') + F('faculdade') + F('cred_convenio') + F('outros_cred')) - (F('adiantamento') + F('desc_convenio') + F('outros_desc'))))
-        arrya.extend(query)
-    for q in arrya:
+        array.extend(query)
+    for q in array:
         writer.writerow([q.nome,q.cpf_cnpj,q.salario,q.faculdade,q.cred_convenio,q.outros_cred,q.outros_cred,q.desc_convenio,q.outros_desc,q.total])
     return response
 
@@ -2487,6 +2620,34 @@ def get_ferias_csv(request):
                                                     'dt_quitacao','alerta_venc_enviado').filter(ultimas_ferias_ini__gte=ini,ultimas_ferias_fim__lte=fim)
         for q in ferias:
             writer.writerow(q)
+        return response
+    
+def get_bonus_csv(request):
+    hoje = datetime.date.today()
+    try:
+        ini = datetime.datetime.strptime(request.POST.get('dataini'), '%Y-%m-%d').date()
+        fim = datetime.datetime.strptime(request.POST.get('datafim'), '%Y-%m-%d').date()
+    except ValueError:
+        messages.error(request, 'Por favor, digite uma data válida')
+        return redirect('portaria:bonuspj')
+    else:
+        response = HttpResponse(content_type='text/csv',
+                                headers={'Content-Disposition':f'attatchment; filename=bonus_{hoje.strftime("%d-%m")}.csv"'})
+        response.write(u'\ufeff'.encode('utf8'))
+        writer = csv.writer(response)
+        writer.writerow([
+            "id","funcionario","valor_pagamento","data_pagamento",
+            "observacao","quitado","data_quitacao","data_criacao", "autor"
+        ])
+
+        bonus = BonusPJ.objects.all().values_list(
+            "id","funcionario","valor_pagamento","data_pagamento",
+            "observacao","quitado","data_quitacao","data_criacao", "autor"
+        ).filter(data_pagamento__gte=ini,data_pagamento__lte=fim)
+
+        for linha in bonus:
+            writer.writerow(linha)
+
         return response
 
 def ediexceltosd1(request):

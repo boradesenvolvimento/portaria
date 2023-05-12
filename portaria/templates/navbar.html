@@ -172,16 +172,7 @@
           >
             <li class="nav-item">
               <a class="nav-link1" href="{% url 'portaria:demissoes' %}"
-                >Checar demissoes</a
-              >
-              <a class="nav-link1" href="{% url 'portaria:servicospj' %}"
-                >Servicos PJ</a
-              >
-              <a class="nav-link1" href="{% url 'portaria:decimopj' %}"
-                >13º PJ</a
-              >
-              <a class="nav-link1" href="{% url 'portaria:feriaspjv' %}"
-                >Férias PJ</a
+              >Checar demissoes</a
               >
               <a class="nav-link1" href="{% url 'portaria:cadfuncionariopj' %}"
                 >Cadastrar funcionário</a
@@ -191,6 +182,21 @@
                 >Atualizar funcionário</a
               >
               {% endif %}
+              <a class="nav-link1" href="{% url 'portaria:servicospj' %}"
+                >Servicos PJ</a
+              >
+              <a class="nav-link1" href="{% url 'portaria:contratopj' %}"
+              >Contrato PJ</a
+            >
+              <a class="nav-link1" href="{% url 'portaria:decimopj' %}"
+                >13º PJ</a
+              >
+              <a class="nav-link1" href="{% url 'portaria:feriaspjv' %}"
+                >Férias PJ</a
+              >
+              <a class="nav-link1" href="{% url 'portaria:bonuspj' %}"
+                >Bonus PJ</a
+              >
             </li>
           </ul>
         </div>
