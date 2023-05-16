@@ -19,57 +19,66 @@
 
                 </form>
             </div>
-            <div class="col-10">
+            <div style="display: flex; justify-content: space-between;">
+                <div>
                     <button onclick="isactive()" class="button">Enviar emails</button>
-            </div>
-            <div class="col-2">
-                <button class="button">
-                    <a href="{% url 'portaria:get_nfpj_csv' %}" style="text-decoration:none;color:white;">Exportar CSV</a>
-                </button>
+                </div>
+                <div>
+                    <form style="display: flex; justify-content: flex-end;" action="{% url 'portaria:get_nfpj_csv' %}" method="post">
+                        {% csrf_token %}
+                        <input class="col-4" type="date" name="dataini" placeholder="Data inicio">
+                        <input class="col-4" type="date" name="datafim" placeholder="Data fim">
+                        <button class="button col-4">
+                            Exportar CSV
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
         <div class="row">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th class="title-cad"><strong>Total de Registros: {{ array|length }}</strong></th>
-                </tr>
-                <tr>
-                    <th class="title-cad">Nome</th>
-                    <th class="title-cad">Salario</th>
-                    <th class="title-cad">Faculdade</th>
-                    <th class="title-cad">Ajuda de Custo</th>
-                    <th class="title-cad">Aux Moradia</th>
-                    <th class="title-cad">Cred Convenio</th>
-                    <th class="title-cad">Outros Cred</th>
-                    <th class="title-cad">Adiantamento</th>
-                    <th class="title-cad">Desc Convenio</th>
-                    <th class="title-cad">Outros Desc</th>
-                    <th class="title-cad">Total a Pagar</th>
-                </tr>
-            </thead>
-        {% for q in array|dictsort:"nome" %}
-            <tbody>
-                <tr>
-                    <th>{{ q.nome|upper }}</th>
-                    <th>R$ {{ q.salario|floatformat:2 }}</th>
-                    <th>R$ {{ q.faculdade|floatformat:2 }}</th>
-                    <th>R$ {{ q.ajuda_custo|floatformat:2 }}</th>
-                    <th>R$ {{ q.aux_moradia|floatformat:2 }}</th>
-                    <th>R$ {{ q.cred_convenio|floatformat:2 }}</th>
-                    <th>R$ {{ q.outros_cred|floatformat:2 }}</th>
-                    <th>R$ {{ q.adiantamento|floatformat:2 }}</th>
-                    <th>R$ {{ q.desc_convenio|floatformat:2 }}</th>
-                    <th>R$ {{ q.outros_desc|floatformat:2 }}</th>
-                    <th>R$ {{ q.total|floatformat:2 }}</th>
-                </tr>
-            </tbody>
-        {% endfor %}
-        </table>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th class="title-cad"><strong>Total de Registros: {{ array|length }}</strong></th>
+                    </tr>
+                    <tr>
+                        {% comment %} <th class="title-cad">#</th> {% endcomment %}
+                        <th class="title-cad">Nome</th>
+                        <th class="title-cad">Salario</th>
+                        <th class="title-cad">Faculdade</th>
+                        <th class="title-cad">Ajuda de Custo</th>
+                        <th class="title-cad">Aux Moradia</th>
+                        <th class="title-cad">Cred Convenio</th>
+                        <th class="title-cad">Outros Cred</th>
+                        <th class="title-cad">Adiantamento</th>
+                        <th class="title-cad">Desc Convenio</th>
+                        <th class="title-cad">Outros Desc</th>
+                        <th class="title-cad">Total a Pagar</th>
+                    </tr>
+                </thead>
+                {% for q in array|dictsort:"nome" %}
+                <tbody>
+                    <tr>
+                        {% comment %} <th><input type="checkbox" value="{{ q.id }}"></th> {% endcomment %}
+                        <th>{{ q.nome|upper }}</th>
+                        <th>R$ {{ q.salario|floatformat:2 }}</th>
+                        <th>R$ {{ q.faculdade|floatformat:2 }}</th>
+                        <th>R$ {{ q.ajuda_custo|floatformat:2 }}</th>
+                        <th>R$ {{ q.aux_moradia|floatformat:2 }}</th>
+                        <th>R$ {{ q.cred_convenio|floatformat:2 }}</th>
+                        <th>R$ {{ q.outros_cred|floatformat:2 }}</th>
+                        <th>R$ {{ q.adiantamento|floatformat:2 }}</th>
+                        <th>R$ {{ q.desc_convenio|floatformat:2 }}</th>
+                        <th>R$ {{ q.outros_desc|floatformat:2 }}</th>
+                        <th>R$ {{ q.total|floatformat:2 }}</th>
+                    </tr>
+                </tbody>
+                {% endfor %}
+            </table>
+        </div>
     </div>
-</div>
-{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
-<script type="text/javascript">
+    {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+    <script type="text/javascript">
     function isactive(){
     if(document.getElementById("sendmail").classList.contains('sr-only')){
         document.getElementById("sendmail").classList.remove('sr-only')

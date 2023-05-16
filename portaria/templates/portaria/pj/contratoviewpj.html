@@ -20,16 +20,16 @@
         {% endfor %}
     <div class="row">
         <h2 class="title-cad col-6">Painel Contratos</h2>
-        {% comment %} <form method="post">
+        <form method="post">
         {% csrf_token %}
             <input type="text" name="textbox" placeholder="Digite o nome" class="col-2">
-            <select name="option" class="col-2">
+            {% comment %} <select name="option" class="col-2">
                 <option></option>
                 <option>Bônus vencido</option>
                 <option>Próximos do vencimento</option>
-            </select>
+            </select> {% endcomment %}
             <button type="submit" style="height:3.4rem;"><ion-icon style="font-size:24px;" name="filter"></ion-icon></button>
-        </form> {% endcomment %}
+        </form>
     </div>
     <div class="container">
         <table class="table table1">
@@ -42,6 +42,7 @@
                     <th>Valor Reajuste</th>
                     <th>Anexo</th>
                     <th>Observação</th>
+                    <th>Editar</th>
                 </tr>
             </thead>
             <tbody>
@@ -51,10 +52,14 @@
                 <th>{{ q.inicio_contrato|date:'d/m/Y' }}</th>
                 <th>{{ q.final_contrato|date:'d/m/Y' }}</th>
                 <th>{{ q.data_reajuste|date:'d/m/Y' }}</th>
+                {% if q.valor_reajuste %}
                 <th>R$ {{ q.valor_reajuste }}</th>
+                {% else %}
+                <th></th>
+                {% endif %}
                 <th>
                     {% if q.anexo %}
-                        <a href="/{{ q.anexo }}" download>
+                        <a href="/media/{{ q.anexo }}" download>
                             <ion-icon size="large" name="document-attach-outline"></ion-icon>
                         </a>
                     {% endif %}
@@ -65,14 +70,13 @@
                             <ion-icon name="list"></ion-icon>
                         </a>
                     </button>
-                    {% comment %} {% if mostrar %}
-                    |
+                </th>
+                <th>
                     <button type="submit" style="height:3.4rem;">
-                        <a style="color:white;font-size:2.4rem;" href="{% url 'portaria:bonusquit' idbpj=q.id %}">
-                            <ion-icon name="checkmark-outline"></ion-icon>
+                        <a style="color:white;font-size:2.4rem;" href="{% url 'portaria:contratoeditarpj' idcpj=q.id %}">
+                            <ion-icon name="create"></ion-icon>
                         </a>
                     </button>
-                    {% endif %} {% endcomment %}
                 </th>
                 <div id="myModal{{ forloop.counter }}" class="modal modalObs">
                     <div class="modal-content">

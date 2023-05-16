@@ -1,11 +1,6 @@
     {% extends 'base.html' %}
     {% block content %}
     {% load groupscheck %}
-    {% comment %} <style>
-        .modalObs{
-            display: block;
-        }
-    </style> {% endcomment %}
     <div class="container mt-5">
     {% if auth_message %}
         <p><strong>{{ auth_message }}</strong></p>
@@ -25,6 +20,7 @@
                 <input type="text" name="textbox" placeholder="Digite o nome" class="col-2">
                 <select name="option" class="col-2">
                     <option></option>
+                    <option>Quitado</option>
                     <option>Férias Vencidas</option>
                     <option>Próximas do vencimento</option>
                 </select>
@@ -38,20 +34,19 @@
                         <th>Nome</th>
                         <th>Ultimas Ferias</th>
                         <th>Periodo</th>
-                        <th>Quitado</th>
                         <th>Vencimento</th>
                         <th>Agendamento</th>
                         <th>Prazo</th>
-                        <th>Observação/Opções/Quitar</th>
+                        <th>Observação</th>
+                        <th>Opções/Quitar</th>
                     </tr>
                 </thead>
                 <tbody>
-                {% for q in qs %}
+                {% for q in ferias %}
                 <tr>
                     <th>{{ q.funcionario|upper }}</th>
                     <th>{{ q.ultimas_ferias_ini|date:'d/m/Y' }}</th>
                     <th>{{ q.periodo }}</th>
-                    <th>{{ q.quitado|yesno:'Sim,Não' }}</th>
                     <th>{{ q.vencimento|date:'d/m/Y' }}</th>
                     <th>{% if q.agendamento_ini is None %}---{% else %}{{ q.agendamento_ini|date:'d/m/Y' }} - {{ q.agendamento_fim|date:'d/m/Y' }}{% endif %}</th>
                     <th>{% if hoje > q.vencimento %}Ferias vencidas{% else %}{{ q.vencimento|timeuntil:hoje }} {% endif %}</th>
@@ -60,7 +55,9 @@
                             <a style="color:white;font-size:2.4rem;">
                                 <ion-icon name="list"></ion-icon>
                             </a>
-                        </button> |
+                        </button>
+                    </th>
+                    <th>
                         <button type="submit" style="height:3.4rem;">
                             <a style="color:white;font-size:2.4rem;" href="{% url 'portaria:feriasagen' idfpj=q.id %}">
                                 <ion-icon name="settings-outline"></ion-icon>

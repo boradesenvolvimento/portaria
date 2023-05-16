@@ -39,7 +39,8 @@
                     <th>Nome</th>
                     <th>Valor Pagamento</th>
                     <th>Data Pagamento</th>
-                    <th>Observação{% if mostrar %}/Quitar{% endif %}</th>
+                    <th>Observação</th>
+                    <th>{% if mostrar %}Quitar{% endif %}</th>
                 </tr>
             </thead>
             <tbody>
@@ -54,8 +55,9 @@
                             <ion-icon name="list"></ion-icon>
                         </a>
                     </button>
-                    {% if mostrar %}
-                    |
+                </th>
+                {% if mostrar %}
+                <th>
                     <button type="submit" style="height:3.4rem;">
                         <a style="color:white;font-size:2.4rem;" href="{% url 'portaria:bonusquit' idbpj=q.id %}">
                             <ion-icon name="checkmark-outline"></ion-icon>

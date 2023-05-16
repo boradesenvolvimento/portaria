@@ -25,6 +25,7 @@ from barcode.writer import ImageWriter
 
 import numpy as np
 import pandas as pd
+from dateutil.relativedelta import relativedelta
 from email import policy, encoders
 from email.header import decode_header
 from email.mime.application import MIMEApplication
@@ -51,7 +52,7 @@ from django.core.mail import send_mail
 from django.db import IntegrityError
 from django.db.models.query import QuerySet
 from django.db.models import Count, Sum, F, Q, Value, Subquery, CharField, ExpressionWrapper, IntegerField, \
-    DateTimeField
+    DateTimeField, Case, When
 from django.db.models.functions import Coalesce, TruncDate, Cast, TruncMinute, Lower
 from django.http import HttpResponse, HttpResponseRedirect, HttpRequest, Http404, FileResponse
 from django.shortcuts import get_object_or_404, render, redirect
@@ -327,31 +328,33 @@ def cadfuncionariopj(request):
     return render(request, 'portaria/pj/cadfuncionariopj.html', {'form':form})
 
 def atualizarfunc(request):
-    allfuncs = FuncPj.objects.all()
-    fields = FuncPjForm
+    allfuncs = FuncPj.objects.filter(ativo=True).order_by('nome')
+    form = FuncPjForm
     func = request.GET.get('func')
     if func:
         getid = get_object_or_404(FuncPj, pk=func)
-        fields = FuncPjForm(instance=getid)
+        form = FuncPjForm(instance=getid)
         if request.method == 'POST':
-            fields = FuncPjForm(request.POST or None,instance=getid)
-            if fields.is_valid():
-                try:
-                    fields.save()
-                except Exception as e:
-                    print(e)
-                else:
-                    messages.success(request, 'Entrada cadastrada com sucesso.')
-                    return redirect('portaria:atualizarfunc')
+            form = FuncPjForm(request.POST or None, instance=getid)
+            if form.is_valid():
+                if form.instance.pk:
+                    form.save()
+
+                messages.success(request, 'Entrada cadastrada com sucesso.')
+                return redirect('portaria:atualizarfunc')
             else:
                 messages.error(request, 'Algo deu errado, por favor contate seu administrador.')
                 return redirect('portaria:index')
-    return render(request, 'portaria/pj/atualizarfunc.html', {'fields':fields,'allfuncs':allfuncs,'func':func})
+    return render(request, 'portaria/pj/atualizarfunc.html', {'fields': form, 'allfuncs': allfuncs, 'func': func})
 
 @login_required
 def servicospj(request):
     func = request.GET.get('nomefunc')
     filter = request.GET.get('filter')
+
+    # nfs = NfServicoPj.objects.all().values('funcionario_id').distinct()
+    # nfs_fun = [nf['funcionario_id'] for nf in nfs]
+
     if func:
         qnt_funcs = FuncPj.objects.filter(nome__icontains=func, ativo=True)
     elif filter:
@@ -361,29 +364,71 @@ def servicospj(request):
 
     return render(request, 'portaria/pj/servicospj.html', {'qnt_funcs': qnt_funcs})
 
+def inserirmesmovalores(request, id):
+    if id:
+        try:
+            funcionario = get_object_or_404(FuncPj, pk=id)
+            nf = NfServicoPj.objects.filter(funcionario=funcionario).order_by("-id").first()
+
+            nf.data_pagamento += relativedelta(months=1)
+            objeto = {
+                "faculdade": nf.faculdade,
+                "cred_convenio": nf.cred_convenio,
+                "aux_moradia": nf.aux_moradia,
+                "outros_cred": nf.outros_cred,
+                "desc_convenio": nf.desc_convenio,
+                "outros_desc": nf.outros_desc,
+                "data_pagamento": nf.data_pagamento,
+                "data_emissao": datetime.date.today(),
+                "funcionario": funcionario,
+            }
+
+            objeto["autor"] = request.user
+
+            NfServicoPj.objects.create(**objeto)
+        except Exception as e:
+            messages.error(request, "Nenhum valor foi inserido anteriormente.")
+
+    return redirect('portaria:servicospj')
+
 @login_required
 def consultanfpj(request):
     array = []
     qnt_funcs = FuncPj.objects.filter(ativo=True)
     for q in qnt_funcs:
-        query = FuncPj.objects.filter(pk=q.id) \
-            .annotate(faculdade=Coalesce(Sum('nfservicopj__faculdade', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)),Value(0.0)),
-            cred_convenio=Coalesce(Sum('nfservicopj__cred_convenio', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)),Value(0.0)),
-            outros_cred=Coalesce(Sum('nfservicopj__outros_cred', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)),Value(0.0)),
-            aux_moradia=Coalesce(Sum('nfservicopj__aux_moradia',filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)),Value(0.0)),
-            desc_convenio=Coalesce(Sum('nfservicopj__desc_convenio', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)),Value(0.0)),
-            outros_desc=Coalesce(Sum('nfservicopj__outros_desc', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)),Value(0.0)),
-            ) \
-            .annotate(total=((F('salario') + F('ajuda_custo') + F('faculdade') + F('cred_convenio') + F('outros_cred') + F('aux_moradia')) - (F('adiantamento') + F('desc_convenio') + F('outros_desc'))))
+        nf = NfServicoPj.objects.filter(funcionario_id=q.id).order_by('-id')
+
+        if len(nf) > 0:
+            query = FuncPj.objects.filter(pk=q.id).annotate(
+                faculdade=Coalesce(nf[0].faculdade,Value(0.0)),
+                cred_convenio=Coalesce(nf[0].cred_convenio,Value(0.0)),
+                outros_cred=Coalesce(nf[0].outros_cred,Value(0.0)),
+                aux_moradia=Coalesce(nf[0].aux_moradia,Value(0.0)),
+                desc_convenio=Coalesce(nf[0].desc_convenio,Value(0.0)),
+                outros_desc=Coalesce(nf[0].outros_desc,Value(0.0)),
+                ) \
+                .annotate(total=((F('salario') + F('ajuda_custo') + F('faculdade') + F('cred_convenio') + F('outros_cred') + F('aux_moradia')) - (F('adiantamento') + F('desc_convenio') + F('outros_desc'))))
+        else:
+            query = FuncPj.objects.filter(pk=q.id).annotate(
+                faculdade=Coalesce(Sum('nfservicopj__faculdade', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)),Value(0.0)),
+                cred_convenio=Coalesce(Sum('nfservicopj__cred_convenio', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)),Value(0.0)),
+                outros_cred=Coalesce(Sum('nfservicopj__outros_cred', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)),Value(0.0)),
+                aux_moradia=Coalesce(Sum('nfservicopj__aux_moradia',filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)),Value(0.0)),
+                desc_convenio=Coalesce(Sum('nfservicopj__desc_convenio', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)),Value(0.0)),
+                outros_desc=Coalesce(Sum('nfservicopj__outros_desc', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)),Value(0.0)),
+                ) \
+                .annotate(total=((F('salario') + F('ajuda_custo') + F('faculdade') + F('cred_convenio') + F('outros_cred') + F('aux_moradia')) - (F('adiantamento') + F('desc_convenio') + F('outros_desc'))))
         array.extend(query)
     return render(request, 'portaria/pj/consultanfpj.html', {'array': array})
 
 @login_required
 def cadservicospj(request, args):
-    form = ServicoPjForm(request.POST or None)
     func = get_object_or_404(FuncPj, pk=args)
+    nf = NfServicoPj.objects.filter(funcionario_id=args).order_by("-id")
     autor = request.user
+
     if request.method == 'POST':
+        form = ServicoPjForm(request.POST or None)
         if form.is_valid():
             calc = form.save(commit=False)
             calc.funcionario = func
@@ -391,6 +436,12 @@ def cadservicospj(request, args):
             calc.save()
             messages.success(request, f'Valores cadastrados com sucesso para {calc.funcionario}')
             return HttpResponseRedirect(reverse('portaria:servicospj'))
+    
+    if len(nf) > 0:
+        form = ServicoPjForm(instance=nf[0])
+    else:
+        form = ServicoPjForm()
+
     return render(request, 'portaria/pj/cadservicospj.html', {'form':form,'func':func})
 
 def decimopj(request):
@@ -533,25 +584,21 @@ def contratopj(request):
     return render(request,'portaria/pj/contratopj.html')
 
 def contratocadpj(request):
-    form = ContratoPJForm
-    hoje = datetime.date.today()
     if request.method == 'POST':
-        anexo = request.POST.get('getanexo')
-        form = ContratoPJForm(request.POST or None)
+        form = ContratoPJForm(request.POST, request.FILES)
         try:
             if form.is_valid():
                 contrato = form.save(commit=False)
                 contrato.autor = request.user
                 contrato.save()
 
-                cont = ContratoPJ.objects.get(id=contrato.id)
-                cont.anexo = hoje.strftime('contrato/%Y/%m/%d/') + anexo
-                cont.save()
-                
                 messages.success(request, 'Cadastrado com sucesso!')
                 return redirect('portaria:contratopj')
+            messages.error(request, 'Formulário inválido')
         except Exception as e:
             messages.error(request, 'Ocorreu erro ao cadastrar!')
+    else:        
+        form = ContratoPJForm()
 
     return render(request,'portaria/pj/contratocadpj.html', {'form':form})
 
@@ -560,7 +607,7 @@ def contratoviewpj(request):
     nome = request.POST.get('textbox')
     option = request.POST.get('option')
 
-    order_by = "final_contrato"
+    order_by = "funcionario__nome"
     filter = {}
 
     if nome:
@@ -574,48 +621,81 @@ def contratoviewpj(request):
 
     return render(request, 'portaria/pj/contratoviewpj.html', {'contratos': contratos})
 
-# def bonusquit(request, idbpj):
-#     bonus = get_object_or_404(BonusPJ, pk=idbpj)
-#     try:
-#         BonusPJ.objects.filter(pk=bonus.id).update(quitado=True, data_quitacao=timezone.now())
-#     except ObjectDoesNotExist:
-#         messages.error(request, 'Erro')
-#         return redirect('portaria:bonusviewpj')
-#     else:
-#         messages.success(request, f'Férias quitadas para o funcionário {bonus.funcionario.nome}')
-#         return redirect('portaria:bonusviewpj')
+def contratoeditarpj(request, idcpj):
+    contrato = get_object_or_404(ContratoPJ, id=idcpj)
+    
+    if request.method == 'POST':
+        form = ContratoPJForm(request.POST, instance=contrato)
+        if form.is_valid():
+            try:
+                form.save()
+            except Exception:
+                messages.error(request, 'Algo deu errado, com o servidor.')
+            finally:
+                messages.success(request, 'Contrato editado com sucesso.')
+                return redirect('portaria:contratoviewpj')
+        else:
+            messages.error(request, 'Dados do Formulário inválido.')
+            return redirect('portaria:contratoeditarpj', idcpj=idcpj)
+    else:
+        form = ContratoPJForm(instance=contrato)
+
+    return render(request, 'portaria/pj/contratoeditarpj.html', {'form': form})
+
+def get_contrato_csv(request):
+    hoje = datetime.date.today()
+    try:
+        ini = datetime.datetime.strptime(request.POST.get('dataini'), '%Y-%m-%d').date()
+        fim = datetime.datetime.strptime(request.POST.get('datafim'), '%Y-%m-%d').date()
+    except ValueError:
+        messages.error(request, 'Por favor, digite uma data válida')
+        return redirect('portaria:contratopj')
+    else:
+        response = HttpResponse(content_type='text/csv',
+                                headers={'Content-Disposition':f'attatchment; filename=contrato/{hoje.strftime("%d/%m")}.csv"'})
+        response.write(u'\ufeff'.encode('utf8'))
+        writer = csv.writer(response)
+        writer.writerow([
+            "id","funcionario","inicio_contrato","final_contrato", "data_reajuste",
+            "valor_reajuste", "anexo", "observacao", "data_criacao", "autor"
+        ])
+
+        contrato = ContratoPJ.objects.all().values_list(
+            "id","funcionario","inicio_contrato","final_contrato", "data_reajuste",
+            "valor_reajuste", "anexo", "observacao", "data_criacao", "autor"
+        ).filter(data_reajuste__gte=ini,data_reajuste__lte=fim)
+
+        for linha in contrato:
+            writer.writerow(linha)
+
+    return response
 
 def feriasview(request):
     hoje = datetime.date.today()
     dias = hoje + datetime.timedelta(days=60)
     aa = FuncPj.objects.filter(ativo=True).values_list('id', flat=True)
-    qs = feriaspj.objects.filter(quitado=False, funcionario_id__in=aa).order_by('vencimento')
-    name = request.POST.get('textbox')
-    opt = request.POST.get('option')
-    if name or opt:
-        if name == '' and opt:
-            if opt == 'Férias Vencidas':
-                qs = feriaspj.objects.filter(quitado=False, funcionario_id__in=aa, vencimento__lte=hoje).order_by('vencimento')
-                return render(request, 'portaria/pj/feriasview.html', {'qs': qs, 'dias': dias, 'hoje': hoje})
-            elif opt == 'Próximas do vencimento':
-                qs = feriaspj.objects.filter(quitado=False, funcionario_id__in=aa, vencimento__gte= hoje,vencimento__lte=dias).order_by('vencimento')
-                return render(request, 'portaria/pj/feriasview.html', {'qs': qs, 'dias': dias, 'hoje': hoje})
-            else:
-                pass
-        elif opt == '' and name:
-            qs = feriaspj.objects.filter(quitado=False, funcionario_id__in=aa, funcionario__nome__contains=name).order_by('vencimento')
-            return render(request, 'portaria/pj/feriasview.html', {'qs': qs, 'dias': dias, 'hoje': hoje})
-        elif name and opt:
-            if opt == 'Férias Vencidas':
-                qs = feriaspj.objects.filter(quitado=False, funcionario_id__in=aa, vencimento__lte = hoje, funcionario__nome__contains=name).order_by('vencimento')
-                return render(request, 'portaria/pj/feriasview.html', {'qs': qs,'dias':dias,'hoje':hoje})
-            elif opt == 'Próximas do vencimento':
-                qs = feriaspj.objects.filter(quitado=False, funcionario_id__in=aa, vencimento__gte= hoje,vencimento__lte=dias, funcionario__nome__contains=name).order_by('vencimento')
-                return render(request, 'portaria/pj/feriasview.html', {'qs': qs,'dias':dias,'hoje':hoje})
-            return render(request, 'portaria/pj/feriasview.html', {'qs': qs, 'dias': dias, 'hoje': hoje})
+    ferias = feriaspj.objects.filter(quitado=False, funcionario_id__in=aa).order_by('vencimento')
+    nome = request.POST.get('textbox')
+    option = request.POST.get('option')
+
+    order_by = "vencimento"
+    filter = {}
+
+    if nome:
+        filter['funcionario__nome__contains'] = nome
+    if option == "Quitado":
+        filter['quitado'] = True
+    else:
+        filter['quitado'] = False
+    if option == "Bônus vencido":
+        filter['vencimento__lte'] = hoje
+    if option == "Próximos do vencimento":
+        filter['vencimento__gte'] = hoje
+
+    ferias = feriaspj.objects.filter(**filter).order_by(order_by)
 
 
-    return render(request, 'portaria/pj/feriasview.html', {'qs': qs,'dias':dias,'hoje':hoje})
+    return render(request, 'portaria/pj/feriasview.html', {'ferias': ferias, 'dias':dias, 'hoje':hoje})
 
 def feriasagen(request, idfpj):
     form = feriaspjForm
@@ -2163,8 +2243,8 @@ def paineltransf(request):
     filtro = {"palete__loc_atual": "MOV"}
     if not origem is None: filtro["origem"] = origem
     if not destino is None: filtro["destino"] = destino
-    if not placa_veiculo is None and not placa_veiculo is "": filtro["placa_veic"] = placa_veiculo
-    if not autor is None and not autor is "": filtro["autor__username"] = autor
+    if not placa_veiculo is None and placa_veiculo != "": filtro["placa_veic"] = placa_veiculo
+    if not autor is None and autor != "": filtro["autor__username"] = autor
 
     form = SolicMovPalete.objects.filter(**filtro).values('solic_id', 'destino', 'origem', 'placa_veic', 'data_solic', 'autor__username').annotate(quantity=Count('solic_id')).order_by('data_solic')
     filiais = Filiais.objects.all()
@@ -2243,12 +2323,12 @@ def painelmov(request):
     today = datetime.datetime.now().strftime('%Y-%m-%d')
 
     filtro = {}
-    if not data_solic is None and not data_solic is "": filtro["data_solic"] = data_solic
-    if not data_receb is None and not data_receb is "": filtro["data_receb"] = data_receb
+    if not data_solic is None and data_solic != "": filtro["data_solic"] = data_solic
+    if not data_receb is None and data_receb != "": filtro["data_receb"] = data_receb
     if not origem is None: filtro["origem"] = origem
     if not destino is None: filtro["destino"] = destino
-    if not placa_veiculo is None and not placa_veiculo is "": filtro["placa_veic"] = placa_veiculo
-    if not autor is None and not autor is "": filtro["autor__username"] = autor
+    if not placa_veiculo is None and placa_veiculo != "": filtro["placa_veic"] = placa_veiculo
+    if not autor is None and autor != "": filtro["autor__username"] = autor
     
     form = MovPalete.objects.filter(**filtro).values('solic_id', 'destino', 'origem', 'placa_veic', 'data_solic', 'data_receb', 'autor__username').annotate(quantity=Count('solic_id')).order_by('data_solic')
     filiais = Filiais.objects.all()
@@ -2285,6 +2365,8 @@ def get_nfpj_mail(request):
         C.c.  : {14}
     CPF/ CNPJ: {11}
     PIX: {20}
+
+Att
                 '''
     if b:
         title = 'NF ADIANTAMENTO'
@@ -2554,26 +2636,61 @@ def mailferias(request,idfpj):
 
 
 def get_nfpj_csv(request):
+    array = []
+    ini = None
+    fim = None
+
+    if request.POST.get('dataini'):
+        ini = datetime.datetime.strptime(request.POST.get('dataini'), '%Y-%m-%d').date()
+    if request.POST.get('datafim'):
+        fim = datetime.datetime.strptime(request.POST.get('datafim'), '%Y-%m-%d').date()
+
     response = HttpResponse(content_type='text/csv',
                             headers={'Content-Disposition':'attatchment; filename="servicospj.csv"'})
     response.write(u'\ufeff'.encode('utf8'))
     writer = csv.writer(response)
-    writer.writerow(['nome','cpf/cnpj','salario','ajuda de custo','adiantamento','credito convenio','outros creditos',
+    writer.writerow(['nome','cpf/cnpj', 'data emissao','salario','ajuda de custo','adiantamento','credito convenio','outros creditos',
                      'desconto convenio','outros descontos','total a pagar'])
-    array = []
-    qnt_funcs = FuncPj.objects.filter(ativo=True)
+    
+    order_by = "nome"
+    filter = {'ativo': 1}
+
+    if ini:
+        filter['nfservicopj__data_emissao__gte'] = ini
+    if fim:
+        filter['nfservicopj__data_emissao__lte'] = fim
+
+    qnt_funcs = FuncPj.objects.filter(**filter).order_by(order_by).distinct()
+
     for q in qnt_funcs:
-        query = FuncPj.objects.filter(pk=q.id) \
-            .annotate(
-            faculdade=Coalesce(Sum('nfservicopj__faculdade', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)),Value(0.0)),
-            cred_convenio=Coalesce(Sum('nfservicopj__cred_convenio', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)), Value(0.0)),
-            outros_cred=Coalesce(Sum('nfservicopj__outros_cred', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)), Value(0.0)),
-            desc_convenio=Coalesce(Sum('nfservicopj__desc_convenio', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)), Value(0.0)),
-            outros_desc=Coalesce(Sum('nfservicopj__outros_desc', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)), Value(0.0)),) \
-            .annotate(total=((F('salario') + F('ajuda_custo') + F('faculdade') + F('cred_convenio') + F('outros_cred')) - (F('adiantamento') + F('desc_convenio') + F('outros_desc'))))
-        array.extend(query)
+        nfs = NfServicoPj.objects.filter(funcionario_id=q.id)
+
+        if len(nfs) > 0:
+            for nf in nfs:
+                query = FuncPj.objects.filter(pk=q.id, nfservicopj=nf).annotate(
+                    faculdade=Coalesce(nf.faculdade, Value(0.0)),
+                    cred_convenio=Coalesce(nf.cred_convenio, Value(0.0)),
+                    outros_cred=Coalesce(nf.outros_cred, Value(0.0)),
+                    desc_convenio=Coalesce(nf.desc_convenio, Value(0.0)),
+                    outros_desc=Coalesce(nf.outros_desc, Value(0.0)),
+                    data_emissao=Coalesce('nfservicopj__data_emissao', datetime.date.today())
+                ).annotate(total=((F('salario') + F('ajuda_custo') + F('faculdade') + F('cred_convenio') + F('outros_cred')) - (F('adiantamento') + F('desc_convenio') + F('outros_desc'))))
+                array.extend(query)
+        else:
+            query = FuncPj.objects.filter(pk=q.id) \
+                .annotate(
+                    faculdade=Coalesce(Sum('nfservicopj__faculdade', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)),Value(0.0)),
+                    cred_convenio=Coalesce(Sum('nfservicopj__cred_convenio', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)), Value(0.0)),
+                    outros_cred=Coalesce(Sum('nfservicopj__outros_cred', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)), Value(0.0)),
+                    desc_convenio=Coalesce(Sum('nfservicopj__desc_convenio', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)), Value(0.0)),
+                    outros_desc=Coalesce(Sum('nfservicopj__outros_desc', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)), Value(0.0)),
+                    data_emissao=Coalesce('nfservicopj__data_emissao', datetime.date.today())
+                ).annotate(total=((F('salario') + F('ajuda_custo') + F('faculdade') + F('cred_convenio') + F('outros_cred')) - (F('adiantamento') + F('desc_convenio') + F('outros_desc'))))
+            array.extend(query)
+
     for q in array:
-        writer.writerow([q.nome,q.cpf_cnpj,q.salario,q.faculdade,q.cred_convenio,q.outros_cred,q.outros_cred,q.desc_convenio,q.outros_desc,q.total])
+        writer.writerow([q.nome,q.cpf_cnpj,q.data_emissao, q.salario,q.faculdade,q.cred_convenio,q.outros_cred,q.outros_cred,q.desc_convenio,q.outros_desc,q.total])
+
     return response
 
 def get_checklist_csv(request):
@@ -2632,7 +2749,7 @@ def get_bonus_csv(request):
         return redirect('portaria:bonuspj')
     else:
         response = HttpResponse(content_type='text/csv',
-                                headers={'Content-Disposition':f'attatchment; filename=bonus_{hoje.strftime("%d-%m")}.csv"'})
+                                headers={'Content-Disposition':f'attatchment; filename=bonus/{hoje.strftime("%d/%m")}.csv"'})
         response.write(u'\ufeff'.encode('utf8'))
         writer = csv.writer(response)
         writer.writerow([

@@ -17,7 +17,7 @@
             <div class="row">
                 <h2 class="title-cad">Cadastro Contrato</h2>
             </div>
-                <form method="post">
+                <form method="post" enctype="multipart/form-data">
                     {% csrf_token %}
                     <table>
                         <tr><th>Funcionário:</th><th>{{ form.funcionario }}</th></tr>
@@ -28,10 +28,21 @@
                         <tr>
                             <th>Anexo:</th>
                             <th>
+                                <label for="anexo" style="font-size:2.4rem;cursor:pointer;">
+                                    <ion-icon name="attach-outline"/>
+                                </label>
+                                <input type="file" name="anexo" id="anexo">
+                                    {{ form.anexo }}
+                                </input>
+                            </th>
+                        </tr>
+                        {% comment %} <tr>
+                            <th>Anexo:</th>
+                            <th>
                                 <label for="getanexo" style="font-size:2.4rem;cursor:pointer;"><ion-icon name="attach-outline"></ion-icon></label>
                                 <input type="file" name="getanexo" id="getanexo">
                             </th>
-                        </tr>
+                        </tr> {% endcomment %}
                         <tr><th>Observação:</th><th>{{ form.observacao }}</th></tr>
                     </table>
                     <button type="submit" style="height:3.4rem;"><ion-icon style="font-size:2.4rem;" name="save-outline"></ion-icon></button>

@@ -141,3 +141,4 @@ secretsdev.json
 
 #etc
 portaria/migrations/
+/media

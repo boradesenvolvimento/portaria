@@ -32,7 +32,7 @@
         <div class="container">
             <div class="row linha-baixo">
                 <h2 class="title-cad col-3">Exportar CSV</h2>
-                <form method="post" action="{% url 'portaria:get_bonus_csv' %}">
+                <form method="post" action="{% url 'portaria:get_contrato_csv' %}">
                     {% csrf_token %}
                     <input class="col-2" type="date" name="dataini" placeholder="Data inicio">
                     <input class="col-2" type="date" name="datafim" placeholder="Data fim">
