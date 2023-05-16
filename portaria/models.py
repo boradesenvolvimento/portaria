@@ -463,8 +463,11 @@ class FuncPj(models.Model):
     conta = models.IntegerField(blank=True, null=True)
     op = models.IntegerField(blank=True, null=True)
     email = models.EmailField(max_length=254)
-    admissao = models.DateField(blank=True, null=True)
+    cargo = models.CharField(max_length=30, null=True)
+    pix = models.CharField(max_length=50, null=True, blank=True)
+    admissao = models.DateField(blank=True, null=True, default=datetime.date.today())
     ativo = models.BooleanField(default=True)
+    data_criacao = models.DateField(blank=True, null=True, default=datetime.date.today())
 
     class Meta:
         verbose_name = 'Funcpj'
@@ -530,9 +533,34 @@ class feriaspj(models.Model):
     valor_parcial2 = models.FloatField(blank=True, null=True)
     dt_quitacao = models.DateField(blank=True, null=True)
     alerta_venc_enviado = models.BooleanField(default=0)
+    observacao = models.TextField(blank=True,null=True)
 
     def __str__(self):
        return self.funcionario.nome
+
+class BonusPJ(models.Model):
+    id = models.AutoField(primary_key=True, unique=True)
+    funcionario = models.ForeignKey(FuncPj, on_delete=PROTECT)
+    valor_pagamento = models.IntegerField()
+    data_pagamento = models.DateField()
+    observacao = models.TextField()
+    quitado = models.BooleanField(default=False)
+    cancelado = models.BooleanField(default=False)
+    data_quitacao = models.DateField(null=True)
+    data_criacao = models.DateField(default=datetime.date.today())
+    autor = models.ForeignKey(User, on_delete=models.PROTECT)
+
+class ContratoPJ(models.Model):
+    id = models.AutoField(primary_key=True, unique=True)
+    funcionario = models.OneToOneField(FuncPj, on_delete=models.CASCADE, unique=True)
+    inicio_contrato = models.DateField(null=True)
+    final_contrato = models.DateField(null=True)
+    data_reajuste = models.DateField(null=True)
+    valor_reajuste = models.IntegerField(null=True)
+    anexo = models.FileField(upload_to='contratos/%Y/%m/%d', null=True, blank=True)
+    observacao = models.TextField(null=True)
+    data_criacao = models.DateField(default=datetime.date.today())
+    autor = models.ForeignKey(User, on_delete=models.PROTECT)
 
 class ManutencaoFrota(models.Model):
     TIPO_MANUTENCAO_CHOICES = [

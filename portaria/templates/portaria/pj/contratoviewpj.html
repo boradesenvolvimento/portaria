@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load groupscheck %}
+{% comment %} <style>
+    .modalObs{
+        display: block;
+    }
+</style> {% endcomment %}
+<div class="container mt-5">
+{% if auth_message %}
+    <p><strong>{{ auth_message }}</strong></p>
+{% else %}
+{% if request.user|has_group:"servicopj" %}
+        {% for message in messages %}
+        <div class="container-fluid p-0">
+            <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                {{ message }}
+            </div>
+        </div>
+        {% endfor %}
+    <div class="row">
+        <h2 class="title-cad col-6">Painel Contratos</h2>
+        <form method="post">
+        {% csrf_token %}
+            <input type="text" name="textbox" placeholder="Digite o nome" class="col-2">
+            {% comment %} <select name="option" class="col-2">
+                <option></option>
+                <option>Bônus vencido</option>
+                <option>Próximos do vencimento</option>
+            </select> {% endcomment %}
+            <button type="submit" style="height:3.4rem;"><ion-icon style="font-size:24px;" name="filter"></ion-icon></button>
+        </form>
+    </div>
+    <div class="container">
+        <table class="table table1">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Inicio Contrato</th>
+                    <th>Final Contrato</th>
+                    <th>Data Reajuste</th>
+                    <th>Valor Reajuste</th>
+                    <th>Anexo</th>
+                    <th>Observação</th>
+                    <th>Editar</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for q in contratos %}
+            <tr>
+                <th>{{ q.funcionario|upper }}</th>
+                <th>{{ q.inicio_contrato|date:'d/m/Y' }}</th>
+                <th>{{ q.final_contrato|date:'d/m/Y' }}</th>
+                <th>{{ q.data_reajuste|date:'d/m/Y' }}</th>
+                {% if q.valor_reajuste %}
+                <th>R$ {{ q.valor_reajuste }}</th>
+                {% else %}
+                <th></th>
+                {% endif %}
+                <th>
+                    {% if q.anexo %}
+                        <a href="/media/{{ q.anexo }}" download>
+                            <ion-icon size="large" name="document-attach-outline"></ion-icon>
+                        </a>
+                    {% endif %}
+                </th>
+                <th>
+                    <button type="button" style="height:3.4rem;" value="{{ forloop.counter }}">
+                        <a style="color:white;font-size:2.4rem;">
+                            <ion-icon name="list"></ion-icon>
+                        </a>
+                    </button>
+                </th>
+                <th>
+                    <button type="submit" style="height:3.4rem;">
+                        <a style="color:white;font-size:2.4rem;" href="{% url 'portaria:contratoeditarpj' idcpj=q.id %}">
+                            <ion-icon name="create"></ion-icon>
+                        </a>
+                    </button>
+                </th>
+                <div id="myModal{{ forloop.counter }}" class="modal modalObs">
+                    <div class="modal-content">
+                        <div>
+                            <span class="title-cad">Observação</span>
+                            <span class="close col" on >&times;</span>
+                        </div>
+                        <div class="container">
+                            {% if q.observacao %}
+                            <p>{{q.observacao}}</p>
+                            {% else %}
+                            <p>Sem observação</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+    </div>
+</div>
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+{% endif %}
+<script>
+    $(document).ready(function(){
+        $("button").click(function(){
+            var but = $(this).val();
+            var modal = document.getElementById("myModal"+but);
+            var span = modal.getElementsByClassName("close")[0];
+            modal.style.display = "block";
+
+            span.onclick = function() {
+                modal.style.display = "none";
+            };
+            window.onclick = function(event) {
+                if (event.target == modal){
+                    modal.style.display = "none";
+                }
+            };
+        });
+    });
+</script>
+{% endblock %}

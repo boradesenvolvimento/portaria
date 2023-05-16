@@ -1,12 +1,16 @@
+from typing import Any, Dict, Mapping, Optional, Type, Union
 from django import forms
 from django.conf import settings
+from django.core.files.base import File
 from django.db.models import ImageField
+from django.db.models.base import Model
 from django.forms import Textarea, DateField
+from django.forms.utils import ErrorList
 from django_summernote.widgets import SummernoteWidget
 
 from .models import Cadastro, TIPO_GARAGEM, ChecklistFrota, NfServicoPj, ManutencaoFrota, ServJoinManu, feriaspj, \
     FuncPj, Motorista, Veiculos, Cliente, PaleteControl, TipoServicosManut, RegistraTerceirizados, GARAGEM_CHOICES, \
-        DisponibilidadeFrota, STATUS_FROTA_CHOICES
+        DisponibilidadeFrota, STATUS_FROTA_CHOICES, BonusPJ, ContratoPJ
 
 
 #forms
@@ -89,7 +93,9 @@ class FuncPjForm(forms.ModelForm):
         fields = [
             'filial',
             'nome',
+            'cargo',
             'salario',
+            'pix',
             'adiantamento',
             'ajuda_custo',
             'cpf_cnpj',
@@ -99,8 +105,12 @@ class FuncPjForm(forms.ModelForm):
             'conta',
             'op',
             'email',
-            'ativo'
+            'ativo',
+            'admissao'
         ]
+        widgets = {
+            'admissao': DateInput(),
+        }
 
 class MotoristaForm(forms.ModelForm):
     class Meta:
@@ -264,11 +274,57 @@ class feriaspjForm(forms.ModelForm):
             'valor_integral',
             'valor_parcial1',
             'valor_parcial2',
+            'observacao'
         ]
         widgets = {
             'ultimas_ferias_ini': DateInput(),
             'ultimas_ferias_fim': DateInput(),
         }
+
+class BonusPJForm(forms.ModelForm):
+    class Meta:
+        model = BonusPJ
+        fields = [
+            'funcionario',
+            'valor_pagamento',
+            'data_pagamento',
+            'observacao',
+        ]
+        widgets = {
+            'data_pagamento': DateInput(),
+        }
+    def __init__(self, *args, **kwargs) -> None:
+        super(BonusPJForm, self).__init__(*args, **kwargs)
+        self.fields['observacao'].required = False
+
+class ContratoPJForm(forms.ModelForm):
+    anexo = forms.FileField()
+    class Meta:
+        model = ContratoPJ
+        fields = [
+            'funcionario',
+            'inicio_contrato',
+            'final_contrato',
+            'data_reajuste',
+            'valor_reajuste',
+            'anexo',
+            'observacao',
+        ]
+        widgets = {
+            'inicio_contrato': DateInput(),
+            'final_contrato': DateInput(),
+            'data_reajuste': DateInput(),
+        }
+    
+    def __init__(self, *args, **kwargs) -> None:
+        super(ContratoPJForm, self).__init__(*args, **kwargs)
+        self.fields['inicio_contrato'].required = False
+        self.fields['final_contrato'].required = False
+        self.fields['data_reajuste'].required = False
+        self.fields['valor_reajuste'].required = False
+        self.fields['anexo'].required = False
+        self.fields['observacao'].required = False
+
 
 class InsertTerceirizados(forms.ModelForm):
     class Meta:

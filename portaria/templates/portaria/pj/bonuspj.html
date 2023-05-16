@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load groupscheck %}
+<div class="container mt-5">
+{% if auth_message %}
+    <p><strong>{{ auth_message }}</strong></p>
+{% else %}
+{% if request.user|has_group:"servicopj" %}
+        {% for message in messages %}
+        <div class="container-fluid p-0">
+            <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                {{ message }}
+            </div>
+        </div>
+        {% endfor %}
+        <div class="container">
+            <div class="row linha-baixo">
+                <h2 class="title-cad col-3">Cadastrar Bônus</h2>
+                <button class="button col-1" style="height:3.4rem;"><a href="{% url 'portaria:bonuscadpj' %}" style="color:white;font-size:2.4rem;">
+                    <ion-icon name="add-circle-sharp"></ion-icon>
+                </a></button>
+            </div>
+        </div>
+        <div class="container">
+            <div class="row linha-baixo">
+                <h2 class="title-cad col-3">Painel Bônus</h2>
+                <button class="button col-1"><a href="{% url 'portaria:bonusviewpj' %}" style="text-decoration:none;color:white;">
+                    Acessar
+                </a></button>
+            </div>
+        </div>
+        <div class="container">
+            <div class="row linha-baixo">
+                <h2 class="title-cad col-3">Exportar CSV</h2>
+                <form method="post" action="{% url 'portaria:get_bonus_csv' %}">
+                    {% csrf_token %}
+                    <input class="col-2" type="date" name="dataini" placeholder="Data inicio">
+                    <input class="col-2" type="date" name="datafim" placeholder="Data fim">
+                    <button type="submit" style="height:3.4rem;"><ion-icon style="font-size:2.4rem;" name="download-outline"></ion-icon></button>
+                </form>
+            </div>
+        </div>
+</div>
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+{% endif %}
+{% endblock %}

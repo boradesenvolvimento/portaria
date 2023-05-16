@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load groupscheck %}
+{% if request.user|has_group:"adm_rh" %}
+<div class="container mt-4">
+    {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+            {% endfor %}
+    <div class="row">
+        <h2 class="title-cad">Atualizar Contratos</h2>
+    </div>
+    <hr/>
+    <div class="container">
+        <form method="post">
+        <table class="table table1">
+            {% csrf_token %}
+            {{ form }}
+            <tr><td><button type="submit" class="button">Atualizar</button></td></tr>
+        </table>
+        </form>
+    </div>
+</div>
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+{% endblock %}

@@ -16,15 +16,15 @@
         <div class="row">
             <h2 class="title-cad col-3">Férias PJ</h2>
             <form method="post">
-                {% csrf_token %}
-            <input type="text" name="textbox" placeholder="Digite o nome" class="col-2">
-
-            <select name="option" class="col-2">
-                <option></option>
-                <option>Férias Vencidas</option>
-                <option>Próximas do vencimento</option>
-            </select>
-            <button type="submit" style="height:3.4rem;"><ion-icon style="font-size:24px;" name="filter"></ion-icon></button>
+            {% csrf_token %}
+                <input type="text" name="textbox" placeholder="Digite o nome" class="col-2">
+                <select name="option" class="col-2">
+                    <option></option>
+                    <option>Quitado</option>
+                    <option>Férias Vencidas</option>
+                    <option>Próximas do vencimento</option>
+                </select>
+                <button type="submit" style="height:3.4rem;"><ion-icon style="font-size:24px;" name="filter"></ion-icon></button>
             </form>
         </div>
         <div class="container">
@@ -34,26 +34,57 @@
                         <th>Nome</th>
                         <th>Ultimas Ferias</th>
                         <th>Periodo</th>
-                        <th>Quitado</th>
                         <th>Vencimento</th>
                         <th>Agendamento</th>
                         <th>Prazo</th>
+                        <th>Observação</th>
                         <th>Opções/Quitar</th>
                     </tr>
                 </thead>
                 <tbody>
-                {% for q in qs %}
-                    <tr><th>{{ q.funcionario|upper }}</th>
+                {% for q in ferias %}
+                <tr>
+                    <th>{{ q.funcionario|upper }}</th>
                     <th>{{ q.ultimas_ferias_ini|date:'d/m/Y' }}</th>
                     <th>{{ q.periodo }}</th>
-                    <th>{{ q.quitado|yesno:'Sim,Não' }}</th>
                     <th>{{ q.vencimento|date:'d/m/Y' }}</th>
                     <th>{% if q.agendamento_ini is None %}---{% else %}{{ q.agendamento_ini|date:'d/m/Y' }} - {{ q.agendamento_fim|date:'d/m/Y' }}{% endif %}</th>
                     <th>{% if hoje > q.vencimento %}Ferias vencidas{% else %}{{ q.vencimento|timeuntil:hoje }} {% endif %}</th>
-                    <th><button type="submit" style="height:3.4rem;"><a style="color:white;font-size:2.4rem;" href="{% url 'portaria:feriasagen' idfpj=q.id %}">
-                        <ion-icon name="settings-outline"></ion-icon>
-                    </a></button> | <button type="submit" style="height:3.4rem;"><a style="color:white;font-size:2.4rem;" href="{% url 'portaria:feriasquit' idfpj=q.id %}">
-                        <ion-icon name="checkmark-outline"></ion-icon></a></button></th></tr>
+                    <th>
+                        <button type="button" style="height:3.4rem;" value="{{ forloop.counter }}">
+                            <a style="color:white;font-size:2.4rem;">
+                                <ion-icon name="list"></ion-icon>
+                            </a>
+                        </button>
+                    </th>
+                    <th>
+                        <button type="submit" style="height:3.4rem;">
+                            <a style="color:white;font-size:2.4rem;" href="{% url 'portaria:feriasagen' idfpj=q.id %}">
+                                <ion-icon name="settings-outline"></ion-icon>
+                            </a>
+                        </button> |
+                        <button type="submit" style="height:3.4rem;">
+                            <a style="color:white;font-size:2.4rem;" href="{% url 'portaria:feriasquit' idfpj=q.id %}">
+                                <ion-icon name="checkmark-outline"></ion-icon>
+                            </a>
+                        </button>
+                    </th>
+                    <div id="myModal{{ forloop.counter }}" class="modal modalObs">
+                        <div class="modal-content">
+                            <div>
+                                <span class="title-cad">Observação</span>
+                                <span class="close col" on >&times;</span>
+                            </div>
+                            <div class="container">
+                                {% if q.observacao %}
+                                <p>{{q.observacao}}</p>
+                                {% else %}
+                                <p>Sem observação</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </tr>
                 {% endfor %}
                 </tbody>
             </table>
@@ -62,4 +93,23 @@
     </div>
     {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
     {% endif %}
+    <script>
+        $(document).ready(function(){
+            $("button").click(function(){
+                var but = $(this).val();
+                var modal = document.getElementById("myModal"+but);
+                var span = modal.getElementsByClassName("close")[0];
+                modal.style.display = "block";
+    
+                span.onclick = function() {
+                    modal.style.display = "none";
+                };
+                window.onclick = function(event) {
+                    if (event.target == modal){
+                        modal.style.display = "none";
+                    }
+                };
+            });
+        });
+    </script>
     {% endblock %}
