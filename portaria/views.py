@@ -2339,6 +2339,7 @@ def painelmov(request):
 def get_nfpj_mail(request):
     a = request.POST.get('total')
     b = request.POST.get('adiantamento')
+    func_id = request.POST.getlist('funcid')
     dt_1 = request.POST.get('periodo1')
     dt_2 = request.POST.get('periodo2')
     dt_pgmt = request.POST.get('dt_pgmt')
@@ -2346,17 +2347,31 @@ def get_nfpj_mail(request):
     dt_2 = datetime.datetime.strptime(dt_2 + " 00:00:00", '%Y-%m-%d %H:%M:%S')
     dt_pgmt = datetime.datetime.strptime(dt_pgmt + " 00:00:00", '%Y-%m-%d %H:%M:%S')
 
+    filter = {
+        'id__in': func_id,
+        'ativo': True
+    }
+
     text = ""
     title = ''
     if a:
         title = 'NF'
-        qs = FuncPj.objects.filter(ativo=True)
+        qs = FuncPj.objects.filter(**filter)
         text = '''Favor emitir a NF. de Prestação Serviços
 
     Período de: {16} à {17}
+
     Valor do Serviço: R$ {2:.2f}
+    Premio: R$ {3:2f}
     Ajuda de custo: R$ {4:.2f}
-    Forma de Pagamento: R$ {10:.2f}
+    Crédito Convênio: R$ {5:.2f}
+    Outros Créditos: R$ {6:.2f}
+
+    Adiantamento: R$ {7:.2f}
+    Desconto Convênio: R$ {8:.2f}
+    Outros Descontos: R$ {9:.2f}
+
+    Total Pagamento: R$ {10:.2f}
     Data de pagamento: {18}
     Serviço Prestado em: {0}
     Dados Bancários: 
@@ -2370,7 +2385,8 @@ Att
                 '''
     if b:
         title = 'NF ADIANTAMENTO'
-        qs = FuncPj.objects.filter(ativo=True, adiantamento__gt=0)
+        filter['adiantamento__gt'] = 0
+        qs = FuncPj.objects.filter(**filter)
         text = """Prestação de Serviços 
 
     Período de: {16} até {17}
@@ -2390,22 +2406,38 @@ Att
                 """
     array = []
     for q in qs:
-        query = FuncPj.objects.filter(pk=q.id) \
-            .annotate(
-             faculdade=Coalesce(Sum('nfservicopj__faculdade',filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)), Value(0.0)),
-             cred_convenio=Coalesce(Sum('nfservicopj__cred_convenio', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)), Value(0.0)),
-             aux_moradia=Coalesce(Sum('nfservicopj__aux_moradia', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)), Value(0.0)),
-             outros_cred=Coalesce(Sum('nfservicopj__outros_cred', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)), Value(0.0)),
-             desc_convenio=Coalesce(Sum('nfservicopj__desc_convenio', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)), Value(0.0)),
-             outros_desc=Coalesce(Sum('nfservicopj__outros_desc',filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)), Value(0.0)),
-             ).annotate(total=(F('salario') + F('ajuda_custo') + F('faculdade') + F('cred_convenio') + F('outros_cred') + F('aux_moradia') ) - (F('adiantamento') + F('desc_convenio') + F('outros_desc')))
+        nf = NfServicoPj.objects.filter(funcionario_id=q.id).order_by('-id')
+
+        if len(nf) > 0:
+            query = FuncPj.objects.filter(pk=q.id).annotate(
+                faculdade=Coalesce(nf[0].faculdade,Value(0.0)),
+                cred_convenio=Coalesce(nf[0].cred_convenio,Value(0.0)),
+                outros_cred=Coalesce(nf[0].outros_cred,Value(0.0)),
+                aux_moradia=Coalesce(nf[0].aux_moradia,Value(0.0)),
+                desc_convenio=Coalesce(nf[0].desc_convenio,Value(0.0)),
+                outros_desc=Coalesce(nf[0].outros_desc,Value(0.0)),
+                ) \
+                .annotate(total=((F('salario') + F('ajuda_custo') + F('faculdade') + F('cred_convenio') + F('outros_cred') + F('aux_moradia')) - (F('adiantamento') + F('desc_convenio') + F('outros_desc'))))
+            
+        else:
+            query = FuncPj.objects.filter(pk=q.id).annotate(
+                faculdade=Coalesce(Sum('nfservicopj__faculdade', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)),Value(0.0)),
+                cred_convenio=Coalesce(Sum('nfservicopj__cred_convenio', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)),Value(0.0)),
+                outros_cred=Coalesce(Sum('nfservicopj__outros_cred', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)),Value(0.0)),
+                aux_moradia=Coalesce(Sum('nfservicopj__aux_moradia',filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)),Value(0.0)),
+                desc_convenio=Coalesce(Sum('nfservicopj__desc_convenio', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)),Value(0.0)),
+                outros_desc=Coalesce(Sum('nfservicopj__outros_desc', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)),Value(0.0)),
+                ) \
+                .annotate(total=((F('salario') + F('ajuda_custo') + F('faculdade') + F('cred_convenio') + F('outros_cred') + F('aux_moradia')) - (F('adiantamento') + F('desc_convenio') + F('outros_desc'))))
         array.extend(query)
+
+    # ipdb.set_trace()
     for q in array:
         try:
             send_mail(
                 subject=title,
                 message=text.format(
-                    q.filial, q.nome, q.salario, q.faculdade, q.ajuda_custo, q.cred_convenio,
+                    q.filial, q.nome, q.salario, q.faculdade, q.ajuda_custo + q.aux_moradia, q.cred_convenio,
                     q.outros_cred, q.adiantamento, q.desc_convenio, q.outros_desc, q.total,
                     q.cpf_cnpj, q.banco, q.ag, q.conta, q.op,
                     dt_1.strftime('%d/%m/%Y'), dt_2.strftime('%d/%m/%Y'), dt_pgmt.strftime('%d/%m/%Y'),
@@ -2415,16 +2447,15 @@ Att
                 recipient_list=[q.email]
                 # recipient_list=['davi.bezerra@bora.com.br']
             )
-            MailsPJ.objects.create(funcionario_id=q.id, data_pagamento=datetime.datetime.strptime(dt_pgmt,'%Y-%m-%d'),
+            MailsPJ.objects.create(funcionario_id=q.id, data_pagamento=dt_pgmt,
                                    mensagem=text.format(
                     q.filial, q.nome, q.salario, q.faculdade, q.ajuda_custo, q.cred_convenio,
                     q.outros_cred, q.adiantamento, q.desc_convenio, q.outros_desc, q.total,
                     q.cpf_cnpj, q.banco, q.ag, q.conta, q.op, dt_1, dt_2, dt_pgmt, q.aux_moradia, q.pix
                 ))
-            print("passei2")
         except Exception as e:
             print(e)
-        break
+            messages.error(request, f"Erro ao enviar o Email do {q.nome.upper()}")
         
     return redirect('portaria:consultanfpj')
 
@@ -4218,7 +4249,7 @@ def compras_lancar_pedido(request):
             email = usuario[0].email
         if idsolic:
             try:
-                filial = Filiais.objects.get(id_empresa=empresa, id_filial=fil)
+                filial = Filiais.objects.filter(id_empresa=empresa, id_filial=fil).first()
                 obj = SolicitacoesCompras.objects.create(
                     nr_solic=int(idsolic), data=datetime.datetime.now(), status="ANDAMENTO",
                     filial=filial, empresa=empresa, codigo_fl = fil, autor=request.user, anexo=anexo,
@@ -4228,7 +4259,8 @@ def compras_lancar_pedido(request):
                 messages.success(request, f'Solicitação cadastrada com sucesso!')
             except Exception as e:
                 print('AQUI É o EROOO===',e)
-                messages.error(f'Error:{e}, error_type:{type(e).__name__}')
+                # messages.error(request, f'Error:{e}, error_type:{type(e).__name__}')
+                messages.error(request, f'{filial}')
         else:
             messages.error(request, 'Não encontrado solicitação com este número.')
         return redirect('portaria:compras_index')
