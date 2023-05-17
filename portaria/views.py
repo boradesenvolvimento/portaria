@@ -2412,8 +2412,8 @@ Att
                     q.aux_moradia, q.pix or "Não Informado"
                 ),
                 from_email=settings.EMAIL_HOST_USER,
-                # recipient_list=[q.email]
-                recipient_list=['davi.bezerra@bora.com.br']
+                recipient_list=[q.email]
+                # recipient_list=['davi.bezerra@bora.com.br']
             )
             MailsPJ.objects.create(funcionario_id=q.id, data_pagamento=datetime.datetime.strptime(dt_pgmt,'%Y-%m-%d'),
                                    mensagem=text.format(
