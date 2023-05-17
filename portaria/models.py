@@ -452,6 +452,7 @@ class FuncPj(models.Model):
 
     id = models.BigAutoField(primary_key=True)
     filial = models.CharField(choices=TIPO_GARAGEM, max_length=3, blank=True, null=True)
+    # filial = models.ForeignKey(Filiais, on_delete=models.PROTECT, blank=True, null=True)
     nome = models.CharField(max_length=50)
     salario = models.FloatField(blank=True, null=True)
     adiantamento = models.FloatField(blank=True, null=True)

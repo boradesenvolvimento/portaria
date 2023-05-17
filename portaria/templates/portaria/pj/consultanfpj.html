@@ -4,24 +4,19 @@
 {% if request.user|has_group:"adm_rh" %}
 
     <div class="container mt-5">
-        <div class="row">
-            <div class="col col-lg-9 col-md-9 col-sm-9 sr-only" id="sendmail">
-                <form class="form-box" action="{% url 'portaria:get_nfpj_mail' %}" method="post">
-                    {% csrf_token %}
-                    <label for="periodo">Periodo:</label>
-                    <input class="col" type="date" id="periodo" name="periodo1">
-                    <input class="col" type="date" name="periodo2">
-
-                    <label for="dt_pgmt">Data pagamento:</label>
-                    <input class="col" type="date" id="dt_pgmt" name="dt_pgmt">
-                    <input type="submit" class="button col-3" name="adiantamento" value="adiantamento">
-                    {% comment %} <input type="submit" class="button col-3" name="total" value="total"> {% endcomment %}
-
-                </form>
+        {% for message in messages %}
+        <div class="container-fluid p-0">
+            <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                {{ message }}
             </div>
+        </div>
+    {% endfor %}
+        <div class="row">
+            {% comment %} <div class="col col-lg-9 col-md-9 col-sm-9 sr-only" id="sendmail">
+            </div> {% endcomment %}
             <div style="display: flex; justify-content: space-between;">
                 <div>
-                    <button onclick="isactive()" class="button">Enviar emails</button>
+                    <strong>Total de Registros: {{ array|length }}</strong>
                 </div>
                 <div>
                     <form style="display: flex; justify-content: flex-end;" action="{% url 'portaria:get_nfpj_csv' %}" method="post">
@@ -37,48 +32,81 @@
         </div>
         <div class="row">
             <table class="table">
-                <thead>
-                    <tr>
-                        <th class="title-cad"><strong>Total de Registros: {{ array|length }}</strong></th>
-                    </tr>
-                    <tr>
-                        {% comment %} <th class="title-cad">#</th> {% endcomment %}
-                        <th class="title-cad">Nome</th>
-                        <th class="title-cad">Salario</th>
-                        <th class="title-cad">Faculdade</th>
-                        <th class="title-cad">Ajuda de Custo</th>
-                        <th class="title-cad">Aux Moradia</th>
-                        <th class="title-cad">Cred Convenio</th>
-                        <th class="title-cad">Outros Cred</th>
-                        <th class="title-cad">Adiantamento</th>
-                        <th class="title-cad">Desc Convenio</th>
-                        <th class="title-cad">Outros Desc</th>
-                        <th class="title-cad">Total a Pagar</th>
-                    </tr>
-                </thead>
-                {% for q in array|dictsort:"nome" %}
-                <tbody>
-                    <tr>
-                        {% comment %} <th><input type="checkbox" value="{{ q.id }}"></th> {% endcomment %}
-                        <th>{{ q.nome|upper }}</th>
-                        <th>R$ {{ q.salario|floatformat:2 }}</th>
-                        <th>R$ {{ q.faculdade|floatformat:2 }}</th>
-                        <th>R$ {{ q.ajuda_custo|floatformat:2 }}</th>
-                        <th>R$ {{ q.aux_moradia|floatformat:2 }}</th>
-                        <th>R$ {{ q.cred_convenio|floatformat:2 }}</th>
-                        <th>R$ {{ q.outros_cred|floatformat:2 }}</th>
-                        <th>R$ {{ q.adiantamento|floatformat:2 }}</th>
-                        <th>R$ {{ q.desc_convenio|floatformat:2 }}</th>
-                        <th>R$ {{ q.outros_desc|floatformat:2 }}</th>
-                        <th>R$ {{ q.total|floatformat:2 }}</th>
-                    </tr>
-                </tbody>
-                {% endfor %}
+                <form class="form-box" action="{% url 'portaria:get_nfpj_mail' %}" method="post">
+                    {% csrf_token %}
+                    <thead>
+                        <tr>
+                            <th class="title-cad">#</th>
+                            <th class="title-cad">Nome</th>
+                            <th class="title-cad">Salario</th>
+                            <th class="title-cad">Faculdade</th>
+                            <th class="title-cad">Ajuda de Custo</th>
+                            <th class="title-cad">Aux Moradia</th>
+                            <th class="title-cad">Cred Convenio</th>
+                            <th class="title-cad">Outros Cred</th>
+                            <th class="title-cad">Adiantamento</th>
+                            <th class="title-cad">Desc Convenio</th>
+                            <th class="title-cad">Outros Desc</th>
+                            <th class="title-cad">Total a Pagar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for q in array|dictsort:"nome" %}
+                        <tr>
+                            <th><input type="checkbox" value="{{ q.id }}" name="funcid"></th>
+                            <th>{{ q.nome|upper }}</th>
+                            <th>R$ {{ q.salario|floatformat:2 }}</th>
+                            <th>R$ {{ q.faculdade|floatformat:2 }}</th>
+                            <th>R$ {{ q.ajuda_custo|floatformat:2 }}</th>
+                            <th>R$ {{ q.aux_moradia|floatformat:2 }}</th>
+                            <th>R$ {{ q.cred_convenio|floatformat:2 }}</th>
+                            <th>R$ {{ q.outros_cred|floatformat:2 }}</th>
+                            <th>R$ {{ q.adiantamento|floatformat:2 }}</th>
+                            <th>R$ {{ q.desc_convenio|floatformat:2 }}</th>
+                            <th>R$ {{ q.outros_desc|floatformat:2 }}</th>
+                            <th>R$ {{ q.total|floatformat:2 }}</th>
+                        </tr>
+                        {% endfor %}
+                        <tr>
+                            <td>
+                                <label for="periodo">Periodo:</label>
+                            </td>
+                            <td>
+                                <input class="col" type="date" id="periodo" name="periodo1">
+                            </td>
+                            <td>
+                                <input class="col" type="date" name="periodo2">
+                            </td>
+                            <td>
+                                <label for="dt_pgmt">Data pagamento:</label>
+                            </td>
+                            <td>
+                                <input class="col" type="date" id="dt_pgmt" name="dt_pgmt">
+                            </td>
+                            <td>
+                                <input type="submit" class="button" name="adiantamento" value="adiantamento">
+                            </td>
+                            <td>
+                                <input type="submit" class="button" name="total" value="total">
+                            </td>
+                            {% comment %} <td>
+                            </td>
+                            <td>
+                            </td>
+                            <td>
+                            </td>
+                            <td>
+                            </td>
+                            <td>
+                            </td> {% endcomment %}
+                        </tr>
+                    </tbody>
+                </form>
             </table>
         </div>
     </div>
     {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
-    <script type="text/javascript">
+<script type="text/javascript">
     function isactive(){
     if(document.getElementById("sendmail").classList.contains('sr-only')){
         document.getElementById("sendmail").classList.remove('sr-only')
@@ -86,7 +114,5 @@
         document.getElementById("sendmail").classList.add('sr-only')
     }
   }
-
-
 </script>
 {% endblock %}
