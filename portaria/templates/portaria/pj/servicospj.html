@@ -45,7 +45,7 @@
         {% for q in qnt_funcs %}
                 <tr>
                     <th>{{ q.nome|upper }}</th>
-                    <th>{{ q.filial }}</th>
+                    <th>{{ q.filial.sigla }}</th>
                     <th>{{ q.cpf_cnpj }}</th>
                     <th>Bco:{{ q.banco }} | Ag:{{ q.ag }} | Cc:{{ q.conta }}</th>
                     <th>

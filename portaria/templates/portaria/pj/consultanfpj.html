@@ -36,6 +36,11 @@
                     {% csrf_token %}
                     <thead>
                         <tr>
+                            <div>
+                                <button id="chkall" type="button">Marcar todos</button>
+                            </div>
+                        </tr>
+                        <tr>
                             <th class="title-cad">#</th>
                             <th class="title-cad">Nome</th>
                             <th class="title-cad">Salario</th>
@@ -108,11 +113,24 @@
     {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
 <script type="text/javascript">
     function isactive(){
-    if(document.getElementById("sendmail").classList.contains('sr-only')){
-        document.getElementById("sendmail").classList.remove('sr-only')
-    } else {
-        document.getElementById("sendmail").classList.add('sr-only')
+        if(document.getElementById("sendmail").classList.contains('sr-only')){
+            document.getElementById("sendmail").classList.remove('sr-only')
+        } else {
+            document.getElementById("sendmail").classList.add('sr-only')
+        }
     }
-  }
+
+  $(document).ready(function(){
+    $('#chkall').click(function(){
+        var chkbox = $('input[name="funcid"]');
+        if($(this).hasClass('allChecked')){
+            chkbox.prop('checked', false);
+            $(this).removeClass('allChecked');
+        }else{
+            chkbox.prop('checked', true);
+            $(this).toggleClass('allChecked');
+        }
+    });
+});
 </script>
 {% endblock %}

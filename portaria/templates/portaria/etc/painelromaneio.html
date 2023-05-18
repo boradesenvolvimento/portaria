@@ -61,6 +61,7 @@
                 </thead>
                 <tbody>
                 <form method="post">
+                    {% csrf_token %}
                     {% for q in context %}
                     <tr class="{{q.printed}}">
                         <th><input type="checkbox" value="{{ q.id }}" name="romid"></th>
