@@ -386,6 +386,7 @@ def inserirmesmovalores(request, id):
             objeto["autor"] = request.user
 
             NfServicoPj.objects.create(**objeto)
+            messages.success(request, "Mesmo valor inserido com sucesso")
         except Exception as e:
             messages.error(request, "Nenhum valor foi inserido anteriormente.")
 
@@ -2385,7 +2386,6 @@ Att
                 '''
     if b:
         title = 'NF ADIANTAMENTO'
-        filter['adiantamento__gt'] = 0
         qs = FuncPj.objects.filter(**filter)
         text = """Prestação de Serviços 
 
@@ -2418,7 +2418,6 @@ Att
                 outros_desc=Coalesce(nf[0].outros_desc,Value(0.0)),
                 ) \
                 .annotate(total=((F('salario') + F('ajuda_custo') + F('faculdade') + F('cred_convenio') + F('outros_cred') + F('aux_moradia')) - (F('adiantamento') + F('desc_convenio') + F('outros_desc'))))
-            
         else:
             query = FuncPj.objects.filter(pk=q.id).annotate(
                 faculdade=Coalesce(Sum('nfservicopj__faculdade', filter=Q(nfservicopj__data_emissao__month=datetime.datetime.now().month,nfservicopj__data_emissao__year=datetime.datetime.now().year)),Value(0.0)),
@@ -2431,13 +2430,12 @@ Att
                 .annotate(total=((F('salario') + F('ajuda_custo') + F('faculdade') + F('cred_convenio') + F('outros_cred') + F('aux_moradia')) - (F('adiantamento') + F('desc_convenio') + F('outros_desc'))))
         array.extend(query)
 
-    # ipdb.set_trace()
     for q in array:
         try:
             send_mail(
                 subject=title,
                 message=text.format(
-                    q.filial, q.nome, q.salario, q.faculdade, q.ajuda_custo + q.aux_moradia, q.cred_convenio,
+                    f'{q.filial.nome} - {q.filial.uf}', q.nome, q.salario, q.faculdade, q.ajuda_custo + q.aux_moradia, q.cred_convenio,
                     q.outros_cred, q.adiantamento, q.desc_convenio, q.outros_desc, q.total,
                     q.cpf_cnpj, q.banco, q.ag, q.conta, q.op,
                     dt_1.strftime('%d/%m/%Y'), dt_2.strftime('%d/%m/%Y'), dt_pgmt.strftime('%d/%m/%Y'),
@@ -2449,13 +2447,16 @@ Att
             )
             MailsPJ.objects.create(funcionario_id=q.id, data_pagamento=dt_pgmt,
                                    mensagem=text.format(
-                    q.filial, q.nome, q.salario, q.faculdade, q.ajuda_custo, q.cred_convenio,
+                    f'{q.filial.nome} - {q.filial.uf}', q.nome, q.salario, q.faculdade, q.ajuda_custo, q.cred_convenio,
                     q.outros_cred, q.adiantamento, q.desc_convenio, q.outros_desc, q.total,
                     q.cpf_cnpj, q.banco, q.ag, q.conta, q.op, dt_1, dt_2, dt_pgmt, q.aux_moradia, q.pix
                 ))
         except Exception as e:
             print(e)
             messages.error(request, f"Erro ao enviar o Email do {q.nome.upper()}")
+            return redirect('portaria:consultanfpj')
+    
+    messages.success(request, 'Emails enviado com sucesso.')
         
     return redirect('portaria:consultanfpj')
 
