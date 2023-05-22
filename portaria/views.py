@@ -2444,6 +2444,7 @@ Att
                 from_email=settings.EMAIL_HOST_USER,
                 recipient_list=[q.email]
                 # recipient_list=['davi.bezerra@bora.com.br']
+                fail_silently=False
             )
             if send == 1:
                 messages.success(request, 'Email enviado com sucesso.')
