@@ -2442,7 +2442,7 @@ Att
                     q.aux_moradia, q.pix or "Não Informado"
                 ),
                 from_email=settings.EMAIL_HOST_USER,
-                recipient_list=[q.email]
+                recipient_list=[q.email],
                 # recipient_list=['davi.bezerra@bora.com.br']
                 fail_silently=False
             )
@@ -3962,8 +3962,8 @@ def justificativa(request):
         date2 = request.GET.get('data2')
         garagem = request.GET.get('garagem')
         if date1 and date2 and garagem:
-            form = JustificativaEntrega.objects.filter(id_garagem=garagem, data_emissao__lte=date2, data_emissao__gte=date1,
-                                                       confirmado=False).order_by("lead_time")
+            form = JustificativaEntrega.objects.filter(filial__id_garagem=garagem, data_emissao__lte=date2, data_emissao__gte=date1,
+                                                        confirmado=False).order_by("lead_time")
             
             return render(request,'portaria/etc/justificativa.html', 
                             {
