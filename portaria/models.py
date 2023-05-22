@@ -908,7 +908,7 @@ class JustificativaEntrega(models.Model):
     remetente = models.CharField(max_length=200)
     peso = models.FloatField()
     lead_time = models.DateField()
-    em_aberto = models.SmallIntegerField()
+    em_aberto = models.SmallIntegerField(null=True)
     data_entrega = models.DateField(blank=True, null=True)
     local_entreg = models.CharField(max_length=100)
     nota_fiscal = models.CharField(max_length=200)
@@ -919,6 +919,7 @@ class JustificativaEntrega(models.Model):
     confirmado = models.BooleanField(default=False)
     recusa = models.BooleanField(default=False)
     autor = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
+    filial = models.ForeignKey(Filiais, on_delete=models.PROTECT, blank=True, null=True)
 
 class OcorrenciaEntrega(models.Model):
     id_empresa = models.CharField(max_length=5)

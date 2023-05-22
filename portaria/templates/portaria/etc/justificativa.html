@@ -29,8 +29,8 @@
                     <label for="garagem">Garagem:</label>
                     <select name="garagem" id="garagem">
                         <option></option>
-                        {% for k,v in garagem_choices %}
-                            <option value="{{ k }}">{{ k }} - {{ v }}</option>
+                        {% for filial in filiais %}
+                            <option value="{{ filial.id }}">{{ filial.id_garagem }} - {{ filial.sigla }}</option>
                         {% endfor %}
                     </select>
                     <button style="padding: 15px 40px;" type="submit">Filtrar</button>
