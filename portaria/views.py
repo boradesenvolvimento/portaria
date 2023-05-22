@@ -3949,7 +3949,7 @@ def bipagempalrel(request):
     return redirect('portaria:etqrelatorio')
 
 def justificativa(request):
-    garagem_choices = GARAGEM_CHOICES
+    filiais = Filiais.objects.all()
     justchoices = JustificativaEntrega.JUSTIFICATIVA_CHOICES
     today = datetime.datetime.now()
     yesterday = today - datetime.timedelta(1)
@@ -3966,8 +3966,8 @@ def justificativa(request):
             
             return render(request,'portaria/etc/justificativa.html', 
                             {
-                                'form':form,'garagem_choices':garagem_choices,
-                                'justchoices':justchoices, 
+                                'form':form,'filiais':filiais,
+                                'justchoices':justchoices,
                                 'today': today, 
                                 'yesterday': yesterday
                             }
@@ -3994,7 +3994,7 @@ def justificativa(request):
                     obj.save()
         messages.success(request, 'Justificativas cadastradas')
         return redirect('portaria:justificativa')
-    return render(request, 'portaria/etc/justificativa.html', {'garagem_choices': garagem_choices, 'today': today, 'yesterday': yesterday})
+    return render(request, 'portaria/etc/justificativa.html', {'filiais': filiais, 'today': today, 'yesterday': yesterday})
 
 def rel_justificativa(request):
     gachoices = GARAGEM_CHOICES
