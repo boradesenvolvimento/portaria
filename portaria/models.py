@@ -931,6 +931,7 @@ class OcorrenciaEntrega(models.Model):
     desc_ocor = models.CharField(max_length=200)
     data_ocorrencia = models.DateField()
     entrega = models.ForeignKey(JustificativaEntrega, on_delete=models.CASCADE, blank=True, null=True)
+    filial = models.ForeignKey(Filiais, on_delete=models.PROTECT, blank=True, null=True)
 
 class SolicitacoesCompras(models.Model):
     STATUS_CHOICES = [
