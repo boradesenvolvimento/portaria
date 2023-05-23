@@ -20,18 +20,10 @@
                     {% csrf_token %}
                 <table class="table1 col-11">
                     <tbody>
-                    <tr><th>Quantidade:<input name="qnt" type="text"><h6>Máximo de 2000 por cadastro.</h6></th></tr>
                     <tr>
                         <th>
-                            <label for="empresa">Empresa:</label>
-                            <select id="empresa" name="empresa">
-                                <option selected disabled value="">--</option>
-                                <option value="1"> 1 - Bora </option>
-                                <option value="2"> 2 - Transervo </option>
-                                <option value="3"> 3 - Bourbon </option>
-                                <option value="4"> 4 - Transfood </option>
-                                
-                            </select>
+                            Quantidade:<input name="qnt" type="text">
+                            <h6>Máximo de 2000 por cadastro.</h6>
                         </th>
                     </tr>
                     <tr>
@@ -39,20 +31,9 @@
                             <label for="fil">Filial:</label>
                             <select id="fil" name="fil">
                                 <option selected disabled value="">--</option>
-                                <option value="1"> 1-SPO </option>
-                                <option value="2"> 2-REC </option>
-                                <option value="3"> 3-SSA </option>
-                                <option value="4"> 4-FOR </option>
-                                <option value="5"> 5-MCZ </option>
-                                <option value="6"> 6-NAT </option>
-                                <option value="7"> 7-JPA </option>
-                                <option value="8"> 8-AJU </option>
-                                <option value="9"> 9-VDC </option>
-                                <option value="10"> 10-CTG </option>
-                                <option value="11"> 11-GVR </option>
-                                <option value="12"> 12-VIX </option>
-                                <option value="13"> 13-TCO </option>
-                                <option value="14"> 14-UDI </option>
+                                {% for f in filiais %}
+                                    <option value={{f.sigla}}>{{f.id_garagem}} - {{f.sigla}}</option>
+                                {% endfor %}
                             </select>
                         </th>
                     </tr>
