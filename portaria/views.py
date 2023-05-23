@@ -2420,7 +2420,7 @@ Att
 
     for q in array:
         try:
-            send = send_mail(
+            send_mail(
                 subject=title,
                 message=text.format(
                     f'{q.filial.nome} - {q.filial.uf}', q.nome, q.salario, q.faculdade, q.ajuda_custo + q.aux_moradia, q.cred_convenio,
