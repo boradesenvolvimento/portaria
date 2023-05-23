@@ -201,6 +201,9 @@ def insert_to_ocorrencias(data):
             try:
                 OcorrenciaEntrega.objects.get(**obj)
             except ObjectDoesNotExist:
+                filial = Filiais.objects.get(id_garagem=obj['id_garagem'])
+                obj['filial'] = filial.id
+                
                 OcorrenciaEntrega.objects.create(**obj)
             except Exception as e:
                 print('Error:%s, error_type:%s' %(e, type(e)))
