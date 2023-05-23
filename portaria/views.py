@@ -2431,11 +2431,8 @@ Att
                 ),
                 from_email=settings.EMAIL_HOST_USER,
                 recipient_list=[q.email],
-                # recipient_list=['davi.bezerra@bora.com.br']
                 fail_silently=False
             )
-            if send == 1:
-                messages.success(request, 'Email enviado com sucesso.')
             MailsPJ.objects.create(funcionario_id=q.id, data_pagamento=dt_pgmt,
                                    mensagem=text.format(
                     f'{q.filial.nome} - {q.filial.uf}', q.nome, q.salario, q.faculdade, q.ajuda_custo, q.cred_convenio,
@@ -2447,7 +2444,7 @@ Att
             messages.error(request, f"Erro ao enviar o Email do {q.nome.upper()}")
             return redirect('portaria:consultanfpj')
     
-    # messages.success(request, 'Emails enviado com sucesso.')
+    messages.success(request, 'Emails enviado com sucesso.')
         
     return redirect('portaria:consultanfpj')
 
