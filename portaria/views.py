@@ -211,12 +211,10 @@ def paleteview(request):
                                                             'ttcount':ttcount})
 
 def cadpaletes(request):
-    tp_fil = GARAGEM_CHOICES
     tp_emp = Cliente.objects.all().order_by('razao_social')
-    keyga = {k: v for k, v in GARAGEM_CHOICES}
+    filiais = Filiais.objects.all()
     if request.method == 'POST':
         qnt = request.POST.get('qnt')
-        empresa = request.POST.get('empresa')
         fil = request.POST.get('fil')
         emp = request.POST.get('emp') # Razao Social
         tp_p = request.POST.get('tp_p')
@@ -231,10 +229,10 @@ def cadpaletes(request):
                 Cliente.objects.filter(razao_social=emp).update(saldo=nsal[0].saldonew)
                 for x in range(0,int(qnt)):
 
-                    PaleteControl.objects.create(loc_atual=keyga[empresa+fil], tp_palete=tp_p, autor=request.user)
+                    PaleteControl.objects.create(loc_atual=fil, tp_palete=tp_p, autor=request.user)
                     if x == 2000: break
                 messages.success(request, f'{qnt} Paletes foram cadastrados com sucesso')
-    return render(request, 'portaria/palete/cadpaletes.html', {'tp_fil':tp_fil, 'tp_emp':tp_emp})
+    return render(request, 'portaria/palete/cadpaletes.html', {'filiais':filiais, 'tp_emp':tp_emp})
 
 def paletecliente(request):
     form = Cliente.objects.filter(~Q(saldo=0), intex='CLIENTE').order_by('razao_social')
@@ -2138,9 +2136,7 @@ def romxmltoexcel(*romaneio, tp_dld):
 #funcoes variadas
 @login_required
 def solictransfpalete(request):
-    mov_gar = "0"
     form = TPaletesForm()
-    keyga = {k:v for k,v in GARAGEM_CHOICES}
     garagem = Filiais.objects.values('sigla', 'id_garagem')
     
     if request.method == 'POST':
@@ -2153,32 +2149,24 @@ def solictransfpalete(request):
         conferente = request.POST.get('conferente')
 
         if qnt <= PaleteControl.objects.filter(loc_atual=ori,tp_palete=tp_p).count():
-            #filtrar caminhão em movimento
-            # placas = SolicMovPalete.objects.order_by('placa_veic').values('placa_veic')
-            # plcs = []
-            # for p in placas:
-            #     plcs.append(p.get('placa_veic'))
-            # if plc in plcs:
-
-            #     messages.error(request, f'O veiculo de placa {plc} já está em movimento')
-            #     return redirect('portaria:paineltransf')
 
             currentTime = timezone.now()
             time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             solic_id = str(time).replace(':', '').replace(' ', '').replace('-', '') + plc[5:]
-            for q in range(0,qnt):
-                x = PaleteControl.objects.filter(loc_atual=ori, tp_palete=tp_p).first()
-                solic = SolicMovPalete.objects.create(solic_id=solic_id, palete=x,data_solic=currentTime,origem=ori,destino=des,
-                                         placa_veic=plc,autor=request.user,motorista=motorista,conferente=conferente)
-               
-                PaleteControl.objects.filter(pk=x.id).update(loc_atual="MOV")
-            messages.success(request, f'{qnt} palete(s) | Aguardando o recebimento de paletes de {ori} para {des}')
-            return redirect('portaria:transfdetalhe', solic_id=solic_id)
-            #return render(request,'portaria/palete/transfpaletes.html', {'form':form})
+            if len(plc) <= 7:
+                for q in range(0,qnt):
+                    x = PaleteControl.objects.filter(loc_atual=ori, tp_palete=tp_p).first()
+                    solic = SolicMovPalete.objects.create(solic_id=solic_id, palete=x,data_solic=currentTime,origem=ori,destino=des,
+                                            placa_veic=plc,autor=request.user,motorista=motorista,conferente=conferente)
+                
+                    PaleteControl.objects.filter(pk=x.id).update(loc_atual="MOV")
+                messages.success(request, f'{qnt} palete(s) | Aguardando o recebimento de paletes de {ori} para {des}')
+                return redirect('portaria:transfdetalhe', solic_id=solic_id)
+            else:
+                messages.error(request,'Número de placa muito extenso.')
+                return render(request,'portaria/palete/transfpaletes.html', {'form':form, 'garagem': garagem})
+                
         else:
-            print(keyga[ori])
-            print(tp_p)
-            print(PaleteControl.objects.filter(loc_atual=keyga[ori], tp_palete=tp_p).count())
             messages.error(request,'Quantidade solicitada maior que a disponível')
             return render(request,'portaria/palete/transfpaletes.html', {'form':form, 'garagem': garagem})
     return render(request,'portaria/palete/transfpaletes.html', {'form':form, 'garagem': garagem})
