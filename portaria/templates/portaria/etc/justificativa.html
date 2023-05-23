@@ -86,13 +86,13 @@
                             <td><label style="font-size:2.4rem;cursor:pointer;margin-top:5px;" for="file{{ forloop.counter0 }}"><ion-icon name="cloud-upload-outline"></ion-icon></label>
                                 <input type="file" id="file{{ forloop.counter0 }}" name="file{{ forloop.counter0 }}">
                             </td>
-                            {% comment %} <td>
+                            <td>
                                 <button style="font-size:1.4rem;" type="button" id="myBtn" value="{{ forloop.counter }}"><ion-icon name="list"></ion-icon></button>
-                            </td> {% endcomment %}
+                            </td>
                             <!--FIM IF-->
                             {% endif %}
                         </tr>
-                            {% comment %} <div id="myModal{{ forloop.counter }}" class="modal">
+                            <div id="myModal{{ forloop.counter }}" class="modal">
                                 <div class="modal-content">
                                     <div>
                                         <span class="title-cad">Ocorrências</span>
@@ -115,7 +115,7 @@
                                         {% endif %}
                                     </div>
                                 </div>
-                            </div> {% endcomment %}
+                            </div>
                     {% endfor %}
                     </tbody>
                 </table>
