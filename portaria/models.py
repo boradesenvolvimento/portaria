@@ -930,7 +930,7 @@ class OcorrenciaEntrega(models.Model):
     cod_ocor = models.CharField(max_length=5)
     desc_ocor = models.CharField(max_length=200)
     data_ocorrencia = models.DateField()
-    entrega = models.ForeignKey(JustificativaEntrega, on_delete=models.CASCADE, blank=True, null=True)
+    entrega = models.ForeignKey(JustificativaEntrega, on_delete=models.CASCADE, blank=True, null=True, related_name='ocorrencias')
     filial = models.ForeignKey(Filiais, on_delete=models.PROTECT, blank=True, null=True)
 
 class SolicitacoesCompras(models.Model):

@@ -50,7 +50,7 @@ from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.core.handlers.wsgi import WSGIRequest
 from django.core.mail import send_mail
 from django.db import IntegrityError
-from django.db.models.query import QuerySet
+from django.db.models.query import QuerySet, Prefetch
 from django.db.models import Count, Sum, F, Q, Value, Subquery, CharField, ExpressionWrapper, IntegerField, \
     DateTimeField, Case, When
 from django.db.models.functions import Coalesce, TruncDate, Cast, TruncMinute, Lower
@@ -70,7 +70,7 @@ from envia_email import envia_email
 from .dbtest import conndb
 from .models import * #Cadastro, PaletControl, ChecklistFrota, Veiculos, NfServicoPj
 from .forms import * #CadastroForm, isPlacaForm, DateForm, FilterForm, TPaletsForm, TIPO_GARAGEM, ChecklistForm
-from .forms import DisponibilidadeFrotaForm
+from .serializers import *
 from mysite.settings import get_secret
 
 # Gerador de código de barras
@@ -2430,7 +2430,7 @@ Att
                     q.aux_moradia, q.pix or "Não Informado"
                 ),
                 from_email=settings.EMAIL_HOST_USER,
-                recipient_list=[q.email],
+                recipient_list=[q.email, 'lucas.feitosa@bora.com.br', 'daniel.domingues@bora.com.br'],
                 fail_silently=False
             )
             MailsPJ.objects.create(funcionario_id=q.id, data_pagamento=dt_pgmt,
@@ -3947,12 +3947,23 @@ def justificativa(request):
         date2 = request.GET.get('data2')
         garagem = request.GET.get('garagem')
         if date1 and date2 and garagem:
-            form = JustificativaEntrega.objects.filter(filial__id_garagem=garagem, data_emissao__lte=date2, data_emissao__gte=date1,
-                                                        confirmado=False).order_by("lead_time")
+            form = JustificativaEntrega.objects.filter(
+                    filial__id_garagem=garagem, data_emissao__lte=date2, data_emissao__gte=date1,
+                    confirmado=False
+                ).order_by(
+                    "lead_time"
+                )
+            
+            form_serialized = JustificativaEntregaSerializer(form, many=True).data
+            # justificativa = JustificativaEntrega.objects.get(id=14560)
+            # serializer = JustificativaEntregaSerializer(justificativa)
+            # print(serializer.data)
+            
+            # ipdb.set_trace()
                                                         
             return render(request,'portaria/etc/justificativa.html', 
                             {
-                                'form':form,
+                                'form':form_serialized,
                                 'filiais':filiais,
                                 'justchoices':justchoices,
                                 'today': today, 
