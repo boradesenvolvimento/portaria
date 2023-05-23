@@ -3964,10 +3964,11 @@ def justificativa(request):
         if date1 and date2 and garagem:
             form = JustificativaEntrega.objects.filter(filial__id_garagem=garagem, data_emissao__lte=date2, data_emissao__gte=date1,
                                                         confirmado=False).order_by("lead_time")
-            
+                                                        
             return render(request,'portaria/etc/justificativa.html', 
                             {
-                                'form':form,'filiais':filiais,
+                                'form':form,
+                                'filiais':filiais,
                                 'justchoices':justchoices,
                                 'today': today, 
                                 'yesterday': yesterday

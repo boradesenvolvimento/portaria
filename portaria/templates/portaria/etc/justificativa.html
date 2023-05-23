@@ -86,13 +86,13 @@
                             <td><label style="font-size:2.4rem;cursor:pointer;margin-top:5px;" for="file{{ forloop.counter0 }}"><ion-icon name="cloud-upload-outline"></ion-icon></label>
                                 <input type="file" id="file{{ forloop.counter0 }}" name="file{{ forloop.counter0 }}">
                             </td>
-                            <td>
+                            {% comment %} <td>
                                 <button style="font-size:1.4rem;" type="button" id="myBtn" value="{{ forloop.counter }}"><ion-icon name="list"></ion-icon></button>
-                            </td>
+                            </td> {% endcomment %}
                             <!--FIM IF-->
                             {% endif %}
                         </tr>
-                            <div id="myModal{{ forloop.counter }}" class="modal">
+                            {% comment %} <div id="myModal{{ forloop.counter }}" class="modal">
                                 <div class="modal-content">
                                     <div>
                                         <span class="title-cad">Ocorrências</span>
@@ -101,17 +101,21 @@
                                     <div class="container tktcontainer">
                                         {% if f.ocorrenciaentrega_set.all %}
                                         <ul>
-                                        {% for q in f.ocorrenciaentrega_set.all %}
-                                            <li><p style="margin: 0 0 0 0;">Descrição: <strong>{{ q.desc_ocor }}</strong> -
-                                                Data:<strong>{{ q.data_ocorrencia }}</strong></p></li>
-                                        {% endfor %}
+                                            {% for q in f.ocorrenciaentrega_set.all %}
+                                                <li>
+                                                    <p style="margin: 0 0 0 0;">
+                                                        Descrição: <strong>{{ q.desc_ocor }}</strong> -
+                                                        Data:<strong>{{ q.data_ocorrencia }}</strong>
+                                                    </p>
+                                                </li>
+                                            {% endfor %}
                                         </ul>
                                         {% else %}
                                             <p style="margin: 0 0 0 0;">Nenhuma ocorrencia encontrada.</p>
                                         {% endif %}
                                     </div>
                                 </div>
-                            </div>
+                            </div> {% endcomment %}
                     {% endfor %}
                     </tbody>
                 </table>
