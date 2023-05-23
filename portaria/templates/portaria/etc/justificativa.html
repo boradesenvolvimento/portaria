@@ -99,9 +99,9 @@
                                         <span class="close col">&times;</span>
                                     </div>
                                     <div class="container tktcontainer">
-                                        {% if f.ocorrenciaentrega_set.all %}
+                                        {% if f.ocorrenciaentrega_set %}
                                         <ul>
-                                            {% for q in f.ocorrenciaentrega_set.all %}
+                                            {% for q in f.ocorrenciaentrega_set %}
                                                 <li>
                                                     <p style="margin: 0 0 0 0;">
                                                         Descrição: <strong>{{ q.desc_ocor }}</strong> -
