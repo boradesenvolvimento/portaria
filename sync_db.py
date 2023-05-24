@@ -52,13 +52,12 @@ SELECT
         WHEN F11.DT_PREV_ENTREGA IS NULL THEN 0
     END em_aberto,
     E2.DESC_LOCALIDADE || '-' || E2.COD_UF local_entreg,
-    XMLAGG(XMLELEMENT(E, LTRIM(F4.NOTA_FISCAL, '0') || ' / ').EXTRACT('//text()') ORDER BY F4.NOTA_FISCAL).GETCLOBVAL() AS nota_fiscal                        
+    LISTAGG ((LTRIM (F4.NOTA_FISCAL,0)), ' / ') nota_fiscal                           
 FROM 
     FTA001 F1,
     FTA011 F11,
     EXA002 E2,
     FTA004 F4,
-    ACA001 A1,
     BGM_CLIENTE BC               
 WHERE
     F1.LOCALID_ENTREGA = E2.COD_LOCALIDADE AND
@@ -76,18 +75,11 @@ WHERE
     F1.CONHECIMENTO = F4.CONHECIMENTO      AND
     F1.SERIE = F4.SERIE                    AND
     
-    F1.EMPRESA = A1.EMPRESA             AND
-    F1.FILIAL = A1.FILIAL               AND
-    F1.GARAGEM = A1.GARAGEM             AND
-    F1.SERIE = A1.SERIE_CTRC            AND
-    F1.CONHECIMENTO = A1.NUMERO_CTRC    AND
-    F1.TIPO_DOCTO = A1.TIPO_DOCTO       AND
-    
     F1.CARGA_ENCOMENDA IN ('CARGA DIRETA','RODOVIARIO')    AND
     F1.ID_GARAGEM NOT IN (1,23,30)                         AND
     F1.DATA_CANCELADO = '01-JAN-0001'                      AND
-                                                        
-    A1.DATA_CADASTRO BETWEEN ((SYSDATE)-1) AND (SYSDATE)                         
+                                                    
+    F1.DATA_EMISSAO BETWEEN ((SYSDATE)-10) AND (SYSDATE)                         
 GROUP BY
     F1.EMPRESA,
     F1.FILIAL,
@@ -104,7 +96,7 @@ GROUP BY
     F1.PESO,
     F11.DT_PREV_ENTREGA,
     E2.DESC_LOCALIDADE,
-    E2.COD_UF                        
+    E2.COD_UF                      
                     """)
     res = dictfetchall(cur)
     print(f"JUSTIFICATIVA: LEN({len(res)})")
@@ -175,7 +167,7 @@ FROM
     ACA002 A2
 WHERE
     A1.COD_OCORRENCIA = A2.CODIGO AND
-    A1.DATA_CADASTRO BETWEEN ((SYSDATE)-2) AND (SYSDATE)                        
+    A1.DATA_CADASTRO BETWEEN ((SYSDATE)-10) AND (SYSDATE)                        
                     """)
     res = dictfetchall(cur)
     print(f"OCORRENCIAS: LEN({len(res)})")
