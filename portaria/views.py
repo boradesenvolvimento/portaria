@@ -273,24 +273,7 @@ def cadcliente(request):
                 messages.error(request, "Algo deu errado, por favor contate o suporte.")
                 return redirect('portaria:cadcliente')
     else:
-        form = ClienteForm
-        
-    all_cli = Cliente.objects.all()
-    if len(all_cli) == 0:
-        filiais = Filiais.objects.all()
-        for data in dataaaa:
-            dados = {
-                'razao_social': data[0],
-                'cnpj': 1,
-                'intex': 'CLIENT',
-            }
-            cliente = Cliente.objects.create(**dados)
-            
-            for filial in filiais:
-                ClienteFiliais.objects.create(cliente=cliente, filial=filial, saldo=data[1])
-            
-            print('ok')
-        
+        form = ClienteForm        
         
     return render(request, 'portaria/palete/cadcliente.html', {'form': form})
 
