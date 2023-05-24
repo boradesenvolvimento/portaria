@@ -149,7 +149,7 @@ def insert_to_justificativa(data):
             del obj['leadtime']
 
             filial = Filiais.objects.get(id_garagem=obj['id_garagem'])
-            obj['filial'] = filial.id
+            obj['filial'] = filial
             
             JustificativaEntrega.objects.create(**obj)
         except Exception as e:
@@ -201,8 +201,8 @@ def insert_to_ocorrencias(data):
             try:
                 OcorrenciaEntrega.objects.get(**obj)
             except ObjectDoesNotExist:
-                filial = Filiais.objects.get(id_garagem=obj['id_garagem'])
-                obj['filial'] = filial.id
+                filial = Filiais.objects.get(id_garagem=obj['garagem'])
+                obj['filial'] = filial
                 
                 OcorrenciaEntrega.objects.create(**obj)
             except Exception as e:

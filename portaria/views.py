@@ -326,7 +326,7 @@ def cadfuncionariopj(request):
     return render(request, 'portaria/pj/cadfuncionariopj.html', {'form':form})
 
 def atualizarfunc(request):
-    allfuncs = FuncPj.objects.filter(ativo=True).order_by('nome')
+    allfuncs = FuncPj.objects.filter().order_by('nome')
     form = FuncPjForm
     func = request.GET.get('func')
     if func:
@@ -354,7 +354,7 @@ def servicospj(request):
     # nfs_fun = [nf['funcionario_id'] for nf in nfs]
 
     if func:
-        qnt_funcs = FuncPj.objects.filter(nome__icontains=func, ativo=True)
+        qnt_funcs = FuncPj.objects.filter(nome__icontains=func)
     elif filter:
         qnt_funcs = FuncPj.objects.all().filter(ativo=True).order_by(filter)
     else:
@@ -3955,11 +3955,6 @@ def justificativa(request):
                 )
             
             form_serialized = JustificativaEntregaSerializer(form, many=True).data
-            justificativa = JustificativaEntrega.objects.get(id=14560)
-            serializer = JustificativaEntregaSerializer(justificativa)
-            # print(serializer.data)
-            
-            # ipdb.set_trace()
                                                         
             return render(request,'portaria/etc/justificativa.html', 
                             {
