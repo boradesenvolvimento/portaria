@@ -3955,8 +3955,8 @@ def justificativa(request):
                 )
             
             form_serialized = JustificativaEntregaSerializer(form, many=True).data
-            # justificativa = JustificativaEntrega.objects.get(id=14560)
-            # serializer = JustificativaEntregaSerializer(justificativa)
+            justificativa = JustificativaEntrega.objects.get(id=14560)
+            serializer = JustificativaEntregaSerializer(justificativa)
             # print(serializer.data)
             
             # ipdb.set_trace()

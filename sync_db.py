@@ -52,7 +52,7 @@ SELECT
         WHEN F11.DT_PREV_ENTREGA IS NULL THEN 0
     END em_aberto,
     E2.DESC_LOCALIDADE || '-' || E2.COD_UF local_entreg,
-    LISTAGG ((LTRIM (F4.NOTA_FISCAL,0)), ' / ') nota_fiscal                           
+    XMLAGG(XMLELEMENT(E, LTRIM(F4.NOTA_FISCAL, '0') || ' / ').EXTRACT('//text()') ORDER BY F4.NOTA_FISCAL).GETCLOBVAL() AS nota_fiscal                        
 FROM 
     FTA001 F1,
     FTA011 F11,

@@ -5,7 +5,8 @@ from .models import *
 class OcorrenciaEntregaSerializer(serializers.ModelSerializer):
     class Meta:
         model = OcorrenciaEntrega
-        fields = '__all__'
+        exclude = ['id_empresa']
+        
 
 class JustificativaEntregaSerializer(serializers.ModelSerializer):
     ocorrencias = OcorrenciaEntregaSerializer(many=True, read_only=True)
@@ -24,5 +25,6 @@ class JustificativaEntregaSerializer(serializers.ModelSerializer):
             "nota_fiscal",
             "ocorrencias"
         )
+        depth = 1
 
         
