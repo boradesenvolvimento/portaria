@@ -12,11 +12,26 @@
             </div>
             {% endfor %}
             <div class="row linha-baixo">
-                <h2 class="title-cad col-9">
-                    Paletes Clientes
-                </h2>
-                <button class="col-2" type="submit"><a style="color:white;" href="{% url 'portaria:saidapalete' %}">Cadastrar Saidas</a></button>
+                    <h2 class="title-cad col-9">
+                        Paletes Clientes
+                    </h2>
+                    <button class="col-2" type="submit"><a style="color:white;" href="{% url 'portaria:saidapalete' %}">Cadastrar Saidas</a></button>
+                <div>
+                    <form method="GET">
+                        <label for="filial">Filial:</label>
+                        <select id="filial" name="filial">
+                            <option selected disabled value="">--</option>
+                            {% for filial in filiais %}
+                                <option value="{{ filial.id }}">{{filial.id_garagem}} - {{ filial.sigla }}</option>
+                            {% endfor %}                
+                        </select>
+                        <label for="clientes">Cliente:</label>
+                        <input style="width:10vw" id="clientes" name="clientes" type="text">
+                        <button style="padding: 15px 40px;" type="submit">Filtrar</button>
+                    <form>
+                </div>
             </div>
+            {% if form %}
             <div class="container linha-baixo">
                 <table class="table tablecli">
                     <thead>
@@ -28,17 +43,20 @@
                     </thead>
                     <tbody>
                             {% for q in form %}
-                            <tr>
-                            <td>{{ q.saldo }}</td>
-                            <td>{{ q.razao_social }}</td>
-                                {% if q.saldo > 0 %}
-                                <td class="table-danger">A bora deve</td>
-                                {% elif q.saldo == 0 %}
-                                <td class="table-info">Ok</td>
-                                {% else %}
-                                <td class="table-success">O cliente deve</td>
+                                {% if q.saldo != 0 %}
+                                <tr>
+                                <td>{{ q.filial.sigla }}</td>
+                                <td>{{ q.saldo }}</td>
+                                <td>{{ q.cliente.razao_social }}</td>
+                                    {% if q.saldo > 0 %}
+                                    <td class="table-danger">A bora deve</td>
+                                    {% elif q.saldo == 0 %}
+                                    <td class="table-info">Ok</td>
+                                    {% else %}
+                                    <td class="table-success">O cliente deve</td>
+                                    {% endif %}
+                                </tr>
                                 {% endif %}
-                            </tr>
                             {% endfor %}
                     </tbody>
                 </table>
@@ -46,7 +64,17 @@
             <div class="container linha-baixo">
                 <h2 class="title-cad">Total saldo: {{ tcount.total }}</h2>
             </div>
+            {% endif %}
         </div>
 {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
-
+<script>
+    $(function(){
+        var availableTags = [
+            {% for q in clientes %}
+                "{{ q|safe }}",
+            {% endfor %}
+        ];
+        $('#clientes').autocomplete({source: availableTags});
+    });
+</script>
 {% endblock %}

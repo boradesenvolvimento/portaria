@@ -1,3 +1,4 @@
+from data import dataaaa
 #edimports geral
 import asyncio
 import io
@@ -235,27 +236,82 @@ def cadpaletes(request):
     return render(request, 'portaria/palete/cadpaletes.html', {'filiais':filiais, 'tp_emp':tp_emp})
 
 def paletecliente(request):
-    form = Cliente.objects.filter(~Q(saldo=0), intex='CLIENTE').order_by('razao_social')
-    tcount = form.aggregate(total=Sum('saldo'))
-    return render(request, 'portaria/palete/paletecliente.html', {'form':form,'tcount':tcount})
+    filiais = Filiais.objects.all()
+    clientes = Cliente.objects.all()
+    
+    filial_selecionada = request.GET.get('filial')
+    cliente_selecionado = request.GET.get('clientes')
+    
+    if filial_selecionada or cliente_selecionado:
+        if filial_selecionada:
+            form = ClienteFiliais.objects.filter(filial__id=filial_selecionada).order_by('cliente__razao_social')
+        elif cliente_selecionado:
+            form = ClienteFiliais.objects.filter(cliente__razao_social__contains=cliente_selecionado).order_by('cliente__razao_social')
+        
+        tcount = form.aggregate(total=Sum('saldo'))
+        
+        return render(request, 'portaria/palete/paletecliente.html', {'form':form,'tcount':tcount, 'filiais': filiais, 'clientes': clientes})
+    
+    return render(request, 'portaria/palete/paletecliente.html', {'filiais': filiais, 'clientes': clientes})
+
+def cadcliente(request):
+    if request.method == 'POST':
+        form = ClienteForm(request.POST or None)
+        if form.is_valid():
+            try:
+                cliente = form.save(commit=False)
+                cliente.intex = 'CLIENTE'
+                cliente.save()
+
+                filiais = Filiais.objects.all()
+                for filial in filiais:
+                    ClienteFiliais.objects.create(cliente=cliente, filial=filial, saldo=0)
+            
+                messages.success(request, 'Cadastrado com sucesso!')
+                return redirect('portaria:paletecliente')
+            except Exception as e:
+                messages.error(request, "Algo deu errado, por favor contate o suporte.")
+                return redirect('portaria:cadcliente')
+    else:
+        form = ClienteForm
+        
+    all_cli = Cliente.objects.all()
+    if len(all_cli) == 0:
+        filiais = Filiais.objects.all()
+        for data in dataaaa:
+            dados = {
+                'razao_social': data[0],
+                'cnpj': 1,
+                'intex': 'CLIENT',
+            }
+            cliente = Cliente.objects.create(**dados)
+            
+            for filial in filiais:
+                ClienteFiliais.objects.create(cliente=cliente, filial=filial, saldo=data[1])
+            
+            print('ok')
+        
+        
+    return render(request, 'portaria/palete/cadcliente.html', {'form': form})
 
 def saidapalete(request):
-    tp_fil = GARAGEM_CHOICES
-    tp_emp = Cliente.objects.all().order_by('razao_social')
-    keyga = {k: v for k, v in GARAGEM_CHOICES}
+    filiais = Filiais.objects.all()
+    clientes = Cliente.objects.all().order_by('razao_social')
+    
     if request.method == 'POST':
         qnt = int(request.POST.get('qnt'))
         fil = str(request.POST.get('fil'))
         emp = request.POST.get('emp')
         tp_p = request.POST.get('tp_p')
         if qnt and fil and emp and tp_p:
-            chk = Cliente.objects.get(razao_social=emp)
-            Cliente.objects.filter(razao_social=emp).update(saldo=(chk.saldo - qnt))
+            cli = Cliente.objects.get(razao_social=emp)
+            fili = Filiais.objects.get(id=fil)
+            ClienteFiliais.objects.filter(cliente=cli, filial=fili).update(saldo=(F('saldo') - qnt))
             for q in range(0,qnt):
-                PaleteControl.objects.filter(loc_atual=keyga[fil], tp_palete=tp_p).first().delete()
+                PaleteControl.objects.filter(loc_atual=fili.sigla, tp_palete=tp_p).first().delete()
             messages.success(request, 'Saidas cadastradas com sucesso')
             return redirect('portaria:paletecliente')
-    return render(request, 'portaria/palete/saidapalete.html', {'tp_fil':tp_fil,'tp_emp':tp_emp})
+    return render(request, 'portaria/palete/saidapalete.html', {'filiais':filiais,'clientes':clientes})
 
 @login_required
 def frota(request):
