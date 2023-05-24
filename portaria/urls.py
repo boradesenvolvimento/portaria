@@ -19,6 +19,7 @@ urlpatterns = [
     path('paletes/painelrecebimento', views.painelmov, name='painelmov'),
     path('paletes/painelcliente', views.paletecliente, name='paletecliente'),
     path('paletes/saidapaletes', views.saidapalete, name='saidapalete'),
+    path('paletes/cadastro-cliente', views.cadcliente, name='cadcliente'),
     path('frota/disponibilidade-frota', views.disponibilidade_frota, name='disponibilidade_frota'),
     path('frota/disponibilidade-frota?<str:filial>', views.disponibilidade_frota, name='disponibilidade_frota'),
     #path('frota/', views.frota, name='frota'),

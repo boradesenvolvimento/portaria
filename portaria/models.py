@@ -172,6 +172,19 @@ class Cadastro(models.Model):
 
     def __str__(self):
        return self.placa
+   
+class Filiais(models.Model):
+    id = models.IntegerField(primary_key=True)
+    id_empresa = models.IntegerField()
+    id_filial = models.IntegerField()
+    id_garagem = models.IntegerField(unique=True)
+    sigla = models.CharField(max_length=3, unique=True)
+    nome = models.CharField(max_length=50, unique=True)
+    uf = models.CharField(max_length=2)
+    cnpj = models.CharField(max_length=14, unique=True)
+
+    def __str__(self):
+       return self.sigla
 
 class PaleteControl(models.Model):
     TIPO_PALETE_CHOICES = [
@@ -229,10 +242,16 @@ class Cliente(models.Model):
     razao_social = models.CharField(max_length=100)
     cnpj = models.CharField(max_length=14, validators=[only_int])
     intex = models.CharField(max_length=7, choices=TP_VINCULO)
-    saldo = models.IntegerField()
+    saldo = models.IntegerField(null=True)
 
     def __str__(self):
         return self.razao_social
+
+class ClienteFiliais(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    filial = models.ForeignKey(Filiais, on_delete=models.CASCADE)
+    saldo = models.IntegerField(default=0)
 
 class Motorista(models.Model):
     codigomot = models.BigAutoField(primary_key=True)
@@ -427,18 +446,7 @@ class ChecklistFrota(models.Model):
     def __str__(self):
        return str(self.idchecklist)
     
-class Filiais(models.Model):
-    id = models.IntegerField(primary_key=True)
-    id_empresa = models.IntegerField()
-    id_filial = models.IntegerField()
-    id_garagem = models.IntegerField(unique=True)
-    sigla = models.CharField(max_length=3, unique=True)
-    nome = models.CharField(max_length=50, unique=True)
-    uf = models.CharField(max_length=2)
-    cnpj = models.CharField(max_length=14, unique=True)
 
-    def __str__(self):
-       return self.sigla
 
 class TipoServicosManut(models.Model):
     id = models.BigAutoField(primary_key=True)
