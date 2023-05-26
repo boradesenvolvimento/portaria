@@ -15,7 +15,9 @@ tracemalloc.start()
 async def get_justificativas():
     conn = conndb()
     cur = conn.cursor()
+    
     print("JUSTIFICATIVA: INICIANDO QUERY")
+    
     cur.execute(f"""
 SELECT 
     F1.EMPRESA id_empresa,
@@ -99,46 +101,51 @@ GROUP BY
     E2.COD_UF                      
                     """)
     res = dictfetchall(cur)
+    cur.close()
+    
     print(f"JUSTIFICATIVA: LEN({len(res)})")
+    
     try:
         print(f"JUSTIFICATIVA: INICIANDO INSERT")
         await insert_to_justificativa(res)
-        cur.close()
         print(f"JUSTIFICATIVA: CONCLUIDO")
+        
         return True
     except Exception as e:
         print('Error:%s, error_type:%s' %(e, type(e)))
-        cur.close()
+        
         return False
 
 @sync_to_async
 def insert_to_justificativa(data):
     for obj in data:
         try:
-            justificativa = JustificativaEntrega.objects.get(
+            JustificativaEntrega.objects.get(
                 id_empresa=obj['id_empresa'], 
                 id_filial=obj['id_filial'], 
                 garagem=obj['garagem'],
                 tipo_doc=obj['tipo_doc'],
                 conhecimento=obj['conhecimento']
                 )
-            
-            if not justificativa.confirmado:
-                if justificativa.lead_time.strftime('%d-%m-%Y') == date(1,1,1).strftime('%d-%m-%Y'):
-                    justificativa.em_aberto = 999
-                else:
-                    diferenca = (date.today() - justificativa.lead_time).days
-                    if diferenca > 0:
-                        justificativa.em_aberto = diferenca
-
-                justificativa.save()
-
         except ObjectDoesNotExist:
-            if obj['lead_time'] == date(1,1,1).strftime('%d-%m-%Y'):
-                obj['em_aberto'] = 999
-
-            obj['lead_time'] = datetime.strptime(obj['lead_time'], '%d-%m-%Y')
             del obj['leadtime']
+            
+            lead_time = datetime.strptime(obj['lead_time'], "%Y-%m-%d").date()
+            data_entrega = obj['data_entrega'].strftime('%Y-%m-%d')
+            data_entrega = datetime.strptime(data_entrega, "%Y-%m-%d").date()
+            
+            # Verifica se tem lead_time
+            if lead_time == date(1,1,1):
+                obj['em_aberto'] = 999
+            # Verifica se passou do prazo
+            elif lead_time < date.today():
+                # Verifica se foi entregue
+                if data_entrega.strftime('%d-%m-%Y') == '01-01-0001':
+                    obj['em_aberto'] = (date.today() - lead_time).days
+                else:
+                    obj['em_aberto'] = data_entrega - lead_time
+            else:
+                obj['em_aberto'] = 0
 
             filial = Filiais.objects.get(id_garagem=obj['id_garagem'])
             obj['filial'] = filial
@@ -148,10 +155,11 @@ def insert_to_justificativa(data):
             print('Error:%s, error_type:%s' %(e, type(e)))
 
 async def get_ocorrencias():
-    hoje = date.today().strftime('%d-%b-%Y')
     conn = conndb()
     cur = conn.cursor()
+    
     print("OCORRENCIAS: INICIANDO QUERY")
+    
     cur.execute(f"""
 SELECT DISTINCT
     A1.EMPRESA id_empresa,
@@ -170,29 +178,44 @@ WHERE
     A1.DATA_CADASTRO BETWEEN ((SYSDATE)-10) AND (SYSDATE)                        
                     """)
     res = dictfetchall(cur)
+    cur.close()
+
     print(f"OCORRENCIAS: LEN({len(res)})")
+    
     try:
         print(f"OCORRENCIAS: INICIANDO INSERT")
         await insert_to_ocorrencias(res)
-        cur.close()
         print(f"OCORRENCIAS: CONCLUIDO")
+        
         return True
     except Exception as e:
         print('Error:%s, error_type:%s' %(e, type(e)))
-        cur.close()
+        
         return False
 
 @sync_to_async
 def insert_to_ocorrencias(data):
     for obj in data:
         just = JustificativaEntrega.objects.filter(id_empresa=obj['id_empresa'], id_filial=obj['id_filial'],
-                                                   garagem=obj['garagem'],
-                                                   conhecimento=obj['conhecimento'])
+                garagem=obj['garagem'], conhecimento=obj['conhecimento']).first()
+        
         if just:
-            obj['entrega'] = just[0]
+            obj['entrega'] = just
+            data_ocorrencia = obj['data_ocorrencia'].date()
             try:
                 OcorrenciaEntrega.objects.get(**obj)
             except ObjectDoesNotExist:
+                
+                # Verifica a ocorrencia é com descrição "Entregue"
+                if obj['desc_ocor'] == 'Entregue':
+                    just.data_entrega = data_ocorrencia
+                    just.em_aberto = (just.data_entrega - just.lead_time).days
+                # Verifica se tem lead_time
+                elif just.lead_time.strftime('%d-%m-%Y') != '01-01-0001':
+                    # Verifica se não tem data_entrega
+                    if just.data_entrega.strftime('%d-%m-%Y') == '01-01-0001':
+                        just.em_aberto = (date.today() - just.lead_time).days
+                
                 filial = Filiais.objects.get(id_garagem=obj['garagem'])
                 obj['filial'] = filial
                 
@@ -201,4 +224,4 @@ def insert_to_ocorrencias(data):
                 print('Error:%s, error_type:%s' %(e, type(e)))
 
 asyncio.run(get_justificativas())
-asyncio.run(get_ocorrencias())
+# asyncio.run(get_ocorrencias())
