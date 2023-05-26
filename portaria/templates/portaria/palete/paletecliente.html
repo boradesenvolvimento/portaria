@@ -2,7 +2,7 @@
 {% block content %}
 {% load groupscheck %}
 {% load static %}
-{% if request.user|has_group:"paletes" %}
+{% if request.user|has_group:"paletes_adm" %}
         <div class="container mt-5">
             {% for message in messages %}
             <div class="container-fluid p-0">
@@ -53,7 +53,7 @@
                                 <tr>
                                 <td>{{ q.filial.sigla }}</td>
                                 <td>{{ q.saldo }}</td>
-                                <td>{{ q.cliente.razao_social }}</td>
+                                <td>{{ q.cliente.razao_social_motorista }}</td>
                                     {% if q.saldo > 0 %}
                                     <td class="table-danger">A bora deve</td>
                                     {% elif q.saldo == 0 %}

@@ -92,11 +92,11 @@
               <a class="nav-link1" href="{% url 'portaria:paleteview' %}"
                 >Paletes</a
               >
-              {% if request.user|has_group:"paletes_adm" %}
+              {% comment %} {% if request.user|has_group:"paletes_adm" %}
               <a class="nav-link1" href="{% url 'portaria:cadpaletes' %}"
                 >Cadastrar Paletes</a
               >
-              {% endif %}
+              {% endif %} {% endcomment %}
               <a class="nav-link1" href="{% url 'portaria:solicpaletes' %}"
                 >Solicitar Transferência</a
               >
@@ -207,8 +207,9 @@
             </li>
           </ul>
         </div>
-        {% endif %} {% if request.user|has_group:"faturamento" %}
-        <!--<div class="dropdown">
+        {% endif %}
+        {% comment %} {% if request.user|has_group:"faturamento" %}
+        <div class="dropdown">
             <button class="dropdown-toggle menutext-navbar nav-link1" type="button" style="background-color: #3188E8;" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
               Faturamento
             </button>
@@ -217,9 +218,9 @@
               <a class="nav-link1" href="{% url 'portaria:fatferramentas' %}">Ferramentas</a>
             </li>
             </ul>
-          </div>-->
-        {% endif %} {% if request.user|has_group:"monitoramento" %}
-        <!--
+          </div>
+        {% endif %} {% endcomment %}
+        {% comment %} {% if request.user|has_group:"monitoramento" %}
             <div class="dropdown">
             <button class="dropdown-toggle menutext-navbar nav-link1" type="button" style="background-color: #3188E8;" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
               Monitoramento
@@ -233,8 +234,8 @@
             </li>
             </ul>
           </div>
-          -->
-        {% endif %} {% if request.user|has_group:'ferramentas' %}
+        {% endif %} {% endcomment %}
+        {% if request.user|has_group:'ferramentas' %}
         <div class="dropdown">
           <button
             class="dropdown-toggle menutext-navbar nav-link1"

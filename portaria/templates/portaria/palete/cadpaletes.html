@@ -22,40 +22,39 @@
                     <tbody>
                     <tr>
                         <th>
-                            Quantidade:<input name="qnt" type="text">
+                            Quantidade: <input name="qnt" type="text">
                             <h6>Máximo de 2000 por cadastro.</h6>
                         </th>
                     </tr>
                     <tr>
                         <th>
-                            <label for="fil">Filial:</label>
+                            <label for="fil">Filial: </label>
                             <select id="fil" name="fil">
                                 <option selected disabled value="">--</option>
                                 {% for f in filiais %}
-                                    <option value={{f.sigla}}>{{f.id_garagem}} - {{f.sigla}}</option>
+                                    <option value={{f.id}}>{{f.id_garagem}} - {{f.sigla}}</option>
                                 {% endfor %}
                             </select>
                         </th>
                     </tr>
-                    <!--Campo antigo que precisa digitar-->
-                    <!--<tr><th>Razão social:<input id="emp" type="text" name="emp"></th></tr>-->
-                    <!--FIM Campo antigo-->
                     <tr>
                         <th>
-                            <label for="emp">Razão Social</label>
-                            <select name="emp" id="emp">
-                                <option selected hidden>--</option>
-                                {% for e in tp_emp %}
-                                    <option value="{{ e }}">{{ e }}</option>
-                                {% endfor %}
+                            Razão Social/Motorista: 
+                            <input id="emp" type="text" name="emp">
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>
+                            Tipo: 
+                            <select name="tp_p">
+                                <option value="PBR">PBR</option>
+                                <option value="CHEP">CHEP</option>
                             </select>
                         </th>
                     </tr>
-                    <tr><th>Tipo:<select name="tp_p">
-                        <option value="PBR">PBR</option>
-                        <option value="CHEP">CHEP</option>
-                    </select></th></tr>
-                    <th><button style="padding: 15px 50px" type="submit">Criar</button></th>
+                    <th>
+                        <button style="padding: 15px 50px" type="submit">Criar</button>
+                    </th>
                     </tbody>
                 </table>
                 </form>
