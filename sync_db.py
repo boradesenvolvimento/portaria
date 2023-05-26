@@ -105,17 +105,10 @@ GROUP BY
     
     print(f"JUSTIFICATIVA: LEN({len(res)})")
     
-    try:
-        print(f"JUSTIFICATIVA: INICIANDO INSERT")
-        await insert_to_justificativa(res)
-        print(f"JUSTIFICATIVA: CONCLUIDO")
+    print(f"JUSTIFICATIVA: INICIANDO INSERT")
+    await insert_to_justificativa(res)
+    print(f"JUSTIFICATIVA: CONCLUIDO")
         
-        return True
-    except Exception as e:
-        print('Error:%s, error_type:%s' %(e, type(e)))
-        
-        return False
-
 @sync_to_async
 def insert_to_justificativa(data):
     for obj in data:
@@ -184,16 +177,9 @@ WHERE
 
     print(f"OCORRENCIAS: LEN({len(res)})")
     
-    try:
-        print(f"OCORRENCIAS: INICIANDO INSERT")
-        await insert_to_ocorrencias(res)
-        print(f"OCORRENCIAS: CONCLUIDO")
-        
-        return True
-    except Exception as e:
-        print('Error:%s, error_type:%s' %(e, type(e)))
-        
-        return False
+    print(f"OCORRENCIAS: INICIANDO INSERT")
+    await insert_to_ocorrencias(res)
+    print(f"OCORRENCIAS: CONCLUIDO")
 
 @sync_to_async
 def insert_to_ocorrencias(data):
