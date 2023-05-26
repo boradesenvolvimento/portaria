@@ -281,13 +281,13 @@ class feriaspjForm(forms.ModelForm):
             'ultimas_ferias_fim': DateInput(),
         }
 
-class ClienteForm(forms.ModelForm):
-    class Meta:
-        model = Cliente
-        fields = [
-            'razao_social',
-            'cnpj',
-        ]
+# class ClienteForm(forms.ModelForm):
+#     class Meta:
+#         model = Cliente
+#         fields = [
+#             'razao_social',
+#             'cnpj',
+#         ]
 
 class BonusPJForm(forms.ModelForm):
     class Meta:
