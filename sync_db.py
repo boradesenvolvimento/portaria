@@ -125,7 +125,10 @@ def insert_to_justificativa(data):
             
             lead_time = datetime.strptime(obj['lead_time'], "%d-%m-%Y").date()
             data_entrega = obj['data_entrega'].strftime('%Y-%m-%d')
-            data_entrega = datetime.strptime(data_entrega, "%Y-%m-%d").date()
+            if data_entrega == '1-01-01':
+                data_entrega = datetime.strptime('0001-01-01', "%Y-%m-%d").date()
+            else:
+                data_entrega = datetime.strptime(data_entrega, "%Y-%m-%d").date()
             
             # Verifica se tem lead_time
             if lead_time == date(1,1,1):
