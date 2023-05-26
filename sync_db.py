@@ -81,7 +81,7 @@ WHERE
     F1.ID_GARAGEM NOT IN (1,23,30)                         AND
     F1.DATA_CANCELADO = '01-JAN-0001'                      AND
                                                     
-    F1.DATA_EMISSAO BETWEEN ((SYSDATE)-10) AND (SYSDATE)                         
+    F1.DATA_EMISSAO BETWEEN ((SYSDATE)-2) AND (SYSDATE)                         
 GROUP BY
     F1.EMPRESA,
     F1.FILIAL,
@@ -130,7 +130,7 @@ def insert_to_justificativa(data):
         except ObjectDoesNotExist:
             del obj['leadtime']
             
-            lead_time = datetime.strptime(obj['lead_time'], "%Y-%m-%d").date()
+            lead_time = datetime.strptime(obj['lead_time'], "%d-%m-%Y").date()
             data_entrega = obj['data_entrega'].strftime('%Y-%m-%d')
             data_entrega = datetime.strptime(data_entrega, "%Y-%m-%d").date()
             
@@ -147,9 +147,11 @@ def insert_to_justificativa(data):
             else:
                 obj['em_aberto'] = 0
 
-            filial = Filiais.objects.get(id_garagem=obj['id_garagem'])
+            filial = Filiais.objects.get(id_empresa=obj['id_empresa'], id_filial=obj['id_filial'])
             obj['filial'] = filial
             
+            obj['lead_time'] = lead_time
+
             JustificativaEntrega.objects.create(**obj)
         except Exception as e:
             print('Error:%s, error_type:%s' %(e, type(e)))
@@ -175,7 +177,7 @@ FROM
     ACA002 A2
 WHERE
     A1.COD_OCORRENCIA = A2.CODIGO AND
-    A1.DATA_CADASTRO BETWEEN ((SYSDATE)-10) AND (SYSDATE)                        
+    A1.DATA_CADASTRO BETWEEN ((SYSDATE)-2) AND (SYSDATE)                        
                     """)
     res = dictfetchall(cur)
     cur.close()
@@ -216,7 +218,7 @@ def insert_to_ocorrencias(data):
                     if just.data_entrega.strftime('%d-%m-%Y') == '01-01-0001':
                         just.em_aberto = (date.today() - just.lead_time).days
                 
-                filial = Filiais.objects.get(id_garagem=obj['garagem'])
+                filial = Filiais.objects.get(id_empresa=obj['id_empresa'], id_filial=obj['id_filial'])
                 obj['filial'] = filial
                 
                 OcorrenciaEntrega.objects.create(**obj)
@@ -224,4 +226,4 @@ def insert_to_ocorrencias(data):
                 print('Error:%s, error_type:%s' %(e, type(e)))
 
 asyncio.run(get_justificativas())
-# asyncio.run(get_ocorrencias())
+asyncio.run(get_ocorrencias())
