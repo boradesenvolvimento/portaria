@@ -1,4 +1,3 @@
-from data import dataaaa
 #edimports geral
 import asyncio
 import io
