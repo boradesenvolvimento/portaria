@@ -81,7 +81,7 @@ WHERE
     F1.ID_GARAGEM NOT IN (1,23,30)                         AND
     F1.DATA_CANCELADO = '01-JAN-0001'                      AND
                                                     
-    F1.DATA_EMISSAO BETWEEN ((SYSDATE)-2) AND (SYSDATE)                         
+    F1.DATA_EMISSAO BETWEEN ((SYSDATE)-1) AND (SYSDATE)                         
 GROUP BY
     F1.EMPRESA,
     F1.FILIAL,
@@ -170,7 +170,7 @@ FROM
     ACA002 A2
 WHERE
     A1.COD_OCORRENCIA = A2.CODIGO AND
-    A1.DATA_CADASTRO BETWEEN ((SYSDATE)-2) AND (SYSDATE)                        
+    A1.DATA_CADASTRO BETWEEN ((SYSDATE)-1) AND (SYSDATE)                        
                     """)
     res = dictfetchall(cur)
     cur.close()
@@ -193,7 +193,6 @@ def insert_to_ocorrencias(data):
             try:
                 OcorrenciaEntrega.objects.get(**obj)
             except ObjectDoesNotExist:
-                
                 # Verifica a ocorrencia é com descrição "Entregue"
                 if obj['desc_ocor'] == 'Entregue':
                     just.data_entrega = data_ocorrencia
@@ -203,6 +202,11 @@ def insert_to_ocorrencias(data):
                     # Verifica se não tem data_entrega
                     if just.data_entrega.strftime('%d-%m-%Y') == '01-01-0001':
                         just.em_aberto = (date.today() - just.lead_time).days
+                
+                if just.em_aberto > 200 or just.em_aberto < -200:
+                    just.em_aberto = -1
+                
+                just.save()
                 
                 filial = Filiais.objects.get(id_empresa=obj['id_empresa'], id_filial=obj['id_filial'])
                 obj['filial'] = filial
