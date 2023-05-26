@@ -196,7 +196,7 @@ def paleteview(request):
     keyga = {k:v for k,v in GARAGEM_CHOICES}
     tp_fil = GARAGEM_CHOICES
     tp_fil.pop()
-    tp_emp = Cliente.objects.values_list('razao_social', flat=True)
+    tp_emp = Cliente.objects.values_list('razao_social_motorista', flat=True)
     form = PaleteControl.objects.values('loc_atual').\
         annotate(pbr=Count('id', filter=Q(tp_palete='PBR')),chep=Count('id', filter=Q(tp_palete='CHEP'))).\
         annotate(total=ExpressionWrapper(Count('id'), output_field=IntegerField())).exclude(Q(loc_atual='MOV'))
@@ -211,41 +211,48 @@ def paleteview(request):
                                                             'ttcount':ttcount})
 
 def cadpaletes(request):
-    tp_emp = Cliente.objects.all().order_by('razao_social')
+    tp_emp = Cliente.objects.all().order_by('razao_social_motorista')
     filiais = Filiais.objects.all()
     if request.method == 'POST':
         qnt = request.POST.get('qnt')
         fil = request.POST.get('fil')
         emp = request.POST.get('emp') # Razao Social
         tp_p = request.POST.get('tp_p')
+        
         if qnt and fil and emp and tp_p:
+            fil = Filiais.objects.get(id=fil)
+
             try:
                 int(qnt)
             except ValueError:
                 messages.error(request,'Por favor digite um valor numérico para quantidade')
                 return redirect('portaria:cadpaletes')
             else:
-                nsal = Cliente.objects.filter(razao_social=emp).annotate(saldonew=Sum(F('saldo')+int(qnt)))
-                Cliente.objects.filter(razao_social=emp).update(saldo=nsal[0].saldonew)
-                for x in range(0,int(qnt)):
-
-                    PaleteControl.objects.create(loc_atual=fil, tp_palete=tp_p, autor=request.user)
+                cliente = Cliente.objects.filter(razao_social_motorista=emp).first()
+                ClienteFiliais.objects.filter(cliente=cliente, filial=fil).update(saldo=(F('saldo') + int(qnt)))
+                
+                for x in range(0,int(qnt)):                    
+                    PaleteControl.objects.create(loc_atual=fil.sigla, tp_palete=tp_p, autor=request.user)
                     if x == 2000: break
                 messages.success(request, f'{qnt} Paletes foram cadastrados com sucesso')
+                
+                return redirect('portaria:paletecliente')
+                
+                
     return render(request, 'portaria/palete/cadpaletes.html', {'filiais':filiais, 'tp_emp':tp_emp})
 
 def paletecliente(request):
     filiais = Filiais.objects.all()
-    clientes = Cliente.objects.all()
+    clientes = Cliente.objects.all().order_by('razao_social_motorista')
     
     filial_selecionada = request.GET.get('filial')
     cliente_selecionado = request.GET.get('clientes')
     
     if filial_selecionada or cliente_selecionado:
         if filial_selecionada:
-            form = ClienteFiliais.objects.filter(filial__id=filial_selecionada).order_by('cliente__razao_social')
+            form = ClienteFiliais.objects.filter(filial__id=filial_selecionada).order_by('cliente__razao_social_motorista')
         elif cliente_selecionado:
-            form = ClienteFiliais.objects.filter(cliente__razao_social__contains=cliente_selecionado).order_by('cliente__razao_social')
+            form = ClienteFiliais.objects.filter(cliente__razao_social_motorista__contains=cliente_selecionado).order_by('cliente__razao_social_motorista')
         
         tcount = form.aggregate(total=Sum('saldo'))
         
@@ -255,12 +262,18 @@ def paletecliente(request):
 
 def cadcliente(request):
     if request.method == 'POST':
-        form = ClienteForm(request.POST or None)
-        if form.is_valid():
+        nome = request.POST.get('nome')
+        indent = request.POST.get('indent')
+        tipo_cad = request.POST.get('tipo_cad')
+        if nome and tipo_cad:
             try:
-                cliente = form.save(commit=False)
-                cliente.intex = 'CLIENTE'
-                cliente.save()
+                dados = {
+                    'razao_social_motorista': nome,
+                    'cnpj_cpf': indent or 1,
+                    'tipo_cad': tipo_cad
+                }
+                
+                cliente = Cliente.objects.create(**dados)
 
                 filiais = Filiais.objects.all()
                 for filial in filiais:
@@ -270,15 +283,13 @@ def cadcliente(request):
                 return redirect('portaria:paletecliente')
             except Exception as e:
                 messages.error(request, "Algo deu errado, por favor contate o suporte.")
-                return redirect('portaria:cadcliente')
-    else:
-        form = ClienteForm        
+                return redirect('portaria:cadcliente')     
         
-    return render(request, 'portaria/palete/cadcliente.html', {'form': form})
+    return render(request, 'portaria/palete/cadcliente.html')
 
 def saidapalete(request):
     filiais = Filiais.objects.all()
-    clientes = Cliente.objects.all().order_by('razao_social')
+    clientes = Cliente.objects.all().order_by('razao_social_motorista')
     
     if request.method == 'POST':
         qnt = int(request.POST.get('qnt'))
@@ -286,7 +297,7 @@ def saidapalete(request):
         emp = request.POST.get('emp')
         tp_p = request.POST.get('tp_p')
         if qnt and fil and emp and tp_p:
-            cli = Cliente.objects.get(razao_social=emp)
+            cli = Cliente.objects.get(razao_social_motorista=emp)
             fili = Filiais.objects.get(id=fil)
             ClienteFiliais.objects.filter(cliente=cli, filial=fili).update(saldo=(F('saldo') - qnt))
             for q in range(0,qnt):

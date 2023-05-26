@@ -2,7 +2,7 @@
 {% block content %}
 {% load groupscheck %}
 {% load static %}
-{% if request.user|has_group:"paletes" %}
+{% if request.user|has_group:"paletes_adm" %}
         <div class="container mt-5">
             {% for message in messages %}
             <div class="container-fluid p-0">
@@ -12,10 +12,15 @@
             </div>
             {% endfor %}
             <div class="row linha-baixo">
+                <div  style="display:flex; justify-content: space-between">
                     <h2 class="title-cad col-9">
                         Paletes Clientes
                     </h2>
-                    <button class="col-2" type="submit"><a style="color:white;" href="{% url 'portaria:saidapalete' %}">Cadastrar Saidas</a></button>
+                    <div>
+                        <button class="col-8" type="submit"><a style="color:white;" href="{% url 'portaria:cadpaletes' %}">Cadastrar Entradas</a></button>
+                        <button class="col-8" type="submit"><a style="color:white;" href="{% url 'portaria:saidapalete' %}">Cadastrar Saidas</a></button>
+                    </div>
+                </div>
                 <div>
                     <form method="GET">
                         <label for="filial">Filial:</label>
@@ -36,6 +41,7 @@
                 <table class="table tablecli">
                     <thead>
                         <tr>
+                            <th>Filial</th>
                             <th>Saldo</th>
                             <th>Cliente</th>
                             <th>Status</th>
@@ -47,7 +53,7 @@
                                 <tr>
                                 <td>{{ q.filial.sigla }}</td>
                                 <td>{{ q.saldo }}</td>
-                                <td>{{ q.cliente.razao_social }}</td>
+                                <td>{{ q.cliente.razao_social_motorista }}</td>
                                     {% if q.saldo > 0 %}
                                     <td class="table-danger">A bora deve</td>
                                     {% elif q.saldo == 0 %}

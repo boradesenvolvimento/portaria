@@ -236,16 +236,17 @@ class MovPalete(models.Model):
 class Cliente(models.Model):
     TP_VINCULO = [
         ('INTERNO','INTERNO'),
-        ('CLIENTE','CLIENTE')
+        ('CLIENTE','CLIENTE'),
+        ('MOTORISTA','MOTORISTA')
     ]
     id = models.BigAutoField(primary_key=True)
-    razao_social = models.CharField(max_length=100)
-    cnpj = models.CharField(max_length=14, validators=[only_int])
-    intex = models.CharField(max_length=7, choices=TP_VINCULO)
-    saldo = models.IntegerField(null=True)
+    razao_social_motorista = models.CharField(max_length=100)
+    cnpj_cpf = models.CharField(max_length=14, validators=[only_int])
+    tipo_cad = models.CharField(max_length=9, choices=TP_VINCULO, null=True)
+    obs = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
-        return self.razao_social
+        return self.razao_social_motorista
 
 class ClienteFiliais(models.Model):
     id = models.BigAutoField(primary_key=True)

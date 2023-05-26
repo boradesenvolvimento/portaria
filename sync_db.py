@@ -80,7 +80,7 @@ WHERE
     F1.CARGA_ENCOMENDA IN ('CARGA DIRETA','RODOVIARIO')    AND
     F1.ID_GARAGEM NOT IN (1,23,30)                         AND
     F1.DATA_CANCELADO = '01-JAN-0001'                      AND
-                                                    
+                                                                         
     F1.DATA_EMISSAO BETWEEN ((SYSDATE)-1) AND (SYSDATE)                         
 GROUP BY
     F1.EMPRESA,
@@ -125,7 +125,10 @@ def insert_to_justificativa(data):
             
             lead_time = datetime.strptime(obj['lead_time'], "%d-%m-%Y").date()
             data_entrega = obj['data_entrega'].strftime('%Y-%m-%d')
-            data_entrega = datetime.strptime(data_entrega, "%Y-%m-%d").date()
+            if data_entrega == '1-01-01':
+                data_entrega = datetime.strptime('0001-01-01', "%Y-%m-%d").date()
+            else:
+                data_entrega = datetime.strptime(data_entrega, "%Y-%m-%d").date()
             
             # Verifica se tem lead_time
             if lead_time == date(1,1,1):
@@ -133,10 +136,10 @@ def insert_to_justificativa(data):
             # Verifica se passou do prazo
             elif lead_time < date.today():
                 # Verifica se foi entregue
-                if data_entrega.strftime('%d-%m-%Y') == '01-01-0001':
+                if data_entrega.strftime('%d-%m-%Y') == '01-01-1':
                     obj['em_aberto'] = (date.today() - lead_time).days
                 else:
-                    obj['em_aberto'] = data_entrega - lead_time
+                    obj['em_aberto'] = (data_entrega - lead_time).days
             else:
                 obj['em_aberto'] = 0
 
@@ -170,6 +173,7 @@ FROM
     ACA002 A2
 WHERE
     A1.COD_OCORRENCIA = A2.CODIGO AND
+    A1.DATA_CADASTRO BETWEEN ((SYSDATE)-1) AND (SYSDATE)                        
     A1.DATA_CADASTRO BETWEEN ((SYSDATE)-1) AND (SYSDATE)                        
                     """)
     res = dictfetchall(cur)
