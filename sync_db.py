@@ -133,10 +133,10 @@ def insert_to_justificativa(data):
             # Verifica se passou do prazo
             elif lead_time < date.today():
                 # Verifica se foi entregue
-                if data_entrega.strftime('%d-%m-%Y') == '01-01-0001':
+                if data_entrega.strftime('%d-%m-%Y') == '01-01-1':
                     obj['em_aberto'] = (date.today() - lead_time).days
                 else:
-                    obj['em_aberto'] = data_entrega - lead_time
+                    obj['em_aberto'] = (data_entrega - lead_time).days
             else:
                 obj['em_aberto'] = 0
 
@@ -203,6 +203,8 @@ def insert_to_ocorrencias(data):
                     # Verifica se não tem data_entrega
                     if just.data_entrega.strftime('%d-%m-%Y') == '01-01-0001':
                         just.em_aberto = (date.today() - just.lead_time).days
+                
+                just.save()
                 
                 filial = Filiais.objects.get(id_empresa=obj['id_empresa'], id_filial=obj['id_filial'])
                 obj['filial'] = filial
