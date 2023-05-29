@@ -14,6 +14,7 @@ class JustificativaEntregaSerializer(serializers.ModelSerializer):
     class Meta:
         model = JustificativaEntrega
         fields = (
+            "id",
             "conhecimento",
             "data_emissao",
             "destinatario",

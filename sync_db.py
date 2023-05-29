@@ -81,7 +81,7 @@ WHERE
     F1.ID_GARAGEM NOT IN (1,23,30)                         AND
     F1.DATA_CANCELADO = '01-JAN-0001'                      AND
                                                                          
-    F1.DATA_EMISSAO BETWEEN ((SYSDATE)-30) AND (SYSDATE-25)
+    F1.DATA_EMISSAO BETWEEN ((SYSDATE)-1) AND (SYSDATE)
 GROUP BY
     F1.EMPRESA,
     F1.FILIAL,
@@ -178,7 +178,7 @@ FROM
     ACA002 A2
 WHERE
     A1.COD_OCORRENCIA = A2.CODIGO AND
-    A1.DATA_CADASTRO BETWEEN ((SYSDATE)-30) AND (SYSDATE-25)                     
+    A1.DATA_CADASTRO BETWEEN ((SYSDATE)-1) AND (SYSDATE)                     
                     """)
     res = dictfetchall(cur)
     cur.close()
