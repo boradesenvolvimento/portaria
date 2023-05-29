@@ -112,8 +112,6 @@ def insert_to_justificativa(data):
     for obj in data:
         try:
             JustificativaEntrega.objects.get(
-                id_empresa=obj['id_empresa'], 
-                id_filial=obj['id_filial'], 
                 garagem=obj['garagem'],
                 tipo_doc=obj['tipo_doc'],
                 conhecimento=obj['conhecimento']
@@ -164,8 +162,6 @@ async def get_ocorrencias():
     
     cur.execute(f"""
 SELECT DISTINCT
-    A1.EMPRESA id_empresa,
-    A1.FILIAL id_filial,
     A1.GARAGEM garagem,
     A1.NUMERO_CTRC conhecimento,
     A1.TIPO_DOCTO tp_doc,
@@ -191,7 +187,7 @@ WHERE
 @sync_to_async
 def insert_to_ocorrencias(data):
     for obj in data:
-        just = JustificativaEntrega.objects.filter(id_empresa=obj['id_empresa'], id_filial=obj['id_filial'],
+        just = JustificativaEntrega.objects.filter(
                 garagem=obj['garagem'], conhecimento=obj['conhecimento']).first()
         
         if just:
