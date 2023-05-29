@@ -5,7 +5,7 @@ from .models import *
 class OcorrenciaEntregaSerializer(serializers.ModelSerializer):
     class Meta:
         model = OcorrenciaEntrega
-        exclude = ['id_empresa']
+        fields = '__all__'
         
 
 class JustificativaEntregaSerializer(serializers.ModelSerializer):
