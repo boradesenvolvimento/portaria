@@ -4039,7 +4039,7 @@ def justificativa(request):
     return render(request, 'portaria/etc/justificativa.html', {'filiais': filiais, 'today': today, 'yesterday': yesterday})
 
 def rel_justificativa(request):
-    gachoices = GARAGEM_CHOICES
+    filiais = Filiais.objects.all()
     if request.method == 'POST':
         if 'pivot_rel_just' in request.POST:
             date1 = request.POST.get('date1')
@@ -4052,10 +4052,10 @@ def rel_justificativa(request):
                 print(f'Error: {e}, error_type:{type(e).__name__}')
             else:
                 return response
-    return render(request, 'portaria/etc/rel_justificativa.html', {'gachoices': gachoices})
+    return render(request, 'portaria/etc/rel_justificativa.html', {'filiais': filiais})
 
 def confirmjust(request):
-    gachoices = FILIAL_CHOICES
+    filiais = Filiais.objects.all()
     form = JustificativaEntrega.objects.filter(cod_just__isnull=False, desc_just__isnull=False, confirmado=False)
     if request.method == 'GET':
         date1 = request.GET.get('data1')
@@ -4065,7 +4065,7 @@ def confirmjust(request):
             form = JustificativaEntrega.objects.filter(id_garagem=filial, data_emissao__lte=date2,
                                                        data_emissao__gte=date1, confirmado=False,
                                                        cod_just__isnull=False, desc_just__isnull=False)
-            return render(request, 'portaria/etc/confirmjustificativas.html', {'form': form, 'gachoices': gachoices})
+            return render(request, 'portaria/etc/confirmjustificativas.html', {'form': form, 'filiais': filiais})
     if request.method == 'POST':
         aa = request.POST.getlist('romid')
         for q in aa:
@@ -4086,12 +4086,10 @@ def confirmjust(request):
                 else:
                     obj.confirmado = True
                 obj.save()
-    return render(request, 'portaria/etc/confirmjustificativas.html', {'form':form,'gachoices':gachoices})
+    return render(request, 'portaria/etc/confirmjustificativas.html', {'form':form,'filiais':filiais})
     
 def pivot_rel_just(date1, date2):
     array = []
-    gachoices = GARAGEM_CHOICES
-    dictga = {k:v for k,v in gachoices}
     compare_date = datetime.datetime.strptime('0001-01-01', '%Y-%m-%d')
     if date1 and date2:
         qs = JustificativaEntrega.objects.filter(data_emissao__lte=date2, data_emissao__gte=date1)

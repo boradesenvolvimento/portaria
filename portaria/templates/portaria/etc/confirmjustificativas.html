@@ -20,8 +20,8 @@
                     <label for="filial">Filial:</label>
                     <select name="filial" id="filial">
                         <option></option>
-                        {% for t,p in gachoices %}
-                            <option value="{{ t }}">{{ p }}</option>
+                        {% for filial in filiais %}
+                            <option value="{{ filial.id_garagem }}">{{ filial.id_garagem }} - {{ filial.sigla }}</option>
                         {% endfor %}
                     </select>
                     <button type="submit">Filtrar</button>
@@ -30,7 +30,8 @@
             </div>
             <div class="container">
                 <div class="row linha-baixo">
-                <form method="post">{% csrf_token %}
+                <form method="post">
+                {% csrf_token %}
                     <table class="table table1">
                         <thead>
                             <!--JavaScript para selecionar todos-->
