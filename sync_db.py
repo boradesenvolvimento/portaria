@@ -68,18 +68,20 @@ WHERE
     F1.GARAGEM = F11.GARAGEM               AND
     F1.SERIE = F11.SERIE                   AND
     F1.CONHECIMENTO = F11.CONHECIMENTO     AND
+    F1.TIPO_DOCTO = F11.TIPO_DOCTO         AND
     
     F1.EMPRESA = F4.EMPRESA                AND
     F1.FILIAL = F4.FILIAL                  AND
     F1.GARAGEM = F4.GARAGEM                AND
     F1.CONHECIMENTO = F4.CONHECIMENTO      AND
     F1.SERIE = F4.SERIE                    AND
+    F1.TIPO_DOCTO = F4.TIPO_DOCTO          AND
     
     F1.CARGA_ENCOMENDA IN ('CARGA DIRETA','RODOVIARIO')    AND
     F1.ID_GARAGEM NOT IN (1,23,30)                         AND
     F1.DATA_CANCELADO = '01-JAN-0001'                      AND
                                                                          
-    F1.DATA_EMISSAO BETWEEN ((SYSDATE)-1) AND (SYSDATE)
+    F1.DATA_EMISSAO BETWEEN ((SYSDATE)-30) AND (SYSDATE-25)
 GROUP BY
     F1.EMPRESA,
     F1.FILIAL,
@@ -141,6 +143,9 @@ def insert_to_justificativa(data):
                     obj['em_aberto'] = 0
             else:
                 obj['em_aberto'] = 0
+            
+            if obj['em_aberto'] > 1000:
+                obj['em_aberto'] = 999
 
             try:
                 filial = Filiais.objects.get(id_garagem=obj['id_garagem'])
@@ -173,7 +178,7 @@ FROM
     ACA002 A2
 WHERE
     A1.COD_OCORRENCIA = A2.CODIGO AND
-    A1.DATA_CADASTRO BETWEEN ((SYSDATE)-1) AND (SYSDATE)                     
+    A1.DATA_CADASTRO BETWEEN ((SYSDATE)-30) AND (SYSDATE-25)                     
                     """)
     res = dictfetchall(cur)
     cur.close()
@@ -211,17 +216,13 @@ def insert_to_ocorrencias(data):
                         if just.em_aberto < 0:
                             just.em_aberto = 0
                 
-                try:
-                    if (just.em_aberto > 200 or just.em_aberto < -200) and just.em_aberto != 999:
-                        just.em_aberto = -1
-                except Exception:
-                    just.em_aberto = -1
+                if just.em_aberto > 1000:
+                    just.em_aberto = 999
                 
                 just.save()
                 
                 try:
-                    filial = Filiais.objects.get(id_garagem=obj['id_garagem'])
-                    obj['filial'] = filial
+                    obj['filial'] = just.filial
                 except:
                     pass
                 
