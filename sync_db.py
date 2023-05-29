@@ -143,8 +143,15 @@ def insert_to_justificativa(data):
             else:
                 obj['em_aberto'] = 0
 
-            filial = Filiais.objects.get(id_empresa=obj['id_empresa'], id_filial=obj['id_filial'])
-            obj['filial'] = filial
+            try:
+                filial = Filiais.objects.get(id_empresa=obj['id_empresa'], id_filial=obj['id_filial'])
+                obj['filial'] = filial
+            except:
+                try:
+                    filial = Filiais.objects.get(id_garagem=obj['garagem'])
+                    obj['filial'] = filial
+                except:
+                    pass
             
             obj['lead_time'] = lead_time
 
@@ -173,7 +180,6 @@ FROM
     ACA002 A2
 WHERE
     A1.COD_OCORRENCIA = A2.CODIGO AND
-    A1.DATA_CADASTRO BETWEEN ((SYSDATE)-1) AND (SYSDATE)                        
     A1.DATA_CADASTRO BETWEEN ((SYSDATE)-1) AND (SYSDATE)                        
                     """)
     res = dictfetchall(cur)
@@ -212,8 +218,15 @@ def insert_to_ocorrencias(data):
                 
                 just.save()
                 
-                filial = Filiais.objects.get(id_empresa=obj['id_empresa'], id_filial=obj['id_filial'])
-                obj['filial'] = filial
+                try:
+                    filial = Filiais.objects.get(id_empresa=obj['id_empresa'], id_filial=obj['id_filial'])
+                    obj['filial'] = filial
+                except:
+                    try:
+                        filial = Filiais.objects.get(id_garagem=obj['garagem'])
+                        obj['filial'] = filial
+                    except:
+                        pass
                 
                 OcorrenciaEntrega.objects.create(**obj)
             except Exception as e:
