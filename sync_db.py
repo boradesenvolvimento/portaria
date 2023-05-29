@@ -20,8 +20,6 @@ async def get_justificativas():
     
     cur.execute(f"""
 SELECT 
-    F1.EMPRESA id_empresa,
-    F1.FILIAL id_filial,
     F1.GARAGEM garagem,
     F1.ID_GARAGEM id_garagem, 
     DECODE(F1.TIPO_DOCTO, 8, 'NFS', 'CTE') tipo_doc,
@@ -140,18 +138,17 @@ def insert_to_justificativa(data):
                     obj['em_aberto'] = (date.today() - lead_time).days
                 else:
                     obj['em_aberto'] = (data_entrega - lead_time).days
+                
+                if obj['em_aberto'] < 0:
+                    obj['em_aberto'] = 0
             else:
                 obj['em_aberto'] = 0
 
             try:
-                filial = Filiais.objects.get(id_empresa=obj['id_empresa'], id_filial=obj['id_filial'])
+                filial = Filiais.objects.get(id_garagem=obj['id_garagem'])
                 obj['filial'] = filial
             except:
-                try:
-                    filial = Filiais.objects.get(id_garagem=obj['id_garagem'])
-                    obj['filial'] = filial
-                except:
-                    pass
+                pass
             
             obj['lead_time'] = lead_time
 
@@ -215,6 +212,8 @@ def insert_to_ocorrencias(data):
                     # Verifica se não tem data_entrega
                     if just.data_entrega.strftime('%d-%m-%Y') == '01-01-0001':
                         just.em_aberto = (date.today() - just.lead_time).days
+                        if just.em_aberto < 0:
+                            just.em_aberto = 0
                 
                 try:
                     if (just.em_aberto > 200 or just.em_aberto < -200) and just.em_aberto != 999:
@@ -225,7 +224,7 @@ def insert_to_ocorrencias(data):
                 just.save()
                 
                 try:
-                    filial = Filiais.objects.get(id_empresa=obj['id_empresa'], id_filial=obj['id_filial'])
+                    filial = Filiais.objects.get(id_garagem=obj['id_garagem'])
                     obj['filial'] = filial
                 except:
                     pass
