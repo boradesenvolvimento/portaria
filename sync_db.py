@@ -81,7 +81,7 @@ WHERE
     F1.ID_GARAGEM NOT IN (1,23,30)                         AND
     F1.DATA_CANCELADO = '01-JAN-0001'                      AND
                                                                          
-    F1.DATA_EMISSAO BETWEEN ((SYSDATE)-1) AND (SYSDATE)                         
+    F1.DATA_EMISSAO BETWEEN ((SYSDATE)-1) AND (SYSDATE)
 GROUP BY
     F1.EMPRESA,
     F1.FILIAL,
@@ -148,7 +148,7 @@ def insert_to_justificativa(data):
                 obj['filial'] = filial
             except:
                 try:
-                    filial = Filiais.objects.get(id_garagem=obj['garagem'])
+                    filial = Filiais.objects.get(id_garagem=obj['id_garagem'])
                     obj['filial'] = filial
                 except:
                     pass
@@ -180,7 +180,7 @@ FROM
     ACA002 A2
 WHERE
     A1.COD_OCORRENCIA = A2.CODIGO AND
-    A1.DATA_CADASTRO BETWEEN ((SYSDATE)-1) AND (SYSDATE)                        
+    A1.DATA_CADASTRO BETWEEN ((SYSDATE)-1) AND (SYSDATE)                     
                     """)
     res = dictfetchall(cur)
     cur.close()
@@ -228,11 +228,7 @@ def insert_to_ocorrencias(data):
                     filial = Filiais.objects.get(id_empresa=obj['id_empresa'], id_filial=obj['id_filial'])
                     obj['filial'] = filial
                 except:
-                    try:
-                        filial = Filiais.objects.get(id_garagem=obj['garagem'])
-                        obj['filial'] = filial
-                    except:
-                        pass
+                    pass
                 
                 OcorrenciaEntrega.objects.create(**obj)
             except Exception as e:
