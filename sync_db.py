@@ -206,14 +206,20 @@ def insert_to_ocorrencias(data):
                 # Verifica a ocorrencia é com descrição "Entregue"
                 if obj['desc_ocor'] == 'Entregue':
                     just.data_entrega = data_ocorrencia
-                    just.em_aberto = (just.data_entrega - just.lead_time).days
+                    if (just.data_entrega - just.lead_time).days <= 0:
+                        just.em_aberto = 0
+                    else:
+                        just.em_aberto = (just.data_entrega - just.lead_time).days
                 # Verifica se tem lead_time
                 elif just.lead_time.strftime('%d-%m-%Y') != '01-01-0001':
                     # Verifica se não tem data_entrega
                     if just.data_entrega.strftime('%d-%m-%Y') == '01-01-0001':
                         just.em_aberto = (date.today() - just.lead_time).days
                 
-                if just.em_aberto > 200 or just.em_aberto < -200:
+                try:
+                    if (just.em_aberto > 200 or just.em_aberto < -200) and just.em_aberto != 999:
+                        just.em_aberto = -1
+                except Exception:
                     just.em_aberto = -1
                 
                 just.save()
