@@ -907,8 +907,6 @@ class JustificativaEntrega(models.Model):
         ('153', 'ATRASO NA TRANSFERENCIA'),
         ('154', 'CUSTO')
     )
-    id_empresa = models.CharField(max_length=5)
-    id_filial = models.CharField(max_length=5)
     garagem = models.CharField(max_length=5)
     id_garagem = models.CharField(max_length=5)
     conhecimento = models.CharField(max_length=15)
@@ -931,8 +929,6 @@ class JustificativaEntrega(models.Model):
     filial = models.ForeignKey(Filiais, on_delete=models.PROTECT, blank=True, null=True)
 
 class OcorrenciaEntrega(models.Model):
-    id_empresa = models.CharField(max_length=5)
-    id_filial = models.CharField(max_length=5)
     garagem = models.CharField(max_length=5)
     conhecimento = models.CharField(max_length=15)
     tp_doc = models.CharField(max_length=5)
