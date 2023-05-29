@@ -252,13 +252,14 @@
             style="background-color: #3188e8"
             aria-labelledby="dropdownMenuButton1"
           >
-            {% if request.user|has_group:"adm_rh" %}
+            {% comment %} {% if request.user|has_group:"adm_rh" %}
             <li class="nav-item">
               <a class="nav-link1" href="{% url 'portaria:cardusuario' %}"
                 >Cards</a
               >
             </li>
-            {% endif %} {% if request.user|has_group:"romaneioxml" %}
+            {% endif %} {% endcomment %}
+            {% if request.user|has_group:"romaneioxml" %}
             <li class="nav-item">
               <a class="nav-link1" href="{% url 'portaria:romaneioxml' %}"
                 >XMLS</a
