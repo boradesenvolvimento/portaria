@@ -17,20 +17,12 @@
                 <form method="post" action="{% url 'portaria:compras_lancar_pedido' %}" enctype="multipart/form-data">
                     {% csrf_token %}
                     <h3>Lançar</h3>
-                    <label for="empresa">Empresa:</label>
-                    <select id="empresa" name="empresa">
-                        <option selected disabled value="">--</option>
-                        <option value="1"> 1 - Bora </option>
-                        <option value="3"> 3 - Bourbon </option>
-                        <option value="4"> 4 - Transfood </option>
-                        
-                    </select>
                     <label for="fil">Filial:</label>
                     <select id="fil" name="filial">
                         <option selected disabled value="">--</option>
-                        {% for k,v in filchoices %}
+                        {% for filial in filiais %}
                             {% if k != "0" %}
-                                <option value="{{k}}">{{k}} - {{v}}</option>
+                                <option value="{{ filial.id }}">{{ filial.id_garagem }} - {{ filial.sigla }}</option>
                             {% endif %}
                         {% endfor %}
                     </select>
