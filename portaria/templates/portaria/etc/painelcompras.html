@@ -52,7 +52,7 @@
                         <th><span class="maozinha">Filial</span></th>
                         <th><span class="maozinha">Solicitante</span></th>
                         <th><span class="maozinha">Responsável</span></th>
-                        <th><span class="maozinha">Itens cad.</span></th>
+                        {% comment %} <th><span class="maozinha">Itens cad.</span></th> {% endcomment %}
                         <th><span class="maozinha">Editar</span></th>
                     </tr>
                     {% for q in form %}
@@ -64,7 +64,7 @@
                         <td>{{ q.filial.sigla }}</td>
                         <td>{{ q.solicitante }}</td>
                         <td>{{ q.responsavel|default_if_none:'Não Cadastrado' }}</td>
-                        <td><button type="button" id="myBtn" value="{{ forloop.counter }}"><ion-icon name="list"></ion-icon></button></td>
+                        {% comment %} <td><button type="button" id="myBtn" value="{{ forloop.counter }}"><ion-icon name="list"></ion-icon></button></td> {% endcomment %}
                         <td><a href="{% url 'portaria:edit_compras' q.id %}"><button type="button"><ion-icon name="create"></ion-icon></button></a></td>
                     </tr>
                         <div id="myModal{{ forloop.counter }}" class="modal">

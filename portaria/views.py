@@ -4148,7 +4148,7 @@ async def get_xmls_api(request):
     return HttpResponse('<h2>Consulta finalizada!</h2>')
 
 def compras_index(request):
-    filchoices = FILIAL_CHOICES
+    filiais = Filiais.objects.all()
     item_solicitante = SolicitacoesCompras.objects.exclude(Q(status='CONCLUIDO') | Q(status='CANCELADO'))\
         .filter(data__month=datetime.datetime.now().month,data__year=datetime.datetime.now().year).values('responsavel__username')\
         .annotate(total=Count('responsavel'))
@@ -4156,138 +4156,23 @@ def compras_index(request):
         concl=Count('id', filter=Q(status='CONCLUIDO')),
         andam=Count('id',filter=(Q(status='ANDAMENTO') | Q(status='APROVADO') | Q(status='ABERTO'))),
         ).aggregate(concluido=Sum('concl'), andamento=Sum('andam'))
-    return render(request, 'portaria/etc/compras.html', {'filchoices':filchoices,'item_solicitante':item_solicitante,
+    return render(request, 'portaria/etc/compras.html', {'filiais':filiais,'item_solicitante':item_solicitante,
                                                          'metrics':metrics})
 
 def compras_lancar_pedido(request):
-        # print('lançando pedido...')
-        # idsolic = request.POST.get('getid')
-        # empresa = request.POST.get('empresa')
-        # fil = request.POST.get('filial')
-        # anexo = request.FILES.get('getanexo')
-        # if idsolic:
-        #     print(f'gakey: {gakey[empresa+fil]}')
-        #     print('stating db conmection...')
-        #     conn = conndb()
-        #     cur = conn.cursor()
-        #     print('execute db select')
-        #     try:
-        #         cur.execute(f"""
-        #                     SELECT 
-        #                            SO.NUMEROSOLIC NR_SOLICITACAO,
-        #                            CM.DESCRICAOMAT PRODUTO,
-        #                            SO.DATASOLIC DATA,
-        #                            CIS.QTDEITSOLIC QTD_ITENS,
-        #                            CASE
-        #                                WHEN SO.STATUSSOLIC = 'A' THEN 'ABERTO'
-        #                                WHEN SO.STATUSSOLIC = 'P' THEN 'APROVADO'
-        #                                WHEN SO.STATUSSOLIC = 'F' THEN 'FECHADO'
-        #                            END STATUS,
-        #                            SO.CODIGOFL FILIAL,
-        #                            SO.USUARIO SOLICITANTE,
-        #                            CC.EMAIL
-        #                     FROM
-        #                         CPR_SOLICITACAO SO, 
-        #                         CPR_ITENSSOLICITADOS CIS,
-        #                         EST_CADMATERIAL CM,
-        #                         CTR_CADASTRODEUSUARIOS CC
-        #                     WHERE
-        #                             SO.CODIGOEMPRESA = {empresa}
-        #                         AND
-        #                         	SO.CODIGOFL = {fil}                  
-        #                         AND
-        #                         	SO.NUMEROSOLIC = CIS.NUMEROSOLIC 
-        #                         AND
-        #                         	SO.STATUSSOLIC = 'P'                      
-        #                         AND    
-        #                         	SO.DATASOLIC BETWEEN ((SYSDATE)-30) AND (SYSDATE) 
-        #                         AND    
-        #                         	CM.CODIGOMATINT = CIS.CODIGOMATINT                
-        #                         AND
-        #                         	SO.NUMEROSOLIC = {idsolic}                        
-        #                         AND
-        #                         	CC.USUARIO = SO.USUARIO
-        #                     GROUP BY
-        #                           SO.NUMEROSOLIC,
-        #                           CM.DESCRICAOMAT,
-        #                           SO.DATASOLIC,
-        #                           CIS.QTDEITSOLIC,
-        #                           SO.STATUSSOLIC,
-        #                           SO.CODIGOEMPRESA,
-        #                           SO.CODIGOFL,
-        #                           SO.USUARIO,
-        #                           CC.EMAIL
-        #                     UNION ALL                        
-        #                     SELECT 
-        #                            SO.NUMEROSOLIC NR_SOLICITACAO,
-        #                            SCO.DESCRICAOSOLOUTROS PRODUTO,
-        #                            SO.DATASOLIC DATA,
-        #                            SCO.QTDESOLOUTROS QTD_ITENS,
-        #                            CASE
-        #                                WHEN SO.STATUSSOLIC = 'A' THEN 'ABERTO'
-        #                                WHEN SO.STATUSSOLIC = 'P' THEN 'APROVADO'
-        #                                WHEN SO.STATUSSOLIC = 'F' THEN 'FECHADO'
-        #                            END STATUS,
-        #                            SO.CODIGOFL FILIAL,
-        #                           SO.USUARIO SOLICITANTE,
-        #                            CC.EMAIL
-        #                     FROM
-        #                         CPR_SOLICITACAO SO,
-        #                         CPR_SOLICOUTROS SCO,
-        #                         CTR_CADASTRODEUSUARIOS CC
-        #                     WHERE
-        #                             SO.CODIGOEMPRESA = {empresa}
-        #                         AND
-        #                     		SO.CODIGOFL = {fil}                
-        #                     	AND
-        #                         	SO.NUMEROSOLIC = SCO.NUMEROSOLIC                  
-        #                         AND
-        #                         	SCO.STATUSSOLOUTROS = 'P'                         
-        #                         AND    
-        #                         	SO.DATASOLIC BETWEEN ((SYSDATE)-30) AND (SYSDATE) 
-        #                         AND
-        #                         	SO.NUMEROSOLIC = {idsolic}                        
-        #                         AND
-        #                         	CC.USUARIO = SO.USUARIO                           
-        #                     GROUP BY
-        #                           SO.NUMEROSOLIC,
-        #                           SCO.DESCRICAOSOLOUTROS,
-        #                           SCO.QTDESOLOUTROS,
-        #                           SO.DATASOLIC,
-        #                           SO.STATUSSOLIC,
-        #                           SO.CODIGOEMPRESA,
-        #                           SO.CODIGOFL,
-        #                           SO.USUARIO,
-        #                           CC.EMAIL
-        #                     """)
-        #     except cxerr:
-        #         print('CHEGOU NO FINAL DA QUERY')
-        #         messages.error(request, 'Não encontrado solicitação com este número.')
-        #     except Exception as e:
-        #         print('AQUI É o EROOO===',e)
-        #         messages.error(f'Error:{e}, error_type:{type(e).__name__}')
-        #     else:
-        #         print('feching results...')
-        #         print('Entrou no ELSE')
-        #         res = dictfetchall(cur)
-        #         cur.close()
-        #         print('AQUI É o RES: ',res)
-        #         if res:
-        #             print(res)
-        #             for q in res:
     if request.method == 'POST':
         idsolic = request.POST.get('getid')
         empresa = request.POST.get('empresa')
         fil = request.POST.get('filial')
         anexo = request.FILES.get('getanexo')
 
-        usuario: list[User] = User.objects.filter(id=request.user.id)
+        usuario = User.objects.filter(id=request.user.id).first()
         if usuario:
-            username = usuario[0].username.split(".")[0].upper()
-            email = usuario[0].email
+            username = usuario.username.split(".")[0].upper()
+            email = usuario.email
         if idsolic:
             try:
-                filial = Filiais.objects.filter(id_empresa=empresa, id_filial=fil).first()
+                filial = Filiais.objects.filter(id=fil).first()
                 obj = SolicitacoesCompras.objects.create(
                     nr_solic=int(idsolic), data=datetime.datetime.now(), status="ANDAMENTO",
                     filial=filial, empresa=empresa, codigo_fl = fil, autor=request.user, anexo=anexo,
@@ -4500,8 +4385,6 @@ def edit_compras(request, id):
     entradas = SolicitacoesEntradas.objects.filter(cpr_ref=obj)
     filchoices = FILIAL_CHOICES
     empchoices = EMPRESA_CHOICES
-    filkey = {v:k for v,k in filchoices}
-    empkey = {v:k for v,k in empchoices}
     stschoices = SolicitacoesCompras.STATUS_CHOICES
     dpchoices = SolicitacoesCompras.DEPARTAMENTO_CHOICES
     pgtchoices = SolicitacoesCompras.FORMA_PGT_CHOICES
@@ -4553,20 +4436,19 @@ def edit_compras(request, id):
                 "observacao": obj.obs,
                 "entradas": entradas,
             }
-            # envio = envia_email(corpo_email)
-            # if envio: messages.info(request, f'Email enviado com sucesso!')
-            # else: messages.info(request, f'Ocorreu uma falha ao enviar o email')
+            envio = envia_email(corpo_email)
+            if envio: messages.info(request, f'Email enviado com sucesso.')
+            else: messages.info(request, f'Ocorreu uma falha ao enviar o email.')
 
         except Exception as e:
             print(f'err:{e}, err_t:{type(e).__name__}')
             raise e
         else:
             try:
-
                 obj.ultima_att = request.user
                 obj.save()
                 print('novo objeto: ', obj.departamento)
-                messages.info(request, f'Solicitação {obj.nr_solic} alterada com sucesso')
+                messages.info(request, f'Solicitação {obj.nr_solic} alterada com sucesso.')
                 return redirect('portaria:painel_compras')
             except Exception as e:
                 print(f'err: {e}, err_type:{type(e).__name__}')
@@ -4599,7 +4481,7 @@ def insert_entradas_cpr(request, obj, textarea, files):
             print(f'Error:{e}, error_type:{type(e).__name__}')
             messages.error(request,'Ops, algo deu errado :(')
             raise e
-        messages.success(request, 'Cadastrado com sucesso :)')
+        messages.success(request, 'Entrada cadastrada com sucesso.')
         # else:
         #     file1 = None
         #     file2 = None
