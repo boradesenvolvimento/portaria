@@ -4120,9 +4120,9 @@ def pivot_rel_just(date1, date2):
     return response
 
 async def get_xmls_api(request):
-    host = get_secret('EHOST_XML')
-    user = get_secret('ESEND_XML')
-    pasw = get_secret('EPASS_XML')
+    host = get_secret('E_HOST_XML')
+    user = get_secret('E_MAIL_XML')
+    pasw = get_secret('E_PASS_XML')
     pp = poplib.POP3(host)
     pp.set_debuglevel(1)
     pp.user(user)
@@ -4130,26 +4130,21 @@ async def get_xmls_api(request):
     xmlsarray = []
     num_messages = len(pp.list()[1])
     for i in range(num_messages):
-        print('for num_messages')
         raw_email = b'\n'.join(pp.retr(i+1)[1])
         parsed_mail = email.message_from_bytes(raw_email)
         if parsed_mail.is_multipart():
-            print('email is multipart')
             for part in parsed_mail.walk():
-                print('for part in parsed_email')
                 filename = part.get_filename()
                 if re.findall(re.compile(r'\w+(?i:.xml|.XML)'), str(filename)):
-                    print('find xml')
                     xmlsarray.extend({part.get_payload(decode=True)})
         pp.dele(i+1)
     pp.quit()
     try:
-        print(xmlsarray)
+        print(f'ARRAY XML: LEN({len(xmlsarray)})')
         await entradaxml(request, args=xmlsarray)
     except Exception as e:
         print(f'Error: {e}, error_type: {type(e).__name__}')
         return HttpResponse(f'<h2> Ocorreu um erro durante a consulta - XML </h2> <br> Erro: {e} <br> Tipo do erro: {type(e).__name__}')
-        pass
     return HttpResponse('<h2>Consulta finalizada!</h2>')
 
 def compras_index(request):
