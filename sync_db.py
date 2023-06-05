@@ -212,7 +212,7 @@ def insert_to_ocorrencias(data):
                 elif just.lead_time.strftime('%d-%m-%Y') != '01-01-0001':
                     # Verifica se não tem data_entrega
                     if just.data_entrega.strftime('%d-%m-%Y') == '01-01-0001':
-                        just.em_aberto = (date.today() - just.lead_time).days
+                        just.em_aberto = (data_ocorrencia - just.lead_time).days
                         if just.em_aberto < 0:
                             just.em_aberto = 0
                 
