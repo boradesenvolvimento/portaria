@@ -2,12 +2,11 @@ from rest_framework import serializers
 
 from .models import *
 
-
 class OcorrenciaEntregaSerializer(serializers.ModelSerializer):
     class Meta:
         model = OcorrenciaEntrega
-        fields = "__all__"
-
+        fields = '__all__'
+        
 
 class JustificativaEntregaSerializer(serializers.ModelSerializer):
     ocorrencias = OcorrenciaEntregaSerializer(many=True, read_only=True)
@@ -25,6 +24,8 @@ class JustificativaEntregaSerializer(serializers.ModelSerializer):
             "em_aberto",
             "local_entreg",
             "nota_fiscal",
-            "ocorrencias",
+            "ocorrencias"
         )
         depth = 1
+
+        
