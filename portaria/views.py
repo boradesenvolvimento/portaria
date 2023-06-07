@@ -279,8 +279,7 @@ def cadastro(request):
 
 def paleteview(request):
     keyga = {k: v for k, v in GARAGEM_CHOICES}
-    tp_fil = GARAGEM_CHOICES
-    tp_fil.pop()
+    filiais = Filiais.objects.all()
     tp_emp = Cliente.objects.values_list("razao_social_motorista", flat=True)
     form = (
         PaleteControl.objects.values("loc_atual")
@@ -307,7 +306,7 @@ def paleteview(request):
     return render(
         request,
         "portaria/palete/paletes.html",
-        {"form": form, "tp_fil": tp_fil, "tp_emp": tp_emp, "ttcount": ttcount},
+        {"form": form, "filiais": filiais, "tp_emp": tp_emp, "ttcount": ttcount},
     )
 
 
