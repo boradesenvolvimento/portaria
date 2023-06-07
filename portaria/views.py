@@ -193,22 +193,36 @@ def cadastro(request):
         return render(request, 'portaria/portaria/cadastro.html', {'auth_message': auth_message})
 
 def paleteview(request):
-    keyga = {k:v for k,v in GARAGEM_CHOICES}
-    tp_fil = GARAGEM_CHOICES
-    tp_fil.pop()
-    tp_emp = Cliente.objects.values_list('razao_social_motorista', flat=True)
-    form = PaleteControl.objects.values('loc_atual').\
-        annotate(pbr=Count('id', filter=Q(tp_palete='PBR')),chep=Count('id', filter=Q(tp_palete='CHEP'))).\
-        annotate(total=ExpressionWrapper(Count('id'), output_field=IntegerField())).exclude(Q(loc_atual='MOV'))
-    ttcount = form.aggregate(total_amount=Sum('total'))
-    fil = request.GET.get('filial')
+    keyga = {k: v for k, v in GARAGEM_CHOICES}
+    filiais = Filiais.objects.all()
+    tp_emp = Cliente.objects.values_list("razao_social_motorista", flat=True)
+    form = (
+        PaleteControl.objects.values("loc_atual")
+        .annotate(
+            pbr=Count("id", filter=Q(tp_palete="PBR")),
+            chep=Count("id", filter=Q(tp_palete="CHEP")),
+        )
+        .annotate(total=ExpressionWrapper(Count("id"), output_field=IntegerField()))
+        .exclude(Q(loc_atual="MOV"))
+    )
+    ttcount = form.aggregate(total_amount=Sum("total"))
+    fil = request.GET.get("filial")
     if fil:
-        form = PaleteControl.objects.filter(loc_atual=keyga[fil]).values('loc_atual').\
-            annotate(pbr=Count('id', filter=Q(tp_palete='PBR')),chep=Count('id', filter=Q(tp_palete='CHEP'))).\
-            annotate(total=ExpressionWrapper(Count('id'), output_field=IntegerField()))
-        ttcount = form.aggregate(total_amount=Sum('total'))
-    return render(request, 'portaria/palete/paletes.html', {'form':form,'tp_fil':tp_fil,'tp_emp':tp_emp,
-                                                            'ttcount':ttcount})
+        form = (
+            PaleteControl.objects.filter(loc_atual=keyga[fil])
+            .values("loc_atual")
+            .annotate(
+                pbr=Count("id", filter=Q(tp_palete="PBR")),
+                chep=Count("id", filter=Q(tp_palete="CHEP")),
+            )
+            .annotate(total=ExpressionWrapper(Count("id"), output_field=IntegerField()))
+        )
+        ttcount = form.aggregate(total_amount=Sum("total"))
+    return render(
+        request,
+        "portaria/palete/paletes.html",
+        {"form": form, "filiais": filiais, "tp_emp": tp_emp, "ttcount": ttcount},
+    )
 
 def cadpaletes(request):
     tp_emp = Cliente.objects.all().order_by('razao_social_motorista')
