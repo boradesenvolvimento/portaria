@@ -43,17 +43,18 @@
                         <tr>
                             <th>Filial</th>
                             <th>Saldo</th>
-                            <th>Cliente</th>
+                            <th>Razão Social/ Motorista</th>
                             <th>Status</th>
+                            <th>Documento</th>
                         </tr>
                     </thead>
                     <tbody>
-                            {% for q in form %}
-                                {% if q.saldo != 0 %}
+                        {% for q in form %}
+                            {% if q.saldo != 0 %}
                                 <tr>
-                                <td>{{ q.filial.sigla }}</td>
-                                <td>{{ q.saldo }}</td>
-                                <td>{{ q.cliente.razao_social_motorista }}</td>
+                                    <td>{{ q.filial.sigla }}</td>
+                                    <td>{{ q.saldo }}</td>
+                                    <td>{{ q.cliente.razao_social_motorista }}</td>
                                     {% if q.saldo > 0 %}
                                     <td class="table-danger">A bora deve</td>
                                     {% elif q.saldo == 0 %}
@@ -61,9 +62,10 @@
                                     {% else %}
                                     <td class="table-success">O cliente deve</td>
                                     {% endif %}
+                                    <td><a href="{% url 'portaria:transfdetalhecliente' id=q.id %}" target="_blank">Informações</a></td>
                                 </tr>
-                                {% endif %}
-                            {% endfor %}
+                            {% endif %}
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>

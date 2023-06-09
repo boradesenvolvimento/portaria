@@ -274,6 +274,51 @@ def paletecliente(request):
     
     return render(request, 'portaria/palete/paletecliente.html', {'filiais': filiais, 'clientes': clientes})
 
+def transfdetalhecliente(request, id):
+    cli = ClienteFiliais.objects.filter(id=id).first()
+    
+    if cli.saldo < 0:
+        status = "DEVEDOR"
+        cli.saldo *= -1
+    else:
+        status = "CREDOR"
+    
+    data = {
+        "Autor": str(request.user).upper(),
+        "Razão Social/ Motorista": str(cli.cliente.razao_social_motorista).upper(),
+        "Filial": cli.filial.sigla,
+        "Data Solicitação": datetime.datetime.now().strftime("%d/%m/%Y %H:%m"),
+        "Quantidade": cli.saldo,
+        "Status": status
+    }
+
+    #Gerar código de barras
+    pdf = FPDF(orientation='P', unit='mm', format=(210, 297))
+    pdf.add_page()
+    pdf.ln()
+    pdf.image('portaria/static/images/logo.png', x=160, y=10, w=35, h=17.5)
+    pdf.ln()
+    page_w = int(pdf.w)
+    pdf.set_font("Arial", size = 20)
+    pdf.cell(w=190, h=25, txt='Solicitação de Entrega', border=0, align='C')
+    pdf.ln(30)
+    pdf.set_font("Arial", size = 12, style= 'B')
+
+    line_height = pdf.font_size * 2.5
+    for k, v in data.items():
+        pdf.set_font("Arial", size = 12, style= 'B')
+        pdf.cell(60, line_height, k, border=1) # com barcode = 35 e 65
+        pdf.set_font("Arial", size = 12)
+        pdf.cell(130, line_height, str(v), border=1, ln=1)
+    pdf.output("GFG.pdf")
+    with open("GFG.pdf", "rb") as f:
+        response = HttpResponse(f.read(), content_type="application/pdf")
+    f.close()
+    os.remove("GFG.pdf")
+    # os.remove("barcode.png")
+    response['Content-Disposition'] = 'filename=some_file.pdf'
+    return response
+
 def cadcliente(request):
     if request.method == 'POST':
         nome = request.POST.get('nome')
