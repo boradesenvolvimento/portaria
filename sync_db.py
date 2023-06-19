@@ -4,7 +4,7 @@ import ipdb
 from asgiref.sync import sync_to_async
 
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Q
+from django.db.models import Q, F
 
 from datetime import date, datetime 
 
@@ -220,17 +220,27 @@ def insert_to_ocorrencias(data):
             except Exception as e:
                 print('Error:%s, error_type:%s' %(e, type(e)))
 
-def atualiza_dados():
+def atualiza_dados_nao_entreges():
     justificativas = JustificativaEntrega.objects.filter(~Q(em_aberto=999), Q(data_entrega=date(1,1,1)), confirmado=0)
-    
+    print(f"ATUALIZANDO {justificativas.count()} DADOS SEM ENTREGAS PREENCHIDAS.")
     for just in justificativas:
         just.em_aberto = (date.today() - just.lead_time).days
         
         if just.em_aberto < 0:
             just.em_aberto = 0
         
-        just.save()        
+        just.save()
+        
+def atualiza_dados_entreges():
+    justificativas = JustificativaEntrega.objects.filter(Q(em_aberto=0), lead_time__lt=F('data_entrega'), confirmado=0)
+    print(f"ATUALIZANDO {justificativas.count()} DADOS COM ENTREGAS PREENCHIDAS.")
+    
+    for just in justificativas:
+        just.em_aberto = (just.data_entrega - just.lead_time).days
+        
+        just.save()
 
 asyncio.run(get_justificativas())
 asyncio.run(get_ocorrencias())
-atualiza_dados()
+atualiza_dados_nao_entreges()
+atualiza_dados_entreges()
