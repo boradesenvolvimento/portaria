@@ -10,6 +10,8 @@ class OcorrenciaEntregaSerializer(serializers.ModelSerializer):
 
 class JustificativaEntregaSerializer(serializers.ModelSerializer):
     ocorrencias = OcorrenciaEntregaSerializer(many=True, read_only=True)
+    data_emissao = serializers.DateField(format="%d-%m-%Y")
+    lead_time = serializers.DateField(format="%d-%m-%Y")
 
     class Meta:
         model = JustificativaEntrega
