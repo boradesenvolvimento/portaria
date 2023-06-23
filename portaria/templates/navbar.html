@@ -422,14 +422,40 @@
           {% if request.user|has_group:"justificativas" %}
           <li class="nav-item">
             <a class="nav-link1" href="{% url 'portaria:rel_justificativa' %}"
-              >Rel Justificativas</a
+            >Rel Justificativas</a
             >
           </li>
           {% endif %}
-          </ul>
-        </div>
+
+        </ul>
+      </div>
+      {% endif %}
+      {% if request.user|has_group:"consultas" %}
+      <div class="dropdown">
+        <button
+          class="dropdown-toggle menutext-navbar nav-link1"
+          type="button"
+          style="background-color: #3188e8"
+          id="dropdownMenuButton1"
+          data-bs-toggle="dropdown"
+          aria-expanded="false"
+        >
+          Consultas
+        </button>
+        <ul
+          class="dropdown-menu"
+          style="background-color: #3188e8"
+          aria-labelledby="dropdownMenuButton1"
+        >
+        {% if request.user|has_group:"consulta_nf" %}
+          <li class="nav-item">
+            <a class="nav-link1" href="{% url 'portaria:consulta_nf' %}"
+              >Consulta NF</a
+            >
+          </li>
         {% endif %}
-      </ul>
+        </ul>
+      {% endif %}
 
       {% if user.notifications.unread.exists %}
       <div class="dropdown" style="position: absolute; right: 0">

@@ -96,6 +96,7 @@ urlpatterns = [
     path('justificativa/', views.justificativa, name='justificativa'),
     path('relatorios-just/', views.rel_justificativa, name='rel_justificativa'),
     path('confirmar-just/', views.confirmjust, name='confirmjust'),
+    path('consulta-nf/', views.consulta_nf, name='consulta_nf'),
     path(r'edibuilder/', views.ediexceltosd1, name='ediexceltosd1'),
     path(r'ediexample/', views.exedicorreios, name='exedicorreios'),
     path('export-bipagem/', views.bipagemdocrel, name='bipagemdocrel'),

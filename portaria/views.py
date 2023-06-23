@@ -4146,6 +4146,190 @@ def confirmjust(request):
                     obj.confirmado = True
                 obj.save()
     return render(request, 'portaria/etc/confirmjustificativas.html', {'form':form,'filiais':filiais})
+
+def consulta_nf(request):
+    if request.method == 'GET':
+        nf = str(request.GET.get('nf'))
+        
+        if nf:
+            while len(nf) < 10:
+                nf = '0' + nf
+            
+            conn = conndb()
+            cur = conn.cursor()
+            cur.execute(f"""
+SELECT 
+    F1.GARAGEM garagem,
+    F1.ID_GARAGEM id_garagem, 
+    DECODE(F1.TIPO_DOCTO, 8, 'NFS', 'CTE') tipo_doc,
+    F1.CONHECIMENTO,
+    TO_CHAR(F1.DATA_EMISSAO, 'DD-MM-YYYY') data_emissao,
+    TO_CHAR(F1.DATA_ENTREGA, 'DD-MM-YYYY') data_entrega,
+    CASE
+        WHEN F1.TIPO_DOCTO = 8 THEN TO_CHAR(BC.NFANTASIACLI)
+        WHEN F1.TIPO_DOCTO = 57 THEN F1.REM_RZ_SOCIAL
+    END REMETENTE,
+    CASE 
+        WHEN F1.TIPO_DOCTO = 8 THEN F11.REC_RZ_SOCIAL
+        WHEN F1.TIPO_DOCTO = 57 THEN F1.DEST_RZ_SOCIAL
+    END DESTINATARIO,
+    F1.PESO,
+    CASE
+        WHEN F11.DT_PREV_ENTREGA IS NULL THEN '01-01-0001'
+        WHEN F11.DT_PREV_ENTREGA IS NOT NULL THEN TO_CHAR(F11.DT_PREV_ENTREGA, 'DD-MM-YYYY')
+    END lead_time,
+    CASE
+        WHEN F1.DATA_ENTREGA = '01-JAN-0001' THEN 'NAO ENTREGUE'
+        WHEN F1.DATA_ENTREGA <> '01-JAN-0001' THEN CASE
+            WHEN (F1.DATA_ENTREGA - F11.DT_PREV_ENTREGA) < 0 THEN 'ADIANTADO'
+            WHEN (F1.DATA_ENTREGA - F11.DT_PREV_ENTREGA) > 0 THEN 'ATRASADO'
+            END
+    END LEADTIME,
+    CASE 
+        WHEN (TRUNC((MIN(F11.DT_PREV_ENTREGA))-(SYSDATE))-1) >= 0 THEN (TRUNC((MIN(F11.DT_PREV_ENTREGA))-(SYSDATE))-1)
+        WHEN (TRUNC((MIN(F11.DT_PREV_ENTREGA))-(SYSDATE))*-1) < 0 THEN 0
+        WHEN F11.DT_PREV_ENTREGA IS NULL THEN 0
+    END em_aberto,
+    E2.DESC_LOCALIDADE || '-' || E2.COD_UF local_entreg,
+    (LTRIM (F4.NOTA_FISCAL,0)) nota_fiscal,
+    F1.CARGA_ENCOMENDA carga_encomenda
+FROM 
+    FTA001 F1,
+    FTA011 F11,
+    EXA002 E2,
+    FTA004 F4,
+    BGM_CLIENTE BC               
+WHERE
+    F1.LOCALID_ENTREGA = E2.COD_LOCALIDADE AND
+    F1.CLIENTE_FAT = BC.CODCLI             AND
+    
+    F1.EMPRESA = F11.EMPRESA               AND
+    F1.FILIAL = F11.FILIAL                 AND
+    F1.GARAGEM = F11.GARAGEM               AND
+    F1.SERIE = F11.SERIE                   AND
+    F1.CONHECIMENTO = F11.CONHECIMENTO     AND
+    F1.TIPO_DOCTO = F11.TIPO_DOCTO         AND
+    
+    F1.EMPRESA = F4.EMPRESA                AND
+    F1.FILIAL = F4.FILIAL                  AND
+    F1.GARAGEM = F4.GARAGEM                AND
+    F1.CONHECIMENTO = F4.CONHECIMENTO      AND
+    F1.SERIE = F4.SERIE                    AND
+    F1.TIPO_DOCTO = F4.TIPO_DOCTO          AND
+    
+    F1.DATA_CANCELADO = '01-JAN-0001'                      AND
+
+    F4.NOTA_FISCAL = '{nf}'
+GROUP BY
+    F1.EMPRESA,
+    F1.FILIAL,
+    F1.GARAGEM,
+    F1.ID_GARAGEM,
+    F1.TIPO_DOCTO,
+    F1.CARGA_ENCOMENDA,
+    BC.NFANTASIACLI,
+    F11.REC_RZ_SOCIAL,
+    F1.CONHECIMENTO,
+    F1.DATA_EMISSAO,
+    F1.DATA_ENTREGA,
+    F1.REM_RZ_SOCIAL,
+    F1.DEST_RZ_SOCIAL,
+    F1.PESO,
+    F11.DT_PREV_ENTREGA,
+    E2.DESC_LOCALIDADE,
+    E2.COD_UF,
+    F4.NOTA_FISCAL
+ORDER BY
+    F1.DATA_EMISSAO DESC
+                    """)
+            
+            justificativas = dictfetchall(cur)
+            
+            cur.execute(f"""
+SELECT 
+    E6.COD_MANIFESTO romaneio,
+    DECODE(E5.ENTREGA_TRANSF,'T','TRANSFERENCIA','ENTREGA') tipo,
+    VE.PREFIXOVEIC placa,
+    TO_CHAR(E5.DATA_SAIDA, 'DD-MM-YYYY') data,
+    MO.NOME motorista,
+    E5.GARAGEM garagem,
+    E6.NUMERO_CTRC conhecimento,
+    (LTRIM (F4.NOTA_FISCAL,0)) nota_fiscal
+    
+FROM 
+    FTA001 F1,
+    FTA004 F4,
+    EXA026 E6,
+    EXA025 E5,
+    FRT_CADVEICULOS VE,
+    VWCGS_FUNCIONARIOSCOMAGREGADO MO
+    
+WHERE
+    
+    F1.EMPRESA = E6.EMPRESA                AND
+    F1.FILIAL = E6.FILIAL                  AND
+    F1.GARAGEM = E6.GARAGEM                AND
+    F1.SERIE = E6.SERIE_CTRC               AND
+    F1.CONHECIMENTO = E6.NUMERO_CTRC       AND
+   
+    E5.RECNUM = E6.RECNUM_EXA025           AND
+    
+    E5.ID_MOTORISTA = MO.IDENTIFICACAO(+)  AND
+    E5.MOTORISTA = MO.CODINTFUNC (+)       AND
+    E5.VEICULO = VE.CODIGOVEIC (+)         AND
+    
+    F1.EMPRESA = F4.EMPRESA                AND
+    F1.FILIAL = F4.FILIAL                  AND
+    F1.GARAGEM = F4.GARAGEM                AND
+    F1.CONHECIMENTO = F4.CONHECIMENTO      AND
+    F1.SERIE = F4.SERIE                    AND
+    F1.TIPO_DOCTO = F4.TIPO_DOCTO          AND
+    
+    F1.DATA_CANCELADO = '01-JAN-0001'      AND
+
+    F4.NOTA_FISCAL = '{nf}'
+                    """)
+                    
+            romaneios = dictfetchall(cur)
+            print(len(romaneios))
+                        
+            lista_justificativas = []
+            for just in justificativas:
+                if just['carga_encomenda'] == 'CARGA DIRETA' or just['carga_encomenda'] == 'RODOVIARIO':
+                    cur.execute(f"""
+SELECT DISTINCT
+    A1.GARAGEM garagem,
+    A1.NUMERO_CTRC conhecimento,
+    A1.TIPO_DOCTO tp_doc,
+    A2.CODIGO cod_ocor,
+    A2.DESCRICAO desc_ocor,
+    TO_CHAR(A1.DATA_OCORRENCIA, 'DD-MM-YYYY') data_ocorrencia
+FROM 
+    ACA001 A1,
+    ACA002 A2
+WHERE
+    A1.COD_OCORRENCIA = A2.CODIGO AND
+    A1.NUMERO_CTRC = {just['conhecimento']} AND
+    A1.GARAGEM = {just['garagem']}
+ORDER BY
+    TO_CHAR(A1.DATA_OCORRENCIA, 'DD-MM-YYYY')
+                    """)
+                    just['ocorrencias'] = dictfetchall(cur)
+                    
+                    just['romaneios'] = [rom for rom in romaneios if just['conhecimento'] == rom['conhecimento']] #and just['garagem'] == rom['garagem']]
+                    
+                    lista_justificativas.append(just)
+
+            cur.close()
+
+            return render(request,'portaria/etc/consulta_nf.html', 
+                            {
+                                'form': lista_justificativas,
+                            }
+                        )
+
+    return render(request, 'portaria/etc/consulta_nf.html')
+    
     
 def pivot_rel_just(date1, date2):
     array = []
