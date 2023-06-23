@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load groupscheck %}
+{% if request.user|has_group:"justificativas" %}
+<style>
+    .smallcap td{
+        font-size:11px;
+    }
+
+    .data-input{
+        padding: 6px;
+    }
+</style>
+        <div class="container mt-5">
+            {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+            {% endfor %}
+            <div class="row linha-baixo">
+                <h2 class="title-cad col-3">Consulta NF</h2>
+                <div class="col-10">
+                    <form method="get">
+                        <label for="nf">Número NF:</label>
+                        <input class="data-input" type="number" name="nf">
+                        <button style="padding: 15px 40px;" type="submit">Filtrar</button>
+                    </form>
+                </div>
+            </div>
+            <div class="row" style="margin-left: 6rem;">
+                <form method="post" id="formgroup" enctype="multipart/form-data">
+                {% csrf_token %}
+                {% if form %}
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>CTE</th>
+                            <th>Emissão</th>
+                            <th>Remetente</th>
+                            <th>Destinatário</th>
+                            <th>Peso</th>
+                            <th>LeadTime</th>
+                            <th>Entrega</th>
+                            <th>Nota Fiscal</th>
+                            <th>Ocorrências</th>
+                            <th>Romaneio</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for f in form %}
+                            <tr class="smallcap">
+                                <!--Inicio IF-->
+                                    <!--Só vai trazer os dados que tenha dias Em aberto que seja 0 ou menor-->
+                                    <td>{{ f.conhecimento }}</td>
+                                    <td>{{ f.data_emissao }}</td>
+                                    <td>{{ f.remetente }}</td>
+                                    <td>{{ f.destinatario }}</td>
+                                    <td>{{ f.peso }}</td>
+                                    {% if f.lead_time == '01-01-0001'%}
+                                        <td>NÃO INFORMADO</td>
+                                    {% else %}
+                                        <td>{{ f.lead_time }}</td>
+                                    {% endif %}
+                                    <td>{{ f.local_entreg }}</td>
+                                    <td>{{ f.nota_fiscal|truncatechars:'100' }}</td>
+                                <td>
+                                    <button style="font-size:1.4rem;" type="button" class="ocorrencias" value="{{ forloop.counter }}"><ion-icon name="list"></ion-icon></button>
+                                </td>
+                                <td>
+                                    <button style="font-size:1.4rem;" type="button" class="romaneios" value="{{ forloop.counter }}"><ion-icon name="list"></ion-icon></button>
+                                </td>
+                            </tr>
+                            <div id="oco{{ forloop.counter }}" class="modal">
+                                <div class="modal-content">
+                                    <div>
+                                        <span class="title-cad">Ocorrências</span>
+                                        <span class="close col">&times;</span>
+                                    </div>
+                                    <div class="container tktcontainer">
+                                        {% if f.ocorrencias %}
+                                        <ul>
+                                            {% for q in f.ocorrencias %}
+                                                <li>
+                                                    <p style="margin: 0">
+                                                        Descrição: <strong>{{ q.desc_ocor }}</strong> -
+                                                        Data:<strong>{{ q.data_ocorrencia }}</strong>
+                                                    </p>
+                                                </li>
+                                                <br />
+                                            {% endfor %}
+                                        </ul>
+                                        {% else %}
+                                            <p style="margin: 0">Nenhum romaneio encontrada.</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="rom{{ forloop.counter }}" class="modal">
+                                <div class="modal-content">
+                                    <div>
+                                        <span class="title-cad">Romaneio</span>
+                                        <span class="close col">&times;</span>
+                                    </div>
+                                    <div class="container tktcontainer">
+                                        {% if f.romaneios %}
+                                        <ul>
+                                            {% for q in f.romaneios %}
+                                                {% if q.placa != 'AAA0000' %}
+                                                <li>
+                                                    <p style="margin: 0">
+                                                        Tipo: <strong>{{ q.tipo }}</strong> -
+                                                        Romaneio: <strong>{{ q.romaneio }}</strong> -
+                                                        Data: <strong>{{ q.data }}</strong> -
+                                                        Placa:<strong>{{ q.placa }}</strong> - 
+                                                        Motorista:<strong>{{ q.motorista }}</strong>
+                                                    </p>
+                                                </li>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </ul>
+                                        {% else %}
+                                            <p style="margin: 0">Nenhuma ocorrencia encontrada.</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                {% endif %}
+                </form>
+            </div>
+        </div>
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+<script>
+    $(document).ready(function(){
+        $(".ocorrencias").click(function(){
+            var but = $(this).val();
+            var modal = document.getElementById("oco"+but);
+            var span = modal.getElementsByClassName("close")[0];
+            modal.style.display = "block";
+
+            span.onclick = function() {
+                modal.style.display = "none";
+            };
+            window.onclick = function(event) {
+                if (event.target == modal){
+                    modal.style.display = "none";
+                }
+            };
+        });
+    });
+    $(document).ready(function(){
+        $(".romaneios").click(function(){
+            var but = $(this).val();
+            var modal = document.getElementById("rom"+but);
+            var span = modal.getElementsByClassName("close")[0];
+            modal.style.display = "block";
+
+            span.onclick = function() {
+                modal.style.display = "none";
+            };
+            window.onclick = function(event) {
+                if (event.target == modal){
+                    modal.style.display = "none";
+                }
+            };
+        });
+    });
+</script>
+{% endblock %}

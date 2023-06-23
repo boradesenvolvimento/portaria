@@ -906,7 +906,8 @@ class JustificativaEntrega(models.Model):
         ('151', 'GRADE FIXA'),
         ('152', 'DEVOLUÇÃO TOTAL '),
         ('153', 'ATRASO NA TRANSFERENCIA'),
-        ('154', 'CUSTO')
+        ('154', 'CUSTO'),
+        ('155', 'ENTREGUE SEM LEAD TIME'),
     )
     garagem = models.CharField(max_length=5)
     id_garagem = models.CharField(max_length=5)
@@ -938,6 +939,9 @@ class OcorrenciaEntrega(models.Model):
     data_ocorrencia = models.DateField()
     entrega = models.ForeignKey(JustificativaEntrega, on_delete=models.CASCADE, blank=True, null=True, related_name='ocorrencias')
     filial = models.ForeignKey(Filiais, on_delete=models.PROTECT, blank=True, null=True)
+    
+    class Meta:
+        ordering = ['data_ocorrencia']
 
 class SolicitacoesCompras(models.Model):
     STATUS_CHOICES = [

@@ -3,6 +3,8 @@ from rest_framework import serializers
 from .models import *
 
 class OcorrenciaEntregaSerializer(serializers.ModelSerializer):
+    data_ocorrencia = serializers.DateField(format="%d-%m-%Y")
+    
     class Meta:
         model = OcorrenciaEntrega
         fields = '__all__'
@@ -29,5 +31,4 @@ class JustificativaEntregaSerializer(serializers.ModelSerializer):
             "ocorrencias"
         )
         depth = 1
-
         
