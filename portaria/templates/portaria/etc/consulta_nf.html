@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block content %}
 {% load groupscheck %}
-{% if request.user|has_group:"justificativas" %}
+{% if request.user|has_group:"consulta_nf" %}
 <style>
     .smallcap td{
         font-size:11px;
