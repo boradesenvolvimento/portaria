@@ -2440,9 +2440,11 @@ def get_nfpj_mail(request):
     dt_1 = request.POST.get('periodo1')
     dt_2 = request.POST.get('periodo2')
     dt_pgmt = request.POST.get('dt_pgmt')
+    dt_envio_nf = request.POST.get('dt_envio_nf')
     dt_1 = datetime.datetime.strptime(dt_1 + " 00:00:00", '%Y-%m-%d %H:%M:%S')
     dt_2 = datetime.datetime.strptime(dt_2 + " 00:00:00", '%Y-%m-%d %H:%M:%S')
     dt_pgmt = datetime.datetime.strptime(dt_pgmt + " 00:00:00", '%Y-%m-%d %H:%M:%S')
+    dt_envio_nf = datetime.datetime.strptime(dt_envio_nf + " 00:00:00", '%Y-%m-%d %H:%M:%S')
 
     filter = {
         'id__in': func_id,
@@ -2459,7 +2461,7 @@ def get_nfpj_mail(request):
     Período de: {16} à {17}
 
     Valor do Serviço: R$ {2:.2f}
-    Premio: R$ {3:2f}
+    Premio: R$ {3:.2f}
     Ajuda de custo: R$ {4:.2f}
     Crédito Convênio: R$ {5:.2f}
     Outros Créditos: R$ {6:.2f}
@@ -2477,6 +2479,8 @@ def get_nfpj_mail(request):
         C.c.  : {14}
     CPF/ CNPJ: {11}
     PIX: {20}
+
+Favor enviar a NF até {21}.
 
 Att
                 '''
@@ -2496,7 +2500,7 @@ Att
     CPF/ CNPJ: {11}
     PIX: {20}
 
-Favor enviar a NF até {18}.
+Favor enviar a NF até {21}.
 
 Att
                 """
@@ -2535,7 +2539,7 @@ Att
                     q.outros_cred, q.adiantamento, q.desc_convenio, q.outros_desc, q.total,
                     q.cpf_cnpj, q.banco, q.ag, q.conta, q.op,
                     dt_1.strftime('%d/%m/%Y'), dt_2.strftime('%d/%m/%Y'), dt_pgmt.strftime('%d/%m/%Y'),
-                    q.aux_moradia, q.pix or "Não Informado"
+                    q.aux_moradia, q.pix or "Não Informado", dt_envio_nf.strftime('%d/%m/%Y') or "Não Informado",
                 ),
                 from_email=settings.EMAIL_HOST_USER,
                 recipient_list=[q.email, 'lucas.feitosa@bora.com.br', 'daniel.domingues@bora.com.br'],
@@ -2545,7 +2549,7 @@ Att
                                    mensagem=text.format(
                     f'{q.filial.nome} - {q.filial.uf}', q.nome, q.salario, q.faculdade, q.ajuda_custo, q.cred_convenio,
                     q.outros_cred, q.adiantamento, q.desc_convenio, q.outros_desc, q.total,
-                    q.cpf_cnpj, q.banco, q.ag, q.conta, q.op, dt_1, dt_2, dt_pgmt, q.aux_moradia, q.pix
+                    q.cpf_cnpj, q.banco, q.ag, q.conta, q.op, dt_1, dt_2, dt_pgmt, q.aux_moradia, q.pix, dt_envio_nf.strftime('%d/%m/%Y'),
                 ))
         except Exception as e:
             print(e)

@@ -28,6 +28,7 @@ django-notifications-hq==1.6.0
 django-qr-code==2.2.0
 django-qrcode==0.3
 django-summernote==0.8.20.0
+djangorestframework==3.14.0
 et-xmlfile==1.1.0
 executing==1.2.0
 fonttools==4.29.1
