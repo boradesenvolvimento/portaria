@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load groupscheck %}
+{% if request.user|has_group:"paletes" %}
+        <div class="container mt-5">
+            {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+            {% endfor %}
+            <div class="row linha-baixo">
+                <h2 class="title-cad">
+                    Cadastrar Cliente
+                </h2>
+            </div>
+            <div class="container mt-4">
+                <form method="post">
+                {% csrf_token %}
+                    <table>
+                        <tbody>
+                            <tr>
+                                <th>
+                                    <label for="nome">Razão Social/ Motorista: </label>
+                                    <input name="nome" type="text">
+                                </th>
+                            </tr>
+                            <tr>
+                                <th>
+                                    <label for="indent">CNPJ/CPF: </label>
+                                    <input name="indent" type="number">
+                                </th>
+                            </tr>
+                            <tr>
+                                <th>
+                                    Tipo:
+                                    <select name="tipo_cad">
+                                        <option value="CLIENT">CLIENTE</option>
+                                        <option value="MOTORISTA">MOTORISTA</option>
+                                    </select>
+                                </th>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <button type="submit" class="button">
+                                        Criar
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </form>
+            </div>
+        </div>
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+{% endblock %}

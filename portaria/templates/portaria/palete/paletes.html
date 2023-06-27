@@ -20,10 +20,10 @@
                     Filial:
                     <select name="filial">
                         <option></option>
-                        {% for t,p in tp_fil %}
-                        {% if t != '0'%}
-                            <option value="{{ t }}">{{ t }} - {{ p }}</option>
-                        {% endif %}
+                        {% for filial in filiais %}
+                            {% if k != "0" %}
+                                <option value="{{ filial.id }}">{{ filial.id_garagem }} - {{ filial.sigla }}</option>
+                             {% endif %}
                         {% endfor %}
                     </select>
                     <button style="padding:14px 19px;" type="submit">Filtrar</button>

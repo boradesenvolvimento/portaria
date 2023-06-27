@@ -193,69 +193,177 @@ def cadastro(request):
         return render(request, 'portaria/portaria/cadastro.html', {'auth_message': auth_message})
 
 def paleteview(request):
-    keyga = {k:v for k,v in GARAGEM_CHOICES}
-    tp_fil = GARAGEM_CHOICES
-    tp_fil.pop()
-    tp_emp = Cliente.objects.values_list('razao_social', flat=True)
-    form = PaleteControl.objects.values('loc_atual').\
-        annotate(pbr=Count('id', filter=Q(tp_palete='PBR')),chep=Count('id', filter=Q(tp_palete='CHEP'))).\
-        annotate(total=ExpressionWrapper(Count('id'), output_field=IntegerField())).exclude(Q(loc_atual='MOV'))
-    ttcount = form.aggregate(total_amount=Sum('total'))
-    fil = request.GET.get('filial')
+    keyga = {k: v for k, v in GARAGEM_CHOICES}
+    filiais = Filiais.objects.all()
+    tp_emp = Cliente.objects.values_list("razao_social_motorista", flat=True)
+    form = (
+        PaleteControl.objects.values("loc_atual")
+        .annotate(
+            pbr=Count("id", filter=Q(tp_palete="PBR")),
+            chep=Count("id", filter=Q(tp_palete="CHEP")),
+        )
+        .annotate(total=ExpressionWrapper(Count("id"), output_field=IntegerField()))
+        .exclude(Q(loc_atual="MOV"))
+    )
+    ttcount = form.aggregate(total_amount=Sum("total"))
+    fil = request.GET.get("filial")
     if fil:
-        form = PaleteControl.objects.filter(loc_atual=keyga[fil]).values('loc_atual').\
-            annotate(pbr=Count('id', filter=Q(tp_palete='PBR')),chep=Count('id', filter=Q(tp_palete='CHEP'))).\
-            annotate(total=ExpressionWrapper(Count('id'), output_field=IntegerField()))
-        ttcount = form.aggregate(total_amount=Sum('total'))
-    return render(request, 'portaria/palete/paletes.html', {'form':form,'tp_fil':tp_fil,'tp_emp':tp_emp,
-                                                            'ttcount':ttcount})
+        form = (
+            PaleteControl.objects.filter(loc_atual=keyga[fil])
+            .values("loc_atual")
+            .annotate(
+                pbr=Count("id", filter=Q(tp_palete="PBR")),
+                chep=Count("id", filter=Q(tp_palete="CHEP")),
+            )
+            .annotate(total=ExpressionWrapper(Count("id"), output_field=IntegerField()))
+        )
+        ttcount = form.aggregate(total_amount=Sum("total"))
+    return render(
+        request,
+        "portaria/palete/paletes.html",
+        {"form": form, "filiais": filiais, "tp_emp": tp_emp, "ttcount": ttcount},
+    )
 
 def cadpaletes(request):
-    tp_emp = Cliente.objects.all().order_by('razao_social')
+    tp_emp = Cliente.objects.all().order_by('razao_social_motorista')
     filiais = Filiais.objects.all()
     if request.method == 'POST':
         qnt = request.POST.get('qnt')
         fil = request.POST.get('fil')
         emp = request.POST.get('emp') # Razao Social
         tp_p = request.POST.get('tp_p')
+        
         if qnt and fil and emp and tp_p:
+            fil = Filiais.objects.get(id=fil)
+
             try:
                 int(qnt)
             except ValueError:
                 messages.error(request,'Por favor digite um valor numérico para quantidade')
                 return redirect('portaria:cadpaletes')
             else:
-                nsal = Cliente.objects.filter(razao_social=emp).annotate(saldonew=Sum(F('saldo')+int(qnt)))
-                Cliente.objects.filter(razao_social=emp).update(saldo=nsal[0].saldonew)
-                for x in range(0,int(qnt)):
-
-                    PaleteControl.objects.create(loc_atual=fil, tp_palete=tp_p, autor=request.user)
+                cliente = Cliente.objects.filter(razao_social_motorista=emp).first()
+                ClienteFiliais.objects.filter(cliente=cliente, filial=fil).update(saldo=(F('saldo') + int(qnt)))
+                
+                for x in range(0,int(qnt)):                    
+                    PaleteControl.objects.create(loc_atual=fil.sigla, tp_palete=tp_p, autor=request.user)
                     if x == 2000: break
                 messages.success(request, f'{qnt} Paletes foram cadastrados com sucesso')
+                
+                return redirect('portaria:paletecliente')
+                
+                
     return render(request, 'portaria/palete/cadpaletes.html', {'filiais':filiais, 'tp_emp':tp_emp})
 
 def paletecliente(request):
-    form = Cliente.objects.filter(~Q(saldo=0), intex='CLIENTE').order_by('razao_social')
-    tcount = form.aggregate(total=Sum('saldo'))
-    return render(request, 'portaria/palete/paletecliente.html', {'form':form,'tcount':tcount})
+    filiais = Filiais.objects.all()
+    clientes = Cliente.objects.all().order_by('razao_social_motorista')
+    
+    filial_selecionada = request.GET.get('filial')
+    cliente_selecionado = request.GET.get('clientes')
+    
+    if filial_selecionada or cliente_selecionado:
+        if filial_selecionada:
+            form = ClienteFiliais.objects.filter(filial__id=filial_selecionada).order_by('cliente__razao_social_motorista')
+        elif cliente_selecionado:
+            form = ClienteFiliais.objects.filter(cliente__razao_social_motorista__contains=cliente_selecionado).order_by('cliente__razao_social_motorista')
+        
+        tcount = form.aggregate(total=Sum('saldo'))
+        
+        return render(request, 'portaria/palete/paletecliente.html', {'form':form,'tcount':tcount, 'filiais': filiais, 'clientes': clientes})
+    
+    return render(request, 'portaria/palete/paletecliente.html', {'filiais': filiais, 'clientes': clientes})
+
+def transfdetalhecliente(request, id):
+    cli = ClienteFiliais.objects.filter(id=id).first()
+    
+    if cli.saldo < 0:
+        status = "DEVEDOR"
+        cli.saldo *= -1
+    else:
+        status = "CREDOR"
+    
+    data = {
+        "Autor": str(request.user).upper(),
+        "Razão Social/ Motorista": str(cli.cliente.razao_social_motorista).upper(),
+        "Filial": cli.filial.sigla,
+        "Data Solicitação": datetime.datetime.now().strftime("%d/%m/%Y %H:%m"),
+        "Quantidade": cli.saldo,
+        "Status": status
+    }
+
+    #Gerar código de barras
+    pdf = FPDF(orientation='P', unit='mm', format=(210, 297))
+    pdf.add_page()
+    pdf.ln()
+    pdf.image('portaria/static/images/logo.png', x=160, y=10, w=35, h=17.5)
+    pdf.ln()
+    page_w = int(pdf.w)
+    pdf.set_font("Arial", size = 20)
+    pdf.cell(w=190, h=25, txt='Solicitação de Entrega', border=0, align='C')
+    pdf.ln(30)
+    pdf.set_font("Arial", size = 12, style= 'B')
+
+    line_height = pdf.font_size * 2.5
+    for k, v in data.items():
+        pdf.set_font("Arial", size = 12, style= 'B')
+        pdf.cell(60, line_height, k, border=1) # com barcode = 35 e 65
+        pdf.set_font("Arial", size = 12)
+        pdf.cell(130, line_height, str(v), border=1, ln=1)
+    pdf.output("GFG.pdf")
+    with open("GFG.pdf", "rb") as f:
+        response = HttpResponse(f.read(), content_type="application/pdf")
+    f.close()
+    os.remove("GFG.pdf")
+    # os.remove("barcode.png")
+    response['Content-Disposition'] = 'filename=some_file.pdf'
+    return response
+
+def cadcliente(request):
+    if request.method == 'POST':
+        nome = request.POST.get('nome')
+        indent = request.POST.get('indent')
+        tipo_cad = request.POST.get('tipo_cad')
+        if nome and tipo_cad:
+            try:
+                dados = {
+                    'razao_social_motorista': nome,
+                    'cnpj_cpf': indent or 1,
+                    'tipo_cad': tipo_cad
+                }
+                
+                cliente = Cliente.objects.create(**dados)
+
+                filiais = Filiais.objects.all()
+                for filial in filiais:
+                    ClienteFiliais.objects.create(cliente=cliente, filial=filial, saldo=0)
+            
+                messages.success(request, 'Cadastrado com sucesso!')
+                return redirect('portaria:paletecliente')
+            except Exception as e:
+                messages.error(request, "Algo deu errado, por favor contate o suporte.")
+                return redirect('portaria:cadcliente')     
+        
+    return render(request, 'portaria/palete/cadcliente.html')
 
 def saidapalete(request):
-    tp_fil = GARAGEM_CHOICES
-    tp_emp = Cliente.objects.all().order_by('razao_social')
-    keyga = {k: v for k, v in GARAGEM_CHOICES}
+    filiais = Filiais.objects.all()
+    clientes = Cliente.objects.all().order_by('razao_social_motorista')
+    
     if request.method == 'POST':
         qnt = int(request.POST.get('qnt'))
         fil = str(request.POST.get('fil'))
         emp = request.POST.get('emp')
         tp_p = request.POST.get('tp_p')
         if qnt and fil and emp and tp_p:
-            chk = Cliente.objects.get(razao_social=emp)
-            Cliente.objects.filter(razao_social=emp).update(saldo=(chk.saldo - qnt))
+            cli = Cliente.objects.get(razao_social_motorista=emp)
+            fili = Filiais.objects.get(id=fil)
+            ClienteFiliais.objects.filter(cliente=cli, filial=fili).update(saldo=(F('saldo') - qnt))
             for q in range(0,qnt):
-                PaleteControl.objects.filter(loc_atual=keyga[fil], tp_palete=tp_p).first().delete()
+                PaleteControl.objects.filter(loc_atual=fili.sigla, tp_palete=tp_p).first().delete()
             messages.success(request, 'Saidas cadastradas com sucesso')
             return redirect('portaria:paletecliente')
-    return render(request, 'portaria/palete/saidapalete.html', {'tp_fil':tp_fil,'tp_emp':tp_emp})
+    return render(request, 'portaria/palete/saidapalete.html', {'filiais':filiais,'clientes':clientes})
 
 @login_required
 def frota(request):
@@ -326,7 +434,7 @@ def cadfuncionariopj(request):
     return render(request, 'portaria/pj/cadfuncionariopj.html', {'form':form})
 
 def atualizarfunc(request):
-    allfuncs = FuncPj.objects.filter(ativo=True).order_by('nome')
+    allfuncs = FuncPj.objects.filter().order_by('nome')
     form = FuncPjForm
     func = request.GET.get('func')
     if func:
@@ -354,7 +462,7 @@ def servicospj(request):
     # nfs_fun = [nf['funcionario_id'] for nf in nfs]
 
     if func:
-        qnt_funcs = FuncPj.objects.filter(nome__icontains=func, ativo=True)
+        qnt_funcs = FuncPj.objects.filter(nome__icontains=func)
     elif filter:
         qnt_funcs = FuncPj.objects.all().filter(ativo=True).order_by(filter)
     else:
@@ -3955,11 +4063,6 @@ def justificativa(request):
                 )
             
             form_serialized = JustificativaEntregaSerializer(form, many=True).data
-            # justificativa = JustificativaEntrega.objects.get(id=14560)
-            # serializer = JustificativaEntregaSerializer(justificativa)
-            # print(serializer.data)
-            
-            # ipdb.set_trace()
                                                         
             return render(request,'portaria/etc/justificativa.html', 
                             {
@@ -3995,7 +4098,7 @@ def justificativa(request):
     return render(request, 'portaria/etc/justificativa.html', {'filiais': filiais, 'today': today, 'yesterday': yesterday})
 
 def rel_justificativa(request):
-    gachoices = GARAGEM_CHOICES
+    filiais = Filiais.objects.all()
     if request.method == 'POST':
         if 'pivot_rel_just' in request.POST:
             date1 = request.POST.get('date1')
@@ -4008,10 +4111,10 @@ def rel_justificativa(request):
                 print(f'Error: {e}, error_type:{type(e).__name__}')
             else:
                 return response
-    return render(request, 'portaria/etc/rel_justificativa.html', {'gachoices': gachoices})
+    return render(request, 'portaria/etc/rel_justificativa.html', {'filiais': filiais})
 
 def confirmjust(request):
-    gachoices = FILIAL_CHOICES
+    filiais = Filiais.objects.all()
     form = JustificativaEntrega.objects.filter(cod_just__isnull=False, desc_just__isnull=False, confirmado=False)
     if request.method == 'GET':
         date1 = request.GET.get('data1')
@@ -4021,7 +4124,7 @@ def confirmjust(request):
             form = JustificativaEntrega.objects.filter(id_garagem=filial, data_emissao__lte=date2,
                                                        data_emissao__gte=date1, confirmado=False,
                                                        cod_just__isnull=False, desc_just__isnull=False)
-            return render(request, 'portaria/etc/confirmjustificativas.html', {'form': form, 'gachoices': gachoices})
+            return render(request, 'portaria/etc/confirmjustificativas.html', {'form': form, 'filiais': filiais})
     if request.method == 'POST':
         aa = request.POST.getlist('romid')
         for q in aa:
@@ -4042,12 +4145,194 @@ def confirmjust(request):
                 else:
                     obj.confirmado = True
                 obj.save()
-    return render(request, 'portaria/etc/confirmjustificativas.html', {'form':form,'gachoices':gachoices})
+    return render(request, 'portaria/etc/confirmjustificativas.html', {'form':form,'filiais':filiais})
+
+def consulta_nf(request):
+    if request.method == 'GET':
+        nf = str(request.GET.get('nf'))
+        
+        if nf:
+            while len(nf) < 10:
+                nf = '0' + nf
+            
+            conn = conndb()
+            cur = conn.cursor()
+            cur.execute(f"""
+SELECT 
+    F1.GARAGEM garagem,
+    F1.ID_GARAGEM id_garagem, 
+    DECODE(F1.TIPO_DOCTO, 8, 'NFS', 'CTE') tipo_doc,
+    F1.CONHECIMENTO,
+    TO_CHAR(F1.DATA_EMISSAO, 'DD-MM-YYYY') data_emissao,
+    TO_CHAR(F1.DATA_ENTREGA, 'DD-MM-YYYY') data_entrega,
+    CASE
+        WHEN F1.TIPO_DOCTO = 8 THEN TO_CHAR(BC.NFANTASIACLI)
+        WHEN F1.TIPO_DOCTO = 57 THEN F1.REM_RZ_SOCIAL
+    END REMETENTE,
+    CASE 
+        WHEN F1.TIPO_DOCTO = 8 THEN F11.REC_RZ_SOCIAL
+        WHEN F1.TIPO_DOCTO = 57 THEN F1.DEST_RZ_SOCIAL
+    END DESTINATARIO,
+    F1.PESO,
+    CASE
+        WHEN F11.DT_PREV_ENTREGA IS NULL THEN '01-01-0001'
+        WHEN F11.DT_PREV_ENTREGA IS NOT NULL THEN TO_CHAR(F11.DT_PREV_ENTREGA, 'DD-MM-YYYY')
+    END lead_time,
+    CASE
+        WHEN F1.DATA_ENTREGA = '01-JAN-0001' THEN 'NAO ENTREGUE'
+        WHEN F1.DATA_ENTREGA <> '01-JAN-0001' THEN CASE
+            WHEN (F1.DATA_ENTREGA - F11.DT_PREV_ENTREGA) < 0 THEN 'ADIANTADO'
+            WHEN (F1.DATA_ENTREGA - F11.DT_PREV_ENTREGA) > 0 THEN 'ATRASADO'
+            END
+    END LEADTIME,
+    CASE 
+        WHEN (TRUNC((MIN(F11.DT_PREV_ENTREGA))-(SYSDATE))-1) >= 0 THEN (TRUNC((MIN(F11.DT_PREV_ENTREGA))-(SYSDATE))-1)
+        WHEN (TRUNC((MIN(F11.DT_PREV_ENTREGA))-(SYSDATE))*-1) < 0 THEN 0
+        WHEN F11.DT_PREV_ENTREGA IS NULL THEN 0
+    END em_aberto,
+    E2.DESC_LOCALIDADE || '-' || E2.COD_UF local_entreg,
+    (LTRIM (F4.NOTA_FISCAL,0)) nota_fiscal,
+    F1.CARGA_ENCOMENDA carga_encomenda
+FROM 
+    FTA001 F1,
+    FTA011 F11,
+    EXA002 E2,
+    FTA004 F4,
+    BGM_CLIENTE BC               
+WHERE
+    F1.LOCALID_ENTREGA = E2.COD_LOCALIDADE AND
+    F1.CLIENTE_FAT = BC.CODCLI             AND
+    
+    F1.EMPRESA = F11.EMPRESA               AND
+    F1.FILIAL = F11.FILIAL                 AND
+    F1.GARAGEM = F11.GARAGEM               AND
+    F1.SERIE = F11.SERIE                   AND
+    F1.CONHECIMENTO = F11.CONHECIMENTO     AND
+    F1.TIPO_DOCTO = F11.TIPO_DOCTO         AND
+    
+    F1.EMPRESA = F4.EMPRESA                AND
+    F1.FILIAL = F4.FILIAL                  AND
+    F1.GARAGEM = F4.GARAGEM                AND
+    F1.CONHECIMENTO = F4.CONHECIMENTO      AND
+    F1.SERIE = F4.SERIE                    AND
+    F1.TIPO_DOCTO = F4.TIPO_DOCTO          AND
+    
+    F1.DATA_CANCELADO = '01-JAN-0001'                      AND
+
+    F4.NOTA_FISCAL = '{nf}'
+GROUP BY
+    F1.EMPRESA,
+    F1.FILIAL,
+    F1.GARAGEM,
+    F1.ID_GARAGEM,
+    F1.TIPO_DOCTO,
+    F1.CARGA_ENCOMENDA,
+    BC.NFANTASIACLI,
+    F11.REC_RZ_SOCIAL,
+    F1.CONHECIMENTO,
+    F1.DATA_EMISSAO,
+    F1.DATA_ENTREGA,
+    F1.REM_RZ_SOCIAL,
+    F1.DEST_RZ_SOCIAL,
+    F1.PESO,
+    F11.DT_PREV_ENTREGA,
+    E2.DESC_LOCALIDADE,
+    E2.COD_UF,
+    F4.NOTA_FISCAL
+ORDER BY
+    F1.DATA_EMISSAO DESC
+                    """)
+            
+            justificativas = dictfetchall(cur)
+            
+            cur.execute(f"""
+SELECT 
+    E6.COD_MANIFESTO romaneio,
+    DECODE(E5.ENTREGA_TRANSF,'T','TRANSFERENCIA','ENTREGA') tipo,
+    VE.PREFIXOVEIC placa,
+    TO_CHAR(E5.DATA_SAIDA, 'DD-MM-YYYY') data,
+    MO.NOME motorista,
+    E5.GARAGEM garagem,
+    E6.NUMERO_CTRC conhecimento,
+    (LTRIM (F4.NOTA_FISCAL,0)) nota_fiscal
+    
+FROM 
+    FTA001 F1,
+    FTA004 F4,
+    EXA026 E6,
+    EXA025 E5,
+    FRT_CADVEICULOS VE,
+    VWCGS_FUNCIONARIOSCOMAGREGADO MO
+    
+WHERE
+    
+    F1.EMPRESA = E6.EMPRESA                AND
+    F1.FILIAL = E6.FILIAL                  AND
+    F1.GARAGEM = E6.GARAGEM                AND
+    F1.SERIE = E6.SERIE_CTRC               AND
+    F1.CONHECIMENTO = E6.NUMERO_CTRC       AND
+   
+    E5.RECNUM = E6.RECNUM_EXA025           AND
+    
+    E5.ID_MOTORISTA = MO.IDENTIFICACAO(+)  AND
+    E5.MOTORISTA = MO.CODINTFUNC (+)       AND
+    E5.VEICULO = VE.CODIGOVEIC (+)         AND
+    
+    F1.EMPRESA = F4.EMPRESA                AND
+    F1.FILIAL = F4.FILIAL                  AND
+    F1.GARAGEM = F4.GARAGEM                AND
+    F1.CONHECIMENTO = F4.CONHECIMENTO      AND
+    F1.SERIE = F4.SERIE                    AND
+    F1.TIPO_DOCTO = F4.TIPO_DOCTO          AND
+    
+    F1.DATA_CANCELADO = '01-JAN-0001'      AND
+
+    F4.NOTA_FISCAL = '{nf}'
+                    """)
+                    
+            romaneios = dictfetchall(cur)
+            print(len(romaneios))
+                        
+            lista_justificativas = []
+            for just in justificativas:
+                if just['carga_encomenda'] == 'CARGA DIRETA' or just['carga_encomenda'] == 'RODOVIARIO':
+                    cur.execute(f"""
+SELECT DISTINCT
+    A1.GARAGEM garagem,
+    A1.NUMERO_CTRC conhecimento,
+    A1.TIPO_DOCTO tp_doc,
+    A2.CODIGO cod_ocor,
+    A2.DESCRICAO desc_ocor,
+    TO_CHAR(A1.DATA_OCORRENCIA, 'DD-MM-YYYY') data_ocorrencia
+FROM 
+    ACA001 A1,
+    ACA002 A2
+WHERE
+    A1.COD_OCORRENCIA = A2.CODIGO AND
+    A1.NUMERO_CTRC = {just['conhecimento']} AND
+    A1.GARAGEM = {just['garagem']}
+ORDER BY
+    TO_CHAR(A1.DATA_OCORRENCIA, 'DD-MM-YYYY')
+                    """)
+                    just['ocorrencias'] = dictfetchall(cur)
+                    
+                    just['romaneios'] = [rom for rom in romaneios if just['conhecimento'] == rom['conhecimento']] #and just['garagem'] == rom['garagem']]
+                    
+                    lista_justificativas.append(just)
+
+            cur.close()
+
+            return render(request,'portaria/etc/consulta_nf.html', 
+                            {
+                                'form': lista_justificativas,
+                            }
+                        )
+
+    return render(request, 'portaria/etc/consulta_nf.html')
+    
     
 def pivot_rel_just(date1, date2):
     array = []
-    gachoices = GARAGEM_CHOICES
-    dictga = {k:v for k,v in gachoices}
     compare_date = datetime.datetime.strptime('0001-01-01', '%Y-%m-%d')
     if date1 and date2:
         qs = JustificativaEntrega.objects.filter(data_emissao__lte=date2, data_emissao__gte=date1)
@@ -4078,9 +4363,9 @@ def pivot_rel_just(date1, date2):
     return response
 
 async def get_xmls_api(request):
-    host = get_secret('EHOST_XML')
-    user = get_secret('ESEND_XML')
-    pasw = get_secret('EPASS_XML')
+    host = get_secret('E_HOST_XML')
+    user = get_secret('E_MAIL_XML')
+    pasw = get_secret('E_PASS_XML')
     pp = poplib.POP3(host)
     pp.set_debuglevel(1)
     pp.user(user)
@@ -4088,30 +4373,25 @@ async def get_xmls_api(request):
     xmlsarray = []
     num_messages = len(pp.list()[1])
     for i in range(num_messages):
-        print('for num_messages')
         raw_email = b'\n'.join(pp.retr(i+1)[1])
         parsed_mail = email.message_from_bytes(raw_email)
         if parsed_mail.is_multipart():
-            print('email is multipart')
             for part in parsed_mail.walk():
-                print('for part in parsed_email')
                 filename = part.get_filename()
                 if re.findall(re.compile(r'\w+(?i:.xml|.XML)'), str(filename)):
-                    print('find xml')
                     xmlsarray.extend({part.get_payload(decode=True)})
         pp.dele(i+1)
     pp.quit()
     try:
-        print(xmlsarray)
+        print(f'ARRAY XML: LEN({len(xmlsarray)})')
         await entradaxml(request, args=xmlsarray)
     except Exception as e:
         print(f'Error: {e}, error_type: {type(e).__name__}')
         return HttpResponse(f'<h2> Ocorreu um erro durante a consulta - XML </h2> <br> Erro: {e} <br> Tipo do erro: {type(e).__name__}')
-        pass
     return HttpResponse('<h2>Consulta finalizada!</h2>')
 
 def compras_index(request):
-    filchoices = FILIAL_CHOICES
+    filiais = Filiais.objects.all()
     item_solicitante = SolicitacoesCompras.objects.exclude(Q(status='CONCLUIDO') | Q(status='CANCELADO'))\
         .filter(data__month=datetime.datetime.now().month,data__year=datetime.datetime.now().year).values('responsavel__username')\
         .annotate(total=Count('responsavel'))
@@ -4119,138 +4399,23 @@ def compras_index(request):
         concl=Count('id', filter=Q(status='CONCLUIDO')),
         andam=Count('id',filter=(Q(status='ANDAMENTO') | Q(status='APROVADO') | Q(status='ABERTO'))),
         ).aggregate(concluido=Sum('concl'), andamento=Sum('andam'))
-    return render(request, 'portaria/etc/compras.html', {'filchoices':filchoices,'item_solicitante':item_solicitante,
+    return render(request, 'portaria/etc/compras.html', {'filiais':filiais,'item_solicitante':item_solicitante,
                                                          'metrics':metrics})
 
 def compras_lancar_pedido(request):
-        # print('lançando pedido...')
-        # idsolic = request.POST.get('getid')
-        # empresa = request.POST.get('empresa')
-        # fil = request.POST.get('filial')
-        # anexo = request.FILES.get('getanexo')
-        # if idsolic:
-        #     print(f'gakey: {gakey[empresa+fil]}')
-        #     print('stating db conmection...')
-        #     conn = conndb()
-        #     cur = conn.cursor()
-        #     print('execute db select')
-        #     try:
-        #         cur.execute(f"""
-        #                     SELECT 
-        #                            SO.NUMEROSOLIC NR_SOLICITACAO,
-        #                            CM.DESCRICAOMAT PRODUTO,
-        #                            SO.DATASOLIC DATA,
-        #                            CIS.QTDEITSOLIC QTD_ITENS,
-        #                            CASE
-        #                                WHEN SO.STATUSSOLIC = 'A' THEN 'ABERTO'
-        #                                WHEN SO.STATUSSOLIC = 'P' THEN 'APROVADO'
-        #                                WHEN SO.STATUSSOLIC = 'F' THEN 'FECHADO'
-        #                            END STATUS,
-        #                            SO.CODIGOFL FILIAL,
-        #                            SO.USUARIO SOLICITANTE,
-        #                            CC.EMAIL
-        #                     FROM
-        #                         CPR_SOLICITACAO SO, 
-        #                         CPR_ITENSSOLICITADOS CIS,
-        #                         EST_CADMATERIAL CM,
-        #                         CTR_CADASTRODEUSUARIOS CC
-        #                     WHERE
-        #                             SO.CODIGOEMPRESA = {empresa}
-        #                         AND
-        #                         	SO.CODIGOFL = {fil}                  
-        #                         AND
-        #                         	SO.NUMEROSOLIC = CIS.NUMEROSOLIC 
-        #                         AND
-        #                         	SO.STATUSSOLIC = 'P'                      
-        #                         AND    
-        #                         	SO.DATASOLIC BETWEEN ((SYSDATE)-30) AND (SYSDATE) 
-        #                         AND    
-        #                         	CM.CODIGOMATINT = CIS.CODIGOMATINT                
-        #                         AND
-        #                         	SO.NUMEROSOLIC = {idsolic}                        
-        #                         AND
-        #                         	CC.USUARIO = SO.USUARIO
-        #                     GROUP BY
-        #                           SO.NUMEROSOLIC,
-        #                           CM.DESCRICAOMAT,
-        #                           SO.DATASOLIC,
-        #                           CIS.QTDEITSOLIC,
-        #                           SO.STATUSSOLIC,
-        #                           SO.CODIGOEMPRESA,
-        #                           SO.CODIGOFL,
-        #                           SO.USUARIO,
-        #                           CC.EMAIL
-        #                     UNION ALL                        
-        #                     SELECT 
-        #                            SO.NUMEROSOLIC NR_SOLICITACAO,
-        #                            SCO.DESCRICAOSOLOUTROS PRODUTO,
-        #                            SO.DATASOLIC DATA,
-        #                            SCO.QTDESOLOUTROS QTD_ITENS,
-        #                            CASE
-        #                                WHEN SO.STATUSSOLIC = 'A' THEN 'ABERTO'
-        #                                WHEN SO.STATUSSOLIC = 'P' THEN 'APROVADO'
-        #                                WHEN SO.STATUSSOLIC = 'F' THEN 'FECHADO'
-        #                            END STATUS,
-        #                            SO.CODIGOFL FILIAL,
-        #                           SO.USUARIO SOLICITANTE,
-        #                            CC.EMAIL
-        #                     FROM
-        #                         CPR_SOLICITACAO SO,
-        #                         CPR_SOLICOUTROS SCO,
-        #                         CTR_CADASTRODEUSUARIOS CC
-        #                     WHERE
-        #                             SO.CODIGOEMPRESA = {empresa}
-        #                         AND
-        #                     		SO.CODIGOFL = {fil}                
-        #                     	AND
-        #                         	SO.NUMEROSOLIC = SCO.NUMEROSOLIC                  
-        #                         AND
-        #                         	SCO.STATUSSOLOUTROS = 'P'                         
-        #                         AND    
-        #                         	SO.DATASOLIC BETWEEN ((SYSDATE)-30) AND (SYSDATE) 
-        #                         AND
-        #                         	SO.NUMEROSOLIC = {idsolic}                        
-        #                         AND
-        #                         	CC.USUARIO = SO.USUARIO                           
-        #                     GROUP BY
-        #                           SO.NUMEROSOLIC,
-        #                           SCO.DESCRICAOSOLOUTROS,
-        #                           SCO.QTDESOLOUTROS,
-        #                           SO.DATASOLIC,
-        #                           SO.STATUSSOLIC,
-        #                           SO.CODIGOEMPRESA,
-        #                           SO.CODIGOFL,
-        #                           SO.USUARIO,
-        #                           CC.EMAIL
-        #                     """)
-        #     except cxerr:
-        #         print('CHEGOU NO FINAL DA QUERY')
-        #         messages.error(request, 'Não encontrado solicitação com este número.')
-        #     except Exception as e:
-        #         print('AQUI É o EROOO===',e)
-        #         messages.error(f'Error:{e}, error_type:{type(e).__name__}')
-        #     else:
-        #         print('feching results...')
-        #         print('Entrou no ELSE')
-        #         res = dictfetchall(cur)
-        #         cur.close()
-        #         print('AQUI É o RES: ',res)
-        #         if res:
-        #             print(res)
-        #             for q in res:
     if request.method == 'POST':
         idsolic = request.POST.get('getid')
         empresa = request.POST.get('empresa')
         fil = request.POST.get('filial')
         anexo = request.FILES.get('getanexo')
 
-        usuario: list[User] = User.objects.filter(id=request.user.id)
+        usuario = User.objects.filter(id=request.user.id).first()
         if usuario:
-            username = usuario[0].username.split(".")[0].upper()
-            email = usuario[0].email
+            username = usuario.username.split(".")[0].upper()
+            email = usuario.email
         if idsolic:
             try:
-                filial = Filiais.objects.filter(id_empresa=empresa, id_filial=fil).first()
+                filial = Filiais.objects.filter(id=fil).first()
                 obj = SolicitacoesCompras.objects.create(
                     nr_solic=int(idsolic), data=datetime.datetime.now(), status="ANDAMENTO",
                     filial=filial, empresa=empresa, codigo_fl = fil, autor=request.user, anexo=anexo,
@@ -4463,8 +4628,6 @@ def edit_compras(request, id):
     entradas = SolicitacoesEntradas.objects.filter(cpr_ref=obj)
     filchoices = FILIAL_CHOICES
     empchoices = EMPRESA_CHOICES
-    filkey = {v:k for v,k in filchoices}
-    empkey = {v:k for v,k in empchoices}
     stschoices = SolicitacoesCompras.STATUS_CHOICES
     dpchoices = SolicitacoesCompras.DEPARTAMENTO_CHOICES
     pgtchoices = SolicitacoesCompras.FORMA_PGT_CHOICES
@@ -4516,20 +4679,19 @@ def edit_compras(request, id):
                 "observacao": obj.obs,
                 "entradas": entradas,
             }
-            # envio = envia_email(corpo_email)
-            # if envio: messages.info(request, f'Email enviado com sucesso!')
-            # else: messages.info(request, f'Ocorreu uma falha ao enviar o email')
+            envio = envia_email(corpo_email)
+            if envio: messages.info(request, f'Email enviado com sucesso.')
+            else: messages.info(request, f'Ocorreu uma falha ao enviar o email.')
 
         except Exception as e:
             print(f'err:{e}, err_t:{type(e).__name__}')
             raise e
         else:
             try:
-
                 obj.ultima_att = request.user
                 obj.save()
                 print('novo objeto: ', obj.departamento)
-                messages.info(request, f'Solicitação {obj.nr_solic} alterada com sucesso')
+                messages.info(request, f'Solicitação {obj.nr_solic} alterada com sucesso.')
                 return redirect('portaria:painel_compras')
             except Exception as e:
                 print(f'err: {e}, err_type:{type(e).__name__}')
@@ -4562,7 +4724,7 @@ def insert_entradas_cpr(request, obj, textarea, files):
             print(f'Error:{e}, error_type:{type(e).__name__}')
             messages.error(request,'Ops, algo deu errado :(')
             raise e
-        messages.success(request, 'Cadastrado com sucesso :)')
+        messages.success(request, 'Entrada cadastrada com sucesso.')
         # else:
         #     file1 = None
         #     file2 = None

@@ -74,7 +74,8 @@
                                 <td style="{% if f.em_aberto == 999 %} background-color: #ff000091; {% endif %}">{{ f.em_aberto }}</td>
                                 <td>{{ f.local_entreg }}</td>
                                 <td>{{ f.nota_fiscal|truncatechars:'100' }}</td>
-                                <td><select name="ocor{{ forloop.counter0 }}" style="font-size:10px;">
+                                <td>
+                                    <select name="ocor{{ forloop.counter0 }}" style="font-size:10px;">
                                         <option selected disabled value="">--</option>
                                         {% for k,v in justchoices %}
                                             <option value="{{ k }}">{{ v }}</option>
@@ -83,7 +84,10 @@
                                     <input type="hidden" name="idobj{{ forloop.counter0 }}" value="{{ f.id }}">
                                     <input type="hidden" name="counter" value="{{ forloop.counter0 }}">
                                 </td>
-                            <td><label style="font-size:2.4rem;cursor:pointer;margin-top:5px;" for="file{{ forloop.counter0 }}"><ion-icon name="cloud-upload-outline"></ion-icon></label>
+                            <td>
+                                <label style="font-size:2.4rem;cursor:pointer;margin-top:5px;" for="file{{ forloop.counter0 }}">
+                                    <ion-icon name="cloud-upload-outline"></ion-icon>
+                                </label>
                                 <input type="file" id="file{{ forloop.counter0 }}" name="file{{ forloop.counter0 }}">
                             </td>
                             <td>
@@ -99,9 +103,9 @@
                                         <span class="close col">&times;</span>
                                     </div>
                                     <div class="container tktcontainer">
-                                        {% if f.ocorrenciaentrega_set %}
+                                        {% if f.ocorrencias %}
                                         <ul>
-                                            {% for q in f.ocorrenciaentrega_set %}
+                                            {% for q in f.ocorrencias %}
                                                 <li>
                                                     <p style="margin: 0 0 0 0;">
                                                         Descrição: <strong>{{ q.desc_ocor }}</strong> -

@@ -2,7 +2,7 @@
 {% block content %}
 {% load groupscheck %}
 {% load static %}
-{% if request.user|has_group:"paletes" %}
+{% if request.user|has_group:"paletes_adm" %}
         <div class="container mt-5">
             {% for message in messages %}
             <div class="container-fluid p-0">
@@ -12,41 +12,77 @@
             </div>
             {% endfor %}
             <div class="row linha-baixo">
-                <h2 class="title-cad col-9">
-                    Paletes Clientes
-                </h2>
-                <button class="col-2" type="submit"><a style="color:white;" href="{% url 'portaria:saidapalete' %}">Cadastrar Saidas</a></button>
+                <div  style="display:flex; justify-content: space-between">
+                    <h2 class="title-cad col-9">
+                        Paletes Clientes
+                    </h2>
+                    <div>
+                        <button class="col-8" type="submit"><a style="color:white;" href="{% url 'portaria:cadpaletes' %}">Cadastrar Entradas</a></button>
+                        <button class="col-8" type="submit"><a style="color:white;" href="{% url 'portaria:saidapalete' %}">Cadastrar Saidas</a></button>
+                    </div>
+                </div>
+                <div>
+                    <form method="GET">
+                        <label for="filial">Filial:</label>
+                        <select id="filial" name="filial">
+                            <option selected disabled value="">--</option>
+                            {% for filial in filiais %}
+                                <option value="{{ filial.id }}">{{filial.id_garagem}} - {{ filial.sigla }}</option>
+                            {% endfor %}                
+                        </select>
+                        <label for="clientes">Cliente:</label>
+                        <input style="width:10vw" id="clientes" name="clientes" type="text">
+                        <button style="padding: 15px 40px;" type="submit">Filtrar</button>
+                    <form>
+                </div>
             </div>
+            {% if form %}
             <div class="container linha-baixo">
                 <table class="table tablecli">
                     <thead>
                         <tr>
+                            <th>Filial</th>
                             <th>Saldo</th>
-                            <th>Cliente</th>
+                            <th>Razão Social/ Motorista</th>
                             <th>Status</th>
+                            <th>Documento</th>
                         </tr>
                     </thead>
                     <tbody>
-                            {% for q in form %}
-                            <tr>
-                            <td>{{ q.saldo }}</td>
-                            <td>{{ q.razao_social }}</td>
-                                {% if q.saldo > 0 %}
-                                <td class="table-danger">A bora deve</td>
-                                {% elif q.saldo == 0 %}
-                                <td class="table-info">Ok</td>
-                                {% else %}
-                                <td class="table-success">O cliente deve</td>
-                                {% endif %}
-                            </tr>
-                            {% endfor %}
+                        {% for q in form %}
+                            {% if q.saldo != 0 %}
+                                <tr>
+                                    <td>{{ q.filial.sigla }}</td>
+                                    <td>{{ q.saldo }}</td>
+                                    <td>{{ q.cliente.razao_social_motorista }}</td>
+                                    {% if q.saldo > 0 %}
+                                    <td class="table-danger">A bora deve</td>
+                                    {% elif q.saldo == 0 %}
+                                    <td class="table-info">Ok</td>
+                                    {% else %}
+                                    <td class="table-success">O cliente deve</td>
+                                    {% endif %}
+                                    <td><a href="{% url 'portaria:transfdetalhecliente' id=q.id %}" target="_blank">Informações</a></td>
+                                </tr>
+                            {% endif %}
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>
             <div class="container linha-baixo">
                 <h2 class="title-cad">Total saldo: {{ tcount.total }}</h2>
             </div>
+            {% endif %}
         </div>
 {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
-
+<script>
+    $(function(){
+        var availableTags = [
+            {% for q in clientes %}
+                "{{ q|safe }}",
+            {% endfor %}
+        ];
+        $('#clientes').autocomplete({source: availableTags});
+    });
+</script>
 {% endblock %}

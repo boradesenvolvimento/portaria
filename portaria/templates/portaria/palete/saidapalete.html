@@ -22,13 +22,12 @@
                     <tbody>
                     <tr><th>Quantidade:<input name="qnt" type="text"></th></tr>
                     <tr><th>Filial:<select name="fil">
-                        {% for t,v in tp_fil %}
-                            {% if t != '0'%}
-                            <option value="{{ t }}">{{t}} - {{ v }}</option>
-                            {% endif %}
+                        <option selected disabled value="">--</option>
+                        {% for filial in filiais %}
+                            <option value="{{ filial.id }}">{{ filial.id_garagem }} - {{ filial.sigla }}</option>
                         {% endfor %}
                     </select></th></tr>
-                    <tr><th>Empresa:<input id="emp" type="text" name="emp"></tr>
+                    <tr><th>Razão Social/Motorista: <input id="emp" type="text" name="emp"></tr>
                     <tr><th>Tipo:<select name="tp_p">
                         <option value="PBR">PBR</option>
                         <option value="CHEP">CHEP</option>
@@ -43,7 +42,7 @@
 <script>
     $(function(){
         var availableTags = [
-            {% for q in tp_emp %}
+            {% for q in clientes %}
                 "{{ q|safe }}",
             {% endfor %}
         ];

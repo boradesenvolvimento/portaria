@@ -172,6 +172,19 @@ class Cadastro(models.Model):
 
     def __str__(self):
        return self.placa
+   
+class Filiais(models.Model):
+    id = models.IntegerField(primary_key=True)
+    id_empresa = models.IntegerField()
+    id_filial = models.IntegerField()
+    id_garagem = models.IntegerField(unique=True)
+    sigla = models.CharField(max_length=3, unique=True)
+    nome = models.CharField(max_length=50, unique=True)
+    uf = models.CharField(max_length=2)
+    cnpj = models.CharField(max_length=14, unique=True)
+
+    def __str__(self):
+       return self.sigla
 
 class PaleteControl(models.Model):
     TIPO_PALETE_CHOICES = [
@@ -223,16 +236,23 @@ class MovPalete(models.Model):
 class Cliente(models.Model):
     TP_VINCULO = [
         ('INTERNO','INTERNO'),
-        ('CLIENTE','CLIENTE')
+        ('CLIENTE','CLIENTE'),
+        ('MOTORISTA','MOTORISTA')
     ]
     id = models.BigAutoField(primary_key=True)
-    razao_social = models.CharField(max_length=100)
-    cnpj = models.CharField(max_length=14, validators=[only_int])
-    intex = models.CharField(max_length=7, choices=TP_VINCULO)
-    saldo = models.IntegerField()
+    razao_social_motorista = models.CharField(max_length=100)
+    cnpj_cpf = models.CharField(max_length=14, validators=[only_int])
+    tipo_cad = models.CharField(max_length=9, choices=TP_VINCULO, null=True)
+    obs = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
-        return self.razao_social
+        return self.razao_social_motorista
+
+class ClienteFiliais(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    filial = models.ForeignKey(Filiais, on_delete=models.CASCADE)
+    saldo = models.IntegerField(default=0)
 
 class Motorista(models.Model):
     codigomot = models.BigAutoField(primary_key=True)
@@ -301,7 +321,8 @@ class DisponibilidadeFrota(models.Model):
     ordem_servico = models.CharField(
         'Ordem de Serviço',
         max_length=255,
-        null=True
+        null=True,
+        blank=True
     )
 
 
@@ -427,18 +448,7 @@ class ChecklistFrota(models.Model):
     def __str__(self):
        return str(self.idchecklist)
     
-class Filiais(models.Model):
-    id = models.IntegerField(primary_key=True)
-    id_empresa = models.IntegerField()
-    id_filial = models.IntegerField()
-    id_garagem = models.IntegerField(unique=True)
-    sigla = models.CharField(max_length=3, unique=True)
-    nome = models.CharField(max_length=50, unique=True)
-    uf = models.CharField(max_length=2)
-    cnpj = models.CharField(max_length=14, unique=True)
 
-    def __str__(self):
-       return self.sigla
 
 class TipoServicosManut(models.Model):
     id = models.BigAutoField(primary_key=True)
@@ -896,10 +906,9 @@ class JustificativaEntrega(models.Model):
         ('151', 'GRADE FIXA'),
         ('152', 'DEVOLUÇÃO TOTAL '),
         ('153', 'ATRASO NA TRANSFERENCIA'),
-        ('154', 'CUSTO')
+        ('154', 'CUSTO'),
+        ('155', 'ENTREGUE SEM LEAD TIME'),
     )
-    id_empresa = models.CharField(max_length=5)
-    id_filial = models.CharField(max_length=5)
     garagem = models.CharField(max_length=5)
     id_garagem = models.CharField(max_length=5)
     conhecimento = models.CharField(max_length=15)
@@ -911,7 +920,7 @@ class JustificativaEntrega(models.Model):
     em_aberto = models.SmallIntegerField(null=True)
     data_entrega = models.DateField(blank=True, null=True)
     local_entreg = models.CharField(max_length=100)
-    nota_fiscal = models.CharField(max_length=200)
+    nota_fiscal = models.TextField()
     tipo_doc = models.CharField(max_length=5)
     cod_just = models.CharField(max_length=3, blank=True, null=True)
     desc_just = models.CharField(max_length=100, blank=True, null=True)
@@ -922,8 +931,6 @@ class JustificativaEntrega(models.Model):
     filial = models.ForeignKey(Filiais, on_delete=models.PROTECT, blank=True, null=True)
 
 class OcorrenciaEntrega(models.Model):
-    id_empresa = models.CharField(max_length=5)
-    id_filial = models.CharField(max_length=5)
     garagem = models.CharField(max_length=5)
     conhecimento = models.CharField(max_length=15)
     tp_doc = models.CharField(max_length=5)
@@ -932,6 +939,9 @@ class OcorrenciaEntrega(models.Model):
     data_ocorrencia = models.DateField()
     entrega = models.ForeignKey(JustificativaEntrega, on_delete=models.CASCADE, blank=True, null=True, related_name='ocorrencias')
     filial = models.ForeignKey(Filiais, on_delete=models.PROTECT, blank=True, null=True)
+    
+    class Meta:
+        ordering = ['data_ocorrencia']
 
 class SolicitacoesCompras(models.Model):
     STATUS_CHOICES = [
