@@ -2461,7 +2461,7 @@ def get_nfpj_mail(request):
     Período de: {16} à {17}
 
     Valor do Serviço: R$ {2:.2f}
-    Premio: R$ {3:2f}
+    Premio: R$ {3:.2f}
     Ajuda de custo: R$ {4:.2f}
     Crédito Convênio: R$ {5:.2f}
     Outros Créditos: R$ {6:.2f}
@@ -2479,6 +2479,8 @@ def get_nfpj_mail(request):
         C.c.  : {14}
     CPF/ CNPJ: {11}
     PIX: {20}
+
+Favor enviar a NF até {21}.
 
 Att
                 '''
@@ -2537,7 +2539,7 @@ Att
                     q.outros_cred, q.adiantamento, q.desc_convenio, q.outros_desc, q.total,
                     q.cpf_cnpj, q.banco, q.ag, q.conta, q.op,
                     dt_1.strftime('%d/%m/%Y'), dt_2.strftime('%d/%m/%Y'), dt_pgmt.strftime('%d/%m/%Y'),
-                    q.aux_moradia, q.pix or "Não Informado", dt_envio_nf.strftime('%d/%m/%Y'),
+                    q.aux_moradia, q.pix or "Não Informado", dt_envio_nf.strftime('%d/%m/%Y') or "Não Informado",
                 ),
                 from_email=settings.EMAIL_HOST_USER,
                 recipient_list=[q.email, 'lucas.feitosa@bora.com.br', 'daniel.domingues@bora.com.br'],
