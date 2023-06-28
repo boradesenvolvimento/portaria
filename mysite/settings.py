@@ -64,7 +64,8 @@ else:
             DjangoIntegration(),
         ],
         traces_sample_rate=1.0,
-        send_default_pii=True
+        send_default_pii=True,
+        profiles_sample_rate=1.0,
     )
 
 # Application definition
