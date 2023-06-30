@@ -22,10 +22,9 @@
   }
   table {
     width: 100vw;
-
   }
   th {
-    width: 25vw;
+    width: 30vw;
     text-align: center
   }
   td {
@@ -127,7 +126,7 @@
                     </thead>
                     <tbody>
                       {% for veiculo in veiculos %}
-                      {% if not veiculo.prefixoveic in placas_movimentos or veiculo.ultimo_dispo_frota is Null%}
+                      {% if not veiculo.prefixoveic in placas_movimentos or veiculo.ultimo_dispo_frota is Null %}
                       {% if veiculo.ativo %}
                       <tr>
                         <td>{{ veiculo.prefixoveic }}</td>

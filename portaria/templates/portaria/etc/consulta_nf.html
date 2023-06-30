@@ -3,9 +3,53 @@
 {% load groupscheck %}
 {% if request.user|has_group:"consulta_nf" %}
 <style>
-    .smallcap td{
+    th, td {
+        border-bottom: 1px solid #ddd;
+    }
+    table {
+        width: 100%;
+    }
+    .smallcap{
         font-size:11px;
     }
+    th {
+        width: 25vw;
+        text-align: center
+    }
+    td {
+        text-align: center
+    }
+
+    .modal-content {
+        width: 60%;
+    }
+    .modal {
+        padding-top: 20px;
+        z-index: 2;
+    }
+
+    @media (max-width: 800px)
+    {
+      .obrigatorio {
+        margin-top: 35px;
+      }
+      .modal-content {
+        width: 95%;
+      }
+      .w3-modal {
+        padding: 5vh 8vw 0 0;
+      }
+      .input-modal {
+        margin: 0 0 2vh 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .button-model {
+        margin-bottom: 2vh
+      }
+    }
+  
+
 
     .data-input{
         padding: 6px;
@@ -19,18 +63,18 @@
                 </div>
             </div>
             {% endfor %}
-            <div class="row linha-baixo">
-                <h2 class="title-cad col-3">Consulta NF</h2>
-                <div class="col-10">
+            <div class="row">
+                <h2 class="title-cad col-12">Consulta NF</h2>
+                <div class="col-12">
                     <form method="get">
                         <label for="nf">Número NF:</label>
-                        <input class="data-input" type="number" name="nf">
-                        <button style="padding: 15px 40px;" type="submit">Filtrar</button>
+                        <input  type="number" name="nf">
+                        <button type="submit">Filtrar</button>
                     </form>
                 </div>
             </div>
-            <div class="row" style="margin-left: 6rem;">
-                <form method="post" id="formgroup" enctype="multipart/form-data">
+            <div class="row">
+                <form method="post" id="formulario" style="overflow-x:auto;" role="form" enctype="multipart/form-data">
                 {% csrf_token %}
                 {% if form %}
                     <table class="table">
