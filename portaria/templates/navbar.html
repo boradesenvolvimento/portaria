@@ -189,6 +189,11 @@
                 >Atualizar funcionário</a
               >
               {% endif %}
+              {% if request.user|has_group:"fixa_cadastral" %}
+              <a class="nav-link1" href="{% url 'portaria:fixa_cadastral' %}"
+                >Fixa Cadastral</a
+              >
+              {% endif %}
               <a class="nav-link1" href="{% url 'portaria:servicospj' %}"
                 >Servicos PJ</a
               >
@@ -354,7 +359,7 @@
           </ul>
         </div>
         {% endif %} {% endcomment %}
-        {% comment %} {% if request.user|has_group:"estoque" %}
+        {% if request.user|has_group:"estoque" %}
         <div class="dropdown">
           <button
             class="dropdown-toggle menutext-navbar nav-link1"
@@ -394,7 +399,7 @@
             {% endif %}
           </ul>
         </div>
-        {% endif %} {% endcomment %}
+        {% endif %}
         {% if request.user|has_group:"justificativas" %}
         <div class="dropdown">
           <button

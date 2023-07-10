@@ -15,11 +15,11 @@
             {% endfor %}
         <section class="container">
             <div class="row" style="justify-content: space-between;">
-                <h2 class="title-cad col-3">Controle de Estoque</h2>
+                <h2 class="title-cad col-3">Controle de EPI's</h2>
                 <div class="col" style="text-align:center;">
                     {% if request.user|has_group:"estoque_main" %}
                         <span>
-                            <label for="createitem">Cadastrar Item</label>
+                            <label for="createitem">Cadastrar Grupo</label>
                             <button id="addGroup" type="button">
                                 <ion-icon name="add-circle-outline"></ion-icon>
                             </button>
@@ -151,7 +151,7 @@
                                     <span class="close">&times;</span>
                                 </div><hr>
                                     <div class="row">
-                                        <span> <h2> Grupo: </h2></span>
+                                        <span> <h2>Grupo: </h2></span>
                                         <ul style="list-style:none;">
                                             <li><strong>ID:</strong> {{ q.id }}</li>
                                             <li><strong>Grupo:</strong> {{ q.grupo }}</li>

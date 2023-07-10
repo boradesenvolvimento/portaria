@@ -189,8 +189,9 @@
                 <table class="table1 table">
                     <thead>
                         <tr>
-                            <th scope="col">ID</th>
-                            <th scope="col">Filial</th>
+                            <th scope="col" style="width:10%;">ID</th>
+                            <th scope="col">Nome</th>
+                            <th scope="col" style="width:10%;">Filial</th>
                             <th scope="col">Data Solicitado</th>
                             <th scope="col">Solicitante</th>
                             <th scope="col" style="width:10%;">Visualizar</th>
@@ -203,9 +204,14 @@
                         {% for q in solics %}
                         <tr class="tabletkt">
                             <td>{{ q.id }}</td>
-                            <td>{{ q.get_filial_display }}</td>
+                            {% if q.funcionario_clt %}
+                                <td>{{ q.funcionario_clt.nome }}</td>
+                            {% else %}
+                                <td>{{ q.funcionario_pj.nome }}</td>
+                            {% endif %}
+                            <td>{{ q.filial.sigla }}</td>
                             <td>{{ q.data_solic }}</td>
-                            <td>{{ q.autor }}</td>
+                            <td>{{ q.autor|upper }}</td>
                             <td>
                                 <button type="button" id="seeDetails" value="{{ forloop.counter }}">
                                     <ion-icon name="menu-outline"></ion-icon>

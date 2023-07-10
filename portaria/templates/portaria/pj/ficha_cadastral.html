@@ -1,0 +1,351 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load groupscheck %}
+{% if request.user|has_group:"fixa_cadastral" %}
+<style>
+    th, td {
+        border-bottom: 1px solid #ddd;
+    }
+    table {
+        width: 100%;
+    }
+    .smallcap{
+        font-size:11px;
+    }
+    th {
+        width: 25vw;
+        text-align: center
+    }
+    td {
+        text-align: center
+    }
+    p {
+        margin: 0px;
+    }
+    input {
+        width: 300px;
+    }
+
+    .modal-content {
+        width: 60%;
+    }
+    .modal {
+        padding-top: 20px;
+        z-index: 2;
+    }
+
+    .p-input {
+        display: flex;
+        flex-direction: column;
+    }
+
+    @media (max-width: 800px)
+    {
+      .obrigatorio {
+        margin-top: 35px;
+      }
+      .modal-content {
+        width: 95%;
+      }
+      .w3-modal {
+        padding: 5vh 8vw 0 0;
+      }
+      .input-modal {
+        margin: 0 0 2vh 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .button-model {
+        margin-bottom: 2vh
+      }
+    }
+
+    .data-input{
+        padding: 6px;
+    }
+</style>
+        <div class="container mt-5">
+            {% for message in messages %}
+            <div class="container-fluid p-0">
+                <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+            </div>
+            {% endfor %}
+            <div class="row">
+                <h2 class="title-cad col-12">Ficha Cadastral</h2>
+                <div class="col-12">
+                    <form method="get">
+                        <label for="nome">Nome:</label>
+                        <input  type="text" name="nome" style="width: 200px">
+                        <label for="filial">Filial:</label>
+                        <select id="filial" name="filial">
+                            <option selected disabled value="">--</option>
+                            {% for filial in filiais %}
+                            {% if k != "0" %}
+                            <option value="{{ filial.id }}">{{ filial.id_garagem }} - {{ filial.sigla }}</option>
+                            {% endif %}
+                            {% endfor %}
+                        </select>
+                        <label for="cpf">CPF:</label>
+                        <input  type="number" name="cpf" style="width: 200px">
+                        <label for="tipo_contrato">Tipo Contrato:</label>
+                        <select id="tipo_contrato" name="tipo_contrato">
+                            <option selected disabled value="">--</option>
+                            <option value="CLT">CLT</option>
+                            <option value="PJ">PJ</option>
+                        </select>
+                        <button type="submit">Filtrar</button>
+                    </form>
+                </div>
+            </div>
+            <br/>
+            <div class="row">
+                {% if funcionarios %}
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Filial</th>
+                            <th>CNPJ/ CPF</th>
+                            <th>Tipo Contrato</th>
+                            <th>Documento</th>
+                            <th>EPI's</th>
+                            <th>Detalhes</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for f in funcionarios %}
+                            <tr class="smallcap">
+                                <!--Inicio IF-->
+                                    <!--Só vai trazer os dados que tenha dias Em aberto que seja 0 ou menor-->
+                                    <td>{{ f.nome }}</td>
+                                    <td>{{ f.filial.sigla }}</td>
+                                    {% if f.tipo_contrato == "CLT" %}
+                                        <td>{{ f.cpf }}</td>
+                                    {% else %}
+                                        <td>{{ f.cpf_cnpj }}</td>
+                                    {% endif %}
+                                    <td>{{ f.tipo_contrato }}</td>
+                                    <td>
+                                        <button style="font-size:1.4rem;" type="button">
+                                            <a href="{% if f.tipo_contrato == "CLT" %} {% url 'portaria:get_documento_funcionario_clt' id=f.id %} {% else %} {% url 'portaria:get_documento_funcionario_pj' id=f.id %} {% endif %}"
+                                                rel="noreferrer" target="_blank">
+                                                <ion-icon name="download-outline"/>
+                                            </a>
+                                        </button>
+                                    </td>
+                                <td>
+                                    <button style="font-size:1.4rem;" type="button" class="epis" value="{{ forloop.counter }}"><ion-icon name="list"></ion-icon></button>
+                                </td>
+                                <td>
+                                    <button style="font-size:1.4rem;" type="button" class="detalhes" value="{{ forloop.counter }}"><ion-icon name="list"></ion-icon></button>
+                                </td>
+                            </tr>
+                            <div id="epi{{ forloop.counter }}" class="modal">
+                                <div class="modal-content">
+                                    <div>
+                                        <span class="title-cad">EPI's</span>
+                                        <span class="close col">&times;</span>
+                                    </div>
+                                    <div class="container tktcontainer">
+                                        <form method="post" 
+                                            action="{% if f.tipo_contrato == "CLT" %} {% url 'portaria:cadastrar_epi_funcionario_clt' id=f.id %} {% else %} {% url 'portaria:cadastrar_epi_funcionario_pj' id=f.id %} {% endif %}">
+                                        {% csrf_token %}
+                                            <p class="p-input">
+                                                {% if f.epi.celular_modelo %}
+                                                    <label for="celular_modelo">MODELO CELULAR:</label>
+                                                    <input  type="text" name="celular_modelo" value={{f.epi.celular_modelo|upper}} />
+                                                {% else %}
+                                                    <label for="celular_modelo">MODELO CELULAR:</label>
+                                                    <input  type="text" name="celular_modelo" />
+                                                {% endif%}
+                                            </p>
+                                            <p class="p-input">
+                                                {% if f.epi.celular_numero_ativo %}
+                                                    <label for="celular_numero_ativo">IDENTIFICAÇÃO CELULAR:</label>
+                                                    <input  type="text" name="celular_numero_ativo" value={{f.epi.celular_numero_ativo|upper}} />
+                                                {% else %}
+                                                    <label for="celular_numero_ativo">IDENTIFICAÇÃO CELULAR:</label>
+                                                    <input  type="text" name="celular_numero_ativo" />
+                                                {% endif%}
+                                            </p>
+                                            <br/>
+                                            <p class="p-input">
+                                                {% if f.epi.notebook_modelo %}
+                                                    <p class="p-input">
+                                                        <label for="notebook_modelo">MODELO NOTEBOOK:</label>
+                                                        <input  type="text" name="notebook_modelo" value={{f.epi.notebook_modelo|upper}} />
+                                                    </p>
+                                                {% else %}
+                                                    <p class="p-input">
+                                                        <label for="notebook_modelo">MODELO NOTEBOOK:</label>
+                                                        <input  type="text" name="notebook_modelo">
+                                                    </p>
+                                                {% endif%}
+                                            </p>
+                                            <p class="p-input">
+                                                {% if f.epi.notebook_numero_ativo %}
+                                                    <p class="p-input">
+                                                        <label for="notebook_numero_ativo">IDENTIFICAÇÃO NOTEBOOK:</label>
+                                                        <input  type="number" name="notebook_numero_ativo" value={{f.epi.notebook_numero_ativo}} />
+                                                    </p>
+                                                {% else %}
+                                                    <p class="p-input">
+                                                        <label for="notebook_numero_ativo">IDENTIFICAÇÃO NOTEBOOK:</label>
+                                                        <input  type="number" name="notebook_numero_ativo" />
+                                                    </p>
+                                                {% endif%}
+                                            </p>
+                                            <h3>EPI's:</h3>
+                                            <textarea id="observacao" name="observacao" style="border:solid 1px; width: 100%; height: 200px; resize: none;">
+                                                {% if f.epi.observacao %}
+                                                    {{ f.epi.observacao }}
+                                                {% endif %}
+                                            </textarea>
+                                            {% if f.epi %}
+                                                <button type="submit">Editar</button>
+                                            {% else %}
+                                                <button type="submit">Criar</button>
+                                            {% endif %}
+                                        </form>
+                                        {% comment %} {% if f.estoque_epis.all|length > 0 %}
+                                            {% for epi in f.estoque_epis.all %}
+                                                {% for cart in epi.cart_set.all %}
+                                                    {% for item in cart.cartitem_set.all %}
+                                                        <p style="margin-top: 20px">
+                                                            <strong>
+                                                                {{item.desc|upper}} - 
+                                                                {{item.tam|upper}} - 
+                                                                QUANT. {{item.qty}}
+                                                            </strong>
+                                                        </p>
+                                                    {% endfor%}
+                                                {% endfor%}
+                                            {% endfor%}
+                                        {% else %}
+                                        <p style="margin-top: 20px">
+                                            <strong>
+                                                Nenhum EPI cadastrado.
+                                            <strong>
+                                        </p>
+                                        {% endif %} {% endcomment %}
+                                    </div>
+                                </div>
+                            </div>
+                                <div id="deta{{ forloop.counter }}" class="modal">
+                                    <div class="modal-content">
+                                    <div>
+                                        <span class="title-cad">Detalhes</span>
+                                        <span class="close col">&times;</span>
+                                    </div>
+                                    <div class="container tktcontainer" style>
+                                        <p>
+                                            NOME: <strong>{{ f.nome|upper }}</strong>
+                                        </p>
+                                        <p>
+                                            RG: <strong>{{ f.rg }}</strong>
+                                        </p>
+                                        <p>
+                                            CPF: <strong>{{ f.cpf }}</strong>
+                                        </p>
+                                        <p>
+                                            DATA NASCIMENTO: <strong>{{ f.data_nascimento }}</strong>
+                                        </p>
+                                        <p>
+                                            EMPRESA: <strong>{{ f.empresa|upper }}</strong>
+                                        </p>
+                                        <p>
+                                            FILIAL: <strong>{{ f.filial.sigla|upper }}</strong>
+                                        </p>
+                                        <p>
+                                            DATA ADMISSÃO: <strong>{{ f.data_admissao }}</strong>
+                                        </p>
+                                        <p>
+                                            RUA: <strong>{{ f.rua|upper }}</strong>
+                                        </p>
+                                        <p>
+                                            NUMERO: <strong>{{ f.numero }}</strong>
+                                        </p>
+                                        <p>
+                                            {% if f.pix %}
+                                                COMPLEMENTO: <strong>{{ f.complemento|upper }}</strong>
+                                            {% else %}
+                                                COMPLEMENTO: <strong>NÃO INFORMADO</strong>
+                                            {% endif%}
+                                        </p>
+                                        <p>
+                                            CEP: <strong>{{ f.cep|upper }}</strong>
+                                        </p>
+                                        <p>
+                                            BAIRRO: <strong>{{ f.bairro|upper }}</strong>
+                                        </p>
+                                        <p>
+                                            CIDADE: <strong>{{ f.cidade|upper }}</strong>
+                                        </p>
+                                        <p>
+                                            UF: <strong>{{ f.uf|upper }}</strong>
+                                        </p>
+                                        <p>
+                                            BANCO: <strong>{{ f.banco|upper }}</strong>
+                                        </p>
+                                        <p>
+                                            AGENCIA: <strong>{{ f.agencia }}</strong>
+                                        </p>
+                                        <p>
+                                            CONTA: <strong>{{ f.conta }}</strong>
+                                        </p>
+                                        <p>
+                                            {% if f.pix %}
+                                                PIX: <strong>{{ f.pix|upper }}</strong>
+                                            {% else %}
+                                                PIX: <strong>NÃO INFORMADO</strong>
+                                            {% endif%}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                {% endif %}
+            </div>
+        </div>
+{% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
+<script>
+    $(document).ready(function(){
+        $(".epis").click(function(){
+            var but = $(this).val();
+            var modal = document.getElementById("epi"+but);
+            var span = modal.getElementsByClassName("close")[0];
+            modal.style.display = "block";
+
+            span.onclick = function() {
+                modal.style.display = "none";
+            };
+            window.onclick = function(event) {
+                if (event.target == modal){
+                    modal.style.display = "none";
+                }
+            };
+        });
+    });
+    $(document).ready(function(){
+        $(".detalhes").click(function(){
+            var but = $(this).val();
+            var modal = document.getElementById("deta"+but);
+            var span = modal.getElementsByClassName("close")[0];
+            modal.style.display = "block";
+
+            span.onclick = function() {
+                modal.style.display = "none";
+            };
+            window.onclick = function(event) {
+                if (event.target == modal){
+                    modal.style.display = "none";
+                }
+            };
+        });
+    });
+</script>
+{% endblock %}
