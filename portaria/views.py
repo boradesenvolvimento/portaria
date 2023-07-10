@@ -710,7 +710,7 @@ ORDER BY
         except Exception:
             Funcionarios.objects.create(**funcionario)
 
-    return redirect("portaria:fixa_cadastral")
+    return redirect("portaria:ficha_cadastral")
 
 
 def get_documento_funcionario_clt(request, id: int):
@@ -806,10 +806,10 @@ def gerar_ficha(data, funcionario):
         return response
 
     except Exception as e:
-        return redirect("portaria:fixa_cadastral")
+        return redirect("portaria:ficha_cadastral")
 
 
-def fixa_cadastral(request):
+def ficha_cadastral(request):
     funcionarios = []
 
     filiais = Filiais.objects.all()
@@ -912,7 +912,7 @@ def cadastrar_epi_funcionario_clt(request, id: int):
             print(e)
             messages.error(request, "Erro ao Fazer Cadastro")
 
-    return redirect("portaria:fixa_cadastral")
+    return redirect("portaria:ficha_cadastral")
 
 
 def cadastrar_epi_funcionario_pj(request, id: int):
@@ -968,7 +968,7 @@ def cadastrar_epi_funcionario_pj(request, id: int):
             print(e)
             messages.error(request, "Erro ao Fazer Cadastro")
 
-    return redirect("portaria:fixa_cadastral")
+    return redirect("portaria:ficha_cadastral")
 
 
 @login_required

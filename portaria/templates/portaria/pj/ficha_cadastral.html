@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block content %}
 {% load groupscheck %}
-{% if request.user|has_group:"fixa_cadastral" %}
+{% if request.user|has_group:"ficha_cadastral" %}
 <style>
     th, td {
         border-bottom: 1px solid #ddd;
