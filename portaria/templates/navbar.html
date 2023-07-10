@@ -189,8 +189,8 @@
                 >Atualizar funcionário</a
               >
               {% endif %}
-              {% if request.user|has_group:"fixa_cadastral" %}
-              <a class="nav-link1" href="{% url 'portaria:fixa_cadastral' %}"
+              {% if request.user|has_group:"ficha_cadastral" %}
+              <a class="nav-link1" href="{% url 'portaria:ficha_cadastral' %}"
                 >Fixa Cadastral</a
               >
               {% endif %}
