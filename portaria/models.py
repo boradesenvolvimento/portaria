@@ -41,7 +41,9 @@ TIPO_VIAGEM = (
 EMPRESA_CHOICES = (
     ('1', 'BORA'),
     ('3', 'BOURBON'),
-    ('4', 'TRANSFOOD')
+    ('4', 'TRANSFOOD'),
+    ('5', 'JCR'),
+    ('6', 'JC')
 )
 
 TIPO_GARAGEM = (
@@ -182,6 +184,7 @@ class Filiais(models.Model):
     nome = models.CharField(max_length=50, unique=True)
     uf = models.CharField(max_length=2)
     cnpj = models.CharField(max_length=14, unique=True)
+    empresa = models.CharField(max_length=20)
 
     def __str__(self):
        return self.sigla
@@ -455,6 +458,51 @@ class TipoServicosManut(models.Model):
     grupo_servico = models.CharField('Grupo', max_length=50)
     tipo_servico = models.CharField('Tipo Servico', max_length=50)
 
+class FuncionariosEPIs(models.Model):
+    id = models.AutoField(primary_key=True, unique=True)
+    celular_modelo = models.CharField(max_length=50, null=True)
+    celular_numero_ativo = models.IntegerField(null=True, unique=True)
+    notebook_modelo = models.CharField(max_length=50, null=True)
+    notebook_numero_ativo = models.IntegerField(null=True, unique=True)
+    observacao = models.TextField(null=True)
+
+    
+class Funcionarios(models.Model):
+    id = models.AutoField(primary_key=True, unique=True)
+    nome = models.CharField(max_length=40, unique=True)
+    data_nascimento = models.DateTimeField()
+    data_admissao = models.DateTimeField(null=True)
+    rg = models.CharField(max_length=8, validators=[only_int], unique=True)
+    cpf = models.CharField(max_length=11, validators=[only_int], unique=True)
+    empresa = models.CharField(max_length=15, choices=EMPRESA_CHOICES)
+    tipo_contrato = models.CharField(max_length=3, default="CLT")
+    rua = models.CharField(max_length=100)
+    numero = models.CharField(max_length=7, validators=[only_int])
+    complemento = models.CharField(max_length=75, null=True, blank=True)
+    cep = models.CharField(max_length=8, validators=[only_int])
+    bairro = models.CharField(max_length=50)
+    cidade = models.CharField(max_length=30)
+    uf = models.CharField(max_length=2)
+    banco = models.CharField(max_length=20)
+    agencia = models.CharField(max_length=5, validators=[only_int])
+    conta = models.CharField(max_length=15, validators=[only_int])
+    operacao = models.IntegerField(null=True)
+    pix = models.CharField(max_length=30, null=True)
+    ativo = models.BooleanField(default=True)
+    
+    filial = models.ForeignKey(
+        Filiais, on_delete=models.CASCADE, related_name="funcionarios"
+    )
+    epi = models.OneToOneField(
+        FuncionariosEPIs,
+        on_delete=models.CASCADE,
+        related_name="funcionario_clt",
+        null=True,
+        unique=True,
+    )
+    user = models.ForeignKey(User, on_delete=CASCADE, related_name="funcionario_clt", null=True)
+    
+
 class FuncPj(models.Model):
     PESSOA_FISICA = 'PF'
     PESSOA_JURIDICA = 'PJ'
@@ -464,14 +512,12 @@ class FuncPj(models.Model):
     ]
 
     id = models.BigAutoField(primary_key=True)
-    # filial = models.CharField(choices=TIPO_GARAGEM, max_length=3, blank=True, null=True)
-    filial = models.ForeignKey(Filiais, on_delete=models.PROTECT, blank=True, null=True, default=None)
     nome = models.CharField(max_length=50)
     salario = models.FloatField(blank=True, null=True)
     adiantamento = models.FloatField(blank=True, null=True)
     ajuda_custo = models.FloatField(blank=True, null=True)
     cpf_cnpj = models.CharField(max_length=14, validators=[only_int])
-    tipo_contrato = models.CharField(choices=TIPO_CONTRATO_CHOICES, max_length=2)
+    tipo_contrato = models.CharField(max_length=2, default='PJ')
     banco = models.CharField(max_length=50 ,blank=True, null=True)
     ag = models.IntegerField(blank=True, null=True)
     conta = models.IntegerField(blank=True, null=True)
@@ -482,6 +528,15 @@ class FuncPj(models.Model):
     admissao = models.DateField(blank=True, null=True, default=datetime.date.today())
     ativo = models.BooleanField(default=True)
     data_criacao = models.DateField(blank=True, null=True, default=datetime.date.today())
+    
+    filial = models.ForeignKey(Filiais, on_delete=models.PROTECT, blank=True, null=True, default=None)
+    epi = models.OneToOneField(
+        FuncionariosEPIs,
+        on_delete=models.CASCADE,
+        related_name="funcionario_pj",
+        null=True,
+        unique=True,
+    )
 
     class Meta:
         verbose_name = 'Funcpj'
@@ -1067,12 +1122,14 @@ class EstoqueItens(models.Model):
 
 class EstoqueSolicitacoes(models.Model):
     id = models.BigAutoField(primary_key=True)
-    filial = models.CharField(max_length=3, choices=GARAGEM_CHOICES)
-    colab = models.CharField(max_length=120)
     data_solic = models.DateField()
     data_envio = models.DateField(blank=True, null=True)
     autor = models.ForeignKey(User, on_delete=models.CASCADE)
     confirmacao = models.DateField(blank=True, null=True)
+
+    filial = models.ForeignKey(Filiais, on_delete=models.CASCADE, related_name="estoque_solicitacao")
+    funcionario_clt = models.ForeignKey(Funcionarios, on_delete=models.CASCADE, related_name="estoque_epis", null=True)
+    funcionario_pj = models.ForeignKey(FuncPj, on_delete=models.CASCADE, related_name="estoque_epis", null=True)
     autor_confirmacao = models.ForeignKey(User, on_delete=models.CASCADE, related_name='estoque_autor_confirmacao',
                                           blank=True, null=True)
                                           

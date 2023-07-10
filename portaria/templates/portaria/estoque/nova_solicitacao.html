@@ -104,22 +104,25 @@
                     <div class="selectors">
                         <div style="width: 100%;">
                             <label for="filial">Filial:</label>
-                            <select name="filial" required>
-                                <option selected disabled value="">------</option>
-                                {% for k,v in filiais %}
-                                    <option value="{{k}}">{{ v }}</option>
+                            <select id="filial" name="filial">
+                                <option selected disabled value="">--</option>
+                                {% for filial in filiais %}
+                                    {% if k != "0" %}
+                                        <option value="{{ filial.id }}">{{ filial.id_garagem }} - {{ filial.sigla }}</option>
+                                    {% endif %}
                                 {% endfor %}
                             </select>
                             <div>
-                                <label for="colab">Colaborador</label>
-                                <input type="text" name="colab" id="colab" />
+                                <label for="funcionario">Colaborador:</label>
+                                <input type="text" name="funcionario" id="funcionario" />
                             </div>
                             <div id="itens-box">
                                 Itens:
                                 <ul id="item-list" style="margin-left: 5px;">
                                 </ul>
 
-                            </div><br>
+                            </div>
+                            <br>
                         </div>
                         <div>
                             <textarea name="itensInput" id="itensInput" hidden></textarea>
@@ -159,6 +162,14 @@
 </div>
 {% endif %}
 <script>
+    $(function(){
+        var availableTags = [
+            {% for q in funcionarios %}
+                "{{ q.nome|safe }}",
+            {% endfor %}
+        ];
+        $('#funcionario').autocomplete({source: availableTags});
+    });
     var list = [];
     function add_chip(id, qty){
         var newList = document.getElementById("item-list");
