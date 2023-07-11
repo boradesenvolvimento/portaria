@@ -7657,17 +7657,18 @@ def estoque_index(request):
     if request.method == "POST":
         itens_r = request.POST.get("itens")
         itens_r = itens_r.split(",")
-        print(f"Itens_r: {itens_r}")
         itens = {}
         for count, i in enumerate(itens_r):
             c = i.split(" ")
             itens[int(c[0])] = int(c[1])
-        print(itens)
-    solic = EstoqueSolicitacoes.objects.filter(data_envio__isnull=True)
+    solic = EstoqueSolicitacoes.objects.filter(
+        data_envio__isnull=True, cancelado__isnull=True
+    )
     metrics = EstoqueSolicitacoes.objects.annotate(
         aberto=Count("id", filter=Q(data_envio__isnull=True)),
         ag_conf=Count("id", filter=Q(data_envio__isnull=False, confirmacao=None)),
         concluido=Count("id", filter=Q(confirmacao__isnull=False)),
+        # cancelado=Count("id", filter=Q(cancelado__isnull=False)),
     ).aggregate(
         aberto1=Sum("aberto"), ag_conf1=Sum("ag_conf"), concluido1=Sum("concluido")
     )
@@ -7693,47 +7694,52 @@ def estoque_confirma_item(request):
     form = EstoqueSolicitacoes.objects.filter(
         data_envio__isnull=False, confirmacao=None
     )
+
     if request.method == "GET":
         busca = request.GET.get("buscaitem")
         if busca:
             form = EstoqueSolicitacoes.objects.filter(
                 data_envio__isnull=False, confirmacao=None, pk=busca
             )
+
     if request.method == "POST":
-        obj = request.POST.get("objid")
-        try:
-            obj = get_object_or_404(EstoqueSolicitacoes, pk=obj)
-            # Remover itens
-            for cart in obj.cart_set.all():
-                for ci in cart.cartitem_set.all():
-                    tamanho = Tamanho.objects.get(id=ci.tam_id)
-                    if tamanho.quantidade < ci.qty:
-                        messages.error(
-                            request,
-                            f"O item {ci.desc} - {ci.tam} está em falta. (Solicitado: {ci.qty} | Em estoque: {tamanho.quantidade} ",
+        anexo = request.FILES.get("getanexo")
+        if anexo:
+            obj = request.POST.get("objid")
+
+            try:
+                obj = get_object_or_404(EstoqueSolicitacoes, pk=obj)
+                # Remover itens
+                for cart in obj.cart_set.all():
+                    for ci in cart.cartitem_set.all():
+                        tamanho = Tamanho.objects.get(id=ci.tam_id)
+                        if tamanho.quantidade < ci.qty:
+                            messages.error(
+                                request,
+                                f"O item {ci.desc} - {ci.tam} está em falta. (Solicitado: {ci.qty} | Em estoque: {tamanho.quantidade} ",
+                            )
+
+                            return redirect("portaria:estoque_confirma_item")
+                for cart in obj.cart_set.all():
+                    for ci in cart.cartitem_set.all():
+                        item = Item.objects.filter(desc=ci.desc).first()
+                        Tamanho.objects.filter(id=ci.tam_id).update(
+                            quantidade=F("quantidade") - ci.qty
                         )
+                        tam = Tamanho.objects.get(id=ci.tam_id)
 
-                        return redirect("portaria:estoque_confirma_item")
-            for cart in obj.cart_set.all():
-                for ci in cart.cartitem_set.all():
-                    print(ci.desc, ci.tam, ci.qty)
-                    item = Item.objects.filter(desc=ci.desc).first()
-                    print(item.desc, item.id)
-                    Tamanho.objects.filter(id=ci.tam_id).update(
-                        quantidade=F("quantidade") - ci.qty
-                    )
-                    tam = Tamanho.objects.get(id=ci.tam_id)
-                    print(tam.quantidade)
+            except Exception as e:
+                print(e)
+            else:
+                obj.confirmacao = timezone.now()
+                obj.autor_confirmacao = request.user
 
-        except Exception as e:
-            print(e)
-        else:
-            obj.confirmacao = timezone.now()
-            obj.autor_confirmacao = request.user
-            obj.save()
-            messages.success(
-                request, "Solicitação com id %s confirmada com sucesso." % obj.id
-            )
+                obj.anexo_confirmacao = anexo
+
+                obj.save()
+                messages.success(
+                    request, "Solicitação com id %s confirmada com sucesso." % obj.id
+                )
     return render(request, "portaria/estoque/confirmasolicitacao.html", {"form": form})
 
 
@@ -7824,7 +7830,6 @@ def estoque_listagem_itens(request):
             tam_id = request.POST.get("item")
             tam = request.POST.get("tam")
             qty = request.POST.get("qty")
-            print(f"id: {tam_id} tam: {tam} qty: {qty} ")
             Tamanho.objects.filter(id=int(tam_id)).update(tam=tam, quantidade=qty)
             messages.success(request, "Tamanho ajustado com sucesso!")
 
@@ -7839,14 +7844,28 @@ def estoque_detalhe(request, id):
 
     if request.method == "POST":
         area = request.POST.get("area")
-        e_to = request.POST.get("e_to")
+        e_to = request.POST.get("email")
 
         if area and area != "<p><br></p>" and e_to:
+            for i in request.POST:
+                key = i.split("_")
+
+                if len(key) > 1:
+                    cart_item = CartItem.objects.get(id=key[1])
+
+                    if key[0] == "tam":
+                        cart_item.tam = request.POST.get(i)
+                    else:
+                        cart_item.qty = request.POST.get(i)
+
+                    cart_item.save()
+
             if request.POST.get("file") != "":
                 myfile = request.FILES.getlist("file")
             else:
                 myfile = None
                 items = ""
+
             for cart in item.cart_set.all():
                 for i in cart.cartitem_set.all():
                     items += f"""
@@ -7930,6 +7949,17 @@ def estoque_detalhe(request, id):
     return render(
         request, "portaria/estoque/detalhesolic.html", {"editor": editor, "obj": item}
     )
+
+
+def cancelar_solicitacao_epi(request, id):
+    solicitacao = EstoqueSolicitacoes.objects.get(id=id)
+
+    solicitacao.cancelado = datetime.date.today()
+    solicitacao.autor_cancelamento = request.user
+
+    solicitacao.save()
+
+    return redirect("portaria:estoque_index")
 
 
 def estoque_caditem(request):
