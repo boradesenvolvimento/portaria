@@ -7745,12 +7745,11 @@ Att,
 Equipe de Desenvolvimento
 """,
                                 from_email=settings.EMAIL_HOST_USER,
-                                # recipient_list=[
-                                #     "rosane.fernandes@bora.com.br",
-                                #     "daniel.domingues@bora.com.br",
-                                #     "marco.antonio@bora.bom.br",
-                                # ],
-                                recipient_list=["davi.bezerra@bora.com.br"],
+                                recipient_list=[
+                                    "rosane.fernandes@bora.com.br",
+                                    "daniel.domingues@bora.com.br",
+                                    "marco.antonio@bora.bom.br",
+                                ],
                             )
 
             except Exception as e:
@@ -7800,12 +7799,11 @@ Equipe de Desenvolvimento
 
 """,
                 from_email=settings.EMAIL_HOST_USER,
-                # recipient_list=[
-                #     "rosane.fernandes@bora.com.br",
-                #     "daniel.domingues@bora.com.br",
-                #     "marco.antonio@bora.bom.br",
-                # ],
-                recipient_list=["davi.bezerra@bora.com.br"],
+                recipient_list=[
+                    "rosane.fernandes@bora.com.br",
+                    "daniel.domingues@bora.com.br",
+                    "marco.antonio@bora.bom.br",
+                ],
             )
 
     hoje = datetime.date.today()
@@ -7851,12 +7849,11 @@ Equipe de Desenvolvimento
 
 """,
                 from_email=settings.EMAIL_HOST_USER,
-                # recipient_list=[
-                #     "rosane.fernandes@bora.com.br",
-                #     "daniel.domingues@bora.com.br",
-                #     "marco.antonio@bora.bom.br",
-                # ],
-                recipient_list=["davi.bezerra@bora.com.br"],
+                recipient_list=[
+                    "rosane.fernandes@bora.com.br",
+                    "daniel.domingues@bora.com.br",
+                    "marco.antonio@bora.bom.br",
+                ],
             )
 
     return redirect("portaria:estoque_listagem_itens")
