@@ -55,26 +55,36 @@
                             <th scope="col" style="width:10%;">Filial</th>
                             <th scope="col">Data Envio</th>
                             <th scope="col">Itens</th>
+                            <th scope="col">Anexo</th>
                             <th scope="col">Confirmar</th>
                         </tr>
                     </thead>
                     <tbody>
                     {% for q in form %}
-                        <tr class="tabletkt">
-                            <th>{{ q.id }}</th>
-                            <th>{{ q.get_filial_display }}</th>
-                            <th>{{ q.data_envio }}</th>
+                    <tr class="tabletkt">
+                        <th>{{ q.id }}</th>
+                        <th>{{ q.filial.sigla }}</th>
+                        <th>{{ q.data_envio }}</th>
+                        <th>
+                            <button type="button" id="seeDetails" value="{{ forloop.counter }}">
+                                <ion-icon name="menu-outline"></ion-icon>
+                            </button>
+                        </th>
+                        <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
                             <th>
-                                <button type="button" id="seeDetails" value="{{ forloop.counter }}">
-                                    <ion-icon name="menu-outline"></ion-icon>
-                                </button>
+                                <label for="getanexo" style="font-size:2.4rem;cursor:pointer;">
+                                    <ion-icon name="attach-outline"></ion-icon>
+                                </label>
+                                <input type="file" name="getanexo" id="getanexo">
                             </th>
-                            <th><form method="post">{% csrf_token %}
+                            <th>
                                 <input type="hidden" name="objid" value="{{ q.id }}">
                                 <button type="submit">
                                 <ion-icon name="checkmark-done-circle-outline"></ion-icon></ion-icon></button>
-                            </form></th>
-                        </tr>
+                            </th>
+                        </form>
+                    </tr>
                         <div id="solicDetails{{ forloop.counter }}" class="modal">
                             <div class="modal-content">
                                 <div style="width: 100%; display: flex; align-items: center ;justify-content: space-between;">
@@ -109,7 +119,6 @@
                     </tbody>
                 </table>
             </div>
-
         </section>
     {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
     </div>

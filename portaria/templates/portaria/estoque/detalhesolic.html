@@ -41,7 +41,7 @@
                             <tbody>
                                 <tr>
                                     <th><b> ID </b></th>
-                                    <td> {{ obj.id }} </td>
+                                    <td>{{ obj.id }}</td>
                                 </tr>
                                 <tr>
                                     <th><b> Filial </b></th>
@@ -50,39 +50,23 @@
                                 <tr>
                                     <th><b> Colaborador </b></th>
                                     {% if obj.funcionario_clt %}
-                                        <td>{{ obj.funcionario_clt.nome }}</td>
+                                        <td>{{ obj.funcionario_clt.nome|upper }}</td>
                                     {% else %}
-                                        <td>{{ obj.funcionario_pj.nome }}</td>
+                                        <td>{{ obj.funcionario_pj.nome|upper }}</td>
                                     {% endif %}
                                 </tr>
                                 <tr>
                                     <th><b> Data </b></th>
-                                    <td> {{ obj.data_solic }} </td>
+                                    <td>{{ obj.data_solic }}</td>
                                 </tr>
                                 <tr>
                                     <th><b> Autor </b></th>
-                                    <td> {{ obj.autor|upper }} </td>
+                                    <td>{{ obj.autor|upper }}</td>
                                 </tr>
 
                             </tbody>
-                            <!-- <tr><strong>ID:</strong> {{ obj.id }} </tr>
-                            <tr><strong>Filial:</strong> {{ obj.filial }} </tr>
-                            <tr><strong>Colaborados:</strong> {{ obj.colab }} </tr>
-                            <tr><strong>Data Solicitação:</strong> {{ obj.data_solic }}</tr>
-                            <tr><strong>Autor:</strong> {{ obj.autor }}</tr>
-                            
-                             -->
                         </table>
-                        <style>
-                            th{
-                                padding: 0 20px 0 5px;
-                                border: solid 2px lightgrey;
-                            }
-                            td {
-                                padding: 0 20px 0 5px;
-                                border: solid 2px lightgrey;
-                            }
-                        </style><br>
+                        <br>
                         <div style="width: 100%;">
                             <h3>Itens solicitados</h3><br>
                             <table style="margin: auto;">
@@ -96,10 +80,18 @@
                                     {% for cart in obj.cart_set.all %}
                                         {% for i in cart.cartitem_set.all %}
                                         <tr>
-                                            <td>{{ i.desc }}</td>
-                                            <td> {{ i.ca }} </td>
-                                            <td style="text-align: center;">{{ i.tam }}</td>
-                                            <td style="text-align: center;" >{{ i.qty }}</td>
+                                            <td>
+                                                {{ i.desc }}
+                                            </td>
+                                            <td>
+                                                {{ i.ca }}
+                                            </td>
+                                            <td>
+                                                <input class="input-table" name="tam_{{i.id}}" value={{ i.tam }} />
+                                            </td>
+                                            <td>
+                                                <input class="input-table" name="qty_{{i.id}}" value={{ i.qty }} />
+                                            </td>
                                         </tr>
                                         {% endfor %}
                                     {% endfor %}
@@ -110,7 +102,7 @@
                 </div>
                 <div class="container col">
                     <strong>Enviar para:</strong>
-                    <input type="email" name="e_to" autocomplete="off" />
+                    <input type="email" name="email" autocomplete="off" />
                     <div>
                         {{ editor.area|safe }}
                     </div>
@@ -119,11 +111,30 @@
                     </div>
                 </div>
             </div>
-                <center><button class="col">enviar</button></center>
-        </form>
+                <center>
+                    <button class="col">Enviar</button>
+                </center>
+            </form>
+            <center>
+                <a class="col-1" href="{% url 'portaria:cancelar_solicitacao_epi' id=obj.id %}"><button type="button" style="background-color:red;">Cancelar Solicitação</button></a>
+            </center>
     </div>
     </section>
 {% else %}<p>Usuário não tem permissão para acessar</p>{% endif %}
 </div>
+<style>
+    th{
+        padding: 0 20px 0 5px;
+        border: solid 2px lightgrey;
+    }
+    td {
+        padding: 0 20px 0 5px;
+        border: solid 2px lightgrey;
+    }
+    .input-table{
+        font-size: 10px;
+        width: 5vw;
+    }
+</style>
 {% endif %}
 {% endblock %}

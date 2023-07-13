@@ -227,6 +227,11 @@ urlpatterns = (
             name="estoque_detalhe",
         ),
         path(
+            "estoque/itens/cancelar/<id>/",
+            views.cancelar_solicitacao_epi,
+            name="cancelar_solicitacao_epi",
+        ),
+        path(
             "estoque/itens/listagem/cadastrar",
             views.estoque_caditem,
             name="estoque_caditem",
@@ -235,6 +240,11 @@ urlpatterns = (
             "estoque/confirma",
             views.estoque_confirma_item,
             name="estoque_confirma_item",
+        ),
+        path(
+            "estoque/verifica-validade-epi/",
+            views.verifica_validade_epi,
+            name="verifica_validade_epi",
         ),
         path("demissoes/", views.index_demissoes, name="demissoes"),
         path(
