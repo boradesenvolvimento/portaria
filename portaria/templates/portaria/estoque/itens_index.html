@@ -168,11 +168,13 @@
                                                         <div class="table-row">
                                                             <div class="table-col">Tamanho</div>
                                                             <div class="table-col">Quantidade</div>
+                                                            <div class="table-col" style="width: 150px;" >Quantidade Mínima</div>
                                                         </div>
                                                         {% for tam in i.tamanho_set.all %}
                                                             <div class="table-row">
                                                                 <div class="table-col"> {{ tam.tam }} </div>
                                                                 <div class="table-col"> {{ tam.quantidade }} </div>
+                                                                <div class="table-col" style="width: 150px;"> {{ tam.quantidade_minima }} </div>
                                                             </div>
                                                         {% endfor %}
                                                     </div>
@@ -194,6 +196,7 @@
                                                             <input name="item" value="{{i.id}}" hidden>
                                                             <input name="tam" type="text" placeholder="Tamanho">
                                                             <input name="qty" type="text" placeholder="Quantidade">
+                                                            <input name="quantidade_minima" type="text" placeholder="Quantidade Mínima">
                                                             <button type="submit" style="display: inline;"> Salvar </button>
                                                         </form>
                                                     </div>

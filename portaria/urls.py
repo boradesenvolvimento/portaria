@@ -241,6 +241,11 @@ urlpatterns = (
             views.estoque_confirma_item,
             name="estoque_confirma_item",
         ),
+        path(
+            "estoque/verifica-validade-epi/",
+            views.verifica_validade_epi,
+            name="verifica_validade_epi",
+        ),
         path("demissoes/", views.index_demissoes, name="demissoes"),
         path(
             "demissoes/get_funcionarios_demissao/",

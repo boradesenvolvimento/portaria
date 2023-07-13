@@ -4553,8 +4553,8 @@ def mailferias(request, idfpj):
                                         Valor a receber: {valor}
                                     """,
             from_email=settings.EMAIL_HOST_USER,
-            # recipient_list=[func.email]
-            recipient_list=["davi.bezerra@bora.com.br"],
+            recipient_list=[func.email]
+            # recipient_list=["davi.bezerra@bora.com.br"],
         )
 
     except ValueError:
@@ -7716,17 +7716,42 @@ def estoque_confirma_item(request):
                         if tamanho.quantidade < ci.qty:
                             messages.error(
                                 request,
-                                f"O item {ci.desc} - {ci.tam} está em falta. (Solicitado: {ci.qty} | Em estoque: {tamanho.quantidade} ",
+                                f"O item {ci.desc} - {ci.tam} está em falta. (Solicitado: {ci.qty} | Em estoque: {tamanho.quantidade})",
                             )
 
                             return redirect("portaria:estoque_confirma_item")
                 for cart in obj.cart_set.all():
                     for ci in cart.cartitem_set.all():
-                        item = Item.objects.filter(desc=ci.desc).first()
                         Tamanho.objects.filter(id=ci.tam_id).update(
                             quantidade=F("quantidade") - ci.qty
                         )
                         tam = Tamanho.objects.get(id=ci.tam_id)
+
+                        if tam.quantidade <= tam.quantidade_minima:
+                            send_mail(
+                                subject="Informação sobre quantidade mínima de estoque",
+                                message=f"""Olá,
+                            
+Informamos que o seguinte item atingiu a quantidade de estoque mínimo:
+
+    ITEM: {upper(ci.desc)}
+    CA: {upper(ci.ca)}
+    TAMANHO: {upper(tam.tam)}
+    QUANTIDADE ATUAL: {tam.quantidade}
+    QUANTIDADE MÍNIMA: {tam.quantidade_minima}
+                
+Att,
+
+Equipe de Desenvolvimento
+""",
+                                from_email=settings.EMAIL_HOST_USER,
+                                # recipient_list=[
+                                #     "rosane.fernandes@bora.com.br",
+                                #     "daniel.domingues@bora.com.br",
+                                #     "marco.antonio@bora.bom.br",
+                                # ],
+                                recipient_list=["davi.bezerra@bora.com.br"],
+                            )
 
             except Exception as e:
                 print(e)
@@ -7740,7 +7765,101 @@ def estoque_confirma_item(request):
                 messages.success(
                     request, "Solicitação com id %s confirmada com sucesso." % obj.id
                 )
+        messages.error(request, "Insira o anexo de confirmação de recebimento.")
     return render(request, "portaria/estoque/confirmasolicitacao.html", {"form": form})
+
+
+def verifica_validade_epi(request):
+    epis = Item.objects.all()
+
+    for epi in epis:
+        enviar = False
+
+        if epi.validade == datetime.date.today() + datetime.timedelta(days=30):
+            enviar = True
+            mensagem = "vence em 30 dias"
+
+        elif epi.validade == datetime.date.today():
+            enviar = True
+            mensagem = "vence hoje"
+
+        if enviar:
+            send_mail(
+                subject="Informação sobre vencimento de EPI",
+                message=f"""Olá,
+            
+Informamos que o seguinte item {mensagem}:
+
+    Descrição:{upper(epi.desc)}
+    CA: {epi.ca}
+    Validade: {epi.validade.strftime('%d/%m/%Y')}
+
+Att,
+
+Equipe de Desenvolvimento
+
+""",
+                from_email=settings.EMAIL_HOST_USER,
+                # recipient_list=[
+                #     "rosane.fernandes@bora.com.br",
+                #     "daniel.domingues@bora.com.br",
+                #     "marco.antonio@bora.bom.br",
+                # ],
+                recipient_list=["davi.bezerra@bora.com.br"],
+            )
+
+    hoje = datetime.date.today()
+    solicitacoes = EstoqueSolicitacoes.objects.filter(data_vencimento__gte=hoje)
+
+    for solicitacao in solicitacoes:
+        enviar = False
+
+        if solicitacao.funcionario_clt:
+            nome = solicitacao.funcionario_clt.nome
+        elif solicitacao.funcionario_pj:
+            nome = solicitacao.funcionario_pj.nome
+
+        if solicitacao.data_vencimento == datetime.date.today() + datetime.timedelta(
+            days=30
+        ):
+            enviar = True
+            mensagem = "vencem em 30 dias"
+
+        elif solicitacao.data_vencimento == datetime.date.today():
+            enviar = True
+            mensagem = "vencem hoje"
+
+        if enviar:
+            cart = Cart.objects.filter(solic=solicitacao).first()
+            itens = CartItem.objects.filter(cart=cart)
+
+            str_itens = ""
+
+            for item in itens:
+                str_itens += f"Descrição: {upper(item.desc)} - Tamanho: {upper(item.tam)} - Quantidade: {item.qty};\n"
+
+            send_mail(
+                subject=f"Informação sobre vencimento de EPI do funcionário - {nome}",
+                message=f"""Olá,
+            
+Informamos que o seguintes itens do {nome} {mensagem}:
+
+{str_itens}
+Att,
+
+Equipe de Desenvolvimento
+
+""",
+                from_email=settings.EMAIL_HOST_USER,
+                # recipient_list=[
+                #     "rosane.fernandes@bora.com.br",
+                #     "daniel.domingues@bora.com.br",
+                #     "marco.antonio@bora.bom.br",
+                # ],
+                recipient_list=["davi.bezerra@bora.com.br"],
+            )
+
+    return redirect("portaria:estoque_listagem_itens")
 
 
 def estoque_nova_solic(request):
@@ -7813,8 +7932,11 @@ def estoque_listagem_itens(request):
             item_id = request.POST.get("item")
             tam = request.POST.get("tam")
             qty = request.POST.get("qty")
+            quantidade_minima = request.POST.get("quantidade_minima")
             item = Item.objects.get(id=int(item_id))
-            Tamanho.objects.create(tam=tam, quantidade=qty, item=item)
+            Tamanho.objects.create(
+                tam=tam, quantidade=qty, item=item, quantidade_minima=quantidade_minima
+            )
             messages.success(request, "Tamanho adicionado com sucesso!")
 
         if request.POST.get("type") == "ITEM":

@@ -1198,6 +1198,9 @@ class EstoqueSolicitacoes(models.Model):
         upload_to="confirmacao_epi/%Y/%m/%d", null=True
     )
     cancelado = models.DateField(blank=True, null=True)
+    data_vencimento = models.DateField(
+        default=(datetime.date.today() + datetime.timedelta(days=365))
+    )
 
     filial = models.ForeignKey(
         Filiais, on_delete=models.CASCADE, related_name="estoque_solicitacao"
@@ -1249,4 +1252,5 @@ class Tamanho(models.Model):
     id = models.BigAutoField(primary_key=True)
     tam = models.CharField(max_length=5)
     quantidade = models.PositiveSmallIntegerField()
+    quantidade_minima = models.PositiveSmallIntegerField(default=1)
     item = models.ForeignKey(Item, on_delete=CASCADE, null=True, blank=True)
