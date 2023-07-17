@@ -815,7 +815,7 @@ def ficha_cadastral(request):
     filiais = Filiais.objects.all()
 
     if request.method == "GET":
-        nome = request.GET.get("nome")
+        nome = upper(request.GET.get("nome"))
         filial = request.GET.get("filial")
         cpf = request.GET.get("cpf")
         tipo_contrato = request.GET.get("tipo_contrato")
