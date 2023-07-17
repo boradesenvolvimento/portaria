@@ -6722,10 +6722,14 @@ def justificativa(request):
                     obj.cod_just = idocor
                     obj.desc_just = result
                     obj.autor = request.user
-                    if request.FILES.get(f"file{q}"):
-                        file = request.FILES.get(f"file{q}")
-                        obj.file = file
-                    obj.save()
+                    try:
+                        if request.FILES.get(f"file{q}"):
+                            file = request.FILES.get(f"file{q}")
+                            obj.file = file
+                        obj.save()
+                    except Exception as e:
+                        messages.error(request, f"Ocorreu um erro no arquivo da Justificativa: {obj.conhecimento}, por favor verificar se o arquivo tem menos de 1 MB.")
+                        return redirect("portaria:justificativa")
         messages.success(request, "Justificativas cadastradas")
         return redirect("portaria:justificativa")
     return render(
