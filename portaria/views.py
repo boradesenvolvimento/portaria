@@ -6728,7 +6728,10 @@ def justificativa(request):
                             obj.file = file
                         obj.save()
                     except Exception as e:
-                        messages.error(request, f"Ocorreu um erro no arquivo da Justificativa: {obj.conhecimento}, por favor verificar se o arquivo tem menos de 1 MB.")
+                        messages.error(
+                            request,
+                            f"Ocorreu um erro no arquivo da Justificativa: {obj.conhecimento}, por favor verificar se o arquivo tem menos de 1 MB.",
+                        )
                         return redirect("portaria:justificativa")
         messages.success(request, "Justificativas cadastradas")
         return redirect("portaria:justificativa")
@@ -7428,28 +7431,6 @@ def edit_compras(request, id):
             if obj.pago != pago and pago is not None:
                 obj.pago = pago
 
-            entradas = SolicitacoesEntradas.objects.filter(cpr_ref=obj)
-            resp = ""
-            if obj.responsavel:
-                resp = obj.responsavel.first_name
-            corpo_email = {
-                "subject": f"Atualização da Solicitação: {obj.nr_solic}",
-                "status": obj.status,
-                "departamento": obj.departamento,
-                "responsavel": resp,
-                "categoria": obj.categoria,
-                "data": obj.pub_date.strftime("%d-%m-%Y"),
-                "nr_pedido": obj.nr_solic,
-                "email_solicitante": obj.email_solic,
-                "observacao": obj.obs,
-                "entradas": entradas,
-            }
-            envio = envia_email(corpo_email)
-            if envio:
-                messages.info(request, f"Email enviado com sucesso.")
-            else:
-                messages.info(request, f"Ocorreu uma falha ao enviar o email.")
-
         except Exception as e:
             print(f"err:{e}, err_t:{type(e).__name__}")
             raise e
@@ -7457,10 +7438,33 @@ def edit_compras(request, id):
             try:
                 obj.ultima_att = request.user
                 obj.save()
-                print("novo objeto: ", obj.departamento)
+
+                entradas = SolicitacoesEntradas.objects.filter(cpr_ref=obj)
+                resp = ""
+                if obj.responsavel:
+                    resp = obj.responsavel.first_name
+                corpo_email = {
+                    "subject": f"Atualização da Solicitação: {obj.nr_solic}",
+                    "status": obj.status,
+                    "departamento": obj.departamento,
+                    "responsavel": resp,
+                    "categoria": obj.categoria,
+                    "data": obj.pub_date.strftime("%d-%m-%Y"),
+                    "nr_pedido": obj.nr_solic,
+                    "email_solicitante": obj.email_solic,
+                    "observacao": obj.obs,
+                    "entradas": entradas,
+                }
+                envio = envia_email(corpo_email)
+                if envio:
+                    messages.info(request, f"Email enviado com sucesso.")
+                else:
+                    messages.info(request, f"Ocorreu uma falha ao enviar o email.")
+
                 messages.info(
                     request, f"Solicitação {obj.nr_solic} alterada com sucesso."
                 )
+                
                 return redirect("portaria:painel_compras")
             except Exception as e:
                 print(f"err: {e}, err_type:{type(e).__name__}")
