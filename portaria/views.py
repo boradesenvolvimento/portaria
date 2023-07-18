@@ -6732,7 +6732,6 @@ def justificativa(request):
                             request,
                             f"Ocorreu um erro no arquivo da Justificativa: {obj.conhecimento}, por favor verificar se o arquivo tem menos de 1 MB.",
                         )
-                        return redirect("portaria:justificativa")
         messages.success(request, "Justificativas cadastradas")
         return redirect("portaria:justificativa")
     return render(
