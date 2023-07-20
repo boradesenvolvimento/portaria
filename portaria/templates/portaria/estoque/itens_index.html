@@ -84,19 +84,18 @@
                                                             <td style="text-align: center; width: 20%;"> {{ tam.tam }} </td>
                                                             <td style="width: 30%;"> </td>
                                                             <td style="text-align: center; width: 25%;">{{ tam.quantidade }}</td>
-                                                            {% comment %} <td style="text-align: center;"> 
-                                                                <button id="editSize" type="button" value="{{ forloop.counter }}" style="background-color: transparent;color: #0d6efd">
+                                                            <td style="text-align: center;"> 
+                                                                <button id="editSize" type="button" value="{{item.id}}-{{ forloop.counter }}" style="background-color: transparent;color: #0d6efd">
                                                                     <ion-icon name="create-outline"></ion-icon> 
                                                                 </button>
-                                                            </td> {% endcomment %}
+                                                            </td>
                                                         </tr>
                                                         
-                                                        <div id="editTam{{ forloop.counter }}" class="modal">
+                                                        <div id="editTam{{item.id}}-{{ forloop.counter }}" class="modal">
                                                             <div class="modal-content" style="width: 45%;">
                                                                 <div class="modal-content" >
                                                                     <div>
-                                                                        <span class="title-cad">Adicionar Tamanho</span>
-                                                                        <span class="close">&times;</span>
+                                                                        <span class="title-cad">Editar Tam</span>                                                                        <span class="close">&times;</span>
                                                                     </div><hr>
                                                                     <div>
                                                                         <form action="" id="formdata-id" method="post">
