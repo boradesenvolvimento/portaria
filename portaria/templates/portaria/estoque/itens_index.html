@@ -84,11 +84,11 @@
                                                             <td style="text-align: center; width: 20%;"> {{ tam.tam }} </td>
                                                             <td style="width: 30%;"> </td>
                                                             <td style="text-align: center; width: 25%;">{{ tam.quantidade }}</td>
-                                                            <td style="text-align: center;"> 
+                                                            {% comment %} <td style="text-align: center;"> 
                                                                 <button id="editSize" type="button" value="{{ forloop.counter }}" style="background-color: transparent;color: #0d6efd">
                                                                     <ion-icon name="create-outline"></ion-icon> 
                                                                 </button>
-                                                            </td>
+                                                            </td> {% endcomment %}
                                                         </tr>
                                                         
                                                         <div id="editTam{{ forloop.counter }}" class="modal">
