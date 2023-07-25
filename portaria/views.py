@@ -4172,7 +4172,6 @@ Att
                 recipient_list=[
                     q.email,
                     "lucas.feitosa@bora.com.br",
-                    "daniel.domingues@bora.com.br",
                 ],
                 fail_silently=False,
             )
