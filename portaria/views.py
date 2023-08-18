@@ -7709,10 +7709,9 @@ def estoque_confirma_item(request):
             )
 
     if request.method == "POST":
-        anexo = request.FILES.get("getanexo")
+        obj = request.POST.get("objid")
+        anexo = request.FILES.get(f"getanexo{obj}")
         if anexo:
-            obj = request.POST.get("objid")
-
             try:
                 obj = get_object_or_404(EstoqueSolicitacoes, pk=obj)
                 # Remover itens
@@ -7737,19 +7736,18 @@ def estoque_confirma_item(request):
                             send_mail(
                                 subject="Informação sobre quantidade mínima de estoque",
                                 message=f"""Olá,
-                            
-Informamos que o seguinte item atingiu a quantidade de estoque mínimo:
+                                        Informamos que o seguinte item atingiu a quantidade de estoque mínimo:
 
-    ITEM: {upper(ci.desc)}
-    CA: {upper(ci.ca)}
-    TAMANHO: {upper(tam.tam)}
-    QUANTIDADE ATUAL: {tam.quantidade}
-    QUANTIDADE MÍNIMA: {tam.quantidade_minima}
-                
-Att,
+                                            ITEM: {upper(ci.desc)}
+                                            CA: {upper(ci.ca)}
+                                            TAMANHO: {upper(tam.tam)}
+                                            QUANTIDADE ATUAL: {tam.quantidade}
+                                            QUANTIDADE MÍNIMA: {tam.quantidade_minima}
+                                                        
+                                        Att,
 
-Equipe de Desenvolvimento
-""",
+                                        Equipe de Desenvolvimento
+                                        """,
                                 from_email=settings.EMAIL_HOST_USER,
                                 recipient_list=[
                                     "rosane.fernandes@bora.com.br",
@@ -7770,7 +7768,9 @@ Equipe de Desenvolvimento
                 messages.success(
                     request, "Solicitação com id %s confirmada com sucesso." % obj.id
                 )
-        messages.error(request, "Insira o anexo de confirmação de recebimento.")
+        else:
+            messages.error(request, "Insira o anexo de confirmação de recebimento.")
+
     return render(request, "portaria/estoque/confirmasolicitacao.html", {"form": form})
 
 

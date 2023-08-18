@@ -194,8 +194,11 @@ EMAIL_HOST_PASSWORD = get_secret("E_UPASS")
 DJANGO_NOTIFICATIONS_CONFIG = {"USE_JSONFIELD": True}
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = (
-    10240  # corrigindo erro de número máximo dentro do campo de data
+    50240  # corrigindo erro de número máximo dentro do campo de data
 )
+MAX_UPLOAD_SIZE = 50000000
+DATA_UPLOAD_MAX_MEMORY_SIZE = MAX_UPLOAD_SIZE
+FILE_UPLOAD_MAX_MEMORY_SIZE = MAX_UPLOAD_SIZE
 
 # summernote
 X_FRAME_OPTIONS = "SAMEORIGIN"
