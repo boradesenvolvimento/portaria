@@ -7462,7 +7462,7 @@ def edit_compras(request, id):
                 messages.info(
                     request, f"Solicitação {obj.nr_solic} alterada com sucesso."
                 )
-                
+
                 return redirect("portaria:painel_compras")
             except Exception as e:
                 print(f"err: {e}, err_type:{type(e).__name__}")
@@ -7710,9 +7710,7 @@ def estoque_confirma_item(request):
 
     if request.method == "POST":
         obj = request.POST.get("objid")
-        anexo = request.FILES.get(f"getanexo{obj.strip()}")
-        print(anexo)
-        print(request.FILES)
+        anexo = request.FILES.get(f"getanexo{obj}")
         if anexo:
             try:
                 obj = get_object_or_404(EstoqueSolicitacoes, pk=obj)
@@ -7991,7 +7989,8 @@ def estoque_detalhe(request, id):
                 myfile = request.FILES.getlist("file")
             else:
                 myfile = None
-                items = ""
+
+            items = ""
 
             for cart in item.cart_set.all():
                 for i in cart.cartitem_set.all():

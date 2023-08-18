@@ -37,7 +37,7 @@
         <section class="container">
             <div style="display: flex; justify-content: space-between;">
                 <div>
-                    <h2 class="title-cad">Confirmar solicitações</h2>
+                    <h2 class="title-cad">Confirmar Entrega</h2>
                 </div>
                 <div>
                     <form method="get">
@@ -73,10 +73,10 @@
                         <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
                             <th>
-                                <label for="getanexo" style="font-size:2.4rem;cursor:pointer;">
+                                <label for="getanexo{{q.id}}" style="font-size:2.4rem;cursor:pointer;">
                                     <ion-icon name="attach-outline"></ion-icon>
                                 </label>
-                                <input type="file" name="getanexo{{q.id}}" id="getanexo">
+                                <input type="file" name="getanexo{{q.id}}" id="getanexo{{q.id}}">
                             </th>
                             <th>
                                 <input type="hidden" name="objid" value="{{ q.id }}">
