@@ -7710,7 +7710,7 @@ def estoque_confirma_item(request):
 
     if request.method == "POST":
         obj = request.POST.get("objid")
-        anexo = request.FILES.get(f"getanexo{obj}")
+        anexo = request.FILES.get(f"getanexo{obj.strip()}")
         print(anexo)
         print(request.FILES)
         if anexo:
