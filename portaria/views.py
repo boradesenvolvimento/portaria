@@ -7711,6 +7711,8 @@ def estoque_confirma_item(request):
     if request.method == "POST":
         obj = request.POST.get("objid")
         anexo = request.FILES.get(f"getanexo{obj}")
+        print(anexo)
+        print(request.FILES)
         if anexo:
             try:
                 obj = get_object_or_404(EstoqueSolicitacoes, pk=obj)
