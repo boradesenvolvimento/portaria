@@ -7881,28 +7881,52 @@ def estoque_nova_solic(request):
         itens_re = request.POST.get("itensInput")
 
         funcionario = request.POST.get("funcionario")
+        if not funcionario:
+            messages.error(request, "Insira um Colaborador")
+            return render(
+                request,
+                "portaria/estoque/nova_solicitacao.html",
+                {"itens": itens, "filiais": filiais, "funcionarios": funcionarios},
+            )
         try:
             data["funcionario_clt"] = Funcionarios.objects.get(nome=funcionario)
         except Exception:
             data["funcionario_pj"] = FuncPj.objects.get(nome=funcionario)
 
-        data["filial"] = Filiais.objects.get(id=fil)
+        try:
+            data["filial"] = Filiais.objects.get(id=fil)
+        except Exception:
+            messages.error(request, "Insira uma Filial")
+            return render(
+                request,
+                "portaria/estoque/nova_solicitacao.html",
+                {"itens": itens, "filiais": filiais, "funcionarios": funcionarios},
+            )
 
         obj = EstoqueSolicitacoes.objects.create(**data)
         cart = Cart.objects.create(solic=obj)
 
-        itens = itens_re[:-1]
-        itens = itens.split(",")
-        for it in itens:
-            i = it.split(" ")
-            tam = Tamanho.objects.get(id=int(i[0]))
-            CartItem.objects.create(
-                cart=cart,
-                tam_id=tam.id,
-                desc=tam.item.desc,
-                ca=tam.item.ca,
-                tam=tam.tam,
-                qty=int(i[1]),
+        itens_x = itens_re[:-1]
+        itens_x = itens_x.split(",")
+
+        try:
+            for it in itens_x:
+                i = it.split(" ")
+                tam = Tamanho.objects.get(id=int(i[0]))
+                CartItem.objects.create(
+                    cart=cart,
+                    tam_id=tam.id,
+                    desc=tam.item.desc,
+                    ca=tam.item.ca,
+                    tam=tam.tam,
+                    qty=int(i[1]),
+                )
+        except Exception:
+            messages.error(request, "Insira pelo menos 1 item")
+            return render(
+                request,
+                "portaria/estoque/nova_solicitacao.html",
+                {"itens": itens, "filiais": filiais, "funcionarios": funcionarios},
             )
 
         return redirect("portaria:estoque_index")

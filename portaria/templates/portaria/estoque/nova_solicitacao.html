@@ -6,13 +6,13 @@
     <p><strong>{{ auth_message }}</strong></p>
 {% else %}
 {% if request.user|has_group:"estoque" %}
-        {% for message in messages %}
-        <div class="container-fluid p-0">
-            <div class="alert {{ message.tags }} alert-dismissible" role="alert">
-                {{ message }}
-            </div>
+    {% for message in messages %}
+    <div class="container-fluid p-0">
+        <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+            {{ message }}
         </div>
-        {% endfor %}
+    </div>
+    {% endfor %}
         <style>
             .selectors{
                 width: 25%; 
