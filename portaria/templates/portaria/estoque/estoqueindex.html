@@ -174,11 +174,9 @@
 
                 </span>
                 <span>
-                    {% if request.user|has_group:"estoque_rh" %}
                         <div>
                             <a id="botao2" href="{% url 'portaria:estoque_nova_solic' %}"><button style="padding: 3px 20px;">Nova solicitação</button></a>
                         </div>
-                    {% endif %}
                 </span>
                 <span style="text-align:center;">
                     <input style="margin:auto;" type="text" id="buscaitem">

@@ -381,6 +381,7 @@
                 >Inicio</a
               >
             </li>
+            {% if request.user|has_group:"estoque_main" %}
             <li class="nav-item">
               <a
                 class="nav-link1"
@@ -388,7 +389,7 @@
                 >Lista de itens</a
               >
             </li>
-            {% if request.user|has_group:"estoque_conf" %}
+            {% endif %}
             <li class="nav-item">
               <a
                 class="nav-link1"
@@ -396,7 +397,6 @@
                 >Confirmar entrega</a
               >
             </li>
-            {% endif %}
           </ul>
         </div>
         {% endif %}

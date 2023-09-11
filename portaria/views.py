@@ -7753,6 +7753,7 @@ def estoque_confirma_item(request):
                                     "rosane.fernandes@bora.com.br",
                                     "daniel.domingues@bora.com.br",
                                     "marco.antonio@bora.bom.br",
+                                    "lucas.franco@bora.bom.br",
                                 ],
                             )
 
@@ -7809,6 +7810,7 @@ Equipe de Desenvolvimento
                     "rosane.fernandes@bora.com.br",
                     "daniel.domingues@bora.com.br",
                     "marco.antonio@bora.bom.br",
+                    "lucas.franco@bora.bom.br",
                 ],
             )
 
@@ -7859,6 +7861,7 @@ Equipe de Desenvolvimento
                     "rosane.fernandes@bora.com.br",
                     "daniel.domingues@bora.com.br",
                     "marco.antonio@bora.bom.br",
+                    "lucas.franco@bora.bom.br",
                 ],
             )
 
