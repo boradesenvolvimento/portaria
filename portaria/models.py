@@ -456,11 +456,11 @@ class FuncionariosEPIs(models.Model):
 
 class Funcionarios(models.Model):
     id = models.AutoField(primary_key=True, unique=True)
-    nome = models.CharField(max_length=40, unique=True)
+    nome = models.CharField(max_length=40)
     data_nascimento = models.DateTimeField()
     data_admissao = models.DateTimeField(null=True)
-    rg = models.CharField(max_length=15, validators=[only_int], unique=True)
-    cpf = models.CharField(max_length=11, validators=[only_int], unique=True)
+    rg = models.CharField(max_length=15, validators=[only_int])
+    cpf = models.CharField(max_length=11, validators=[only_int])
     empresa = models.CharField(max_length=15, choices=EMPRESA_CHOICES)
     tipo_contrato = models.CharField(max_length=3, default="CLT")
     rua = models.CharField(max_length=100)
