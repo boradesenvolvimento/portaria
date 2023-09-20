@@ -14,6 +14,8 @@ urlpatterns = (
         ),
         path("cadastro/cadastrosaida/", views.cadastrosaida, name="cadastrosaida"),
         path("paletes/", views.paleteview, name="paleteview"),
+        path("paletes/add/", views.add_pallets, name="add_pallets"),
+        path("paletes/", views.paleteview, name="paleteview"),
         path("paletes/transfpaletes/", views.solictransfpalete, name="solicpaletes"),
         path(
             "paletes/transfdetalhe/<str:solic_id>/",

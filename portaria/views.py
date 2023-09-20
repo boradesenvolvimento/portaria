@@ -320,6 +320,17 @@ def paleteview(request):
     )
 
 
+# TEMPORARIO
+def add_pallets(request):
+    quantidade = 1500
+
+    for i in range(0, quantidade):
+        obj = {"loc_atual": "SPO", "tp_palete": "PBR", "autor_id": 1}
+        PaleteControl.objects.create(**obj)
+
+    return redirect("portaria:paleteview")
+
+
 def cadpaletes(request):
     tp_emp = Cliente.objects.all().order_by("razao_social_motorista")
     filiais = Filiais.objects.all()
