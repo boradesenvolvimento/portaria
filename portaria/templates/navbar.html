@@ -42,7 +42,7 @@
         <li class="nav-item">
           <a class="nav-link1" aria-current="page" href="/">Home</a>
         </li>
-        {% if request.user|has_group:"portaria" %}
+        {% comment %} {% if request.user|has_group:"portaria" %}
         <div class="dropdown">
           <button
             class="dropdown-toggle menutext-navbar nav-link1"
@@ -71,7 +71,8 @@
             </li>
           </ul>
         </div>
-        {% endif %} {% if request.user|has_group:"paletes" %}
+        {% endif %} {% endcomment %}
+        {% if request.user|has_group:"paletes" %}
         <div class="dropdown">
           <button
             class="dropdown-toggle menutext-navbar nav-link1"
@@ -89,7 +90,7 @@
             aria-labelledby="dropdownMenuButton1"
           >
             <li class="nav-item">
-              <a class="nav-link1" href="{% url 'portaria:paleteview' %}"
+              <a class="nav-link1" href="https://novo.bora.tec.br/paletes/filiais"
                 >Paletes</a
               >
               {% comment %} {% if request.user|has_group:"paletes_adm" %}
@@ -97,30 +98,31 @@
                 >Cadastrar Paletes</a
               >
               {% endif %} {% endcomment %}
-              <a class="nav-link1" href="{% url 'portaria:solicpaletes' %}"
+              <a class="nav-link1" href="https://novo.bora.tec.br/paletes/filiais"
                 >Solicitar Transferência</a
               >
-              <a class="nav-link1" href="{% url 'portaria:paineltransf' %}"
+              <a class="nav-link1" href="https://novo.bora.tec.br/paletes/filiais"
                 >Transferências em Andamento</a
               >
-              <a class="nav-link1" href="{% url 'portaria:recpaletes' %}"
+              <a class="nav-link1" href="https://novo.bora.tec.br/paletes/filiais"
                 >Registrar Recebimento</a
               >
-              <a class="nav-link1" href="{% url 'portaria:painelmov' %}"
+              <a class="nav-link1" href="https://novo.bora.tec.br/paletes/filiais"
                 >Painel de Movimentações</a
               >
-              <a class="nav-link1" href="{% url 'portaria:paletecliente' %}"
+              <a class="nav-link1" href="https://novo.bora.tec.br/paletes/clientes"
                 >Painel Cliente</a
               >
               {% if request.user|has_group:"paletes_adm" %}
-              <a class="nav-link1" href="{% url 'portaria:cadcliente' %}"
+              <a class="nav-link1" href="https://novo.bora.tec.br/paletes/clientes"
                 >Cadastrar Cliente</a
               >
               {% endif %}
             </li>
           </ul>
         </div>
-        {% endif %} {% if request.user|has_group:"frota" %}
+        {% endif %}
+        {% if request.user|has_group:"frota" %}
         <div class="dropdown">
           <button
             class="dropdown-toggle menutext-navbar nav-link1"
@@ -150,7 +152,7 @@
               > {% endcomment %}
               <a
                 class="nav-link1"
-                href="{% url 'portaria:disponibilidade_frota' %}"
+                href="https://novo.bora.tec.br/frotas/disponibilidades"
                 >Disp. Frota</a
               >
               {% endif %}
@@ -178,35 +180,35 @@
             aria-labelledby="dropdownMenuButton1"
           >
             <li class="nav-item">
-              <a class="nav-link1" href="{% url 'portaria:demissoes' %}"
+              <a class="nav-link1" href="https://novo.bora.tec.br/rh/fichas-cadastrais"
               >Checar demissoes</a
               >
-              <a class="nav-link1" href="{% url 'portaria:cadfuncionariopj' %}"
+              <a class="nav-link1" href="https://novo.bora.tec.br/rh/funcionarios-pj"
                 >Cadastrar funcionário</a
               >
               {% if request.user|has_group:"adm_rh" %}
-              <a class="nav-link1" href="{% url 'portaria:atualizarfunc' %}"
+              <a class="nav-link1" href="https://novo.bora.tec.br/rh/funcionarios-pj"
                 >Atualizar funcionário</a
               >
               {% endif %}
               {% if request.user|has_group:"ficha_cadastral" %}
-              <a class="nav-link1" href="{% url 'portaria:ficha_cadastral' %}"
+              <a class="nav-link1" href="https://novo.bora.tec.br/rh/fichas-cadastrais"
                 >Ficha Cadastral</a
               >
               {% endif %}
-              <a class="nav-link1" href="{% url 'portaria:servicospj' %}"
+              <a class="nav-link1" href="https://novo.bora.tec.br/rh/funcionarios-pj"
                 >Servicos PJ</a
               >
-              <a class="nav-link1" href="{% url 'portaria:contratopj' %}"
+              <a class="nav-link1" href="https://novo.bora.tec.br/rh/funcionarios-pj"
               >Contrato PJ</a
             >
-              <a class="nav-link1" href="{% url 'portaria:decimopj' %}"
+              <a class="nav-link1" href="https://novo.bora.tec.br/rh/funcionarios-pj"
                 >13º PJ</a
               >
-              <a class="nav-link1" href="{% url 'portaria:feriaspjv' %}"
+              <a class="nav-link1" href="https://novo.bora.tec.br/rh/funcionarios-pj"
                 >Férias PJ</a
               >
-              <a class="nav-link1" href="{% url 'portaria:bonuspj' %}"
+              <a class="nav-link1" href="https://novo.bora.tec.br/rh/funcionarios-pj"
                 >Bonus PJ</a
               >
             </li>
@@ -272,7 +274,7 @@
             </li>
             {% endif %} {% if request.user|has_group:"compras" %}
             <li class="nav-item">
-              <a class="nav-link1" href="{% url 'portaria:compras_index' %}"
+              <a class="nav-link1" href="https://novo.bora.tec.br/compras/solicitacoes-compras"
                 >Compras</a
               >
             </li>
@@ -377,7 +379,7 @@
             aria-labelledby="dropdownMenuButton1"
           >
             <li class="nav-item">
-              <a class="nav-link1" href="{% url 'portaria:estoque_index' %}"
+              <a class="nav-link1" href="https://novo.bora.tec.br/estoques/epis/solicitacoes"
                 >Inicio</a
               >
             </li>
@@ -385,7 +387,7 @@
             <li class="nav-item">
               <a
                 class="nav-link1"
-                href="{% url 'portaria:estoque_listagem_itens' %}"
+                href="https://novo.bora.tec.br/estoques/epis/controles"
                 >Lista de itens</a
               >
             </li>
@@ -393,7 +395,7 @@
             <li class="nav-item">
               <a
                 class="nav-link1"
-                href="{% url 'portaria:estoque_confirma_item' %}"
+                href="https://novo.bora.tec.br/estoques/epis/solicitacoes"
                 >Confirmar entrega</a
               >
             </li>
